@@ -26,6 +26,12 @@ if rails_env == "production"
   else
     preload_app!
   end
+  
+  bind "unix:///var/www/nagai-kotoba-database/shared/tmp/sockets/puma.sock"
+  pidfile "/var/www/nagai-kotoba-database/shared/tmp/pids/puma.pid"
+else
+  port ENV.fetch("PORT") { 3000 }
+  pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 end
 # Specifies the `worker_timeout` threshold that Puma will use to wait before
 # terminating a worker in development environments.
