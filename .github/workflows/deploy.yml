@@ -28,4 +28,6 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy with Capistrano
+        env:
+          NAGAI_KOTOBA_DATABASE_V2_PASSWORD: ${{ secrets.NAGAI_KOTOBA_DATABASE_V2_PASSWORD }}
         run: bundle exec cap production deploy
