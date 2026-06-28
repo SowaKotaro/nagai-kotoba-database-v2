@@ -3,6 +3,7 @@ lock "~> 3.20.1"
 
 set :application, "nagai-kotoba-database"
 set :repo_url, "git@github.com:SowaKotaro/nagai-kotoba-database-v2.git"
+set :branch, "main"
 
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
