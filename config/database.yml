@@ -19,14 +19,14 @@ default: &default
 
 development:
   <<: *default
-  database: nagai_kotoba_database_v2_development
+  database: nagai_kotoba_database_development
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: nagai_kotoba_database_v2_test
+  database: nagai_kotoba_database_test
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -50,6 +50,6 @@ test:
 #
 production:
   <<: *default
-  database: nagai_kotoba_database_v2_production
-  username: nagai_kotoba_database_v2
-  password: <%= ENV["NAGAI_KOTOBA_DATABASE_V2_DATABASE_PASSWORD"] %>
+  database: nagai_kotoba_database_production
+  username: deploy
+  password: <%= ENV["NAGAI_KOTOBA_DATABASE_V2_PASSWORD"] %>
