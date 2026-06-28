@@ -51,3 +51,6 @@ set :ssh_options, {
   forward_agent: false,
   auth_methods: %w[publickey]
 }
+set :default_env, {
+  "NAGAI_KOTOBA_DATABASE_V2_PASSWORD" => ENV["NAGAI_KOTOBA_DATABASE_V2_PASSWORD"]
+}
