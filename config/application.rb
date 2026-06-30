@@ -23,5 +23,9 @@ module NagaiKotobaDatabaseV2
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # 日本語アプリのため既定ロケールを日本語にする。
+    config.i18n.default_locale = :ja
+    config.i18n.available_locales = %i[ja en]
   end
 end

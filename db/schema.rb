@@ -10,11 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_132054) do
-  create_table "articles", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
-    t.text "body"
+ActiveRecord::Schema[8.1].define(version: 2026_06_30_152936) do
+  create_table "admins", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "title"
+    t.string "password_digest", null: false
     t.datetime "updated_at", null: false
+    t.string "username", null: false
+    t.index ["username"], name: "index_admins_on_username", unique: true
   end
+
+  create_table "sessions", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "admin_id", null: false
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["admin_id"], name: "index_sessions_on_admin_id"
+  end
+
+  add_foreign_key "sessions", "admins"
 end

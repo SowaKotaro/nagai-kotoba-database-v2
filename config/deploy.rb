@@ -54,3 +54,19 @@ set :ssh_options, {
 set :default_env, {
   "NAGAI_KOTOBA_DATABASE_V2_PASSWORD" => ENV["NAGAI_KOTOBA_DATABASE_V2_PASSWORD"]
 }
+
+namespace :deploy do
+  desc "管理者(seed)を作成/更新する。credentials の admin: を読み込む。seed は冪等なので毎回実行して安全。"
+  task :seed do
+    on roles(:app) do
+      within release_path do
+        with rails_env: fetch(:rails_env, "production") do
+          execute :bundle, :exec, :rails, "db:seed"
+        end
+      end
+    end
+  end
+
+  # マイグレーション完了後に seed を自動実行する。
+  after "deploy:migrate", "deploy:seed"
+end
