@@ -1,0 +1,11 @@
+<h1>言葉データベース</h1>
+<p>日本語の単語を収集・公開するサイトです。</p>
+
+<%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
+
+<% if authenticated? %>
+  <p>管理者としてログイン中です。</p>
+  <%= button_to "ログアウト", session_path, method: :delete %>
+<% else %>
+  <%= link_to "管理者ログイン", new_session_path %>
+<% end %>

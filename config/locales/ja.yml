@@ -1,0 +1,9 @@
+ja:
+  sessions:
+    new:
+      username_placeholder: "ユーザーIDを入力"
+      password_placeholder: "パスワードを入力"
+      submit: "ログイン"
+    create:
+      rate_limited: "しばらく時間をおいてから再度お試しください。"
+      invalid: "ユーザーIDまたはパスワードが正しくありません。"

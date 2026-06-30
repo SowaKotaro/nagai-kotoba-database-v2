@@ -7,3 +7,20 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+# 管理者（オーナー）を1名作成する。
+# 認証情報は credentials（config/credentials.yml.enc の admin: username / password）か、
+# 環境変数 ADMIN_USERNAME / ADMIN_PASSWORD から読み込む。コードには直書きしない。
+admin_credentials = Rails.application.credentials.admin || {}
+admin_username = ENV["ADMIN_USERNAME"] || admin_credentials[:username]
+admin_password = ENV["ADMIN_PASSWORD"] || admin_credentials[:password]
+
+if admin_username.present? && admin_password.present?
+  admin = Admin.find_or_initialize_by(username: admin_username)
+  admin.password = admin_password
+  admin.save!
+  puts "管理者を作成/更新しました: #{admin.username}"
+else
+  puts "管理者の認証情報が未設定のためスキップしました。" \
+       "ADMIN_USERNAME / ADMIN_PASSWORD か credentials の admin: を設定してください。"
+end
