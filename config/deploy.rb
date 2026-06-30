@@ -45,7 +45,7 @@ set :puma_systemctl_user, :user
 
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
-# 
+#
 set :ssh_options, {
   keys: %w[~/.ssh/nagai_kotoba_database_deploy],
   forward_agent: false,

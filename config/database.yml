@@ -27,6 +27,10 @@ development:
 test:
   <<: *default
   database: nagai_kotoba_database_test
+  # CIではDATABASE_HOSTにTCPの接続先を設定する。
+  # host が 127.0.0.1 等の場合、mysql2はsocket指定を無視してTCP接続する。
+  # 未設定（ローカル開発）の場合は default の socket 接続にフォールバックする。
+  host: <%= ENV.fetch("DATABASE_HOST", nil) %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
