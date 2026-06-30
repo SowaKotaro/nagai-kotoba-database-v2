@@ -1,0 +1,136 @@
+-- =====================================================================
+-- 長い日本語単語 収集・解析アプリ  スキーマ定義 (MySQL / InnoDB / utf8mb4)
+--   - 想定規模: 1万レコード程度
+--   - word : word_sense = 1 : 多 (同音異義語対応)
+--   - genre は隣接リストで大→中→小の3階層を表現
+--   - linguistic_feature は多対多
+-- =====================================================================
+
+SET NAMES utf8mb4;
+
+-- ---------------------------------------------------------------------
+-- マスタ: ジャンル (大分類=level1 / 中分類=level2 / 小分類=level3)
+--   parent_id を辿ることで「小が決まれば中・大も一意」を構造的に保証
+-- ---------------------------------------------------------------------
+CREATE TABLE genres (
+  id         BIGINT       NOT NULL AUTO_INCREMENT,
+  parent_id  BIGINT       NULL,
+  level      TINYINT      NOT NULL COMMENT '1=大分類, 2=中分類, 3=小分類',
+  name       VARCHAR(255) NOT NULL,
+  created_at DATETIME(6)  NOT NULL,
+  updated_at DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_genres_parent_name (parent_id, name),
+  KEY idx_genres_level (level),
+  CONSTRAINT fk_genres_parent FOREIGN KEY (parent_id) REFERENCES genres (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- マスタ: エンティティタイプ (人名 / 書籍名 など)
+-- ---------------------------------------------------------------------
+CREATE TABLE entity_types (
+  id         BIGINT       NOT NULL AUTO_INCREMENT,
+  name       VARCHAR(255) NOT NULL,
+  created_at DATETIME(6)  NOT NULL,
+  updated_at DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_entity_types_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- マスタ: 品詞
+-- ---------------------------------------------------------------------
+CREATE TABLE parts_of_speech (
+  id         BIGINT       NOT NULL AUTO_INCREMENT,
+  name       VARCHAR(255) NOT NULL,
+  created_at DATETIME(6)  NOT NULL,
+  updated_at DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_parts_of_speech_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- マスタ: 言語学的特徴 (連濁 / 重箱読み / 湯桶読み など) ※1語義に複数付与可
+-- ---------------------------------------------------------------------
+CREATE TABLE linguistic_features (
+  id         BIGINT       NOT NULL AUTO_INCREMENT,
+  name       VARCHAR(255) NOT NULL,
+  created_at DATETIME(6)  NOT NULL,
+  updated_at DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_linguistic_features_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- 単語 (表層形) : surface に紐づく属性のみを保持
+--   char_type_pattern は surface から Ruby 側で生成 (漢/あ/ア/A/@ へ変換)
+-- ---------------------------------------------------------------------
+CREATE TABLE words (
+  id                BIGINT       NOT NULL AUTO_INCREMENT,
+  surface           VARCHAR(768) NOT NULL COMMENT '表層形 例: ABC殺人事件',
+  char_type_pattern VARCHAR(768) NOT NULL COMMENT '文字タイプ列 例: AAA漢漢漢漢',
+  created_at        DATETIME(6)  NOT NULL,
+  updated_at        DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  -- utf8mb4 のインデックスキー長制限(3072byte)対策で先頭191文字を一意キーに
+  UNIQUE KEY uq_words_surface (surface(191)),
+  KEY idx_words_char_type_pattern (char_type_pattern(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- 語義 : 読み単位の情報。homonym 対応で word に対し 1:多
+--   genre_id は末端(小分類)を指す
+--   reading_length / first_char / last_char は読みからの派生 = 生成カラム(STORED)
+--     ※ CHAR_LENGTH なので「きゃ」= 2 文字としてカウントされる
+--   rhythm_pattern (ローマ字) は SQL で生成不可のため Ruby 側で設定
+-- ---------------------------------------------------------------------
+CREATE TABLE word_senses (
+  id                BIGINT        NOT NULL AUTO_INCREMENT,
+  word_id           BIGINT        NOT NULL,
+  genre_id          BIGINT        NULL COMMENT '小分類(末端)を指す',
+  entity_type_id    BIGINT        NULL,
+  part_of_speech_id BIGINT        NULL,
+  reading           VARCHAR(768)  NOT NULL COMMENT '読み',
+  rhythm_pattern    VARCHAR(2048) NULL COMMENT '韻パターン(読みのローマ字表記)',
+  meaning           TEXT          NULL COMMENT '意味',
+  reading_length    INT           AS (CHAR_LENGTH(reading)) STORED COMMENT '読みの文字数',
+  first_char        VARCHAR(8)    AS (LEFT(reading, 1))     STORED COMMENT '先頭文字',
+  last_char         VARCHAR(8)    AS (RIGHT(reading, 1))    STORED COMMENT '末尾文字',
+  created_at        DATETIME(6)   NOT NULL,
+  updated_at        DATETIME(6)   NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_word_senses_word           (word_id),
+  KEY idx_word_senses_genre          (genre_id),
+  KEY idx_word_senses_entity_type    (entity_type_id),
+  KEY idx_word_senses_part_of_speech (part_of_speech_id),
+  KEY idx_word_senses_reading        (reading(191)),
+  KEY idx_word_senses_reading_length (reading_length),
+  KEY idx_word_senses_first_char     (first_char),
+  KEY idx_word_senses_last_char      (last_char),
+  CONSTRAINT fk_word_senses_word
+    FOREIGN KEY (word_id)           REFERENCES words (id),
+  CONSTRAINT fk_word_senses_genre
+    FOREIGN KEY (genre_id)          REFERENCES genres (id),
+  CONSTRAINT fk_word_senses_entity_type
+    FOREIGN KEY (entity_type_id)    REFERENCES entity_types (id),
+  CONSTRAINT fk_word_senses_part_of_speech
+    FOREIGN KEY (part_of_speech_id) REFERENCES parts_of_speech (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- 中間: 語義 × 言語学的特徴 (多対多)
+-- ---------------------------------------------------------------------
+CREATE TABLE word_sense_features (
+  id                    BIGINT      NOT NULL AUTO_INCREMENT,
+  word_sense_id         BIGINT      NOT NULL,
+  linguistic_feature_id BIGINT      NOT NULL,
+  created_at            DATETIME(6) NOT NULL,
+  updated_at            DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_wsf_sense_feature (word_sense_id, linguistic_feature_id),
+  KEY idx_wsf_feature (linguistic_feature_id),
+  CONSTRAINT fk_wsf_word_sense
+    FOREIGN KEY (word_sense_id)         REFERENCES word_senses (id),
+  CONSTRAINT fk_wsf_linguistic_feature
+    FOREIGN KEY (linguistic_feature_id) REFERENCES linguistic_features (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
