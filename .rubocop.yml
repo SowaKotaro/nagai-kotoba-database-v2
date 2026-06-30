@@ -1,0 +1,6 @@
+# Omakase Ruby styling for Rails
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+# Overrides default RuboCop config to suit project preferences.
+# See https://github.com/rails/rubocop-rails-omakase for details.
