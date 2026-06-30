@@ -5,7 +5,8 @@
 ## データモデル概要
 - `word` : `word_sense` = 1 : 多（同音異義語に対応）。
 - `genres` は隣接リスト（`parent_id`）で 大(level1)→中(level2)→小(level3) の3階層を表現。小分類が決まれば中・大も一意に辿れる。
-- `word_senses.genre_id` は末端（小分類）を指す。
+- `word_senses.genre_id` は末端（小分類=level3）を指す。**登録時は必ず大→中→小まで選択する**（中・大は `parent_id` を辿って一意に復元）。
+- ジャンルは日本十進分類法(NDC)を基にした柔軟な階層。各階層の子は10種に収まらないため、**数値の分類コード列は持たない**（名前＋階層のみ）。
 - `linguistic_features` は `word_sense_features` 経由で語義と多対多。
 - 生成カラム（STORED）: `reading_length` / `first_char` / `last_char`（SQL 側）。`char_type_pattern`・`rhythm_pattern` は Ruby 側で生成。
 - 想定規模: 1万レコード程度。
@@ -27,7 +28,8 @@
 ## Issue 2: ジャンル(genres)マスタ ― 3階層・自己参照
 - [ ] migration: `parent_id`(自己参照FK), `level`, `name`, `UNIQUE(parent_id, name)`, `index(level)`
 - [ ] model `Genre`: `belongs_to :parent`(optional) / `has_many :children`、`name` presence・`(parent_id, name)` 一意
-- [ ] level と parent の整合性バリデーション、末端から祖先を辿るメソッド
+- [ ] level と parent の整合性バリデーション、末端(level3)から祖先(中・大)を辿るメソッド
+- [ ] 分類コード列は設けない（名前＋階層のみ）
 - 依存: なし
 
 ## Issue 3: 単純マスタ3種（entity_types / parts_of_speech / linguistic_features）
@@ -45,7 +47,8 @@
 ## Issue 5: word_senses テーブル ― 語義・生成カラム・rhythm_pattern
 - [ ] migration: FK `word_id`/`genre_id`/`entity_type_id`/`part_of_speech_id`、`reading`, `rhythm_pattern`, `meaning`
 - [ ] STORED 生成カラム（`t.virtual ... stored: true`）: `reading_length` / `first_char` / `last_char` と対応 index
-- [ ] model `WordSense`: 各 `belongs_to`（genre/entity_type/part_of_speech は optional）、`reading` presence
+- [ ] model `WordSense`: 各 `belongs_to`（entity_type/part_of_speech は optional）、`reading` presence
+- [ ] `genre_id` は **level3(小分類) のみ許可**するバリデーション（必ず小分類まで選ぶ運用）
 - [ ] `rhythm_pattern` 生成（読み→ローマ字、Ruby 側）。かな→ローマ字変換の方針決定
 - 依存: Issue 2・3・4
 
@@ -57,6 +60,7 @@
 ## Issue 7: 管理者用 CRUD（登録・編集・削除）
 - [ ] 認証必須（`before_action`）の管理コントローラ
 - [ ] words / word_senses のフォーム（語義のネスト、マスタのセレクト、言語学的特徴の複数選択）
+- [ ] ジャンルは **大→中→小の依存ドロップダウン**（親を選ぶと子の選択肢を絞り込み。Hotwire/Stimulus）。小分類まで選択して確定
 - 依存: Issue 4・5・6
 
 ## Issue 8: 公開閲覧（一覧・詳細）
