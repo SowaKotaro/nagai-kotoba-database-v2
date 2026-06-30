@@ -1,0 +1,70 @@
+# 実装 Issue リスト（単語収集・解析アプリ）
+
+`docs/schema.sql` を基にした段階的な実装計画。上から実装順。各 Issue = 1 ブランチ = 1 PR を原則とする。
+
+## データモデル概要
+- `word` : `word_sense` = 1 : 多（同音異義語に対応）。
+- `genres` は隣接リスト（`parent_id`）で 大(level1)→中(level2)→小(level3) の3階層を表現。小分類が決まれば中・大も一意に辿れる。
+- `word_senses.genre_id` は末端（小分類）を指す。
+- `linguistic_features` は `word_sense_features` 経由で語義と多対多。
+- 生成カラム（STORED）: `reading_length` / `first_char` / `last_char`（SQL 側）。`char_type_pattern`・`rhythm_pattern` は Ruby 側で生成。
+- 想定規模: 1万レコード程度。
+
+## 横断方針
+- **照合順序(collation)**: 日本語検索が中心のため、全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。既存の `admins` / `sessions`（`utf8mb4_general_ci`）も変更マイグレーションで揃える（Issue 1 で対応 or 別途）。
+- 閲覧は全世界に公開、登録・編集・削除は管理者のみ（[[CLAUDE.md]] 参照）。
+- インデックスのキー長対策で、`utf8mb4` の長い文字列カラムは先頭191文字の prefix index を使う（`surface(191)` など）。
+
+---
+
+## Issue 1: 設計ドキュメント整備とスキーマ方針確定 ★最初のブランチ
+- [x] `docs/schema.sql` を取り込む
+- [x] 本 Issue リスト（`docs/issues.md`）を作成
+- [x] `CLAUDE.md` を作成（ドメイン／公開方針／スキーマ方針を反映）
+- [ ] 照合順序の方針確定（`utf8mb4_0900_ai_ci` 統一）と、既存テーブルの扱いを決定
+- [ ] `char_type_pattern`（漢/あ/ア/A/@）と `rhythm_pattern`（ローマ字）の変換仕様メモを残す
+
+## Issue 2: ジャンル(genres)マスタ ― 3階層・自己参照
+- [ ] migration: `parent_id`(自己参照FK), `level`, `name`, `UNIQUE(parent_id, name)`, `index(level)`
+- [ ] model `Genre`: `belongs_to :parent`(optional) / `has_many :children`、`name` presence・`(parent_id, name)` 一意
+- [ ] level と parent の整合性バリデーション、末端から祖先を辿るメソッド
+- 依存: なし
+
+## Issue 3: 単純マスタ3種（entity_types / parts_of_speech / linguistic_features）
+- [ ] 各 migration: `name`, `UNIQUE(name)`
+- [ ] 各 model: `name` presence・uniqueness
+- 依存: なし（Issue 2 と並行可）
+
+## Issue 4: words テーブル ― 表層形と char_type_pattern 生成
+- [ ] migration: `surface`, `char_type_pattern`, `UNIQUE(surface(191))`, `index(char_type_pattern(191))`
+- [ ] model `Word`: `has_many :word_senses`、`surface` presence・uniqueness
+- [ ] `char_type_pattern` 生成ロジック（漢字→漢 / ひらがな→あ / カタカナ→ア / 英字→A / その他→@）を surface から生成
+- [ ] 生成ロジックのユニットテスト（記号・数字・全角半角の境界）
+- 依存: なし
+
+## Issue 5: word_senses テーブル ― 語義・生成カラム・rhythm_pattern
+- [ ] migration: FK `word_id`/`genre_id`/`entity_type_id`/`part_of_speech_id`、`reading`, `rhythm_pattern`, `meaning`
+- [ ] STORED 生成カラム（`t.virtual ... stored: true`）: `reading_length` / `first_char` / `last_char` と対応 index
+- [ ] model `WordSense`: 各 `belongs_to`（genre/entity_type/part_of_speech は optional）、`reading` presence
+- [ ] `rhythm_pattern` 生成（読み→ローマ字、Ruby 側）。かな→ローマ字変換の方針決定
+- 依存: Issue 2・3・4
+
+## Issue 6: word_sense_features ― 語義 × 言語学的特徴（多対多）
+- [ ] migration: 中間テーブル、`UNIQUE(word_sense_id, linguistic_feature_id)`、両 FK
+- [ ] `WordSense has_many :linguistic_features, through:`、重複防止
+- 依存: Issue 3・5
+
+## Issue 7: 管理者用 CRUD（登録・編集・削除）
+- [ ] 認証必須（`before_action`）の管理コントローラ
+- [ ] words / word_senses のフォーム（語義のネスト、マスタのセレクト、言語学的特徴の複数選択）
+- 依存: Issue 4・5・6
+
+## Issue 8: 公開閲覧（一覧・詳細）
+- [ ] 未認証で閲覧可（`allow_unauthenticated_access`）の一覧・詳細
+- [ ] word とその語義群、ジャンル階層・品詞・特徴の表示
+- 依存: Issue 4・5（6 があれば特徴も）
+
+## Issue 9: 検索・絞り込み機能
+- [ ] `reading_length`・先頭/末尾文字・`char_type_pattern`・ジャンル階層・品詞・エンティティタイプ・言語学的特徴・`rhythm_pattern` での絞り込み
+- [ ] 生成カラム／インデックスを活用
+- 依存: Issue 5（必要に応じ 6・8）
