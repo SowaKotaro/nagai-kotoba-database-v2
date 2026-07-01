@@ -22,14 +22,16 @@
 - [x] `docs/schema.sql` を取り込む
 - [x] 本 Issue リスト（`docs/issues.md`）を作成
 - [x] `CLAUDE.md` を作成（ドメイン／公開方針／スキーマ方針を反映）
-- [ ] 照合順序の方針確定（`utf8mb4_0900_ai_ci` 統一）と、既存テーブルの扱いを決定
-- [ ] `char_type_pattern`（漢/あ/ア/A/@）と `rhythm_pattern`（ローマ字）の変換仕様メモを残す
+- 照合順序の方針確定・既存テーブルの扱いは **Issue 2** へ、`char_type_pattern` の変換仕様メモは **Issue 4** へ、`rhythm_pattern` の変換仕様メモは **Issue 5** へ移動。
 
 ## Issue 2: ジャンル(genres)マスタ ― 3階層・自己参照
-- [ ] migration: `parent_id`(自己参照FK), `level`, `name`, `UNIQUE(parent_id, name)`, `index(level)`
-- [ ] model `Genre`: `belongs_to :parent`(optional) / `has_many :children`、`name` presence・`(parent_id, name)` 一意
-- [ ] level と parent の整合性バリデーション、末端(level3)から祖先(中・大)を辿るメソッド
-- [ ] 分類コード列は設けない（名前＋階層のみ）
+- [x] migration: `parent_id`(自己参照FK), `level`, `name`, `UNIQUE(parent_id, name)`, `index(level)`
+- [x] model `Genre`: `belongs_to :parent`(optional) / `has_many :children`、`name` presence・`(parent_id, name)` 一意
+- [x] level と parent の整合性バリデーション、末端(level3)から祖先(中・大)を辿るメソッド（`self_and_ancestors` / `root_genre`）
+- [x] 分類コード列は設けない（名前＋階層のみ）
+- [x] 照合順序の方針確定（`utf8mb4_0900_ai_ci` 統一）と、既存テーブル（`admins` / `sessions`）の扱いを決定 ※Issue 1 から移動
+  - ローカルは MariaDB で `utf8mb4_0900_ai_ci` 非対応のため、CI/本番と同じ MySQL 8.4 を `docker compose`（ホスト3307）で用意し接続先を切替。
+  - 既存 `admins` / `sessions` は本 Issue のマイグレーションで `utf8mb4_0900_ai_ci` に変換し統一。
 - 依存: なし
 
 ## Issue 3: 単純マスタ3種（entity_types / parts_of_speech / linguistic_features）
@@ -42,6 +44,7 @@
 - [ ] model `Word`: `has_many :word_senses`、`surface` presence・uniqueness
 - [ ] `char_type_pattern` 生成ロジック（漢字→漢 / ひらがな→あ / カタカナ→ア / 英字→A / その他→@）を surface から生成
 - [ ] 生成ロジックのユニットテスト（記号・数字・全角半角の境界）
+- [ ] `char_type_pattern`（漢/あ/ア/A/@）の変換仕様メモを残す ※Issue 1 から移動
 - 依存: なし
 
 ## Issue 5: word_senses テーブル ― 語義・生成カラム・rhythm_pattern
@@ -50,6 +53,7 @@
 - [ ] model `WordSense`: 各 `belongs_to`（entity_type/part_of_speech は optional）、`reading` presence
 - [ ] `genre_id` は **level3(小分類) のみ許可**するバリデーション（必ず小分類まで選ぶ運用）
 - [ ] `rhythm_pattern` 生成（読み→ローマ字、Ruby 側）。かな→ローマ字変換の方針決定
+- [ ] `rhythm_pattern`（ローマ字）の変換仕様メモを残す ※Issue 1 から移動
 - 依存: Issue 2・3・4
 
 ## Issue 6: word_sense_features ― 語義 × 言語学的特徴（多対多）

@@ -24,3 +24,6 @@ else
   puts "管理者の認証情報が未設定のためスキップしました。" \
        "ADMIN_USERNAME / ADMIN_PASSWORD か credentials の admin: を設定してください。"
 end
+
+# ジャンル(大分類・中分類)のマスタを投入する。
+load Rails.root.join("db/seeds/genres.rb")

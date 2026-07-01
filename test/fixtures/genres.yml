@@ -1,0 +1,15 @@
+# ジャンルフィクスチャ。大(large)→中(medium)→小(small)の3階層の例。
+# 自己参照の parent はフィクスチャのラベルで指定する。
+large_literature:
+  level: 1
+  name: 文学
+
+medium_japanese:
+  parent: large_literature
+  level: 2
+  name: 日本文学
+
+small_novel:
+  parent: medium_japanese
+  level: 3
+  name: 小説

@@ -1,4 +1,24 @@
 ja:
+  errors:
+    messages:
+      blank: "を入力してください"
+      taken: "はすでに存在します"
+  activerecord:
+    models:
+      genre: "ジャンル"
+    attributes:
+      genre:
+        parent: "親ジャンル"
+        level: "階層"
+        name: "名称"
+    errors:
+      models:
+        genre:
+          attributes:
+            parent:
+              must_be_blank_for_large: "は大分類には指定できません"
+              required_for_non_large: "を指定してください"
+              level_mismatch: "の階層が一致しません"
   sessions:
     new:
       username_placeholder: "ユーザーIDを入力"
