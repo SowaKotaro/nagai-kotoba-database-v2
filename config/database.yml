@@ -20,6 +20,10 @@ default: &default
 development:
   <<: *default
   database: nagai_kotoba_database_development
+  # ローカルは docker compose の MySQL 8.4（ホスト 3307）へ TCP 接続する。
+  # host が 127.0.0.1 等の場合、mysql2 は socket 指定を無視して TCP 接続する。
+  host: <%= ENV.fetch("DATABASE_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("DATABASE_PORT", 3307) %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -27,10 +31,11 @@ development:
 test:
   <<: *default
   database: nagai_kotoba_database_test
-  # CIではDATABASE_HOSTにTCPの接続先を設定する。
-  # host が 127.0.0.1 等の場合、mysql2はsocket指定を無視してTCP接続する。
-  # 未設定（ローカル開発）の場合は default の socket 接続にフォールバックする。
-  host: <%= ENV.fetch("DATABASE_HOST", nil) %>
+  # CIでは DATABASE_HOST / DATABASE_PORT で TCP の接続先を設定する。
+  # host が 127.0.0.1 等の場合、mysql2 は socket 指定を無視して TCP 接続する。
+  # ローカルは docker compose の MySQL 8.4（ホスト 3307）が既定の接続先。
+  host: <%= ENV.fetch("DATABASE_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("DATABASE_PORT", 3307) %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
