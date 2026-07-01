@@ -40,11 +40,12 @@
 - 依存: なし（Issue 2 と並行可）
 
 ## Issue 4: words テーブル ― 表層形と char_type_pattern 生成
-- [ ] migration: `surface`, `char_type_pattern`, `UNIQUE(surface(191))`, `index(char_type_pattern(191))`
-- [ ] model `Word`: `has_many :word_senses`、`surface` presence・uniqueness
-- [ ] `char_type_pattern` 生成ロジック（漢字→漢 / ひらがな→あ / カタカナ→ア / 英字→A / その他→@）を surface から生成
-- [ ] 生成ロジックのユニットテスト（記号・数字・全角半角の境界）
-- [ ] `char_type_pattern`（漢/あ/ア/A/@）の変換仕様メモを残す ※Issue 1 から移動
+- [x] migration: `surface`, `char_type_pattern`, `UNIQUE(surface(191))`, `index(char_type_pattern(191))`
+- [x] model `Word`: `has_many :word_senses`、`surface` presence・uniqueness
+- [x] `char_type_pattern` 生成ロジック（漢字→漢 / ひらがな→あ / カタカナ→ア / 英字→A / その他→@）を surface から生成（値オブジェクト `CharTypePattern`、`before_validation` で自動セット）
+- [x] 生成ロジックのユニットテスト（記号・数字・全角半角の境界）
+- [x] `char_type_pattern`（漢/あ/ア/A/@）の変換仕様メモを残す（[`docs/char_type_pattern.md`](char_type_pattern.md)）※Issue 1 から移動
+  - 長音符 `ー`/`ｰ` はカタカナ(`ア`)扱い、`々` は漢字(`漢`)扱いと決定。
 - 依存: なし
 
 ## Issue 5: word_senses テーブル ― 語義・生成カラム・rhythm_pattern

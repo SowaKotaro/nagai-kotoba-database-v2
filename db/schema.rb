@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_205048) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_01_211958) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -37,6 +37,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_205048) do
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.index ["admin_id"], name: "index_sessions_on_admin_id"
+  end
+
+  create_table "words", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "char_type_pattern", limit: 768, null: false, comment: "文字タイプ列 例: AAA漢漢漢漢"
+    t.datetime "created_at", null: false
+    t.string "surface", limit: 768, null: false, comment: "表層形 例: ABC殺人事件"
+    t.datetime "updated_at", null: false
+    t.index ["char_type_pattern"], name: "idx_words_char_type_pattern", length: 191
+    t.index ["surface"], name: "uq_words_surface", unique: true, length: 191
   end
 
   add_foreign_key "genres", "genres", column: "parent_id"
