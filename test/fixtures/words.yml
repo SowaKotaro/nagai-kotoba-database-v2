@@ -1,0 +1,9 @@
+# 単語フィクスチャ。char_type_pattern はフィクスチャ読込では
+# コールバックが走らないため、surface に対応する値を明示しておく。
+abc_murder:
+  surface: ABC殺人事件
+  char_type_pattern: AAA漢漢漢漢
+
+curry:
+  surface: カレーライス
+  char_type_pattern: アアアアアア
