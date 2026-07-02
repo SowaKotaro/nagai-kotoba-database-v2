@@ -31,7 +31,7 @@
 - `genres` は**隣接リスト**（`parent_id`）で 大(level1)→中(level2)→小(level3) の3階層。
   `word_senses.genre_id` は**末端(小分類)のみ**を指し、中・大は `parent_id` を辿って一意に導出する。
   数値の分類コード列は持たない（名前＋階層のみ）。ジャンル一覧は [`docs/genres.md`](genres.md)。
-- `linguistic_features` は中間表 `word_sense_features` 経由で語義と**多対多**。
+- `linguistic_features` は中間表 `word_sense_features` 経由で語義と**多対多**。特徴は単語の**該当部分ごと**に付与する（`target`＝表層の一部 / `target_reading`＝その読み）。
 - `entity_types` / `parts_of_speech` は単純マスタ（`name` のみ）。
 - **生成カラム**: `reading_length` / `first_char` / `last_char` は SQL の STORED 生成カラム。
   `char_type_pattern`（漢/あ/ア/A/@）と `rhythm_pattern`（ローマ字）は **Ruby 側**で生成。
@@ -50,7 +50,11 @@
   - STORED 生成カラム `reading_length` / `first_char` / `last_char`（SQL 側）
   - `rhythm_pattern` は値オブジェクト `RhythmPattern`（ヘボン式・長音は母音展開）で `before_validation` 自動生成
   - `genre_id` は小分類(level3)のみ許可するバリデーション
-- ⬜ Issue 6: word_sense_features（多対多）
+- ✅ Issue 6: **word_sense_features**（語義 × 言語学的特徴の多対多）
+  - 特徴は単語の**該当部分ごと**に付与（`target`＝表層の一部 / `target_reading`＝その読み）。
+    例:「硫黄島からの手紙」に 連濁:硫黄島 / 熟字訓:硫黄 / 連濁:手紙
+  - 中間モデル `WordSenseFeature`、`UNIQUE(word_sense_id, linguistic_feature_id, target)` で三つ組の重複防止
+  - `WordSense has_many :linguistic_features, through:` / `LinguisticFeature` も逆から辿れる（参照中は削除不可）
 - ⬜ Issue 7: 管理者用 CRUD（大→中→小のカスケード選択 UI）
 - ⬜ Issue 8: 公開閲覧（一覧・詳細）
 - ⬜ Issue 9: 検索・絞り込み

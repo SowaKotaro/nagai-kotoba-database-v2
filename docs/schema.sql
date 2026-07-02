@@ -119,15 +119,24 @@ CREATE TABLE word_senses (
 
 -- ---------------------------------------------------------------------
 -- 中間: 語義 × 言語学的特徴 (多対多)
+--   特徴は単語の「該当部分」ごとに付与する。
+--   例:「硫黄島からの手紙(イオウジマカラノテガミ)」に対し
+--       連濁:硫黄島(イオウジマ) / 熟字訓:硫黄(イオウ) / 連濁:手紙(テガミ)。
+--   このため同じ (word_sense, feature) でも target が異なれば複数行を許す。
+--   target      … 表層形(word.surface)の部分文字列
+--   target_reading … 語義の読み(word_senses.reading)の部分文字列
 -- ---------------------------------------------------------------------
 CREATE TABLE word_sense_features (
-  id                    BIGINT      NOT NULL AUTO_INCREMENT,
-  word_sense_id         BIGINT      NOT NULL,
-  linguistic_feature_id BIGINT      NOT NULL,
-  created_at            DATETIME(6) NOT NULL,
-  updated_at            DATETIME(6) NOT NULL,
+  id                    BIGINT       NOT NULL AUTO_INCREMENT,
+  word_sense_id         BIGINT       NOT NULL,
+  linguistic_feature_id BIGINT       NOT NULL,
+  target                VARCHAR(768) NOT NULL COMMENT '該当部分(表層形の一部) 例: 硫黄島',
+  target_reading        VARCHAR(768) NOT NULL COMMENT '該当部分の読み 例: イオウジマ',
+  created_at            DATETIME(6)  NOT NULL,
+  updated_at            DATETIME(6)  NOT NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_wsf_sense_feature (word_sense_id, linguistic_feature_id),
+  -- (word_sense, feature, target) の三つ組で一意。target は prefix index(191文字)。
+  UNIQUE KEY uq_wsf_sense_feature_target (word_sense_id, linguistic_feature_id, target(191)),
   KEY idx_wsf_feature (linguistic_feature_id),
   CONSTRAINT fk_wsf_word_sense
     FOREIGN KEY (word_sense_id)         REFERENCES word_senses (id),

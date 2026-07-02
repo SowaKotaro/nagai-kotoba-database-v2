@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_093000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_094500) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -60,6 +60,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_093000) do
     t.index ["admin_id"], name: "index_sessions_on_admin_id"
   end
 
+  create_table "word_sense_features", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "linguistic_feature_id", null: false
+    t.string "target", limit: 768, null: false, comment: "該当部分(表層形の一部) 例: 硫黄島"
+    t.string "target_reading", limit: 768, null: false, comment: "該当部分の読み 例: イオウジマ"
+    t.datetime "updated_at", null: false
+    t.bigint "word_sense_id", null: false
+    t.index ["linguistic_feature_id"], name: "idx_wsf_feature"
+    t.index ["word_sense_id", "linguistic_feature_id", "target"], name: "uq_wsf_sense_feature_target", unique: true, length: { target: 191 }
+  end
+
   create_table "word_senses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "entity_type_id"
@@ -94,6 +105,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_093000) do
 
   add_foreign_key "genres", "genres", column: "parent_id"
   add_foreign_key "sessions", "admins"
+  add_foreign_key "word_sense_features", "linguistic_features", name: "fk_wsf_linguistic_feature"
+  add_foreign_key "word_sense_features", "word_senses", name: "fk_wsf_word_sense"
   add_foreign_key "word_senses", "entity_types", name: "fk_word_senses_entity_type"
   add_foreign_key "word_senses", "genres", name: "fk_word_senses_genre"
   add_foreign_key "word_senses", "parts_of_speech", name: "fk_word_senses_part_of_speech"
