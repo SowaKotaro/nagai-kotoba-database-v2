@@ -1,0 +1,55 @@
+<h1><%= @word.surface %></h1>
+<p><%= t("words.show.char_type_pattern") %>: <%= @word.char_type_pattern %></p>
+
+<% if @word.word_senses.empty? %>
+  <p><%= t("words.show.no_senses") %></p>
+<% end %>
+
+<% @word.word_senses.each do |sense| %>
+  <section class="word-sense">
+    <h2><%= sense.reading %></h2>
+    <dl>
+      <dt><%= WordSense.human_attribute_name(:rhythm_pattern) %></dt>
+      <dd><%= sense.rhythm_pattern %></dd>
+
+      <dt><%= t("words.show.reading_length") %></dt>
+      <dd><%= sense.reading_length %></dd>
+
+      <% if sense.genre %>
+        <dt><%= WordSense.human_attribute_name(:genre) %></dt>
+        <dd><%= sense.genre.self_and_ancestors.map(&:name).join(" > ") %></dd>
+      <% end %>
+
+      <% if sense.entity_type %>
+        <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
+        <dd><%= sense.entity_type.name %></dd>
+      <% end %>
+
+      <% if sense.part_of_speech %>
+        <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
+        <dd><%= sense.part_of_speech.name %></dd>
+      <% end %>
+
+      <% if sense.meaning.present? %>
+        <dt><%= WordSense.human_attribute_name(:meaning) %></dt>
+        <dd><%= sense.meaning %></dd>
+      <% end %>
+
+      <% if sense.word_sense_features.any? %>
+        <dt><%= t("words.show.features") %></dt>
+        <dd>
+          <ul>
+            <% sense.word_sense_features.each do |feature| %>
+              <li>
+                <%= feature.linguistic_feature.name %>：
+                <%= feature.target %>（<%= feature.target_reading %>）
+              </li>
+            <% end %>
+          </ul>
+        </dd>
+      <% end %>
+    </dl>
+  </section>
+<% end %>
+
+<p><%= link_to t("words.show.back"), words_path %></p>

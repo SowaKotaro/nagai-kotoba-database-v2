@@ -58,8 +58,11 @@
 - ✅ Issue 7: **管理者用 CRUD**（`/admin/words`。認証必須の `Admin::` 名前空間）
   - Word→語義→特徴(該当部分つき)の1画面フル入れ子フォーム（`accepts_nested_attributes_for` ＋ Stimulus `nested-form`）
   - ジャンルは大→中→小の依存ドロップダウン（Stimulus `genre-cascade` ＋ `Admin::GenresController#children`）
-- ⬜ Issue 8: 公開閲覧（一覧・詳細）
+- ✅ Issue 8: **公開閲覧**（一覧・詳細）
+  - トップレベル `WordsController#index/#show` を `allow_unauthenticated_access` で開放（誰でも閲覧可）
+  - 詳細で語義・ジャンル階層・品詞・特徴（該当部分つき）を表示。一覧は gem 無しの軽量ページネーション
 - ⬜ Issue 9: 検索・絞り込み
+- ⬜ Issue 10: マスタのインライン追加（単語登録画面から完結）
 
 単語データの CRUD は管理側（`/admin/words`）まで実装済み。公開閲覧（誰でも見られる一覧・詳細）は Issue 8 で実装予定。
 
@@ -67,6 +70,7 @@
 - `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
   `entity_type` / `part_of_speech` / `linguistic_feature` / 値オブジェクト `char_type_pattern` / `rhythm_pattern`
 - `app/controllers/` … `application_controller` / `home_controller` / `sessions_controller` /
+  `words_controller`（公開閲覧の一覧・詳細）/
   `admin/`（`base` / `words` / `genres`。管理者専用 CRUD。名前空間 `Admin` は `Admin` モデルが保持）/
   `concerns/authentication.rb`（認証。閲覧公開は `allow_unauthenticated_access` で開放）
 - `app/javascript/controllers/` … Stimulus。`nested_form`（行の動的追加/削除）/ `genre_cascade`（大中小の依存選択）
