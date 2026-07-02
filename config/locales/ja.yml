@@ -9,6 +9,7 @@ ja:
       entity_type: "エンティティタイプ"
       part_of_speech: "品詞"
       linguistic_feature: "言語学的特徴"
+      word_sense: "語義"
     attributes:
       genre:
         parent: "親ジャンル"
@@ -20,6 +21,14 @@ ja:
         name: "名称"
       linguistic_feature:
         name: "名称"
+      word_sense:
+        word: "単語"
+        genre: "ジャンル"
+        entity_type: "エンティティタイプ"
+        part_of_speech: "品詞"
+        reading: "読み"
+        rhythm_pattern: "韻パターン"
+        meaning: "意味"
     errors:
       models:
         genre:
@@ -28,6 +37,10 @@ ja:
               must_be_blank_for_large: "は大分類には指定できません"
               required_for_non_large: "を指定してください"
               level_mismatch: "の階層が一致しません"
+        word_sense:
+          attributes:
+            genre:
+              must_be_small: "は小分類(末端)を指定してください"
   sessions:
     new:
       username_placeholder: "ユーザーIDを入力"

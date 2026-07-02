@@ -50,12 +50,13 @@
 - 依存: なし
 
 ## Issue 5: word_senses テーブル ― 語義・生成カラム・rhythm_pattern
-- [ ] migration: FK `word_id`/`genre_id`/`entity_type_id`/`part_of_speech_id`、`reading`, `rhythm_pattern`, `meaning`
-- [ ] STORED 生成カラム（`t.virtual ... stored: true`）: `reading_length` / `first_char` / `last_char` と対応 index
-- [ ] model `WordSense`: 各 `belongs_to`（entity_type/part_of_speech は optional）、`reading` presence
-- [ ] `genre_id` は **level3(小分類) のみ許可**するバリデーション（必ず小分類まで選ぶ運用）
-- [ ] `rhythm_pattern` 生成（読み→ローマ字、Ruby 側）。かな→ローマ字変換の方針決定
-- [ ] `rhythm_pattern`（ローマ字）の変換仕様メモを残す ※Issue 1 から移動
+- [x] migration: FK `word_id`/`genre_id`/`entity_type_id`/`part_of_speech_id`、`reading`, `rhythm_pattern`, `meaning`
+- [x] STORED 生成カラム（`t.virtual ... stored: true`）: `reading_length` / `first_char` / `last_char` と対応 index
+- [x] model `WordSense`: 各 `belongs_to`（entity_type/part_of_speech は optional）、`reading` presence
+- [x] `genre_id` は **level3(小分類) のみ許可**するバリデーション（必ず小分類まで選ぶ運用）
+- [x] `rhythm_pattern` 生成（読み→ローマ字、Ruby 側）。かな→ローマ字変換の方針決定
+  - **ヘボン式**を採用。**長音は母音をそのまま展開**（`とうきょう→toukyou`、`カレー→karee`）。値オブジェクト `RhythmPattern` + `before_validation` で自動セット。
+- [x] `rhythm_pattern`（ローマ字）の変換仕様メモを残す（[`docs/rhythm_pattern.md`](rhythm_pattern.md)）※Issue 1 から移動
 - 依存: Issue 2・3・4
 
 ## Issue 6: word_sense_features ― 語義 × 言語学的特徴（多対多）
