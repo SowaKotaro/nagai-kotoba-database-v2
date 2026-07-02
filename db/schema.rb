@@ -10,13 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_211958) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_090200) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.string "username", null: false
     t.index ["username"], name: "index_admins_on_username", unique: true
+  end
+
+  create_table "entity_types", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "uq_entity_types_name", unique: true
   end
 
   create_table "genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -28,6 +35,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_211958) do
     t.index ["level"], name: "idx_genres_level"
     t.index ["parent_id", "name"], name: "uq_genres_parent_name", unique: true
     t.index ["parent_id"], name: "index_genres_on_parent_id"
+  end
+
+  create_table "linguistic_features", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "uq_linguistic_features_name", unique: true
+  end
+
+  create_table "parts_of_speech", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "uq_parts_of_speech_name", unique: true
   end
 
   create_table "sessions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

@@ -43,8 +43,9 @@
   - `app/models/genre.rb`（enum `level`、`self_and_ancestors` / `root_genre`、整合性バリデーション）
   - 大分類10件・中分類150件を seed 投入済み（`db/seeds/genres.rb`）
   - 既存 admins/sessions も `utf8mb4_0900_ai_ci` に統一済み
-- ⬜ Issue 3: 単純マスタ3種（entity_types / parts_of_speech / linguistic_features）
-- ⬜ Issue 4: words テーブル（surface / char_type_pattern 生成）
+- ✅ Issue 3: **単純マスタ3種**（entity_types / parts_of_speech / linguistic_features）… `name` + `UNIQUE(name)` のみ
+  - `parts_of_speech` は不規則複数形のため inflections に屈折ルールを追加
+- ✅ Issue 4: words テーブル（surface / char_type_pattern 生成）
 - ⬜ Issue 5: word_senses テーブル（生成カラム / rhythm_pattern）
 - ⬜ Issue 6: word_sense_features（多対多）
 - ⬜ Issue 7: 管理者用 CRUD（大→中→小のカスケード選択 UI）

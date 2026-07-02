@@ -33,3 +33,6 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Ignore editor-specific settings (SQLTools 接続設定など個人環境の設定)。
+/.vscode/
