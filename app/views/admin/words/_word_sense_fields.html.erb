@@ -1,0 +1,50 @@
+<%# 1つの語義(word_sense)の入力欄。local: form(語義のフォームビルダ) %>
+<div class="word-sense-fields" data-nested-form-item>
+  <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>
+
+  <div>
+    <%= form.label :reading %>
+    <%= form.text_field :reading %>
+  </div>
+
+  <div>
+    <%= form.label :genre_id %>
+    <%= render "genre_cascade", form: form %>
+  </div>
+
+  <div>
+    <%= form.label :entity_type_id %>
+    <%= form.collection_select :entity_type_id, EntityType.order(:name), :id, :name, include_blank: true %>
+  </div>
+
+  <div>
+    <%= form.label :part_of_speech_id %>
+    <%= form.collection_select :part_of_speech_id, PartOfSpeech.order(:name), :id, :name, include_blank: true %>
+  </div>
+
+  <div>
+    <%= form.label :meaning %>
+    <%= form.text_area :meaning %>
+  </div>
+
+  <fieldset data-controller="nested-form" data-nested-form-placeholder-value="NEW_FEATURE">
+    <legend><%= t("admin.words.features_legend") %></legend>
+
+    <div data-nested-form-target="container">
+      <%= form.fields_for :word_sense_features do |feature_form| %>
+        <%= render "word_sense_feature_fields", form: feature_form %>
+      <% end %>
+    </div>
+
+    <%# 新規特徴のテンプレート %>
+    <template data-nested-form-target="template">
+      <%= form.fields_for :word_sense_features, WordSenseFeature.new, child_index: "NEW_FEATURE" do |feature_form| %>
+        <%= render "word_sense_feature_fields", form: feature_form %>
+      <% end %>
+    </template>
+
+    <button type="button" data-action="nested-form#add"><%= t("admin.words.add_feature") %></button>
+  </fieldset>
+
+  <button type="button" data-action="nested-form#remove"><%= t("admin.words.remove_sense") %></button>
+</div>

@@ -1,6 +1,8 @@
 class Word < ApplicationRecord
-  # 1つの表層形に対し複数の語義を持つ(同音異義語に対応)。※word_senses は Issue 5 で作成。
+  # 1つの表層形に対し複数の語義を持つ(同音異義語に対応)。
   has_many :word_senses, dependent: :destroy
+  # 管理画面から語義をネストして登録・編集する。空行はスキップ、_destroy で削除可。
+  accepts_nested_attributes_for :word_senses, allow_destroy: true, reject_if: :all_blank
 
   validates :surface, presence: true, uniqueness: true
 

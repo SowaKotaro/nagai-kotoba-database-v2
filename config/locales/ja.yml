@@ -53,6 +53,28 @@ ja:
               not_in_surface: "は単語の表層形に含まれる部分を指定してください"
             target_reading:
               not_in_reading: "は語義の読みに含まれる部分を指定してください"
+  admin:
+    words:
+      title: "単語の管理"
+      new: "単語を登録"
+      edit_title: "単語を編集"
+      edit: "編集"
+      destroy: "削除"
+      back_to_index: "一覧に戻る"
+      confirm_destroy: "この単語と語義をすべて削除します。よろしいですか？"
+      created: "単語を登録しました。"
+      updated: "単語を更新しました。"
+      destroyed: "単語を削除しました。"
+      error_header: "入力内容にエラーがあります"
+      senses_legend: "語義"
+      senses_count: "語義数"
+      features_legend: "言語学的特徴（該当部分ごと）"
+      add_sense: "語義を追加"
+      remove_sense: "この語義を削除"
+      add_feature: "特徴を追加"
+      remove_feature: "削除"
+      target_placeholder: "該当部分（例：硫黄島）"
+      target_reading_placeholder: "該当部分の読み（例：イオウジマ）"
   sessions:
     new:
       username_placeholder: "ユーザーIDを入力"

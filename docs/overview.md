@@ -55,16 +55,21 @@
     例:「硫黄島からの手紙」に 連濁:硫黄島 / 熟字訓:硫黄 / 連濁:手紙
   - 中間モデル `WordSenseFeature`、`UNIQUE(word_sense_id, linguistic_feature_id, target)` で三つ組の重複防止
   - `WordSense has_many :linguistic_features, through:` / `LinguisticFeature` も逆から辿れる（参照中は削除不可）
-- ⬜ Issue 7: 管理者用 CRUD（大→中→小のカスケード選択 UI）
+- ✅ Issue 7: **管理者用 CRUD**（`/admin/words`。認証必須の `Admin::` 名前空間）
+  - Word→語義→特徴(該当部分つき)の1画面フル入れ子フォーム（`accepts_nested_attributes_for` ＋ Stimulus `nested-form`）
+  - ジャンルは大→中→小の依存ドロップダウン（Stimulus `genre-cascade` ＋ `Admin::GenresController#children`）
 - ⬜ Issue 8: 公開閲覧（一覧・詳細）
 - ⬜ Issue 9: 検索・絞り込み
 
-現状のアプリ本体は認証（`Admin` / `Session`）とルート(`home#index`)まで。単語系の画面は未実装。
+単語データの CRUD は管理側（`/admin/words`）まで実装済み。公開閲覧（誰でも見られる一覧・詳細）は Issue 8 で実装予定。
 
 ## 6. 主要ファイル / ディレクトリ
-- `app/models/` … `admin` / `session` / `current` / `genre`
+- `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
+  `entity_type` / `part_of_speech` / `linguistic_feature` / 値オブジェクト `char_type_pattern` / `rhythm_pattern`
 - `app/controllers/` … `application_controller` / `home_controller` / `sessions_controller` /
+  `admin/`（`base` / `words` / `genres`。管理者専用 CRUD。名前空間 `Admin` は `Admin` モデルが保持）/
   `concerns/authentication.rb`（認証。閲覧公開は `allow_unauthenticated_access` で開放）
+- `app/javascript/controllers/` … Stimulus。`nested_form`（行の動的追加/削除）/ `genre_cascade`（大中小の依存選択）
 - `db/schema.rb` … スキーマの正（直接編集せずマイグレーション経由で更新）
 - `db/seeds.rb` → `db/seeds/genres.rb` … 管理者とジャンルマスタを冪等に投入
 - `config/locales/ja.yml` … 既定ロケール `:ja`。表示文言はここに集約（ハードコードしない）

@@ -1,0 +1,10 @@
+<%# 1つの言語学的特徴(該当部分つき)の入力欄。local: form(特徴のフォームビルダ) %>
+<div class="word-sense-feature-fields" data-nested-form-item>
+  <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>
+
+  <%= form.collection_select :linguistic_feature_id, LinguisticFeature.order(:name), :id, :name, include_blank: true %>
+  <%= form.text_field :target, placeholder: t("admin.words.target_placeholder") %>
+  <%= form.text_field :target_reading, placeholder: t("admin.words.target_reading_placeholder") %>
+
+  <button type="button" data-action="nested-form#remove"><%= t("admin.words.remove_feature") %></button>
+</div>

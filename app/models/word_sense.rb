@@ -8,6 +8,8 @@ class WordSense < ApplicationRecord
   # 言語学的特徴とは word_sense_features を介した多対多。
   has_many :word_sense_features, dependent: :destroy
   has_many :linguistic_features, through: :word_sense_features
+  # 管理画面から特徴(該当部分つき)をネストして登録・編集する。空行はスキップ、_destroy で削除可。
+  accepts_nested_attributes_for :word_sense_features, allow_destroy: true, reject_if: :all_blank
 
   validates :reading, presence: true
   validate :genre_must_be_small
