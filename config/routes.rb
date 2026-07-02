@@ -3,6 +3,8 @@ Rails.application.routes.draw do
 
   # 公開閲覧(誰でも閲覧可)。一覧・詳細のみ。書き込みは admin 名前空間に閉じる。
   resources :words, only: %i[index show]
+  # 公開の検索・絞り込み。
+  get "search", to: "searches#index", as: :search
 
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do

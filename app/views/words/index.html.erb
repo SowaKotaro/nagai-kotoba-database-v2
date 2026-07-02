@@ -1,5 +1,7 @@
 <h1><%= t("words.index.title") %></h1>
 
+<p><%= link_to t("searches.title"), search_path %></p>
+
 <% if @words.empty? %>
   <p><%= t("words.index.empty") %></p>
 <% else %>

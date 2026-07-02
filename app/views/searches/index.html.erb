@@ -1,0 +1,98 @@
+<h1><%= t("searches.title") %></h1>
+
+<%= form_with url: search_path, method: :get, data: { turbo_action: "advance" } do %>
+  <fieldset>
+    <legend><%= t("searches.legend.reading") %></legend>
+
+    <div>
+      <%= label_tag :reading_length_min, t("searches.reading_length_min") %>
+      <%= number_field_tag :reading_length_min, @search.reading_length_min, min: 1 %>
+      <%= label_tag :reading_length_max, t("searches.reading_length_max") %>
+      <%= number_field_tag :reading_length_max, @search.reading_length_max, min: 1 %>
+    </div>
+
+    <div>
+      <%= label_tag :first_char, WordSense.human_attribute_name(:first_char) %>
+      <%= text_field_tag :first_char, @search.first_char, maxlength: 1 %>
+      <%= label_tag :last_char, WordSense.human_attribute_name(:last_char) %>
+      <%= text_field_tag :last_char, @search.last_char, maxlength: 1 %>
+    </div>
+
+    <div>
+      <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern") %>
+      <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
+    </div>
+
+    <div>
+      <%= label_tag :char_type_pattern, t("searches.char_type_pattern") %>
+      <%= text_field_tag :char_type_pattern, @search.char_type_pattern %>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t("searches.legend.category") %></legend>
+
+    <div>
+      <%= label_tag :genre_id, WordSense.human_attribute_name(:genre) %>
+      <%= select_tag :genre_id,
+            options_for_select(hierarchical_genre_options, @search.genre_id),
+            include_blank: true %>
+    </div>
+
+    <div>
+      <%= label_tag :part_of_speech_id, WordSense.human_attribute_name(:part_of_speech) %>
+      <%= select_tag :part_of_speech_id,
+            options_from_collection_for_select(PartOfSpeech.order(:name), :id, :name, @search.part_of_speech_id),
+            include_blank: true %>
+    </div>
+
+    <div>
+      <%= label_tag :entity_type_id, WordSense.human_attribute_name(:entity_type) %>
+      <%= select_tag :entity_type_id,
+            options_from_collection_for_select(EntityType.order(:name), :id, :name, @search.entity_type_id),
+            include_blank: true %>
+    </div>
+
+    <div>
+      <%= label_tag :linguistic_feature_id, t("searches.linguistic_feature") %>
+      <%= select_tag :linguistic_feature_id,
+            options_from_collection_for_select(LinguisticFeature.order(:name), :id, :name, @search.linguistic_feature_id),
+            include_blank: true %>
+    </div>
+  </fieldset>
+
+  <%= submit_tag t("searches.submit") %>
+<% end %>
+
+<hr>
+
+<h2><%= t("searches.results", count: @total_count) %></h2>
+
+<% if @word_senses.empty? %>
+  <p><%= t("searches.empty") %></p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th><%= Word.human_attribute_name(:surface) %></th>
+        <th><%= WordSense.human_attribute_name(:reading) %></th>
+        <th><%= t("searches.reading_length") %></th>
+        <th><%= WordSense.human_attribute_name(:genre) %></th>
+        <th><%= WordSense.human_attribute_name(:part_of_speech) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @word_senses.each do |sense| %>
+        <tr>
+          <td><%= link_to sense.word.surface, word_path(sense.word) %></td>
+          <td><%= sense.reading %></td>
+          <td><%= sense.reading_length %></td>
+          <td><%= sense.genre ? sense.genre.self_and_ancestors.map(&:name).join(" > ") : "" %></td>
+          <td><%= sense.part_of_speech&.name %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%= render "pagination" %>
+<% end %>

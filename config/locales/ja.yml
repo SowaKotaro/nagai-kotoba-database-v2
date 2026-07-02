@@ -30,6 +30,8 @@ ja:
         reading: "読み"
         rhythm_pattern: "韻パターン"
         meaning: "意味"
+        first_char: "先頭文字"
+        last_char: "末尾文字"
       word_sense_feature:
         word_sense: "語義"
         linguistic_feature: "言語学的特徴"
@@ -53,6 +55,20 @@ ja:
               not_in_surface: "は単語の表層形に含まれる部分を指定してください"
             target_reading:
               not_in_reading: "は語義の読みに含まれる部分を指定してください"
+  searches:
+    title: "検索・絞り込み"
+    legend:
+      reading: "読みの条件"
+      category: "分類・特徴の条件"
+    reading_length_min: "読みの文字数（下限）"
+    reading_length_max: "読みの文字数（上限）"
+    rhythm_pattern: "韻（ローマ字・部分一致）"
+    char_type_pattern: "文字タイプ列（完全一致）"
+    linguistic_feature: "言語学的特徴"
+    reading_length: "読みの文字数"
+    submit: "検索"
+    results: "検索結果（%{count}件）"
+    empty: "条件に一致する語義はありません。"
   words:
     index:
       title: "単語一覧"

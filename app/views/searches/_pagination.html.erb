@@ -1,0 +1,11 @@
+<nav class="pagination">
+  <% if @page > 1 %>
+    <%= link_to t("words.pagination.prev"), search_path(request.query_parameters.merge(page: @page - 1)) %>
+  <% end %>
+
+  <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
+
+  <% if @page < @total_pages %>
+    <%= link_to t("words.pagination.next"), search_path(request.query_parameters.merge(page: @page + 1)) %>
+  <% end %>
+</nav>
