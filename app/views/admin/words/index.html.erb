@@ -1,0 +1,28 @@
+<h1><%= t("admin.words.title") %></h1>
+
+<%= tag.p(flash[:notice], style: "color:green") if flash[:notice] %>
+
+<p><%= link_to t("admin.words.new"), new_admin_word_path %></p>
+
+<table>
+  <thead>
+    <tr>
+      <th><%= Word.human_attribute_name(:surface) %></th>
+      <th><%= t("admin.words.senses_count") %></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @words.each do |word| %>
+      <tr>
+        <td><%= word.surface %></td>
+        <td><%= word.word_senses.size %></td>
+        <td>
+          <%= link_to t("admin.words.edit"), edit_admin_word_path(word) %>
+          <%= button_to t("admin.words.destroy"), admin_word_path(word), method: :delete,
+                data: { turbo_confirm: t("admin.words.confirm_destroy") } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

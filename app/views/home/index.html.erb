@@ -5,6 +5,7 @@
 
 <% if authenticated? %>
   <p>管理者としてログイン中です。</p>
+  <p><%= link_to t("admin.words.title"), admin_words_path %></p>
   <%= button_to "ログアウト", session_path, method: :delete %>
 <% else %>
   <%= link_to "管理者ログイン", new_session_path %>

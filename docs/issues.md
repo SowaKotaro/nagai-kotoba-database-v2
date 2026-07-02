@@ -69,10 +69,12 @@
 - 依存: Issue 3・5
 
 ## Issue 7: 管理者用 CRUD（登録・編集・削除）
-- [ ] 認証必須（`before_action`）の管理コントローラ
-- [ ] words / word_senses のフォーム（語義のネスト、マスタのセレクト、言語学的特徴の複数選択）
-- [ ] ジャンルは **大→中→小の依存ドロップダウン**（親を選ぶと子の選択肢を絞り込み。Hotwire/Stimulus）。小分類まで選択して確定
+- [x] 認証必須の管理コントローラ（`Admin::` 名前空間 = `/admin/words`。`Admin::BaseController` は `ApplicationController` を継承し既定で認証必須）
+- [x] words / word_senses / word_sense_features のフォーム（**1画面フル入れ子**。`accepts_nested_attributes_for` ＋ Stimulus `nested-form` で語義・特徴の行を動的に追加/削除）
+- [x] 言語学的特徴は**該当部分つき**（`target` / `target_reading`）で複数登録（Issue 6 の再設計に対応）
+- [x] ジャンルは **大→中→小の依存ドロップダウン**（Stimulus `genre-cascade` ＋ `Admin::GenresController#children` の JSON）。送信は小分類(`genre_id`)のみ
 - 依存: Issue 4・5・6
+- 補足: Stimulus の DOM 操作（行の追加/削除・カスケード）はシステムテスト（Capybara/Selenium）で確認する想定。サーバ側（認可・ネスト保存・バリデーション）は結合テストでカバー済み。
 
 ## Issue 8: 公開閲覧（一覧・詳細）
 - [ ] 未認証で閲覧可（`allow_unauthenticated_access`）の一覧・詳細
@@ -83,3 +85,12 @@
 - [ ] `reading_length`・先頭/末尾文字・`char_type_pattern`・ジャンル階層・品詞・エンティティタイプ・言語学的特徴・`rhythm_pattern` での絞り込み
 - [ ] 生成カラム／インデックスを活用
 - 依存: Issue 5（必要に応じ 6・8）
+
+## Issue 10: マスタのインライン追加（単語登録画面から完結）
+- [ ] 単語の登録・編集画面（Issue 7）から**別ページに遷移せず**、セレクトの選択肢を新規追加できるようにする。
+  - 対象マスタ: 中分類/小分類（ジャンル）・品詞・エンティティタイプ・言語学的特徴。
+- [ ] 各マスタ用の軽量な create アクション（`Admin::` 名前空間）＋ **Turbo Stream** で対象 `<select>` に新しい `<option>` を追加し、その場で選択状態にする。
+- [ ] ジャンルの中分類/小分類は**現在選択中の親（大/中）配下**に作成する（親 `id` を送る。カスケードと整合）。
+- [ ] 追加 UI は `<dialog>` もしくは Turbo Frame をその場で開く方式（小さな Stimulus）。フルページ遷移させない。
+- 依存: Issue 7
+- 目的: 「別ページで追加 → 戻って選択」という手間を無くし、単語登録フロー内で完結させる。
