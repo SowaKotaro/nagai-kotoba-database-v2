@@ -1,0 +1,26 @@
+<h1><%= t("words.index.title") %></h1>
+
+<% if @words.empty? %>
+  <p><%= t("words.index.empty") %></p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th><%= Word.human_attribute_name(:surface) %></th>
+        <th><%= WordSense.human_attribute_name(:reading) %></th>
+        <th><%= t("words.index.senses_count") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @words.each do |word| %>
+        <tr>
+          <td><%= link_to word.surface, word_path(word) %></td>
+          <td><%= word.word_senses.map(&:reading).join("、") %></td>
+          <td><%= word.word_senses.size %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%= render "pagination" %>
+<% end %>

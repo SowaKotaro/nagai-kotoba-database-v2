@@ -53,6 +53,21 @@ ja:
               not_in_surface: "は単語の表層形に含まれる部分を指定してください"
             target_reading:
               not_in_reading: "は語義の読みに含まれる部分を指定してください"
+  words:
+    index:
+      title: "単語一覧"
+      empty: "まだ単語が登録されていません。"
+      senses_count: "語義数"
+    show:
+      char_type_pattern: "文字タイプ"
+      reading_length: "読みの文字数"
+      features: "言語学的特徴"
+      no_senses: "語義がまだ登録されていません。"
+      back: "一覧に戻る"
+    pagination:
+      prev: "前へ"
+      next: "次へ"
+      status: "%{page} / %{total} ページ"
   admin:
     words:
       title: "単語の管理"

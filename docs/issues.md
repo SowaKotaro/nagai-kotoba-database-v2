@@ -77,8 +77,9 @@
 - 補足: Stimulus の DOM 操作（行の追加/削除・カスケード）はシステムテスト（Capybara/Selenium）で確認する想定。サーバ側（認可・ネスト保存・バリデーション）は結合テストでカバー済み。
 
 ## Issue 8: 公開閲覧（一覧・詳細）
-- [ ] 未認証で閲覧可（`allow_unauthenticated_access`）の一覧・詳細
-- [ ] word とその語義群、ジャンル階層・品詞・特徴の表示
+- [x] 未認証で閲覧可（`allow_unauthenticated_access`）の一覧・詳細（トップレベル `WordsController#index/#show`。書き込みは admin 側に限定）
+- [x] word とその語義群、ジャンル階層（大 > 中 > 小）・品詞・エンティティタイプ・言語学的特徴（該当部分つき）の表示
+- [x] 一覧は gem を足さず軽量ページネーション（`limit`/`offset` ＋ `page` パラメータ、前へ/次へ）。1万件想定に配慮
 - 依存: Issue 4・5（6 があれば特徴も）
 
 ## Issue 9: 検索・絞り込み機能
