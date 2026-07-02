@@ -7,7 +7,7 @@
 - `genres` は隣接リスト（`parent_id`）で 大(level1)→中(level2)→小(level3) の3階層を表現。小分類が決まれば中・大も一意に辿れる。
 - `word_senses.genre_id` は末端（小分類=level3）を指す。**登録時は必ず大→中→小まで選択する**（中・大は `parent_id` を辿って一意に復元）。
 - ジャンルは日本十進分類法(NDC)を基にした柔軟な階層。各階層の子は10種に収まらないため、**数値の分類コード列は持たない**（名前＋階層のみ）。
-- `linguistic_features` は `word_sense_features` 経由で語義と多対多。
+- `linguistic_features` は `word_sense_features` 経由で語義と多対多。特徴は単語の**該当部分ごと**に付与する（`target`＝表層の一部 / `target_reading`＝その読み）。
 - 生成カラム（STORED）: `reading_length` / `first_char` / `last_char`（SQL 側）。`char_type_pattern`・`rhythm_pattern` は Ruby 側で生成。
 - 想定規模: 1万レコード程度。
 
@@ -60,8 +60,12 @@
 - 依存: Issue 2・3・4
 
 ## Issue 6: word_sense_features ― 語義 × 言語学的特徴（多対多）
-- [ ] migration: 中間テーブル、`UNIQUE(word_sense_id, linguistic_feature_id)`、両 FK
-- [ ] `WordSense has_many :linguistic_features, through:`、重複防止
+- [x] migration: 中間テーブル、両 FK、`target`（該当部分・表層）/ `target_reading`（該当部分の読み）
+- [x] 特徴は単語の**該当部分ごと**に付与する（例:「硫黄島からの手紙」に 連濁:硫黄島 / 熟字訓:硫黄 / 連濁:手紙）。
+  このため `UNIQUE(word_sense_id, linguistic_feature_id, target)` とし、同じ語義×特徴でも該当部分が違えば複数登録可
+- [x] `WordSense has_many :linguistic_features, through:`、三つ組の重複防止（中間モデルの uniqueness ＋ DB 複合ユニーク）
+- [x] `target` は親 `word.surface`、`target_reading` は `word_senses.reading` の部分文字列であることを検証
+- [x] `LinguisticFeature` からも `word_senses, through:` で辿れる。参照中のマスタは削除不可（`restrict_with_error`）
 - 依存: Issue 3・5
 
 ## Issue 7: 管理者用 CRUD（登録・編集・削除）

@@ -6,9 +6,9 @@ murder:
   genre: small_novel
   entity_type: book_title
   part_of_speech: noun
-  reading: さつじん
-  rhythm_pattern: satsujin
-  meaning: 人を殺すこと
+  reading: さつじんじけん
+  rhythm_pattern: satsujinjiken
+  meaning: 人を殺す事件
 
 curry:
   word: curry

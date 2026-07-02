@@ -10,6 +10,7 @@ ja:
       part_of_speech: "品詞"
       linguistic_feature: "言語学的特徴"
       word_sense: "語義"
+      word_sense_feature: "語義の言語学的特徴"
     attributes:
       genre:
         parent: "親ジャンル"
@@ -29,6 +30,11 @@ ja:
         reading: "読み"
         rhythm_pattern: "韻パターン"
         meaning: "意味"
+      word_sense_feature:
+        word_sense: "語義"
+        linguistic_feature: "言語学的特徴"
+        target: "該当部分"
+        target_reading: "該当部分の読み"
     errors:
       models:
         genre:
@@ -41,6 +47,12 @@ ja:
           attributes:
             genre:
               must_be_small: "は小分類(末端)を指定してください"
+        word_sense_feature:
+          attributes:
+            target:
+              not_in_surface: "は単語の表層形に含まれる部分を指定してください"
+            target_reading:
+              not_in_reading: "は語義の読みに含まれる部分を指定してください"
   sessions:
     new:
       username_placeholder: "ユーザーIDを入力"

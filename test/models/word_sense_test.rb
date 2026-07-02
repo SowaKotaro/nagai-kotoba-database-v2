@@ -58,4 +58,35 @@ class WordSenseTest < ActiveSupport::TestCase
                               entity_type: entity_types(:person_name), part_of_speech: parts_of_speech(:noun))
     assert word_sense.valid?
   end
+
+  test "linguistic_features を多対多で辿れる" do
+    assert_includes word_senses(:murder).linguistic_features, linguistic_features(:rendaku)
+    assert_includes word_senses(:murder).linguistic_features, linguistic_features(:jubako)
+  end
+
+  test "語義を削除すると中間レコードも削除される" do
+    word_sense = word_senses(:murder)
+    feature_ids = word_sense.word_sense_features.ids
+    assert_not_empty feature_ids
+
+    word_sense.destroy
+    assert_empty WordSenseFeature.where(id: feature_ids)
+    # マスタ(linguistic_features)自体は削除されない。
+    assert LinguisticFeature.exists?(linguistic_features(:rendaku).id)
+  end
+
+  test "同じ特徴でも該当部分が違えば追加できる" do
+    word_sense = word_senses(:murder) # 既に 連濁:殺人 がある
+    word_sense.word_sense_features.create!(linguistic_feature: linguistic_features(:rendaku),
+                                           target: "事件", target_reading: "じけん")
+    assert_equal 2, word_sense.word_sense_features.where(linguistic_feature: linguistic_features(:rendaku)).count
+  end
+
+  test "同じ特徴・同じ該当部分の重複は保存に失敗する" do
+    word_sense = word_senses(:murder) # 既に 連濁:殺人 がある
+    assert_raises(ActiveRecord::RecordInvalid) do
+      word_sense.word_sense_features.create!(linguistic_feature: linguistic_features(:rendaku),
+                                             target: "殺人", target_reading: "さつじん")
+    end
+  end
 end

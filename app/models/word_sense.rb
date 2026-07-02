@@ -5,7 +5,9 @@ class WordSense < ApplicationRecord
   belongs_to :genre, optional: true
   belongs_to :entity_type, optional: true
   belongs_to :part_of_speech, optional: true
-  # ※言語学的特徴との多対多(word_sense_features 経由)は Issue 6 で追加する。
+  # 言語学的特徴とは word_sense_features を介した多対多。
+  has_many :word_sense_features, dependent: :destroy
+  has_many :linguistic_features, through: :word_sense_features
 
   validates :reading, presence: true
   validate :genre_must_be_small

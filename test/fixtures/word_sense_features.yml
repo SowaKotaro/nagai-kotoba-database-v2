@@ -1,0 +1,14 @@
+# 語義 × 言語学的特徴の中間フィクスチャ。特徴は該当部分ごとに付与する。
+# word_sense murder: word=ABC殺人事件 / reading=さつじんじけん。target は surface の一部、
+# target_reading は reading の一部であること。
+murder_rendaku:
+  word_sense: murder
+  linguistic_feature: rendaku
+  target: 殺人
+  target_reading: さつじん
+
+murder_jubako:
+  word_sense: murder
+  linguistic_feature: jubako
+  target: 事件
+  target_reading: じけん
