@@ -3,7 +3,10 @@
 
 <%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
 
-<p><%= link_to t("words.index.title"), words_path %></p>
+<p>
+  <%= link_to t("words.index.title"), words_path %>
+  <%= link_to t("searches.title"), search_path %>
+</p>
 
 <% if authenticated? %>
   <p>管理者としてログイン中です。</p>
