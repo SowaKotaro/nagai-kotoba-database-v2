@@ -14,3 +14,9 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# 品詞(PartOfSpeech)のテーブル名を parts_of_speech に対応させる。
+# 既定の複数形は part_of_speeches になってしまうため、不規則変化として登録する。
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular "part_of_speech", "parts_of_speech"
+end

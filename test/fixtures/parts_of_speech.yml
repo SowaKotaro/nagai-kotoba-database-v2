@@ -1,0 +1,6 @@
+# 品詞フィクスチャ。テーブル名は parts_of_speech。
+noun:
+  name: 名詞
+
+verb:
+  name: 動詞

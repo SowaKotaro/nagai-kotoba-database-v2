@@ -1,0 +1,6 @@
+# エンティティタイプフィクスチャ(人名 / 書籍名 など)。
+person_name:
+  name: 人名
+
+book_title:
+  name: 書籍名

@@ -6,10 +6,19 @@ ja:
   activerecord:
     models:
       genre: "ジャンル"
+      entity_type: "エンティティタイプ"
+      part_of_speech: "品詞"
+      linguistic_feature: "言語学的特徴"
     attributes:
       genre:
         parent: "親ジャンル"
         level: "階層"
+        name: "名称"
+      entity_type:
+        name: "名称"
+      part_of_speech:
+        name: "名称"
+      linguistic_feature:
         name: "名称"
     errors:
       models:

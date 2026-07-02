@@ -35,8 +35,9 @@
 - 依存: なし
 
 ## Issue 3: 単純マスタ3種（entity_types / parts_of_speech / linguistic_features）
-- [ ] 各 migration: `name`, `UNIQUE(name)`
-- [ ] 各 model: `name` presence・uniqueness
+- [x] 各 migration: `name`, `UNIQUE(name)`
+- [x] 各 model: `name` presence・uniqueness
+- [x] `parts_of_speech` は不規則複数形のため `config/initializers/inflections.rb` に屈折ルールを追加（`PartOfSpeech` → `parts_of_speech`）
 - 依存: なし（Issue 2 と並行可）
 
 ## Issue 4: words テーブル ― 表層形と char_type_pattern 生成
