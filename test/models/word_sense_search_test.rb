@@ -13,6 +13,19 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal WordSense.pluck(:id).sort, ids({})
   end
 
+  # --- キーワード(表層形・読みの部分一致) ---
+  test "キーワードは表層形の部分一致で絞れる" do
+    assert_equal [ word_senses(:murder).id ], ids(q: "殺人")
+  end
+
+  test "キーワードは読みの部分一致でも絞れる" do
+    assert_equal [ word_senses(:murder).id ], ids(q: "さつじん")
+  end
+
+  test "キーワードの LIKE ワイルドカードはエスケープされる" do
+    assert_equal [], ids(q: "%殺人%")
+  end
+
   test "読みの文字数の下限で絞れる" do
     result = ids(reading_length_min: "5")
     assert_includes result, word_senses(:murder).id

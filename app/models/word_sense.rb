@@ -15,6 +15,11 @@ class WordSense < ApplicationRecord
   validate :genre_must_be_small
 
   # --- 検索・絞り込み用スコープ(生成カラム/インデックスを活用。Issue 9) ---
+  # キーワード(表層形・読みの部分一致)。ワイルドカードはエスケープする。
+  scope :keyword, lambda { |text|
+    pattern = "%#{sanitize_sql_like(text)}%"
+    joins(:word).where("words.surface LIKE :pattern OR word_senses.reading LIKE :pattern", pattern: pattern)
+  }
   # 読みの長さ(生成カラム reading_length)の範囲。
   scope :reading_length_at_least, ->(n) { where(reading_length: n..) }
   scope :reading_length_at_most, ->(n) { where(reading_length: ..n) }

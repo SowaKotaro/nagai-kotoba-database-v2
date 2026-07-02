@@ -13,6 +13,13 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: words(:curry).surface, count: 0
   end
 
+  test "キーワード(q)で絞り込める(ヘッダー検索・ホーム検索の入口)" do
+    get search_path, params: { q: "カレー" }
+    assert_response :success
+    assert_select "td", text: words(:curry).surface
+    assert_select "td", text: words(:abc_murder).surface, count: 0
+  end
+
   test "一致が無いときはメッセージを表示する" do
     get search_path, params: { first_char: "ん" }
     assert_response :success

@@ -86,6 +86,7 @@
 - [x] `reading_length`（下限/上限）・先頭/末尾文字・`char_type_pattern`（完全一致）・ジャンル階層・品詞・エンティティタイプ・言語学的特徴・`rhythm_pattern`（部分一致）での絞り込み
 - [x] 生成カラム／インデックスを活用（`WordSense` のスコープ群。`char_type_pattern` は `words` と join）
 - [x] 公開の検索ページ `GET /search`（`SearchesController#index`、未認証可）。ロジックはクエリオブジェクト `WordSenseSearch` に集約
+- [x] キーワード検索 `q`（表層形・読みの部分一致。ヘッダー常設検索・ホームの検索窓の入口）※デザイン改修時に追加
 - [x] ジャンルは階層セレクト（大/中/小のどれを選んでも配下の小分類で絞り込み）。結果は語義単位で一覧＋軽量ページネーション
 - 依存: Issue 5（必要に応じ 6・8）
 
