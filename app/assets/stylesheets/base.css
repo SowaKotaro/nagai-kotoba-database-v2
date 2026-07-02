@@ -1,0 +1,72 @@
+/* 素のタグへの基本設定(docs/design.md)。角丸・影は全面禁止。 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-gothic);
+  font-size: 14px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-mincho);
+  font-weight: 600; /* 700(bold)は使わない */
+  line-height: 1.4;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+p {
+  margin: 0 0 var(--space-3);
+}
+
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-color: var(--ink-muted);
+}
+
+/* フォーカスリングは消さず、明示的に再定義する */
+:focus-visible {
+  outline: 2px solid var(--ink-muted);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* 読み仮名。必ず <ruby> を使う(疑似ルビ禁止) */
+rt {
+  font-family: var(--font-gothic);
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}

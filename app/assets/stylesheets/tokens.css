@@ -1,0 +1,33 @@
+/* デザイントークン「紙とインク」(docs/design.md §1〜3)。
+   色・フォント・余白はここ以外で直書きしない。角丸・影のトークンは存在しない(使用禁止のため)。 */
+:root {
+  /* 紙とインクの限定パレット */
+  --paper: #F7F2E7;         /* ページ背景 */
+  --paper-card: #FFFDF8;    /* 台紙カードの面(本体より少し明るい) */
+  --ink: #2B2B28;           /* 本文・見出し */
+  --ink-muted: #5A5440;     /* 補足文 */
+  --ink-faint: #8A8168;     /* メタ情報(最も弱い文字) */
+  --hairline: #D8CFBB;      /* すべての境界線 */
+  --border-strong: #B7AC8E; /* 強調境界(二重罫線の上段・入力の下線など) */
+  --vermillion: #B33A2E;    /* 注釈・該当部分・エラー専用の朱 */
+  --moss: #5F6B3E;          /* 言語学的特徴チップの背景専用 */
+  --moss-strong: #4E5832;   /* チップの hover */
+  --moss-fg: #F3F5EA;       /* moss 上の文字 */
+
+  /* タイポグラフィ: 見出しは明朝(webフォント1本)、本文は OS 標準ゴシック */
+  --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-gothic: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
+                 "Noto Sans JP", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* 余白スケール */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 28px;
+  --space-7: 44px;
+
+  --content-width: 760px;
+}

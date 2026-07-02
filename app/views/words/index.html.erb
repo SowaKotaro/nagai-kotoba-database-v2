@@ -1,28 +1,24 @@
-<h1><%= t("words.index.title") %></h1>
+<% content_for :title, t("words.index.title") %>
 
-<p><%= link_to t("searches.title"), search_path %></p>
+<%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), nil ] ] %>
+
+<h1 class="page-title"><%= t("words.index.title") %></h1>
+<p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>
 
 <% if @words.empty? %>
-  <p><%= t("words.index.empty") %></p>
+  <p class="empty-note"><%= t("words.index.empty") %></p>
 <% else %>
-  <table>
-    <thead>
-      <tr>
-        <th><%= Word.human_attribute_name(:surface) %></th>
-        <th><%= WordSense.human_attribute_name(:reading) %></th>
-        <th><%= t("words.index.senses_count") %></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @words.each do |word| %>
-        <tr>
-          <td><%= link_to word.surface, word_path(word) %></td>
-          <td><%= word.word_senses.map(&:reading).join("、") %></td>
-          <td><%= word.word_senses.size %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <div class="entry-list">
+    <% @words.each do |word| %>
+      <div class="entry-row">
+        <div class="entry-row__main">
+          <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
+          <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
+        </div>
+        <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
+      </div>
+    <% end %>
+  </div>
 
   <%= render "pagination" %>
 <% end %>

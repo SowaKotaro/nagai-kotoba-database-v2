@@ -19,14 +19,25 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get word_path(sense.word)
 
     assert_response :success
-    assert_select "h2", text: sense.reading
+    # 読みは表層形へのグループルビ(<ruby><rt>)で表示する
+    assert_select "h2.sense-heading rt", text: sense.reading
     assert_match sense.rhythm_pattern, response.body
     assert_match sense.meaning, response.body
   end
 
-  test "詳細にジャンル階層が大 > 中 > 小で表示される" do
+  test "詳細にジャンル階層が検索絞り込みリンク付きのパンくずで表示される" do
     get word_path(word_senses(:murder).word)
-    assert_select "dd", text: "文学 > 日本文学 > 小説"
+
+    assert_select ".genre-path a", count: 3
+    assert_select ".genre-path a[href=?]", search_path(genre_id: genres(:large_literature).id), text: "文学"
+    assert_select ".genre-path a.genre-path__current[href=?]", search_path(genre_id: genres(:small_novel).id), text: "小説"
+  end
+
+  test "詳細の品詞・エンティティタイプ・特徴は検索への絞り込みリンクになっている" do
+    get word_path(word_senses(:murder).word)
+
+    assert_select "a.tag[href=?]", search_path(part_of_speech_id: parts_of_speech(:noun).id), text: "名詞"
+    assert_select "a.chip[href=?]", search_path(linguistic_feature_id: linguistic_features(:rendaku).id), text: "連濁"
   end
 
   test "詳細に言語学的特徴が該当部分つきで表示される" do

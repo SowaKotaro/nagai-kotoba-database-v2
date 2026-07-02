@@ -1,0 +1,30 @@
+<%# グローバルヘッダー(docs/design.md §5.1)。印章ロゴ + ナビ(現在地表示) + 常設のキーワード検索。 %>
+<header class="site-header">
+  <div class="site-header__inner">
+    <%= link_to root_path, class: "site-brand" do %>
+      <%# ブランド印章(落款)。インライン SVG なので色はトークンを参照できる %>
+      <svg class="site-brand__seal" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect width="24" height="24" fill="var(--vermillion)"/>
+        <text x="12" y="17.5" text-anchor="middle" font-size="14" font-family="serif" fill="var(--paper)">言</text>
+      </svg>
+      <span class="site-brand__name"><%= t("layouts.brand") %></span>
+    <% end %>
+
+    <div class="site-header__right">
+      <nav class="site-nav">
+        <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
+        <%= link_to t("layouts.nav.search"), search_path, class: ("is-current" if request.path == search_path) %>
+        <% if authenticated? %>
+          <%= link_to t("layouts.nav.admin"), admin_words_path, class: ("is-current" if request.path.start_with?("/admin")) %>
+          <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>
+        <% end %>
+      </nav>
+
+      <%# 常設のキーワード検索(下線1本。枠で囲わない)。Enter で /search へ %>
+      <%= form_with url: search_path, method: :get, class: "header-search" do %>
+        <%= text_field_tag :q, nil, placeholder: t("layouts.search_placeholder"),
+              class: "header-search__input", aria: { label: t("searches.q_label") } %>
+      <% end %>
+    </div>
+  </div>
+</header>

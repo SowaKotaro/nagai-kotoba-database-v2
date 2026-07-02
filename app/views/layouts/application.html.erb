@@ -1,16 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
-    <title>NagaiKotobaDatabaseV2</title>
+    <title><%= content_for?(:title) ? "#{yield(:title)} | #{t("layouts.brand")}" : t("layouts.brand") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+
+    <%# 見出し用の明朝のみ web フォントで読む(本文は OS 標準ゴシック。docs/design.md §2)。
+        display=swap で LCP を阻害しない。 %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap">
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <%= yield %>
+    <%= render "shared/header" %>
+
+    <main class="container">
+      <%# フラッシュはここで一元表示する(各ビューでは表示しない) %>
+      <%= tag.p(flash[:notice], class: "flash flash--notice") if flash[:notice] %>
+      <%= tag.p(flash[:alert], class: "flash flash--alert") if flash[:alert] %>
+
+      <%= yield %>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <div class="site-footer__about">
+          <p class="site-footer__brand"><%= t("layouts.brand") %></p>
+          <p class="site-footer__desc"><%= t("layouts.footer.about") %></p>
+        </div>
+        <nav class="site-footer__nav" aria-label="<%= t("layouts.footer.nav_label") %>">
+          <%= link_to t("layouts.nav.words"), words_path %>
+          <%= link_to t("layouts.nav.search"), search_path %>
+          <% if authenticated? %>
+            <%= link_to t("layouts.nav.admin"), admin_words_path %>
+          <% else %>
+            <%= link_to t("layouts.footer.admin_login"), new_session_path %>
+          <% end %>
+        </nav>
+      </div>
+      <div class="site-footer__bottom">
+        <div class="site-footer__bottom-inner"><%= t("layouts.footer.copyright", year: Date.current.year) %></div>
+      </div>
+    </footer>
   </body>
 </html>

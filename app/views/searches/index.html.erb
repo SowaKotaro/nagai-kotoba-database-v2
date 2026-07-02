@@ -1,59 +1,68 @@
-<h1><%= t("searches.title") %></h1>
+<% content_for :title, t("searches.title") %>
+
+<%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("searches.title"), nil ] ] %>
+
+<h1 class="page-title"><%= t("searches.title") %></h1>
 
 <%= form_with url: search_path, method: :get, data: { turbo_action: "advance" } do %>
-  <fieldset>
+  <div class="field field--keyword">
+    <%= label_tag :q, t("searches.q_label") %>
+    <%= text_field_tag :q, @search.q %>
+  </div>
+
+  <fieldset class="fieldset-card">
     <legend><%= t("searches.legend.reading") %></legend>
 
-    <div>
+    <div class="field">
       <%= label_tag :reading_length_min, t("searches.reading_length_min") %>
       <%= number_field_tag :reading_length_min, @search.reading_length_min, min: 1 %>
       <%= label_tag :reading_length_max, t("searches.reading_length_max") %>
       <%= number_field_tag :reading_length_max, @search.reading_length_max, min: 1 %>
     </div>
 
-    <div>
+    <div class="field">
       <%= label_tag :first_char, WordSense.human_attribute_name(:first_char) %>
       <%= text_field_tag :first_char, @search.first_char, maxlength: 1 %>
       <%= label_tag :last_char, WordSense.human_attribute_name(:last_char) %>
       <%= text_field_tag :last_char, @search.last_char, maxlength: 1 %>
     </div>
 
-    <div>
+    <div class="field">
       <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern") %>
       <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
     </div>
 
-    <div>
+    <div class="field">
       <%= label_tag :char_type_pattern, t("searches.char_type_pattern") %>
       <%= text_field_tag :char_type_pattern, @search.char_type_pattern %>
     </div>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="fieldset-card">
     <legend><%= t("searches.legend.category") %></legend>
 
-    <div>
+    <div class="field">
       <%= label_tag :genre_id, WordSense.human_attribute_name(:genre) %>
       <%= select_tag :genre_id,
             options_for_select(hierarchical_genre_options, @search.genre_id),
             include_blank: true %>
     </div>
 
-    <div>
+    <div class="field">
       <%= label_tag :part_of_speech_id, WordSense.human_attribute_name(:part_of_speech) %>
       <%= select_tag :part_of_speech_id,
             options_from_collection_for_select(PartOfSpeech.order(:name), :id, :name, @search.part_of_speech_id),
             include_blank: true %>
     </div>
 
-    <div>
+    <div class="field">
       <%= label_tag :entity_type_id, WordSense.human_attribute_name(:entity_type) %>
       <%= select_tag :entity_type_id,
             options_from_collection_for_select(EntityType.order(:name), :id, :name, @search.entity_type_id),
             include_blank: true %>
     </div>
 
-    <div>
+    <div class="field">
       <%= label_tag :linguistic_feature_id, t("searches.linguistic_feature") %>
       <%= select_tag :linguistic_feature_id,
             options_from_collection_for_select(LinguisticFeature.order(:name), :id, :name, @search.linguistic_feature_id),
@@ -61,17 +70,15 @@
     </div>
   </fieldset>
 
-  <%= submit_tag t("searches.submit") %>
+  <%= submit_tag t("searches.submit"), class: "btn btn--primary" %>
 <% end %>
 
-<hr>
-
-<h2><%= t("searches.results", count: @total_count) %></h2>
+<h2 class="section-heading"><%= t("searches.results", count: @total_count) %></h2>
 
 <% if @word_senses.empty? %>
-  <p><%= t("searches.empty") %></p>
+  <p class="empty-note"><%= t("searches.empty") %></p>
 <% else %>
-  <table>
+  <table class="data-table">
     <thead>
       <tr>
         <th><%= Word.human_attribute_name(:surface) %></th>
@@ -87,7 +94,7 @@
           <td><%= link_to sense.word.surface, word_path(sense.word) %></td>
           <td><%= sense.reading %></td>
           <td><%= sense.reading_length %></td>
-          <td><%= sense.genre ? sense.genre.self_and_ancestors.map(&:name).join(" > ") : "" %></td>
+          <td><%= sense.genre ? sense.genre.self_and_ancestors.map(&:name).join(" › ") : "" %></td>
           <td><%= sense.part_of_speech&.name %></td>
         </tr>
       <% end %>

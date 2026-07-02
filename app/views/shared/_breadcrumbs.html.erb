@@ -1,0 +1,11 @@
+<%# パンくず。locals: items = [[ラベル, パス(現在地は nil)], ...] %>
+<nav class="breadcrumbs" aria-label="<%= t("layouts.breadcrumbs_label") %>">
+  <% items.each_with_index do |(label, path), index| %>
+    <% if path %>
+      <%= link_to label, path %>
+    <% else %>
+      <span aria-current="page"><%= label %></span>
+    <% end %>
+    <% unless index == items.size - 1 %><span class="breadcrumbs__sep">›</span><% end %>
+  <% end %>
+</nav>

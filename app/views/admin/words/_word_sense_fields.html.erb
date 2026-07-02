@@ -2,32 +2,32 @@
 <div class="word-sense-fields" data-nested-form-item>
   <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>
 
-  <div>
+  <div class="field">
     <%= form.label :reading %>
     <%= form.text_field :reading %>
   </div>
 
-  <div>
+  <div class="field">
     <%= form.label :genre_id %>
     <%= render "genre_cascade", form: form %>
   </div>
 
-  <div>
+  <div class="field">
     <%= form.label :entity_type_id %>
     <%= form.collection_select :entity_type_id, EntityType.order(:name), :id, :name, include_blank: true %>
   </div>
 
-  <div>
+  <div class="field">
     <%= form.label :part_of_speech_id %>
     <%= form.collection_select :part_of_speech_id, PartOfSpeech.order(:name), :id, :name, include_blank: true %>
   </div>
 
-  <div>
+  <div class="field">
     <%= form.label :meaning %>
     <%= form.text_area :meaning %>
   </div>
 
-  <fieldset data-controller="nested-form" data-nested-form-placeholder-value="NEW_FEATURE">
+  <fieldset class="fieldset-card" data-controller="nested-form" data-nested-form-placeholder-value="NEW_FEATURE">
     <legend><%= t("admin.words.features_legend") %></legend>
 
     <div data-nested-form-target="container">
@@ -43,8 +43,8 @@
       <% end %>
     </template>
 
-    <button type="button" data-action="nested-form#add"><%= t("admin.words.add_feature") %></button>
+    <button type="button" class="btn btn--sm" data-action="nested-form#add"><%= t("admin.words.add_feature") %></button>
   </fieldset>
 
-  <button type="button" data-action="nested-form#remove"><%= t("admin.words.remove_sense") %></button>
+  <button type="button" class="btn btn--sm" data-action="nested-form#remove"><%= t("admin.words.remove_sense") %></button>
 </div>

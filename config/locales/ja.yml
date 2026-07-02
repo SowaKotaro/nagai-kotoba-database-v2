@@ -55,8 +55,38 @@ ja:
               not_in_surface: "は単語の表層形に含まれる部分を指定してください"
             target_reading:
               not_in_reading: "は語義の読みに含まれる部分を指定してください"
+  layouts:
+    brand: "長い言葉のデータベース"
+    search_placeholder: "単語を検索"
+    breadcrumbs_home: "ホーム"
+    breadcrumbs_label: "現在位置"
+    nav:
+      words: "一覧"
+      search: "検索"
+      admin: "管理"
+      logout: "ログアウト"
+    footer:
+      about: "日本語の長い単語を収集・解析し、読み・韻・文字構成・ジャンルなど多彩な軸で引ける公開データベースです。収録データはすべて運営者が精査のうえ登録しています。"
+      nav_label: "フッターメニュー"
+      admin_login: "管理者ログイン"
+      copyright: "© %{year} 長い言葉のデータベース"
+  home:
+    index:
+      description: "日本語の長い単語を収集・解析・公開するデータベースです。読みの長さ・文字の構成・韻・ジャンルなど、さまざまな軸から言葉を眺められます。"
+      search_placeholder: "表層形・読みで検索（例：小春日和、コハル）"
+      search_submit: "検索"
+      recent: "新着の単語"
+      see_all: "すべて見る"
+      stats:
+        words: "収録語数"
+        words_unit: "語"
+        senses: "語義数"
+        senses_unit: "件"
+        genres: "ジャンル数"
+        genres_unit: "分類"
   searches:
     title: "検索・絞り込み"
+    q_label: "キーワード（表層形・読み）"
     legend:
       reading: "読みの条件"
       category: "分類・特徴の条件"
@@ -73,10 +103,15 @@ ja:
     index:
       title: "単語一覧"
       empty: "まだ単語が登録されていません。"
-      senses_count: "語義数"
+      total: "全 %{count} 語"
+      senses_count: "%{count} 語義"
     show:
+      headword: "見出し語"
+      record_number: "No. %{id}"
+      sense_number: "語義 %{number}"
       char_type_pattern: "文字タイプ"
       reading_length: "読みの文字数"
+      chars: "%{count}文字"
       features: "言語学的特徴"
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
@@ -108,6 +143,7 @@ ja:
       target_reading_placeholder: "該当部分の読み（例：イオウジマ）"
   sessions:
     new:
+      title: "管理者ログイン"
       username_placeholder: "ユーザーIDを入力"
       password_placeholder: "パスワードを入力"
       submit: "ログイン"
