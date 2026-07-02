@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_090200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_093000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -60,6 +60,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_090200) do
     t.index ["admin_id"], name: "index_sessions_on_admin_id"
   end
 
+  create_table "word_senses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "entity_type_id"
+    t.virtual "first_char", type: :string, limit: 8, comment: "先頭文字", as: "left(`reading`,1)", stored: true
+    t.bigint "genre_id", comment: "小分類(末端)を指す"
+    t.virtual "last_char", type: :string, limit: 8, comment: "末尾文字", as: "right(`reading`,1)", stored: true
+    t.text "meaning", comment: "意味"
+    t.bigint "part_of_speech_id"
+    t.string "reading", limit: 768, null: false, comment: "読み"
+    t.virtual "reading_length", type: :integer, comment: "読みの文字数", as: "char_length(`reading`)", stored: true
+    t.string "rhythm_pattern", limit: 2048, comment: "韻パターン(読みのローマ字表記)"
+    t.datetime "updated_at", null: false
+    t.bigint "word_id", null: false
+    t.index ["entity_type_id"], name: "idx_word_senses_entity_type"
+    t.index ["first_char"], name: "idx_word_senses_first_char"
+    t.index ["genre_id"], name: "idx_word_senses_genre"
+    t.index ["last_char"], name: "idx_word_senses_last_char"
+    t.index ["part_of_speech_id"], name: "idx_word_senses_part_of_speech"
+    t.index ["reading"], name: "idx_word_senses_reading", length: 191
+    t.index ["reading_length"], name: "idx_word_senses_reading_length"
+    t.index ["word_id"], name: "idx_word_senses_word"
+  end
+
   create_table "words", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "char_type_pattern", limit: 768, null: false, comment: "文字タイプ列 例: AAA漢漢漢漢"
     t.datetime "created_at", null: false
@@ -71,4 +94,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_090200) do
 
   add_foreign_key "genres", "genres", column: "parent_id"
   add_foreign_key "sessions", "admins"
+  add_foreign_key "word_senses", "entity_types", name: "fk_word_senses_entity_type"
+  add_foreign_key "word_senses", "genres", name: "fk_word_senses_genre"
+  add_foreign_key "word_senses", "parts_of_speech", name: "fk_word_senses_part_of_speech"
+  add_foreign_key "word_senses", "words", name: "fk_word_senses_word"
 end

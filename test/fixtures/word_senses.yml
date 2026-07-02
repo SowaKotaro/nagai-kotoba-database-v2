@@ -1,0 +1,17 @@
+# 語義フィクスチャ。
+# rhythm_pattern はフィクスチャ読込ではコールバックが走らないため、reading に対応する値を明示する。
+# reading_length / first_char / last_char は DB の STORED 生成カラムのため指定しない。
+murder:
+  word: abc_murder
+  genre: small_novel
+  entity_type: book_title
+  part_of_speech: noun
+  reading: さつじん
+  rhythm_pattern: satsujin
+  meaning: 人を殺すこと
+
+curry:
+  word: curry
+  part_of_speech: noun
+  reading: カレー
+  rhythm_pattern: karee

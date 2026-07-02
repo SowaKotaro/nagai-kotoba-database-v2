@@ -46,7 +46,10 @@
 - ✅ Issue 3: **単純マスタ3種**（entity_types / parts_of_speech / linguistic_features）… `name` + `UNIQUE(name)` のみ
   - `parts_of_speech` は不規則複数形のため inflections に屈折ルールを追加
 - ✅ Issue 4: words テーブル（surface / char_type_pattern 生成）
-- ⬜ Issue 5: word_senses テーブル（生成カラム / rhythm_pattern）
+- ✅ Issue 5: **word_senses テーブル**（語義。word に 1:多）
+  - STORED 生成カラム `reading_length` / `first_char` / `last_char`（SQL 側）
+  - `rhythm_pattern` は値オブジェクト `RhythmPattern`（ヘボン式・長音は母音展開）で `before_validation` 自動生成
+  - `genre_id` は小分類(level3)のみ許可するバリデーション
 - ⬜ Issue 6: word_sense_features（多対多）
 - ⬜ Issue 7: 管理者用 CRUD（大→中→小のカスケード選択 UI）
 - ⬜ Issue 8: 公開閲覧（一覧・詳細）
