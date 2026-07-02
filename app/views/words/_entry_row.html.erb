@@ -1,0 +1,8 @@
+<%# 一覧の1行(型見本のリスト): 読みを小さく上に、言葉を大きな明朝で。local: word %>
+<div class="entry-row">
+  <div class="entry-row__main">
+    <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
+    <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
+  </div>
+  <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
+</div>

@@ -1,0 +1,195 @@
+/* ページ骨格(docs/design.md §5.1)。ヘッダーは墨の1本罫、フッターは墨のベタ面で締める。 */
+
+/* --- グローバルヘッダー --- */
+.site-header {
+  border-bottom: 1px solid var(--ink);
+}
+
+.site-header__inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 14px var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-brand__seal {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.site-brand__name {
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.12em;
+}
+
+.site-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.site-nav {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  font-size: 13px;
+}
+
+.site-nav a {
+  text-decoration: none;
+  color: var(--ink-2);
+  /* タップ領域確保(見た目は変えずに padding で広げる) */
+  padding: var(--space-2) 2px;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+}
+
+/* 現在地は朱の下線 */
+.site-nav a.is-current {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 2px solid var(--shu);
+}
+
+/* ログアウト(button_to)をナビリンクと同じ見た目にする */
+.site-nav form {
+  display: inline;
+}
+
+.site-nav form button {
+  background: none;
+  border: none;
+  padding: var(--space-2) 2px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.site-nav form button:hover {
+  color: var(--ink);
+}
+
+/* 常設のキーワード検索(枠で囲わず下線1本) */
+.header-search__input {
+  border: none;
+  border-bottom: 1px solid var(--rule-mid);
+  background: transparent;
+  padding: 4px 2px;
+  font-size: 12px;
+  width: 160px;
+  color: var(--ink);
+}
+
+.header-search__input:focus {
+  border-bottom-color: var(--shu);
+}
+
+.header-search__input::placeholder {
+  color: var(--ink-3);
+}
+
+/* --- メインコンテナ --- */
+main.container {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-7);
+}
+
+/* --- フッター: 墨のベタ面で締める --- */
+.site-footer {
+  background: var(--ink);
+  color: var(--on-ink);
+  margin-top: var(--space-7);
+}
+
+.site-footer__inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5) var(--space-6);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.site-footer__about {
+  max-width: 480px;
+}
+
+.site-footer__brand {
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  font-size: clamp(18px, 2.5vw, 24px);
+  letter-spacing: 0.14em;
+  margin: 0 0 var(--space-3);
+}
+
+.site-footer__desc {
+  font-size: 12px;
+  line-height: 2;
+  color: var(--on-ink-dim);
+  margin: 0;
+}
+
+.site-footer__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 12px;
+}
+
+.site-footer__nav a {
+  color: var(--on-ink-dim);
+  text-decoration: none;
+}
+
+.site-footer__nav a:hover {
+  color: var(--on-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--shu);
+}
+
+.site-footer__bottom {
+  border-top: 1px solid var(--on-ink-rule);
+}
+
+.site-footer__bottom-inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--on-ink-dim);
+}
+
+/* --- フラッシュ(レイアウトで一元表示) --- */
+.flash {
+  border: 1px solid var(--ink);
+  padding: var(--space-2) var(--space-4);
+  font-size: 13px;
+  margin-bottom: var(--space-5);
+}
+
+.flash--alert {
+  color: var(--shu); /* エラーは朱テキストのみ。背景は塗らない */
+  border-color: var(--shu);
+}

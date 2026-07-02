@@ -1,0 +1,79 @@
+/* 素のタグへの基本設定(docs/design.md)。角丸・影は全面禁止。構造は罫線とスケール対比で作る。 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-gothic);
+  font-size: 14px;
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+p {
+  margin: 0 0 var(--space-3);
+}
+
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-mid);
+  text-underline-offset: 4px;
+  transition: color 0.15s, text-decoration-color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+a:hover {
+  text-decoration-color: var(--shu);
+}
+
+/* テキスト選択も朱(細部の作り込み) */
+::selection {
+  background: var(--shu);
+  color: var(--bg);
+}
+
+/* フォーカスリングは消さず、朱で明示的に再定義する */
+:focus-visible {
+  outline: 2px solid var(--shu);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* 読み仮名。必ず <ruby> を使う(疑似ルビ禁止)。既定は弱い墨、見出し語では朱 */
+rt {
+  font-family: var(--font-gothic);
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.14em;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}

@@ -20,7 +20,7 @@ class SearchesController < ApplicationController
 
   def search_params
     params.permit(
-      :reading_length_min, :reading_length_max, :first_char, :last_char,
+      :q, :reading_length_min, :reading_length_max, :first_char, :last_char,
       :char_type_pattern, :rhythm_pattern,
       :genre_id, :part_of_speech_id, :entity_type_id, :linguistic_feature_id
     )

@@ -9,6 +9,7 @@ class WordSenseSearch
   # 絞り込み済みで並び順を付けた Relation を返す(空条件なら全件)。
   def results
     relation = WordSense.all
+    relation = relation.keyword(q) if q.present?
     relation = relation.reading_length_at_least(reading_length_min) if reading_length_min
     relation = relation.reading_length_at_most(reading_length_max) if reading_length_max
     relation = relation.first_char_is(first_char) if first_char.present?
@@ -23,6 +24,7 @@ class WordSenseSearch
   end
 
   # --- フォーム再表示用に、受け取った値をそのまま返すアクセサ ---
+  def q = @params[:q].to_s.strip
   def reading_length_min = positive_integer(:reading_length_min)
   def reading_length_max = positive_integer(:reading_length_max)
   def first_char = @params[:first_char].to_s.strip

@@ -1,55 +1,98 @@
-<h1><%= @word.surface %></h1>
-<p><%= t("words.show.char_type_pattern") %>: <%= @word.char_type_pattern %></p>
+<% content_for :title, @word.surface %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), words_path ], [ @word.surface, nil ] ] %>
+
+<header class="page-header">
+  <p class="page-eyebrow">
+    <span><%= t("words.show.headword") %></span>
+    <span class="mono"><%= t("words.show.record_number", id: @word.id) %></span>
+  </p>
+  <h1 class="page-title"><%= @word.surface %></h1>
+  <p class="page-title-meta">
+    <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
+  </p>
+</header>
 
 <% if @word.word_senses.empty? %>
-  <p><%= t("words.show.no_senses") %></p>
-<% end %>
+  <p class="empty-note"><%= t("words.show.no_senses") %></p>
+<% else %>
+  <div class="sense-list">
+    <% @word.word_senses.each.with_index(1) do |sense, number| %>
+      <section class="sense-card">
+        <span class="sense-card__number"><%= t("words.show.sense_number", number: format("%02d", number)) %></span>
 
-<% @word.word_senses.each do |sense| %>
-  <section class="word-sense">
-    <h2><%= sense.reading %></h2>
-    <dl>
-      <dt><%= WordSense.human_attribute_name(:rhythm_pattern) %></dt>
-      <dd><%= sense.rhythm_pattern %></dd>
+        <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.2) %>
+        <h2 class="sense-heading">
+          <ruby><%= @word.surface %><rt><%= sense.reading %></rt></ruby>
+        </h2>
 
-      <dt><%= t("words.show.reading_length") %></dt>
-      <dd><%= sense.reading_length %></dd>
+        <% if sense.meaning.present? %>
+          <p class="sense-meaning"><%= sense.meaning %></p>
+        <% end %>
 
-      <% if sense.genre %>
-        <dt><%= WordSense.human_attribute_name(:genre) %></dt>
-        <dd><%= sense.genre.self_and_ancestors.map(&:name).join(" > ") %></dd>
-      <% end %>
-
-      <% if sense.entity_type %>
-        <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
-        <dd><%= sense.entity_type.name %></dd>
-      <% end %>
-
-      <% if sense.part_of_speech %>
-        <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
-        <dd><%= sense.part_of_speech.name %></dd>
-      <% end %>
-
-      <% if sense.meaning.present? %>
-        <dt><%= WordSense.human_attribute_name(:meaning) %></dt>
-        <dd><%= sense.meaning %></dd>
-      <% end %>
-
-      <% if sense.word_sense_features.any? %>
-        <dt><%= t("words.show.features") %></dt>
-        <dd>
-          <ul>
+        <% if sense.word_sense_features.any? %>
+          <p class="section-label"><%= t("words.show.features") %></p>
+          <ul class="annotations">
             <% sense.word_sense_features.each do |feature| %>
-              <li>
-                <%= feature.linguistic_feature.name %>：
-                <%= feature.target %>（<%= feature.target_reading %>）
+              <li class="annotation">
+                <%# チップは同じ特徴での検索へ、該当部分は朱ハイライト+読みルビ %>
+                <%= link_to feature.linguistic_feature.name,
+                      search_path(linguistic_feature_id: feature.linguistic_feature_id), class: "chip" %>
+                <ruby class="annotation-target"><%= feature.target %><rt><%= feature.target_reading %></rt></ruby>
               </li>
             <% end %>
           </ul>
-        </dd>
-      <% end %>
-    </dl>
-  </section>
+        <% end %>
+
+        <dl class="sense-attrs">
+          <% if sense.genre %>
+            <div class="sense-attrs__item sense-attrs__item--wide">
+              <dt><%= WordSense.human_attribute_name(:genre) %></dt>
+              <dd>
+                <%# 各階層から検索絞り込みへ飛べるパンくず。末端は少し強調 %>
+                <nav class="genre-path">
+                  <% hierarchy = sense.genre.self_and_ancestors %>
+                  <% hierarchy.each.with_index(1) do |genre, depth| %>
+                    <% current = depth == hierarchy.size %>
+                    <%= link_to genre.name, search_path(genre_id: genre.id),
+                          class: ("genre-path__current" if current) %>
+                    <% unless current %><span class="genre-path__sep">›</span><% end %>
+                  <% end %>
+                </nav>
+              </dd>
+            </div>
+          <% end %>
+
+          <% if sense.part_of_speech %>
+            <div class="sense-attrs__item">
+              <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
+              <dd><%= link_to sense.part_of_speech.name,
+                        search_path(part_of_speech_id: sense.part_of_speech_id), class: "tag" %></dd>
+            </div>
+          <% end %>
+
+          <% if sense.entity_type %>
+            <div class="sense-attrs__item">
+              <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
+              <dd><%= link_to sense.entity_type.name,
+                        search_path(entity_type_id: sense.entity_type_id), class: "tag" %></dd>
+            </div>
+          <% end %>
+
+          <div class="sense-attrs__item">
+            <dt><%= t("words.show.reading_length") %></dt>
+            <dd><%= t("words.show.chars", count: sense.reading_length) %></dd>
+          </div>
+
+          <div class="sense-attrs__item">
+            <dt><%= WordSense.human_attribute_name(:rhythm_pattern) %></dt>
+            <dd class="mono"><%= sense.rhythm_pattern %></dd>
+          </div>
+        </dl>
+      </section>
+    <% end %>
+  </div>
 <% end %>
 
-<p><%= link_to t("words.show.back"), words_path %></p>
+<p><%= link_to t("words.show.back"), words_path, class: "back-link" %></p>

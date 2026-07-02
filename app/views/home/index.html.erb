@@ -1,17 +1,48 @@
-<h1>言葉データベース</h1>
-<p>日本語の単語を収集・公開するサイトです。</p>
+<%# ホーム: 型見本の表紙。ステートメント → 今日の一語(巨大) → 検索 → 収録統計 → 新着 %>
+<section class="hero">
+  <h1 class="hero__lead"><%= t("home.index.description") %></h1>
 
-<%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
+  <% if @featured_word %>
+    <div class="hero-featured">
+      <p class="hero-featured__label"><%= t("home.index.featured") %></p>
+      <%= link_to @featured_word.surface, word_path(@featured_word), class: "hero-featured__word" %>
+      <p class="hero-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
+    </div>
+  <% end %>
 
-<p>
-  <%= link_to t("words.index.title"), words_path %>
-  <%= link_to t("searches.title"), search_path %>
-</p>
+  <%= form_with url: search_path, method: :get, class: "hero-search" do %>
+    <%= text_field_tag :q, nil, placeholder: t("home.index.search_placeholder"),
+          class: "hero-search__input", aria: { label: t("searches.q_label") } %>
+    <%= submit_tag t("home.index.search_submit"), class: "btn btn--primary" %>
+  <% end %>
+</section>
 
-<% if authenticated? %>
-  <p>管理者としてログイン中です。</p>
-  <p><%= link_to t("admin.words.title"), admin_words_path %></p>
-  <%= button_to "ログアウト", session_path, method: :delete %>
-<% else %>
-  <%= link_to "管理者ログイン", new_session_path %>
-<% end %>
+<dl class="stats-grid">
+  <div class="stats-grid__item">
+    <dt><%= t("home.index.stats.words") %></dt>
+    <dd><%= number_with_delimiter(@word_count) %><span class="stats-grid__unit"><%= t("home.index.stats.words_unit") %></span></dd>
+  </div>
+  <div class="stats-grid__item">
+    <dt><%= t("home.index.stats.senses") %></dt>
+    <dd><%= number_with_delimiter(@sense_count) %><span class="stats-grid__unit"><%= t("home.index.stats.senses_unit") %></span></dd>
+  </div>
+  <div class="stats-grid__item">
+    <dt><%= t("home.index.stats.genres") %></dt>
+    <dd><%= number_with_delimiter(@genre_count) %><span class="stats-grid__unit"><%= t("home.index.stats.genres_unit") %></span></dd>
+  </div>
+</dl>
+
+<section>
+  <div class="section-header">
+    <h2 class="section-heading"><%= t("home.index.recent") %></h2>
+    <%= link_to t("home.index.see_all"), words_path, class: "section-header__more" %>
+  </div>
+
+  <% if @recent_words.empty? %>
+    <p class="empty-note"><%= t("words.index.empty") %></p>
+  <% else %>
+    <div class="entry-list">
+      <%= render partial: "words/entry_row", collection: @recent_words, as: :word %>
+    </div>
+  <% end %>
+</section>
