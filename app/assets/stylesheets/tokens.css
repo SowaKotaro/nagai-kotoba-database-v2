@@ -1,20 +1,24 @@
-/* デザイントークン「紙とインク」(docs/design.md §1〜3)。
-   色・フォント・余白はここ以外で直書きしない。角丸・影のトークンは存在しない(使用禁止のため)。 */
+/* デザイントークン「活字見本帖」(docs/design.md)。
+   色・フォント・余白はここ以外で直書きしない。角丸・影のトークンは存在しない(使用禁止)。 */
 :root {
-  /* 紙とインクの限定パレット */
-  --paper: #F7F2E7;         /* ページ背景 */
-  --paper-card: #FFFDF8;    /* 台紙カードの面(本体より少し明るい) */
-  --ink: #2B2B28;           /* 本文・見出し */
-  --ink-muted: #5A5440;     /* 補足文 */
-  --ink-faint: #8A8168;     /* メタ情報(最も弱い文字) */
-  --hairline: #D8CFBB;      /* すべての境界線 */
-  --border-strong: #B7AC8E; /* 強調境界(二重罫線の上段・入力の下線など) */
-  --vermillion: #B33A2E;    /* 注釈・該当部分・エラー専用の朱 */
-  --moss: #5F6B3E;          /* 言語学的特徴チップの背景専用 */
-  --moss-strong: #4E5832;   /* チップの hover */
-  --moss-fg: #F3F5EA;       /* moss 上の文字 */
+  /* 紙と墨: 高コントラスト */
+  --bg: #FAF8F3;          /* 温かみのある白(紙) */
+  --ink: #191813;         /* ほぼ黒の墨 */
+  --ink-2: #5C5950;       /* 補足文 */
+  --ink-3: #7C7969;       /* メタ情報(最も弱い文字。これ以上薄くしない) */
+  --rule: #E4E1D5;        /* 細罫(ヘアライン) */
+  --rule-mid: #C9C5B4;    /* 中間の罫(入力の下線など) */
 
-  /* タイポグラフィ: 見出しは明朝(webフォント1本)、本文は OS 標準ゴシック */
+  /* 朱: ふりがな・注釈・現在地・ブランド印章。唯一のアクセント */
+  --shu: #C43A1E;
+  --shu-deep: #A62E15;    /* hover */
+
+  /* 墨ベタ面(フッター)の上で使う文字色 */
+  --on-ink: #FAF8F3;
+  --on-ink-dim: #B6B3A6;
+  --on-ink-rule: #3B3931;
+
+  /* タイポグラフィ: 見出し語は明朝を巨大に、データラベルは極小の等幅 */
   --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-gothic: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
                  "Noto Sans JP", system-ui, sans-serif;
@@ -25,9 +29,9 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 28px;
-  --space-7: 44px;
+  --space-5: 24px;
+  --space-6: 36px;
+  --space-7: 56px;
 
-  --content-width: 760px;
+  --content-width: 1040px;
 }

@@ -1,7 +1,14 @@
-<%# ホーム: サービスの顔。検索窓・収録statistics・新着で「データベース」であることを一目で伝える %>
+<%# ホーム: 型見本の表紙。ステートメント → 今日の一語(巨大) → 検索 → 収録統計 → 新着 %>
 <section class="hero">
-  <h1 class="hero__title"><%= t("layouts.brand") %></h1>
-  <p class="hero__lead"><%= t("home.index.description") %></p>
+  <h1 class="hero__lead"><%= t("home.index.description") %></h1>
+
+  <% if @featured_word %>
+    <div class="hero-featured">
+      <p class="hero-featured__label"><%= t("home.index.featured") %></p>
+      <%= link_to @featured_word.surface, word_path(@featured_word), class: "hero-featured__word" %>
+      <p class="hero-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
+    </div>
+  <% end %>
 
   <%= form_with url: search_path, method: :get, class: "hero-search" do %>
     <%= text_field_tag :q, nil, placeholder: t("home.index.search_placeholder"),
@@ -35,15 +42,7 @@
     <p class="empty-note"><%= t("words.index.empty") %></p>
   <% else %>
     <div class="entry-list">
-      <% @recent_words.each do |word| %>
-        <div class="entry-row">
-          <div class="entry-row__main">
-            <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
-            <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
-          </div>
-          <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
-        </div>
-      <% end %>
+      <%= render partial: "words/entry_row", collection: @recent_words, as: :word %>
     </div>
   <% end %>
 </section>

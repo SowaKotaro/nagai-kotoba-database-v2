@@ -75,6 +75,7 @@ ja:
       description: "日本語の長い単語を収集・解析・公開するデータベースです。読みの長さ・文字の構成・韻・ジャンルなど、さまざまな軸から言葉を眺められます。"
       search_placeholder: "表層形・読みで検索（例：小春日和、コハル）"
       search_submit: "検索"
+      featured: "今日の一語"
       recent: "新着の単語"
       see_all: "すべて見る"
       stats:

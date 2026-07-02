@@ -20,7 +20,7 @@
   <div class="sense-list">
     <% @word.word_senses.each.with_index(1) do |sense, number| %>
       <section class="sense-card">
-        <span class="sense-card__number"><%= t("words.show.sense_number", number: number) %></span>
+        <span class="sense-card__number"><%= t("words.show.sense_number", number: format("%02d", number)) %></span>
 
         <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.2) %>
         <h2 class="sense-heading">

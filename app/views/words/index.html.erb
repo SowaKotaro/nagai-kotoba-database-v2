@@ -9,15 +9,7 @@
   <p class="empty-note"><%= t("words.index.empty") %></p>
 <% else %>
   <div class="entry-list">
-    <% @words.each do |word| %>
-      <div class="entry-row">
-        <div class="entry-row__main">
-          <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
-          <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
-        </div>
-        <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
-      </div>
-    <% end %>
+    <%= render partial: "words/entry_row", collection: @words, as: :word %>
   </div>
 
   <%= render "pagination" %>
