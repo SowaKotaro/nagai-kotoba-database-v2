@@ -1,5 +1,6 @@
 # 語義フィクスチャ。
-# rhythm_pattern はフィクスチャ読込ではコールバックが走らないため、reading に対応する値を明示する。
+# rhythm_pattern / vowel_pattern / mora_count はフィクスチャ読込ではコールバックが走らないため、
+# reading に対応する値を明示する。
 # reading_length / first_char / last_char は DB の STORED 生成カラムのため指定しない。
 murder:
   word: abc_murder
@@ -8,6 +9,8 @@ murder:
   part_of_speech: noun
   reading: さつじんじけん
   rhythm_pattern: satsujinjiken
+  vowel_pattern: auiie
+  mora_count: 7
   meaning: 人を殺す事件
 
 curry:
@@ -15,3 +18,5 @@ curry:
   part_of_speech: noun
   reading: カレー
   rhythm_pattern: karee
+  vowel_pattern: aee
+  mora_count: 3

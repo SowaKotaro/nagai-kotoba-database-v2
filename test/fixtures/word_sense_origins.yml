@@ -1,0 +1,8 @@
+# 語義 × 語種(多対多)のフィクスチャ。
+murder_kango:
+  word_sense: murder
+  word_origin: kango
+
+curry_eigo:
+  word_sense: curry
+  word_origin: eigo

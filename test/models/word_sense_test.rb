@@ -24,6 +24,19 @@ class WordSenseTest < ActiveSupport::TestCase
     assert_equal "raamen", word_sense.rhythm_pattern
   end
 
+  test "保存時に reading から vowel_pattern / mora_count が自動生成される" do
+    word_sense = WordSense.create!(word: words(:abc_murder), reading: "とうきょう")
+    assert_equal "ouou", word_sense.vowel_pattern
+    assert_equal 4, word_sense.mora_count
+  end
+
+  test "reading を変更すると vowel_pattern / mora_count も追従する" do
+    word_sense = word_senses(:curry)
+    word_sense.update!(reading: "らーめん")
+    assert_equal "aae", word_sense.vowel_pattern
+    assert_equal 4, word_sense.mora_count
+  end
+
   test "生成カラム(reading_length/first_char/last_char)が DB で計算される" do
     word_sense = WordSense.create!(word: words(:abc_murder), reading: "さくら")
     word_sense.reload

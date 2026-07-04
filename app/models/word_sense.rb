@@ -8,8 +8,16 @@ class WordSense < ApplicationRecord
   # 言語学的特徴とは word_sense_features を介した多対多。
   has_many :word_sense_features, dependent: :destroy
   has_many :linguistic_features, through: :word_sense_features
-  # 管理画面から特徴(該当部分つき)をネストして登録・編集する。空行はスキップ、_destroy で削除可。
+  # 語種とは word_sense_origins を介した多対多(混種語に対応し複数付与できる)。
+  has_many :word_sense_origins, dependent: :destroy
+  has_many :word_origins, through: :word_sense_origins
+  # 別表記(この語義にだけ付く別の表記。読みも変わりうる)。
+  has_many :word_sense_variants, dependent: :destroy
+  # 管理画面から特徴(該当部分つき)・語種・別表記をネストして登録・編集する。
+  # 空行はスキップ、_destroy で削除可。
   accepts_nested_attributes_for :word_sense_features, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :word_sense_origins, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :word_sense_variants, allow_destroy: true, reject_if: :all_blank
 
   validates :reading, presence: true
   validate :genre_must_be_small
@@ -39,13 +47,16 @@ class WordSense < ApplicationRecord
     where(id: WordSenseFeature.where(linguistic_feature_id: id).select(:word_sense_id))
   }
 
-  # rhythm_pattern は reading から常に導出する(手入力させない)。
-  before_validation :assign_rhythm_pattern
+  # 読み(reading)由来の派生値は常に reading から導出する(手入力させない)。
+  # vowel_pattern は rhythm_pattern から作るため、rhythm_pattern の後に生成する。
+  before_validation :assign_reading_derivations
 
   private
 
-  def assign_rhythm_pattern
+  def assign_reading_derivations
     self.rhythm_pattern = RhythmPattern.call(reading)
+    self.vowel_pattern = VowelPattern.call(rhythm_pattern)
+    self.mora_count = MoraCount.call(reading)
   end
 
   # genre は必ず小分類(末端)を指す運用。大・中分類は登録できない。

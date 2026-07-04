@@ -65,12 +65,18 @@
   - `reading_length`（範囲）/先頭・末尾文字/`char_type_pattern`/`rhythm_pattern`（部分一致）/ジャンル階層/品詞/エンティティタイプ/言語学的特徴
   - `WordSense` のスコープ群＋クエリオブジェクト `WordSenseSearch`。生成カラム/インデックスを活用
 - ⬜ Issue 10: マスタのインライン追加（単語登録画面から完結）
+- ✅ Issue 11: **拡張データ（読み指標・語種・別表記）** … データ層のみ（画面機能は別 Issue）
+  - `word_senses` に `mora_count`（モーラ数・拗音は1拍）/ `vowel_pattern`（母音パターン）を追加。値オブジェクト `MoraCount` / `VowelPattern` ＋ `before_validation` で reading から生成
+  - 語種マスタ `word_origins`（言語ごとに切り分け）＋ 語義との多対多 `word_sense_origins`（混種語対応）
+  - 別表記 `word_sense_variants`（語義に 1:多、読みも保持）
+  - バックフィルタスク `backfill:reading_metrics`
 
 単語データは管理側の CRUD（`/admin/words`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。残タスクは Issue 10（マスタのインライン追加）。
 
 ## 6. 主要ファイル / ディレクトリ
 - `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
-  `entity_type` / `part_of_speech` / `linguistic_feature` / 値オブジェクト `char_type_pattern` / `rhythm_pattern` /
+  `entity_type` / `part_of_speech` / `linguistic_feature` / `word_origin` / `word_sense_origin`（語種の多対多）/
+  `word_sense_variant`（別表記）/ 値オブジェクト `char_type_pattern` / `rhythm_pattern` / `mora_count` / `vowel_pattern` /
   クエリオブジェクト `word_sense_search`（検索条件の組み立て）
 - `app/controllers/` … `application_controller` / `home_controller` / `sessions_controller` /
   `words_controller`（公開閲覧の一覧・詳細）/ `searches_controller`（公開の検索・絞り込み）/

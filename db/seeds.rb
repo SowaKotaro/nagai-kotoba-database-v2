@@ -27,3 +27,6 @@ end
 
 # ジャンル(大分類・中分類)のマスタを投入する。
 load Rails.root.join("db/seeds/genres.rb")
+
+# 語種(和語・漢語・各言語)のマスタを投入する。
+load Rails.root.join("db/seeds/word_origins.rb")

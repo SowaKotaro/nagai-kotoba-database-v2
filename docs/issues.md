@@ -98,3 +98,16 @@
 - [ ] 追加 UI は `<dialog>` もしくは Turbo Frame をその場で開く方式（小さな Stimulus）。フルページ遷移させない。
 - 依存: Issue 7
 - 目的: 「別ページで追加 → 戻って選択」という手間を無くし、単語登録フロー内で完結させる。
+
+## Issue 11: 拡張データ（読み指標・語種・別表記）
+言葉に紐づく解析データを増やす。今回はデータ層（マイグレーション・モデル・値オブジェクト・seed・バックフィル・テスト）まで。検索/表示など画面機能は含めない（別 Issue）。
+- [x] `word_senses` に **モーラ数 `mora_count`**（拗音「きゃ」は1拍。`reading_length` とは別軸）を追加。値オブジェクト `MoraCount` ＋ `before_validation` で reading から生成（Ruby 側・NULL 許容）。
+- [x] `word_senses` に **母音パターン `vowel_pattern`**（`rhythm_pattern` から母音 aiueo のみ抽出）を追加。値オブジェクト `VowelPattern`（`rhythm_pattern` 生成の後に生成）。
+- [x] **語種マスタ `word_origins`**（和語/漢語/英語/フランス語…）。「外来語」で束ねず言語ごとに切り分ける開いた集合。単純マスタ（`name` + `UNIQUE`）。seed 投入。
+- [x] **語義 × 語種の多対多 `word_sense_origins`**（中間）。混種語（例: 歯ブラシ = 和語 + 英語）に対応し 1 語義に複数付与可。`UNIQUE(word_sense_id, word_origin_id)`。参照中の語種は `restrict_with_error`。
+- [x] **別表記 `word_sense_variants`**（語義に 1:多）。その語義にだけ付く別の表記。読みも変わりうるため `reading` を保持（任意）。`UNIQUE(word_sense_id, surface)`。
+- [x] `WordSense` に多対多（`word_origins, through:`）・`has_many :word_sense_variants` と `accepts_nested_attributes_for` を追加。
+- [x] 既存行向けバックフィルタスク `backfill:reading_metrics`（rhythm/vowel/mora を reading から再生成、冪等）。
+- [x] 値オブジェクト（境界値）・各モデルのユニット/バリデーションテスト、フィクスチャ整備。
+- マイグレーション: `AddReadingMetricsToWordSenses` / `CreateWordOrigins` / `CreateWordSenseOrigins` / `CreateWordSenseVariants` の4本。
+- 依存: Issue 5（語義）・Issue 3（マスタの作法）
