@@ -37,5 +37,7 @@ load Rails.root.join("db/seeds/parts_of_speech.rb")
 # 言語学的特徴のマスタを投入する。
 load Rails.root.join("db/seeds/linguistic_features.rb")
 
-# 初期の単語コーパス(表層形・読み)を投入する。読み以外は未注釈のまま。
-load Rails.root.join("db/seeds/words.rb")
+# 初期の単語コーパス(表層形・読み)は開発/テストでの操作確認用のサンプルデータ。
+# 本番では自動投入しない(自動デプロイの deploy:seed に載せない)。
+# 本番の単語は管理者が実際に登録したものだけにして、ID/created_at をクリーンに保つ。
+load Rails.root.join("db/seeds/words.rb") unless Rails.env.production?
