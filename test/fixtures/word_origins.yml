@@ -1,0 +1,9 @@
+# 語種マスタのフィクスチャ。
+wago:
+  name: 和語
+
+kango:
+  name: 漢語
+
+eigo:
+  name: 英語

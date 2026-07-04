@@ -62,6 +62,19 @@ CREATE TABLE linguistic_features (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ---------------------------------------------------------------------
+-- マスタ: 語種 (和語 / 漢語 / 英語 / フランス語 …)
+--   「外来語」で束ねず言語ごとに切り分ける。値が増える開いた集合。
+-- ---------------------------------------------------------------------
+CREATE TABLE word_origins (
+  id         BIGINT       NOT NULL AUTO_INCREMENT,
+  name       VARCHAR(255) NOT NULL,
+  created_at DATETIME(6)  NOT NULL,
+  updated_at DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_word_origins_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
 -- 単語 (表層形) : surface に紐づく属性のみを保持
 --   char_type_pattern は surface から Ruby 側で生成 (漢/あ/ア/A/@ へ変換)
 -- ---------------------------------------------------------------------
@@ -92,6 +105,8 @@ CREATE TABLE word_senses (
   part_of_speech_id BIGINT        NULL,
   reading           VARCHAR(768)  NOT NULL COMMENT '読み',
   rhythm_pattern    VARCHAR(2048) NULL COMMENT '韻パターン(読みのローマ字表記)',
+  mora_count        INT           NULL COMMENT 'モーラ数(拗音は1拍。Ruby 側で生成)',
+  vowel_pattern     VARCHAR(1024) NULL COMMENT '母音パターン(rhythm_pattern から母音抽出。Ruby 側で生成)',
   meaning           TEXT          NULL COMMENT '意味',
   reading_length    INT           AS (CHAR_LENGTH(reading)) STORED COMMENT '読みの文字数',
   first_char        VARCHAR(8)    AS (LEFT(reading, 1))     STORED COMMENT '先頭文字',
@@ -107,6 +122,8 @@ CREATE TABLE word_senses (
   KEY idx_word_senses_reading_length (reading_length),
   KEY idx_word_senses_first_char     (first_char),
   KEY idx_word_senses_last_char      (last_char),
+  KEY idx_word_senses_mora_count     (mora_count),
+  KEY idx_word_senses_vowel_pattern  (vowel_pattern(191)),
   CONSTRAINT fk_word_senses_word
     FOREIGN KEY (word_id)           REFERENCES words (id),
   CONSTRAINT fk_word_senses_genre
@@ -142,4 +159,44 @@ CREATE TABLE word_sense_features (
     FOREIGN KEY (word_sense_id)         REFERENCES word_senses (id),
   CONSTRAINT fk_wsf_linguistic_feature
     FOREIGN KEY (linguistic_feature_id) REFERENCES linguistic_features (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- 中間: 語義 × 語種 (多対多)
+--   混種語 (例: 歯ブラシ = 和語 + 英語) を表現するため 1 語義に複数の語種を許す。
+-- ---------------------------------------------------------------------
+CREATE TABLE word_sense_origins (
+  id             BIGINT      NOT NULL AUTO_INCREMENT,
+  word_sense_id  BIGINT      NOT NULL,
+  word_origin_id BIGINT      NOT NULL,
+  created_at     DATETIME(6) NOT NULL,
+  updated_at     DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  -- (word_sense, origin) の二つ組で一意 (同じ語義に同じ語種を二重登録させない)。
+  UNIQUE KEY uq_wso_sense_origin (word_sense_id, word_origin_id),
+  KEY idx_wso_origin (word_origin_id),
+  CONSTRAINT fk_wso_word_sense
+    FOREIGN KEY (word_sense_id)  REFERENCES word_senses (id),
+  CONSTRAINT fk_wso_word_origin
+    FOREIGN KEY (word_origin_id) REFERENCES word_origins (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------------------------------------------------------------------
+-- 別表記 : 語義 (word_sense) に 1:多。その語義にだけ付く別の表記。
+--   例:「バタフライエフェクト」の自然科学の語義に別表記「バタフライ効果」。
+--   読みも変わりうるため reading も保持する (バタフライエフェクト→バタフライこうか)。
+-- ---------------------------------------------------------------------
+CREATE TABLE word_sense_variants (
+  id            BIGINT       NOT NULL AUTO_INCREMENT,
+  word_sense_id BIGINT       NOT NULL,
+  surface       VARCHAR(768) NOT NULL COMMENT '別表記の表層形 例: バタフライ効果',
+  reading       VARCHAR(768) NULL     COMMENT '別表記の読み(変わる場合) 例: バタフライこうか',
+  note          VARCHAR(255) NULL     COMMENT '任意メモ(旧字/略式 など)',
+  created_at    DATETIME(6)  NOT NULL,
+  updated_at    DATETIME(6)  NOT NULL,
+  PRIMARY KEY (id),
+  -- (word_sense, surface) で一意。surface は prefix index(191文字)。
+  UNIQUE KEY uq_wsv_sense_surface (word_sense_id, surface(191)),
+  CONSTRAINT fk_wsv_word_sense
+    FOREIGN KEY (word_sense_id) REFERENCES word_senses (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
