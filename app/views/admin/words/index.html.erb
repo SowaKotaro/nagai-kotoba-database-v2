@@ -2,7 +2,10 @@
 
 <h1 class="page-title"><%= t("admin.words.title") %></h1>
 
-<p><%= link_to t("admin.words.new"), new_admin_word_path, class: "btn btn--primary" %></p>
+<p class="admin-actions">
+  <%= link_to t("admin.words.new"), new_admin_word_path, class: "btn btn--primary" %>
+  <%= link_to t("admin.annotations.nav"), admin_annotations_path, class: "btn" %>
+</p>
 
 <table class="data-table">
   <thead>

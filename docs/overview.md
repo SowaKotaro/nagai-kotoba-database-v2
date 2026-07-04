@@ -70,8 +70,11 @@
   - 語種マスタ `word_origins`（言語ごとに切り分け）＋ 語義との多対多 `word_sense_origins`（混種語対応）
   - 別表記 `word_sense_variants`（語義に 1:多、読みも保持）
   - バックフィルタスク `backfill:reading_metrics`
+- ✅ Issue 12: **高速アノテーション・コンソール**（`/admin/annotations`）… 既存 `/admin/words` と併存
+  - 1語集中キュー（`words.annotated_at` で未注釈を管理）。Turbo Frame で「保存して次へ」
+  - ドロップダウン全廃・チップ選択（`:has()`）／ジャンル段階表示／特徴は文字の範囲タップ（`feature-range`）／マスタその場追加（`inline-add`・`genre-picker`）／語義複製（`sense-cloner`）
 
-単語データは管理側の CRUD（`/admin/words`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。残タスクは Issue 10（マスタのインライン追加）。
+単語データは管理側の CRUD（`/admin/words`）・高速アノテーション（`/admin/annotations`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。マスタのその場追加はコンソールで実現済み（Issue 10 相当）。
 
 ## 6. 主要ファイル / ディレクトリ
 - `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
@@ -82,7 +85,9 @@
   `words_controller`（公開閲覧の一覧・詳細）/ `searches_controller`（公開の検索・絞り込み）/
   `admin/`（`base` / `words` / `genres`。管理者専用 CRUD。名前空間 `Admin` は `Admin` モデルが保持）/
   `concerns/authentication.rb`（認証。閲覧公開は `allow_unauthenticated_access` で開放）
-- `app/javascript/controllers/` … Stimulus。`nested_form`（行の動的追加/削除）/ `genre_cascade`（大中小の依存選択）
+- `app/javascript/controllers/` … Stimulus。`nested_form`（行の動的追加/削除）/ `genre_cascade`（大中小の依存選択）/
+  アノテーション用: `queue_nav`（キーボード送り）/ `inline_add`（マスタその場追加）/ `feature_range`（特徴の範囲タップ）/
+  `genre_picker`（ジャンル段階表示＋その場追加）/ `sense_cloner`（語義の複製追加）
 - `db/schema.rb` … スキーマの正（直接編集せずマイグレーション経由で更新）
 - `db/seeds.rb` → `db/seeds/genres.rb` … 管理者とジャンルマスタを冪等に投入
 - `config/locales/ja.yml` … 既定ロケール `:ja`。表示文言はここに集約（ハードコードしない）

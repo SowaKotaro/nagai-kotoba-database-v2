@@ -1,0 +1,184 @@
+<%# 1つの語義の入力欄。local: form(語義のフォームビルダ)。マスタは @word_origins 等を参照。 %>
+<% sense = form.object %>
+<div class="ann-sense js-sense" data-index="<%= form.index %>">
+  <div class="ann-sense__head">
+    <span class="ann-sense__stamp"><%= t("admin.words.senses_legend") %> <%= format("%02d", form.index + 1) %></span>
+    <%= form.hidden_field :_destroy, data: { sense_destroy: "" } %>
+    <button type="button" class="ann-sense__del" data-action="sense-cloner#remove"><%= t("admin.annotations.remove_sense") %></button>
+  </div>
+
+  <%# 読み %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.reading") %></div>
+    <div>
+      <%= form.text_field :reading, class: "ann-reading js-reading", placeholder: t("admin.annotations.reading_placeholder") %>
+      <div class="ann-derived">
+        韻 <b><%= sense.rhythm_pattern.presence || "—" %></b>　母音 <b><%= sense.vowel_pattern.presence || "—" %></b>　モーラ <b><%= sense.mora_count || "—" %></b>　<span><%= t("admin.annotations.derived_note") %></span>
+      </div>
+    </div>
+  </div>
+
+  <%# 意味 %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.meaning") %></div>
+    <div><%= form.text_area :meaning, class: "js-meaning", placeholder: t("admin.annotations.meaning_placeholder") %></div>
+  </div>
+
+  <%# 語種(多対多・複数選択) %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.origins") %></div>
+    <div class="ann-chips">
+      <%= hidden_field_tag "#{form.field_name(:word_origin_ids)}[]", "", id: nil %>
+      <% @word_origins.each do |origin| %>
+        <label class="ann-chip">
+          <%= check_box_tag "#{form.field_name(:word_origin_ids)}[]", origin.id,
+                            sense.word_origin_ids.include?(origin.id), id: nil, class: "ann-chip__input" %>
+          <%= origin.name %>
+        </label>
+      <% end %>
+      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_word_origins_path %>">
+        <button type="button" class="ann-add__btn" data-action="inline-add#open"><%= t("admin.annotations.add_master") %></button>
+        <span class="ann-add__field" data-inline-add-target="field" hidden>
+          <input type="text" class="ann-add__input" data-inline-add-target="input"
+                 data-action="keydown->inline-add#key" placeholder="<%= t("admin.annotations.new_origin_placeholder") %>">
+        </span>
+        <template data-inline-add-target="chip">
+          <label class="ann-chip">
+            <input type="checkbox" class="ann-chip__input" name="<%= "#{form.field_name(:word_origin_ids)}[]" %>" value="__ID__" checked>
+            __NAME__
+          </label>
+        </template>
+      </span>
+    </div>
+  </div>
+
+  <%# ジャンル(段階表示) %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.genre") %></div>
+    <div class="ann-genre" data-controller="genre-picker"
+         data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
+         data-genre-picker-create-url-value="<%= admin_genres_path %>">
+      <%= form.hidden_field :genre_id, class: "js-genre-value", data: { genre_picker_target: "value" } %>
+      <% if sense.genre %>
+        <div class="ann-genre__current js-genre-current" data-genre-picker-target="current">
+          <% sense.genre.self_and_ancestors.reverse.each_with_index do |g, i| %>
+            <% if i.positive? %><span class="sep">›</span><% end %><span><%= g.name %></span>
+          <% end %>
+          <button type="button" class="ann-genre__change" data-action="genre-picker#reset"><%= t("admin.annotations.genre_change") %></button>
+        </div>
+      <% end %>
+      <div class="ann-genre__level js-genre-large" data-genre-picker-target="largeLevel" <%= "hidden" if sense.genre %>>
+        <span class="ann-genre__tag"><%= t("admin.annotations.genre_large") %></span>
+        <div class="ann-chips" data-genre-picker-target="largeChips">
+          <% @large_genres.each do |g| %>
+            <button type="button" class="ann-chip" data-id="<%= g.id %>" data-action="genre-picker#pickLarge"><%= g.name %></button>
+          <% end %>
+        </div>
+      </div>
+      <div class="ann-genre__level js-genre-medium" data-genre-picker-target="mediumLevel" hidden>
+        <span class="ann-genre__tag"><%= t("admin.annotations.genre_medium") %></span>
+        <div class="ann-chips" data-genre-picker-target="mediumChips"></div>
+      </div>
+      <div class="ann-genre__level js-genre-small" data-genre-picker-target="smallLevel" hidden>
+        <span class="ann-genre__tag"><%= t("admin.annotations.genre_small") %></span>
+        <div class="ann-chips" data-genre-picker-target="smallChips"></div>
+      </div>
+    </div>
+  </div>
+
+  <%# 品詞(単一選択) %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.pos") %></div>
+    <div class="ann-chips">
+      <label class="ann-chip">
+        <%= form.radio_button :part_of_speech_id, "", checked: sense.part_of_speech_id.blank?, class: "ann-chip__input" %>
+        <%= t("admin.annotations.none") %>
+      </label>
+      <% @parts_of_speech.each do |pos| %>
+        <label class="ann-chip">
+          <%= form.radio_button :part_of_speech_id, pos.id, class: "ann-chip__input" %>
+          <%= pos.name %>
+        </label>
+      <% end %>
+      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_parts_of_speech_path %>">
+        <button type="button" class="ann-add__btn" data-action="inline-add#open"><%= t("admin.annotations.add_master") %></button>
+        <span class="ann-add__field" data-inline-add-target="field" hidden>
+          <input type="text" class="ann-add__input" data-inline-add-target="input"
+                 data-action="keydown->inline-add#key" placeholder="<%= t("admin.annotations.new_pos_placeholder") %>">
+        </span>
+        <template data-inline-add-target="chip">
+          <label class="ann-chip">
+            <input type="radio" class="ann-chip__input" name="<%= form.field_name(:part_of_speech_id) %>" value="__ID__" checked>
+            __NAME__
+          </label>
+        </template>
+      </span>
+    </div>
+  </div>
+
+  <%# エンティティ(単一選択) %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.entity") %></div>
+    <div class="ann-chips">
+      <label class="ann-chip">
+        <%= form.radio_button :entity_type_id, "", checked: sense.entity_type_id.blank?, class: "ann-chip__input js-entity-none" %>
+        <%= t("admin.annotations.none") %>
+      </label>
+      <% @entity_types.each do |entity| %>
+        <label class="ann-chip">
+          <%= form.radio_button :entity_type_id, entity.id, class: "ann-chip__input" %>
+          <%= entity.name %>
+        </label>
+      <% end %>
+      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_entity_types_path %>">
+        <button type="button" class="ann-add__btn" data-action="inline-add#open"><%= t("admin.annotations.add_master") %></button>
+        <span class="ann-add__field" data-inline-add-target="field" hidden>
+          <input type="text" class="ann-add__input" data-inline-add-target="input"
+                 data-action="keydown->inline-add#key" placeholder="<%= t("admin.annotations.new_entity_placeholder") %>">
+        </span>
+        <template data-inline-add-target="chip">
+          <label class="ann-chip">
+            <input type="radio" class="ann-chip__input" name="<%= form.field_name(:entity_type_id) %>" value="__ID__" checked>
+            __NAME__
+          </label>
+        </template>
+      </span>
+    </div>
+  </div>
+
+  <%# 言語学的特徴(該当部分を範囲タップで指定) %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.features") %></div>
+    <div class="ann-features" data-controller="nested-form" data-nested-form-placeholder-value="NEW_FEATURE">
+      <div data-nested-form-target="container">
+        <%= form.fields_for :word_sense_features do |feature_form| %>
+          <%= render "feature_fields", form: feature_form %>
+        <% end %>
+      </div>
+      <template data-nested-form-target="template">
+        <%= form.fields_for :word_sense_features, WordSenseFeature.new, child_index: "NEW_FEATURE" do |feature_form| %>
+          <%= render "feature_fields", form: feature_form %>
+        <% end %>
+      </template>
+      <button type="button" class="ann-addrow" data-action="nested-form#add"><%= t("admin.annotations.add_feature") %></button>
+    </div>
+  </div>
+
+  <%# 別表記(最後) %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.annotations.variants") %></div>
+    <div class="ann-variants" data-controller="nested-form" data-nested-form-placeholder-value="NEW_VARIANT">
+      <div class="js-variants" data-nested-form-target="container">
+        <%= form.fields_for :word_sense_variants do |variant_form| %>
+          <%= render "variant_fields", form: variant_form %>
+        <% end %>
+      </div>
+      <template data-nested-form-target="template">
+        <%= form.fields_for :word_sense_variants, WordSenseVariant.new, child_index: "NEW_VARIANT" do |variant_form| %>
+          <%= render "variant_fields", form: variant_form %>
+        <% end %>
+      </template>
+      <button type="button" class="ann-addrow" data-action="nested-form#add"><%= t("admin.annotations.add_variant") %></button>
+    </div>
+  </div>
+</div>

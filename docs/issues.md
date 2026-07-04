@@ -111,3 +111,15 @@
 - [x] 値オブジェクト（境界値）・各モデルのユニット/バリデーションテスト、フィクスチャ整備。
 - マイグレーション: `AddReadingMetricsToWordSenses` / `CreateWordOrigins` / `CreateWordSenseOrigins` / `CreateWordSenseVariants` の4本。
 - 依存: Issue 5（語義）・Issue 3（マスタの作法）
+
+## Issue 12: 高速アノテーション・コンソール
+1語集中キュー型の管理 UI。既存 `/admin/words`（フル入れ子フォーム）とは**併存**。モックで UX 確定後に実装（`docs/design.md` 準拠）。
+- [x] `words.annotated_at` を追加（`AddAnnotatedAtToWords`）。**未注釈キュー** = `Word.unannotated`（`annotated_at` が NULL）。保存で現在時刻をセット。
+- [x] `Admin::AnnotationsController`（index=最初の未注釈へ誘導 / show=コンソール / update=保存して次の未注釈へ）。**Turbo Frame** でキュー送り（フルリロードなし・`turbo_action: advance` で履歴追従）。
+- [x] **ドロップダウン全廃**。語種＝複数チップ（`word_origin_ids`）、品詞・エンティティ＝単一チップ（ラジオ）、ジャンル＝**段階表示**（大→中→小、選ぶと下位が出現）。チップは隠し input＋CSS `:has()` で極力 JS レス。
+- [x] **言語学的特徴の該当部分をキーボードなしで指定**: 単語／読みの文字を「始点→終点タップ」（宿泊予約のチェックイン/アウト式）で範囲選択（`feature-range` Stimulus）。スマホ/タブレット対応。
+- [x] **マスタのその場追加**（Issue 10 相当）: 語種・品詞・エンティティ・ジャンル（各階層）を画面遷移せず JSON POST で追加し即選択（`inline-add` / `genre-picker` Stimulus、`Admin::WordOrigins/PartsOfSpeech/EntityTypes/Genres#create`）。
+- [x] **語義を追加**: 語種・品詞・特徴を引き継ぎ、読み・意味・ジャンル・エンティティ・別表記を空にした語義を複製（`sense-cloner` Stimulus）。
+- [x] 別表記は語義ごとにネストで登録。CSS は `annotate.css`（manifest に追加）。i18n・スモークテスト（描画＋ネスト保存＋その場追加）。
+- 依存: Issue 11（語種・別表記）・Issue 5/6/7（語義・特徴・admin CRUD の作法）
+- 補足: チップ操作・範囲タップ・段階ジャンルなどの DOM 挙動はシステムテスト（未整備）で確認する想定。サーバ側は結合テストでカバー済み。

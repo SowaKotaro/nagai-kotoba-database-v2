@@ -10,10 +10,16 @@ Rails.application.routes.draw do
   namespace :admin do
     # 詳細(show)は公開閲覧側(Issue 8)で扱うため管理側には持たせない。
     resources :words, except: :show
-    # ジャンルの大→中→小 依存ドロップダウン用に、指定した親の子ジャンルを返す。
-    resources :genres, only: [] do
+    # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。
+    resources :annotations, only: %i[index show update]
+    # ジャンルの大→中→小 依存選択用に、子ジャンルの取得と、その場での新規追加。
+    resources :genres, only: :create do
       get :children, on: :collection
     end
+    # マスタのその場追加(コンソールから画面遷移せずに選択肢を増やす)。
+    resources :word_origins, only: :create
+    resources :parts_of_speech, only: :create
+    resources :entity_types, only: :create
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

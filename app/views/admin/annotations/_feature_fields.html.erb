@@ -1,0 +1,27 @@
+<%# 1つの言語学的特徴。該当部分は単語/読みの文字を範囲タップで指定する。local: form %>
+<div class="ann-feature js-feature" data-nested-form-item data-controller="feature-range"
+     data-feature-range-surface-value="<%= @word.surface %>">
+  <div class="ann-feature__head">
+    <span class="t"><%= t("admin.annotations.feature_no") %></span>
+    <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>
+    <button type="button" class="ann-remove" data-action="nested-form#remove" aria-label="<%= t("admin.annotations.remove") %>">×</button>
+  </div>
+
+  <div class="ann-chips">
+    <% @linguistic_features.each do |feature| %>
+      <label class="ann-chip">
+        <%= form.radio_button :linguistic_feature_id, feature.id, class: "ann-chip__input" %>
+        <%= feature.name %>
+      </label>
+    <% end %>
+  </div>
+
+  <p class="ann-strip-label"><%= t("admin.annotations.target_word") %></p>
+  <div class="ann-strip" data-feature-range-target="surfaceStrip"></div>
+  <p class="ann-strip-label"><%= t("admin.annotations.target_reading") %></p>
+  <div class="ann-strip ann-strip--reading" data-feature-range-target="readingStrip"></div>
+
+  <%= form.hidden_field :target, data: { feature_range_target: "targetField" } %>
+  <%= form.hidden_field :target_reading, data: { feature_range_target: "targetReadingField" } %>
+  <p class="ann-feature__result" data-feature-range-target="result"></p>
+</div>
