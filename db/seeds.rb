@@ -30,3 +30,12 @@ load Rails.root.join("db/seeds/genres.rb")
 
 # 語種(和語・漢語・各言語)のマスタを投入する。
 load Rails.root.join("db/seeds/word_origins.rb")
+
+# 品詞のマスタを投入する。
+load Rails.root.join("db/seeds/parts_of_speech.rb")
+
+# 言語学的特徴のマスタを投入する。
+load Rails.root.join("db/seeds/linguistic_features.rb")
+
+# 初期の単語コーパス(表層形・読み)を投入する。読み以外は未注釈のまま。
+load Rails.root.join("db/seeds/words.rb")
