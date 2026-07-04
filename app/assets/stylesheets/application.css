@@ -7,5 +7,6 @@
  *= require base
  *= require layout
  *= require components
+ *= require annotate
  *= require_self
  */

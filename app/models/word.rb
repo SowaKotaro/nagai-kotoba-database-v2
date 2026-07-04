@@ -6,6 +6,14 @@ class Word < ApplicationRecord
 
   validates :surface, presence: true, uniqueness: true
 
+  # アノテーション・コンソールの未注釈キュー(annotated_at が未セットの語)。
+  scope :unannotated, -> { where(annotated_at: nil) }
+
+  # 注釈完了とみなす時刻をセットする(保存は呼び出し側で行う)。
+  def mark_annotated
+    self.annotated_at = Time.current
+  end
+
   # char_type_pattern は surface から常に導出する(手入力させない)。
   before_validation :assign_char_type_pattern
 

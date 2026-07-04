@@ -1,0 +1,9 @@
+<% content_for :title, t("admin.annotations.title") %>
+<%= turbo_frame_tag "annotation-console", data: { turbo_action: "advance" } do %>
+  <div class="ann-done">
+    <p class="ann-eyebrow"><span><%= t("admin.annotations.title") %></span></p>
+    <p class="ann-done__lead"><%= t("admin.annotations.all_done") %></p>
+    <p><%= t("admin.annotations.all_done_lead") %></p>
+    <p><%= link_to t("admin.annotations.to_words"), admin_words_path, class: "btn" %></p>
+  </div>
+<% end %>

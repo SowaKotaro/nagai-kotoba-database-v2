@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_04_100300) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_04_110000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -125,10 +125,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_04_100300) do
   end
 
   create_table "words", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "annotated_at", comment: "アノテーション完了時刻(未注釈は NULL)"
     t.string "char_type_pattern", limit: 768, null: false, comment: "文字タイプ列 例: AAA漢漢漢漢"
     t.datetime "created_at", null: false
     t.string "surface", limit: 768, null: false, comment: "表層形 例: ABC殺人事件"
     t.datetime "updated_at", null: false
+    t.index ["annotated_at"], name: "idx_words_annotated_at"
     t.index ["char_type_pattern"], name: "idx_words_char_type_pattern", length: 191
     t.index ["surface"], name: "uq_words_surface", unique: true, length: 191
   end

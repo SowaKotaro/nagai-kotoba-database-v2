@@ -1,0 +1,7 @@
+<%# 1つの別表記(語義に紐づく)。表記と、変わる場合の読み。local: form %>
+<div class="ann-subrow" data-nested-form-item>
+  <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>
+  <%= form.text_field :surface, placeholder: t("admin.annotations.variant_surface") %>
+  <%= form.text_field :reading, placeholder: t("admin.annotations.variant_reading") %>
+  <button type="button" class="ann-remove" data-action="nested-form#remove" aria-label="<%= t("admin.annotations.remove") %>">×</button>
+</div>

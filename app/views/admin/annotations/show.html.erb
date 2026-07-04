@@ -1,0 +1,61 @@
+<% content_for :title, t("admin.annotations.title") %>
+<%= turbo_frame_tag "annotation-console", data: { turbo_action: "advance" } do %>
+  <div class="ann" data-controller="queue-nav">
+    <div class="ann-bar">
+      <span class="ann-bar__counter">
+        <%= t("admin.annotations.remaining") %>
+        <span class="rest"><%= @remaining %></span> <%= t("admin.annotations.unit_word") %>
+      </span>
+      <span class="ann-bar__legend" aria-hidden="true">
+        <span><key>&#9166;</key><%= t("admin.annotations.save_next") %></span>
+        <span><key>&rarr;</key><%= t("admin.annotations.skip") %></span>
+        <span><key>&larr;</key><%= t("admin.annotations.back") %></span>
+      </span>
+    </div>
+
+    <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.annotations.eyebrow") %></span></p>
+    <h1 class="ann-word"><%= @word.surface %></h1>
+    <p class="ann-word-meta"><%= t("admin.annotations.char_type") %>　<%= @word.char_type_pattern %></p>
+
+    <%= form_with model: @word, url: admin_annotation_path(@word), method: :patch,
+                  data: { queue_nav_target: "form" } do |form| %>
+      <% if @word.errors.any? %>
+        <div class="error-explanation">
+          <h2><%= t("admin.annotations.error_header") %></h2>
+          <ul>
+            <% @word.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="ann-senses" data-controller="sense-cloner">
+        <div data-sense-cloner-target="container">
+          <%= form.fields_for :word_senses do |sense_form| %>
+            <%= render "sense_fields", form: sense_form %>
+          <% end %>
+        </div>
+
+        <button type="button" class="ann-add-sense" data-action="sense-cloner#add">
+          <%= t("admin.annotations.add_sense") %>
+          <small><%= t("admin.annotations.add_sense_hint") %></small>
+        </button>
+      </div>
+
+      <div class="ann-actionbar">
+        <% if @prev_word %>
+          <%= link_to t("admin.annotations.back"), admin_annotation_path(@prev_word),
+                      class: "btn", data: { queue_nav_target: "back" } %>
+        <% else %>
+          <span class="btn" aria-disabled="true"><%= t("admin.annotations.back") %></span>
+        <% end %>
+        <span class="spacer"></span>
+        <%= link_to t("admin.annotations.skip"),
+                    (@skip_word ? admin_annotation_path(@skip_word) : admin_annotations_path),
+                    class: "btn", data: { queue_nav_target: "skip" } %>
+        <%= form.submit t("admin.annotations.save_next"), class: "btn btn--primary" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

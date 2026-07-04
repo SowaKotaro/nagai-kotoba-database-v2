@@ -1,0 +1,118 @@
+/* =====================================================================
+   アノテーション・コンソール(管理者専用)。docs/design.md 準拠。
+   紙×墨＋朱一色 / 角丸・影・ピルなし / 巨大明朝 × 等幅ラベル。
+   チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
+   ===================================================================== */
+
+.ann { position: relative; }
+
+/* 上部ステータス(墨2px下端) */
+.ann-bar {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: var(--space-2); margin-bottom: var(--space-4);
+}
+.ann-bar__counter { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-2); }
+.ann-bar__counter b { color: var(--ink); font-weight: 600; }
+.ann-bar__counter .rest { color: var(--shu); }
+.ann-bar__legend { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); }
+.ann-bar__legend key { color: var(--shu); border: 1px solid var(--rule-mid); padding: 1px 5px; margin-right: 6px; }
+
+/* 見本語 */
+.ann-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-3); display: flex; gap: 14px; align-items: center; }
+.ann-eyebrow .no { color: var(--shu); }
+.ann-word { font-family: var(--font-mincho); font-weight: 600; font-size: clamp(34px, 7vw, 76px); line-height: 1.06; margin: var(--space-1) 0 2px; letter-spacing: 0.01em; overflow-wrap: anywhere; }
+.ann-word-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding-bottom: var(--space-4); border-bottom: 2px solid var(--ink); }
+
+/* 語義パネル(墨1px枠・番号刻印) */
+.ann-sense { border: 1px solid var(--ink); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
+.ann-sense__head { display: flex; align-items: center; justify-content: space-between; margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5)) var(--space-3); }
+.ann-sense__stamp { background: var(--ink); color: var(--on-ink); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; padding: 5px 12px; }
+.ann-sense__del { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; padding: 6px 12px; }
+.ann-sense__del:hover { color: var(--shu); }
+
+/* ラベル列 + 値列 */
+.ann-row { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; align-items: start; padding: var(--space-3) 0; border-bottom: 1px solid var(--rule); }
+.ann-row:last-child { border-bottom: 0; }
+.ann-row__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); padding-top: 6px; }
+
+.ann-reading { font-size: 17px; letter-spacing: 0.04em; border-bottom: 1px solid var(--rule-mid); }
+.ann-derived { display: flex; gap: 16px; flex-wrap: wrap; margin-top: var(--space-2); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-3); }
+.ann-derived b { color: var(--ink); font-weight: 400; }
+
+/* チップ(隠し input + :has) */
+.ann-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.ann-chip {
+  position: relative; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--ink); color: var(--ink); background: transparent;
+  font-family: var(--font-gothic); font-size: 13.5px; line-height: 1.3;
+  padding: 6px 12px; min-height: 34px; cursor: pointer; user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+.ann-chip:hover { background: var(--ink); color: var(--on-ink); }
+.ann-chip__input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.ann-chip:has(.ann-chip__input:checked) { background: var(--ink); color: var(--on-ink); }
+.ann-chip:has(input[type="radio"].ann-chip__input:checked)::before { content: "\25CF"; font-size: 8px; color: var(--shu); }
+.ann-chip:has(input[type="radio"].ann-chip__input:checked):hover::before { color: var(--on-ink-dim); }
+.ann-chip:has(.ann-chip__input:focus-visible) { outline: 2px solid var(--shu); outline-offset: 2px; }
+/* ジャンルのボタン型チップ(JS で is-on を付与) */
+.ann-chip.is-on { background: var(--ink); color: var(--on-ink); }
+
+/* その場追加 */
+.ann-add { display: inline-flex; align-items: center; gap: 6px; }
+.ann-add__btn { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-2); background: transparent; border: 1px dashed var(--rule-mid); padding: 5px 10px; cursor: pointer; min-height: 34px; }
+.ann-add__btn:hover { border-color: var(--ink); color: var(--ink); }
+.ann-add__input { width: 8em; font-size: 14px; border: 0; border-bottom: 1px solid var(--shu); padding: 4px 2px; }
+
+/* ジャンル 段階表示 */
+.ann-genre__current { font-family: var(--font-gothic); font-size: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ann-genre__current .sep { color: var(--shu); }
+.ann-genre__change { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
+.ann-genre__change:hover { color: var(--shu); }
+.ann-genre__level { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 5px 0; }
+.ann-genre__tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--shu); min-width: 1.4em; }
+.ann-genre__level .ann-chips { flex: 1; }
+
+/* 特徴: 範囲タップ */
+.ann-feature { border: 1px solid var(--ink); padding: var(--space-3) var(--space-4) var(--space-4); margin-bottom: var(--space-3); }
+.ann-feature__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.ann-feature__head .t { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); }
+.ann-strip-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--ink-3); margin: var(--space-3) 0 var(--space-1); }
+.ann-strip { display: flex; flex-wrap: wrap; gap: 3px; }
+.ann-cell { font-family: var(--font-mincho); font-size: 18px; line-height: 1; text-align: center; min-width: 1.5em; padding: 9px 5px; border: 1px solid var(--rule-mid); background: transparent; color: var(--ink); cursor: pointer; transition: background 0.1s, color 0.1s, border-color 0.1s; }
+.ann-strip--reading .ann-cell { font-family: var(--font-gothic); font-size: 14px; }
+.ann-cell:hover { border-color: var(--ink); }
+.ann-cell.is-sel { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.ann-cell.is-start { color: var(--shu); border-color: var(--shu); box-shadow: inset 0 -2px 0 var(--shu); }
+.ann-feature__result { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-2); margin-top: var(--space-2); }
+
+/* 別表記(行追加・テキスト) */
+.ann-subrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px dotted var(--rule); }
+.ann-subrow input { flex: 1 1 8em; min-width: 6em; }
+.ann-subrow .ann-remove { font-family: var(--font-mono); font-size: 15px; line-height: 1; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; padding: 6px; }
+.ann-subrow .ann-remove:hover { color: var(--shu); }
+
+.ann-addrow { align-self: flex-start; margin-top: var(--space-2); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; background: transparent; color: var(--ink); border: 1px solid var(--ink); padding: 6px 14px; cursor: pointer; min-height: 34px; }
+.ann-addrow:hover { background: var(--ink); color: var(--on-ink); }
+
+/* 語義を追加 */
+.ann-add-sense { display: block; width: 100%; margin-top: var(--space-5); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.16em; background: transparent; color: var(--ink); border: 1px dashed var(--ink); padding: var(--space-3); cursor: pointer; }
+.ann-add-sense:hover { background: var(--ink); color: var(--on-ink); }
+.ann-add-sense small { display: block; font-size: 9.5px; color: var(--ink-3); letter-spacing: 0.08em; margin-top: 3px; }
+.ann-add-sense:hover small { color: var(--on-ink-dim); }
+
+/* 最下部アクションバー */
+.ann-actionbar { position: sticky; bottom: 0; z-index: 4; background: var(--bg); border-top: 2px solid var(--ink); padding: var(--space-3) 0; margin-top: var(--space-5); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.ann-actionbar .spacer { flex: 1; }
+.ann-actionbar .kbd { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-left: 6px; }
+.ann-actionbar .btn:hover .kbd, .ann-actionbar .btn--primary .kbd { color: var(--on-ink-dim); }
+
+/* 完了画面 */
+.ann-done { padding: var(--space-6) 0; }
+.ann-done__lead { font-family: var(--font-mincho); font-size: clamp(24px, 4vw, 36px); }
+
+@media (max-width: 560px) {
+  .ann-row { grid-template-columns: 1fr; gap: 6px; }
+  .ann-row__label { padding-top: 0; }
+  .ann-bar__legend { display: none; }
+}
