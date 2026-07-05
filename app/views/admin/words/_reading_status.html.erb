@@ -1,0 +1,11 @@
+<% case row.status
+   when :match %>
+  <span class="reading-status reading-status--match"><%= t("admin.words.bulk.readings.status.match") %></span>
+<% when :differ %>
+  <span class="reading-status reading-status--differ"><%= t("admin.words.bulk.readings.status.differ") %></span>
+<% when :research_only %>
+  <span class="reading-status reading-status--research"><%= t("admin.words.bulk.readings.status.research_only") %></span>
+<% end %>
+<% if row.research_confidence.present? && row.status != :mecab_only %>
+  <span class="reading-status__conf"><%= t("admin.words.bulk.readings.confidence.#{row.research_confidence}", default: row.research_confidence) %></span>
+<% end %>

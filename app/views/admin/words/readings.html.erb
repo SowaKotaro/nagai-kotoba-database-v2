@@ -1,0 +1,84 @@
+<% content_for :title, t("admin.words.bulk.readings.title") %>
+
+<h1 class="page-title"><%= t("admin.words.bulk.readings.title") %></h1>
+
+<%= render "steps", current: 2 %>
+
+<% if flash.now[:alert] %>
+  <p class="form-alert"><%= flash.now[:alert] %></p>
+<% end %>
+
+<p class="field-hint"><%= t("admin.words.bulk.readings.lead") %></p>
+
+<%# 送信先は既定で step3(重複)。「調査結果を反映」ボタンだけ formaction で apply_research に送る。 %>
+<%# 次画面は成功時に描画するため Turbo を無効化する。 %>
+<%# 1つのフォームを2つの action(duplicates / apply_research)へ formaction で送るため、 %>
+<%# action に紐づく per-form CSRF トークンではなくグローバルトークンを使う(両方で検証が通る)。 %>
+<%= form_with url: duplicates_admin_words_path, method: :post, scope: :bulk_word_registration,
+      authenticity_token: form_authenticity_token, data: { turbo: false } do %>
+  <details class="bulk-research" <%= "open" if @registration.research_json.present? %>>
+    <summary class="bulk-research__summary"><%= t("admin.words.bulk.readings.research_legend") %></summary>
+    <p class="field-hint"><%= t("admin.words.bulk.readings.research_hint") %></p>
+    <%= text_area_tag "bulk_word_registration[research_json]", @registration.research_json, rows: 6,
+          class: "bulk-input", placeholder: t("admin.words.bulk.readings.research_placeholder") %>
+    <div>
+      <%= submit_tag t("admin.words.bulk.readings.apply_research"),
+            formaction: apply_research_admin_words_path, class: "btn" %>
+    </div>
+  </details>
+
+  <div class="bulk-review">
+    <table class="bulk-review__table">
+      <thead>
+        <tr>
+          <th class="bulk-review__no"><%= t("admin.words.bulk.readings.col_no") %></th>
+          <th><%= t("admin.words.bulk.readings.col_surface") %></th>
+          <th><%= t("admin.words.bulk.readings.col_reading") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @rows.each_with_index do |row, i| %>
+          <tr>
+            <td class="bulk-review__no"><%= i + 1 %></td>
+            <td class="bulk-review__surface">
+              <%= row.surface %>
+              <%= hidden_field_tag "bulk_word_registration[entries][][surface]", row.surface %>
+            </td>
+            <td class="bulk-review__reading" data-controller="reading-choice">
+              <div class="bulk-review__reading-head">
+                <%= text_field_tag "bulk_word_registration[entries][][reading]", row.chosen,
+                      class: "bulk-review__reading-input", autocomplete: "off",
+                      data: { reading_choice_target: "input" },
+                      placeholder: t("admin.words.bulk.readings.reading_missing") %>
+                <%= render "reading_status", row: row %>
+              </div>
+
+              <% if row.candidates.size > 1 %>
+                <div class="reading-choices">
+                  <% row.candidates.each do |candidate| %>
+                    <button type="button" class="reading-choice <%= "is-active" if candidate[:reading] == row.chosen %>"
+                            data-reading-choice-target="chip"
+                            data-action="reading-choice#choose"
+                            data-reading="<%= candidate[:reading] %>">
+                      <span class="reading-choice__src"><%= t("admin.words.bulk.readings.source.#{candidate[:source]}") %></span>
+                      <span class="reading-choice__val"><%= candidate[:reading] %></span>
+                    </button>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <% if row.mecab_reading.blank? && row.research_reading.blank? %>
+                <span class="bulk-review__missing"><%= t("admin.words.bulk.readings.reading_missing") %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bulk-review__actions">
+    <%= submit_tag t("admin.words.bulk.readings.to_duplicates"), class: "btn btn--primary" %>
+    <%= link_to t("admin.words.bulk.readings.back"), new_admin_word_path, class: "btn" %>
+  </div>
+<% end %>

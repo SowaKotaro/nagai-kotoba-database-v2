@@ -1260,6 +1260,319 @@ textarea {
   color: var(--shu);
 }
 
+/* --- 一括登録のフェーズ表示(入力→読み→重複) --- */
+.steps {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+}
+
+.steps__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+
+/* ステップ間の細い墨罫でつなぐ */
+.steps__item:not(:last-child)::after {
+  content: "";
+  width: var(--space-6);
+  height: 1px;
+  background: var(--rule-mid);
+  margin-left: var(--space-2);
+}
+
+/* 番号は 1px 墨枠の正方形。現在は朱ベタ、完了は墨ベタ。 */
+.steps__no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.steps__item.is-current {
+  color: var(--shu);
+}
+
+.steps__item.is-current .steps__no {
+  background: var(--shu);
+  border-color: var(--shu);
+  color: var(--bg);
+}
+
+.steps__item.is-done {
+  color: var(--ink);
+}
+
+.steps__item.is-done .steps__no {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* --- 一括登録の読み確認テーブル(墨罫の表 + 朱の警告) --- */
+.bulk-review {
+  overflow-x: auto;
+  border: 1px solid var(--ink);
+  margin-bottom: var(--space-5);
+}
+
+.bulk-review__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.bulk-review__table th,
+.bulk-review__table td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.bulk-review__table thead th {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  border-bottom: 2px solid var(--ink);
+}
+
+.bulk-review__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.bulk-review__no {
+  width: 3rem;
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+}
+
+/* 類似・重複がある行は左端に朱の帯を出して目立たせる */
+.bulk-review__row--warn td:first-child {
+  box-shadow: inset 3px 0 0 var(--shu);
+}
+
+.bulk-review__surface {
+  font-family: var(--font-mincho);
+  font-size: 18px;
+}
+
+.bulk-review__reading-input {
+  width: 100%;
+  min-width: 12rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+/* --- step2: 調査 JSON の反映パネル --- */
+.bulk-research {
+  border: 1px solid var(--ink);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.bulk-research__summary {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.bulk-research .bulk-input {
+  margin: var(--space-3) 0;
+}
+
+/* --- step2: 読み欄(入力 + 一致バッジ + 候補チップ) --- */
+.bulk-review__reading-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.reading-status {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+}
+
+/* 一致=緑 / 不一致=朱(赤) で即時に判別できるようにする */
+.reading-status--match {
+  color: var(--midori);
+}
+
+.reading-status--differ {
+  color: var(--shu);
+}
+
+.reading-status--research {
+  color: var(--ink-2);
+}
+
+.reading-status__conf {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.reading-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* 候補チップ: クリックで読み欄へ流し込む。選択中は墨ベタ反転。 */
+.reading-choice {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  border: 1px solid var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 2px 8px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.reading-choice:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.reading-choice.is-active {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.reading-choice__src {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.reading-choice__val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+/* step3 の読みは確定済みなので読み取り専用の等幅テキストで見せる */
+.bulk-review__reading-text {
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+.bulk-review__missing {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 13px;
+  color: var(--shu);
+}
+
+.bulk-review__warn-label {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--shu);
+}
+
+.bulk-review__warn-label:not(:first-child) {
+  margin-top: var(--space-2);
+}
+
+.bulk-review__matches {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.bulk-review__match {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  border: 1px solid var(--shu);
+  padding: 1px 8px;
+}
+
+.bulk-review__match-surface {
+  font-family: var(--font-mincho);
+}
+
+.bulk-review__match-reading {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.bulk-review__match-sim {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--shu);
+}
+
+.bulk-review__ok {
+  color: var(--ink-3);
+}
+
+/* 除外チェック列 */
+.bulk-review__exclude-col {
+  width: 5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.bulk-review__exclude-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+/* 「除外」にチェックした行は薄く・取り消し線で「登録に投げない」ことを示す */
+.bulk-review__table tbody tr:has(.bulk-review__exclude:checked) {
+  opacity: 0.45;
+}
+
+.bulk-review__table tbody tr:has(.bulk-review__exclude:checked) .bulk-review__surface {
+  text-decoration: line-through;
+  text-decoration-color: var(--shu);
+}
+
+.bulk-review__table tbody tr:has(.bulk-review__exclude:checked) .bulk-review__reading-input {
+  text-decoration: line-through;
+}
+
+.bulk-review__actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
 /* --- 管理フォームの入れ子(語義・特徴の行) --- */
 .word-sense-fields {
   border-top: 1px solid var(--rule-mid);
