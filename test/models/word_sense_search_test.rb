@@ -84,6 +84,22 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [ word_senses(:murder).id ], ids(genre_id: genres(:small_novel).id)
   end
 
+  test "ジャンルは配列(複数選択)でも絞れる" do
+    assert_equal [ word_senses(:murder).id ], ids(genre_id: [ genres(:small_novel).id.to_s ])
+  end
+
+  test "ジャンルは上位と下位を同時に選ぶと下位を優先する" do
+    search = WordSenseSearch.new(genre_id: [ genres(:large_literature).id.to_s,
+                                             genres(:medium_japanese).id.to_s ])
+    assert_equal [ genres(:medium_japanese) ], search.effective_genres
+  end
+
+  test "ジャンルの実効節点は中抜きの祖先(大と小のみ選択)でも上位を除く" do
+    search = WordSenseSearch.new(genre_id: [ genres(:large_literature).id.to_s,
+                                             genres(:small_novel).id.to_s ])
+    assert_equal [ genres(:small_novel) ], search.effective_genres
+  end
+
   test "複数条件は AND で積み重なる" do
     both = ids(part_of_speech_id: parts_of_speech(:noun).id, first_char: "カ")
     assert_equal [ word_senses(:curry).id ], both

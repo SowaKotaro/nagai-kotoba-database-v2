@@ -4,15 +4,25 @@
 
 <h1 class="page-title"><%= t("words.index.title") %></h1>
 
-<% if @active_facet %>
-  <p class="active-facet">
+<% conditions = applied_search_conditions(@search) %>
+<% if conditions.any? %>
+  <div class="active-facet">
     <%= icon "funnel" %>
-    <span class="active-facet__label"><%= @active_facet.first %></span>
-    <span class="active-facet__value"><%= @active_facet.last %></span>
+    <ul class="condition-list">
+      <% conditions.each do |label, value| %>
+        <li class="condition-chip">
+          <span class="condition-chip__label"><%= label %></span>
+          <span class="condition-chip__value"><%= value %></span>
+        </li>
+      <% end %>
+    </ul>
+    <%= link_to search_path(request.query_parameters.except("page")), class: "active-facet__edit icon-label" do %>
+      <%= icon "magnifying_glass" %><%= t("words.index.edit_conditions") %>
+    <% end %>
     <%= link_to words_path, class: "active-facet__clear icon-label" do %>
       <%= icon "x" %><%= t("words.index.clear_filter") %>
     <% end %>
-  </p>
+  </div>
 <% end %>
 
 <p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>

@@ -126,10 +126,39 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
   end
 
-  test "絞り込み中はインジケータと解除リンクを表示する" do
+  test "キーワード(q)で単語一覧を絞り込める" do
+    get words_path(q: "カレー")
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
+  end
+
+  test "キーワード検索でも未注釈語は出ない" do
+    get words_path(q: "涼宮ハルヒ")
+    assert_response :success
+    assert_select ".entry-row__surface", text: words(:pending_haruhi).surface, count: 0
+    assert_select "p", text: I18n.t("words.index.empty")
+  end
+
+  test "検索フォーム由来の配列条件(先頭文字・複数OR)でも絞り込める" do
+    get words_path(first_char: [ word_senses(:curry).first_char, word_senses(:murder).first_char ])
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+  end
+
+  test "一致が無いときは空メッセージを表示する" do
+    get words_path(first_char: "ヲ")
+    assert_response :success
+    assert_select "p", text: I18n.t("words.index.empty")
+  end
+
+  test "絞り込み中は条件チップと変更・解除リンクを表示する" do
     get words_path(part_of_speech_id: parts_of_speech(:noun).id)
     assert_response :success
-    assert_select ".active-facet__value", text: parts_of_speech(:noun).name
+    assert_select ".condition-chip__value", text: parts_of_speech(:noun).name
+    assert_select "a.active-facet__edit[href=?]",
+                  search_path(part_of_speech_id: parts_of_speech(:noun).id)
     assert_select "a.active-facet__clear[href=?]", words_path
   end
 

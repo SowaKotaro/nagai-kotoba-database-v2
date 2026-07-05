@@ -4,12 +4,6 @@
 
 <h1 class="page-title"><%= t("searches.title") %></h1>
 
-<p class="search-switch">
-  <%= link_to simple_search_path(q: @search.q.presence), class: "icon-label" do %>
-    <%= icon "magnifying_glass" %><%= t("searches.to_simple") %>
-  <% end %>
-</p>
-
 <%= form_with url: search_path, method: :get, data: { turbo_action: "advance" }, class: "search-form" do %>
   <div class="field">
     <%= label_tag :q, t("searches.q_label"), class: "field-legend" %>
@@ -35,70 +29,36 @@
     </div>
   </fieldset>
 
-  <div class="search-form__cols">
-    <%= render "kana_grid", name: "first_char", selected: @search.first_char, legend: t("searches.first_char") %>
-    <%= render "kana_grid", name: "last_char", selected: @search.last_char, legend: t("searches.last_char") %>
-  </div>
+  <%= render "kana_grid", name: "first_char", selected: @search.first_char, legend: t("searches.first_char") %>
+  <%= render "kana_grid", name: "last_char", selected: @search.last_char, legend: t("searches.last_char") %>
 
   <%= render "genre_filter" %>
 
-  <div class="search-form__cols">
-    <%= render "check_chips", name: "part_of_speech_id", collection: @parts_of_speech,
-          selected: @search.part_of_speech_id, legend: WordSense.human_attribute_name(:part_of_speech) %>
-    <%= render "check_chips", name: "entity_type_id", collection: @entity_types,
-          selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type) %>
-  </div>
+  <%= render "check_chips", name: "part_of_speech_id", collection: @parts_of_speech,
+        selected: @search.part_of_speech_id, legend: WordSense.human_attribute_name(:part_of_speech) %>
+  <%= render "check_chips", name: "entity_type_id", collection: @entity_types,
+        selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type) %>
 
   <%= render "check_chips", name: "linguistic_feature_id", collection: @linguistic_features,
         selected: @search.linguistic_feature_id, legend: t("searches.linguistic_feature") %>
 
-  <details class="search-form__advanced">
-    <summary><%= t("searches.more_conditions") %></summary>
-    <div class="field">
-      <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "field-legend" %>
-      <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
+  <div class="field">
+    <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "field-legend" %>
+    <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
+  </div>
+
+  <div class="field" data-controller="char-type">
+    <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
+    <%# 入力キー。押すたびに対応する記号を入力欄の末尾へ追記する(削除は通常のテキスト編集で) %>
+    <div class="char-type-keys">
+      <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
+           CharTypePattern::ALPHABET, CharTypePattern::OTHER ].each do |char| %>
+        <button type="button" class="char-type-key" data-action="char-type#append"
+                data-char-type-char-param="<%= char %>"><%= char %></button>
+      <% end %>
     </div>
-    <div class="field">
-      <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
-      <%= text_field_tag :char_type_pattern, @search.char_type_pattern %>
-    </div>
-  </details>
+    <%= text_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
+  </div>
 
   <%= submit_tag t("searches.submit"), class: "btn btn--primary" %>
 <% end %>
-
-<section class="search-results" id="results">
-  <div class="search-results__head">
-    <h2 class="search-results__count"><%= t("searches.result_count", count: @total_count) %></h2>
-    <% conditions = applied_search_conditions(@search) %>
-    <% if conditions.any? %>
-      <ul class="condition-list">
-        <% conditions.each do |label, value| %>
-          <li class="condition-chip">
-            <span class="condition-chip__label"><%= label %></span>
-            <span class="condition-chip__value"><%= value %></span>
-          </li>
-        <% end %>
-      </ul>
-    <% end %>
-  </div>
-
-  <% if @words.empty? %>
-    <p class="empty-note"><%= t("searches.empty") %></p>
-  <% else %>
-    <div class="entry-list">
-      <%= render partial: "words/entry_row", collection: @words, as: :word %>
-    </div>
-
-    <% base = request.query_parameters.except("page") %>
-    <nav class="pagination">
-      <% if @page > 1 %>
-        <%= link_to t("words.pagination.prev"), search_path(base.merge(page: @page - 1)) %>
-      <% end %>
-      <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
-      <% if @page < @total_pages %>
-        <%= link_to t("words.pagination.next"), search_path(base.merge(page: @page + 1)) %>
-      <% end %>
-    </nav>
-  <% end %>
-</section>

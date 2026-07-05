@@ -1,6 +1,7 @@
 module SearchesHelper
   # 先頭/末尾文字の 50音表(カタカナ・濁音/半濁音含む)。読みはカタカナ基準。
-  KANA_ROWS = [
+  # 1列 = 1行(ア行・カ行…)を上から下(ア段→オ段)に並べる。nil は段を揃える空セル。
+  KANA_COLUMNS = [
     %w[ア イ ウ エ オ],
     %w[カ キ ク ケ コ],
     %w[ガ ギ グ ゲ ゴ],
@@ -13,9 +14,10 @@ module SearchesHelper
     %w[バ ビ ブ ベ ボ],
     %w[パ ピ プ ペ ポ],
     %w[マ ミ ム メ モ],
-    %w[ヤ ユ ヨ],
+    [ "ヤ", nil, "ユ", nil, "ヨ" ],
     %w[ラ リ ル レ ロ],
-    %w[ワ ヲ ン]
+    [ "ワ", "ヰ", nil, "ヱ", "ヲ" ],
+    [ "ン", nil, nil, nil, nil ]
   ].freeze
 
   # 適用中の検索条件を [ラベル, 値の文字列] の配列で返す(結果ヘッダのチップ表示用)。
@@ -25,12 +27,19 @@ module SearchesHelper
     if search.reading_length_min || search.reading_length_max
       conditions << [ t("searches.reading_length"), reading_length_phrase(search) ]
     end
+    if search.reading_length
+      conditions << [ t("words.show.reading_length"), t("words.show.chars", count: search.reading_length) ]
+    end
+    conditions << [ t("words.show.mora_count"), t("words.show.mora", count: search.mora_count) ] if search.mora_count
     conditions << [ t("searches.first_char"), search.first_char.join("・") ] if search.first_char.present?
     conditions << [ t("searches.last_char"), search.last_char.join("・") ] if search.last_char.present?
-    conditions << [ WordSense.human_attribute_name(:genre), master_name(Genre, search.genre_id) ] if search.genre_id.present?
+    if search.effective_genres.any?
+      conditions << [ WordSense.human_attribute_name(:genre), search.effective_genres.map(&:name).join("・") ]
+    end
     conditions << [ WordSense.human_attribute_name(:part_of_speech), master_names(PartOfSpeech, search.part_of_speech_id) ] if search.part_of_speech_id.present?
     conditions << [ WordSense.human_attribute_name(:entity_type), master_names(EntityType, search.entity_type_id) ] if search.entity_type_id.present?
     conditions << [ t("searches.linguistic_feature"), master_names(LinguisticFeature, search.linguistic_feature_id) ] if search.linguistic_feature_id.present?
+    conditions << [ t("words.show.origins"), master_names(WordOrigin, search.word_origin_id) ] if search.word_origin_id.present?
     conditions << [ t("searches.rhythm_pattern"), search.rhythm_pattern ] if search.rhythm_pattern.present?
     conditions << [ t("searches.char_type_pattern"), search.char_type_pattern ] if search.char_type_pattern.present?
     conditions
@@ -46,10 +55,6 @@ module SearchesHelper
     elsif min.nil? then t("searches.length_at_most", count: max)
     else t("searches.length_between", min: min, max: max)
     end
-  end
-
-  def master_name(model, id)
-    model.find_by(id: id)&.name
   end
 
   def master_names(model, ids)

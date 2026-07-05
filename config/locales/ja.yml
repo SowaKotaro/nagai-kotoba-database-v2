@@ -58,6 +58,7 @@ ja:
   layouts:
     brand: "長い言葉のデータベース"
     search_placeholder: "単語を検索"
+    search_submit: "検索"
     breadcrumbs_home: "ホーム"
     breadcrumbs_label: "現在位置"
     nav:
@@ -102,20 +103,7 @@ ja:
     length_at_least: "%{count}文字以上"
     length_at_most: "%{count}文字以下"
     length_between: "%{min}文字以上%{max}文字以下"
-    more_conditions: "その他の条件（韻・文字タイプ）"
-    result_count: "検索結果 %{count} 語"
     submit: "この条件で検索"
-    results: "検索結果（%{count}件）"
-    empty: "条件に一致する単語はありません。"
-    simple:
-      title: "キーワード検索"
-      placeholder: "表層形・読みで検索（例：小春日和、コハル）"
-      submit: "検索"
-      results: "「%{q}」の検索結果（%{count}語）"
-      empty: "「%{q}」に一致する単語はありません。"
-      prompt: "キーワードを入力して単語を探せます。"
-      to_advanced: "長さ・ジャンル・エンティティ種別で詳細に絞り込む"
-    to_simple: "キーワードだけで探す"
   words:
     index:
       title: "単語一覧"
@@ -124,6 +112,7 @@ ja:
       senses_count: "%{count} 語義"
       char_count: "%{count} 字"
       clear_filter: "絞り込みを解除"
+      edit_conditions: "条件を変更"
     show:
       headword: "見出し語"
       record_number: "No. %{id}"

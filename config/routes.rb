@@ -3,8 +3,7 @@ Rails.application.routes.draw do
 
   # 公開閲覧(誰でも閲覧可)。一覧・詳細のみ。書き込みは admin 名前空間に閉じる。
   resources :words, only: %i[index show]
-  # 公開の検索。簡素(キーワードのみ)と詳細(全条件)の2段構え。
-  get "search/simple", to: "searches#simple", as: :simple_search
+  # 公開の詳細検索フォーム。キーワードだけの検索はヘッダー等から words#index の q で行う。
   get "search", to: "searches#index", as: :search
 
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。

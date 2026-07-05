@@ -35,14 +35,50 @@ class WordSenseSearch
   def mora_count = positive_integer(:mora_count)
   def char_type_pattern = @params[:char_type_pattern].to_s.strip
   def rhythm_pattern = @params[:rhythm_pattern].to_s.strip
-  def genre_id = @params[:genre_id].presence
   def word_origin_id = @params[:word_origin_id].presence
   # 複数選択(OR)の条件。単一値でも配列でも受ける(詳細検索は配列、ファセットリンクは単一)。
+  def genre_id = value_list(:genre_id)
   def first_char = value_list(:first_char)
   def last_char = value_list(:last_char)
   def part_of_speech_id = value_list(:part_of_speech_id)
   def entity_type_id = value_list(:entity_type_id)
   def linguistic_feature_id = value_list(:linguistic_feature_id)
+
+  # 指定された条件だけを、空を除いたハッシュで返す。
+  # 検索実行時に単語一覧へ条件を引き継ぐリダイレクトや、絞り込み有無の判定に使う。
+  def to_query_params
+    {
+      q: q.presence,
+      reading_length_min: reading_length_min,
+      reading_length_max: reading_length_max,
+      reading_length: reading_length,
+      mora_count: mora_count,
+      first_char: first_char.presence,
+      last_char: last_char.presence,
+      genre_id: genre_id.presence,
+      part_of_speech_id: part_of_speech_id.presence,
+      entity_type_id: entity_type_id.presence,
+      linguistic_feature_id: linguistic_feature_id.presence,
+      word_origin_id: word_origin_id,
+      rhythm_pattern: rhythm_pattern.presence,
+      char_type_pattern: char_type_pattern.presence
+    }.compact
+  end
+
+  # 何かひとつでも絞り込み条件が指定されているか。
+  def conditions? = to_query_params.any?
+
+  # 選択したジャンルのうち、選択済みの下位を持つ上位を除いた「実効の節点」。
+  # 例: 大「文学」と中「日本文学」を両方選んだら、より具体的な「日本文学」を採用する。
+  # 条件チップの表示(SearchesHelper)でも使うため公開している。
+  def effective_genres
+    return @effective_genres if defined?(@effective_genres)
+
+    selected = Genre.where(id: genre_id).to_a
+    ancestor_ids = selected.filter_map(&:parent_id)
+    ancestor_ids |= Genre.where(id: ancestor_ids).filter_map(&:parent_id)
+    @effective_genres = selected.reject { |genre| ancestor_ids.include?(genre.id) }
+  end
 
   private
 
@@ -57,13 +93,13 @@ class WordSenseSearch
     Array(@params[key]).map { |v| v.to_s.strip }.reject(&:blank?)
   end
 
-  # 選択したジャンル(大/中/小いずれか)を、末端(小分類)の id 群に展開する。
+  # 選択したジャンル(大/中/小いずれか・複数可)を、末端(小分類)の id 群に展開する(OR)。
   # genre_id は小分類しか指さないため、上位を選んだら配下の小分類すべてで絞り込む。
   def genre_filter_ids
     return @genre_filter_ids if defined?(@genre_filter_ids)
 
-    genre = genre_id && Genre.find_by(id: genre_id)
-    @genre_filter_ids = genre && small_descendant_ids(genre)
+    @genre_filter_ids = effective_genres.presence &&
+                        effective_genres.flat_map { |genre| small_descendant_ids(genre) }.uniq
   end
 
   def small_descendant_ids(genre)

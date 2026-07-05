@@ -5,9 +5,9 @@ import { Controller } from "@hotwired/stimulus"
 //   reading_length_min / reading_length_max に値を書き込む。
 //   上限が MAX(30) のときは「以上」の意味なので max は空にする(上限なし)。
 // メッセージは3種類:
-//   1. max < MAX      → 「N文字以上M文字以下」
-//   2. max == MAX     → 「N文字以上」
-//   3. min == max     → 「N文字」
+//   1. max == MAX     → 「N文字以上」(両方 MAX でも「30文字以上」)
+//   2. min == max     → 「N文字」
+//   3. それ以外        → 「N文字以上M文字以下」
 export default class extends Controller {
   static targets = ["minThumb", "maxThumb", "minField", "maxField", "message", "track"]
   static values = { min: Number, max: Number }
@@ -52,8 +52,8 @@ export default class extends Controller {
   }
 
   messageFor(lo, hi) {
-    if (lo === hi) return `${lo}文字`
     if (hi >= this.MAX) return `${lo}文字以上`
+    if (lo === hi) return `${lo}文字`
     return `${lo}文字以上${hi}文字以下`
   }
 }

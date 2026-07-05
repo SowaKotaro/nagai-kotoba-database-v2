@@ -6,92 +6,44 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "結果は単語一覧(entry_row)で表示される" do
+  test "結果は表示せず、検索フォームのみを描画する" do
     get search_path
     assert_response :success
-    assert_select ".search-results__count"
-    assert_select "a.entry-row__surface"
+    assert_select "form.search-form"
+    assert_select ".entry-list", count: 0
   end
 
-  # --- 各条件(結果は単語単位) ---
-  test "先頭文字(50音・複数OR)で絞り込める" do
-    get search_path, params: { first_char: [ word_senses(:curry).first_char ] }
-    assert_response :success
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
+  # --- 検索実行(送信)は単語一覧へのリダイレクト ---
+  test "検索を実行すると空条件を除いて単語一覧へリダイレクトする" do
+    get search_path, params: { commit: I18n.t("searches.submit"), q: "カレー",
+                               rhythm_pattern: "", char_type_pattern: "",
+                               first_char: [ "カ" ], last_char: [] }
+    assert_redirected_to words_path(q: "カレー", first_char: [ "カ" ])
   end
 
-  test "末尾文字で絞り込める" do
-    get search_path, params: { last_char: [ word_senses(:curry).last_char ] }
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+  test "ジャンル(複数選択)も単語一覧へ引き継がれる" do
+    get search_path, params: { commit: I18n.t("searches.submit"),
+                               genre_id: [ genres(:large_literature).id.to_s ] }
+    assert_redirected_to words_path(genre_id: [ genres(:large_literature).id ])
   end
 
-  test "キーワード(q)で絞り込める" do
+  test "commit なし(リンクからの遷移)はリダイレクトせずフォームに条件を反映する" do
     get search_path, params: { q: "カレー" }
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
-  end
-
-  test "エンティティ種別(複数選択)で絞り込める" do
-    get search_path, params: { entity_type_id: [ entity_types(:book_title).id ] }
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry)), count: 0
-  end
-
-  test "ジャンル階層(大)で絞り込める" do
-    get search_path, params: { genre_id: genres(:large_literature).id }
-    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
-  end
-
-  test "一致が無いときはメッセージを表示する" do
-    get search_path, params: { first_char: [ "ヲ" ] }
     assert_response :success
-    assert_select "p", text: I18n.t("searches.empty")
-    assert_select ".search-results__count", text: I18n.t("searches.result_count", count: 0)
+    assert_select "input#q[value=?]", "カレー"
   end
 
-  test "適用中の検索条件がチップで表示される" do
-    get search_path, params: { q: "カレー" }
-    assert_select ".condition-chip__value", text: "カレー"
+  test "文字タイプ列の入力キー(あ/ア/漢/A/@)が表示される" do
+    get search_path
+    %w[あ ア 漢 A @].each do |char|
+      assert_select "button.char-type-key[data-char-type-char-param=?]", char, text: char
+    end
   end
 
-  test "page パラメータを付けても開ける" do
-    get search_path, params: { page: 2 }
-    assert_response :success
-  end
-
-  # --- 簡素検索(キーワードのみ・単語単位) ---
-  test "簡素検索は未認証で開ける" do
-    get simple_search_path
-    assert_response :success
-  end
-
-  test "キーワード未入力なら入力を促す" do
-    get simple_search_path
-    assert_select "p", text: I18n.t("searches.simple.prompt")
-  end
-
-  test "簡素検索は表層形の部分一致で単語を返す" do
-    get simple_search_path, params: { q: "殺人" }
-    assert_response :success
-    assert_select ".entry-row__surface", text: words(:abc_murder).surface
-    assert_select ".entry-row__surface", text: words(:curry).surface, count: 0
-  end
-
-  test "簡素検索は読みの部分一致でも返す" do
-    get simple_search_path, params: { q: "カレー" }
-    assert_select ".entry-row__surface", text: words(:curry).surface
-  end
-
-  test "簡素検索は未注釈語を返さない" do
-    get simple_search_path, params: { q: "涼宮ハルヒ" }
-    assert_response :success
-    assert_select ".entry-row__surface", text: words(:pending_haruhi).surface, count: 0
-    assert_select "p", text: I18n.t("searches.simple.empty", q: "涼宮ハルヒ")
-  end
-
-  test "簡素検索から詳細検索への導線がある" do
-    get simple_search_path, params: { q: "殺人" }
-    assert_select ".search-switch a[href=?]", search_path(q: "殺人")
+  test "選択したジャンルの直下グループだけが展開されて描画される" do
+    get search_path, params: { genre_id: [ genres(:large_literature).id ] }
+    # 大「文学」を選択 → 中分類グループが表示、中「日本文学」未選択なので小分類グループは hidden。
+    assert_select ".genre-filter__group[data-parent=?]:not([hidden])", genres(:large_literature).id.to_s
+    assert_select ".genre-filter__group[data-parent=?][hidden]", genres(:medium_japanese).id.to_s
   end
 end

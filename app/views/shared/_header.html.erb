@@ -20,11 +20,11 @@
         <% end %>
       </nav>
 
-      <%# 常設のキーワード検索(下線1本。枠で囲わない)。Enter で簡素検索へ %>
-      <%= form_with url: simple_search_path, method: :get, class: "header-search" do %>
+      <%# 常設のキーワード検索(下線1本。枠で囲わない)。Enter で単語一覧の絞り込みへ %>
+      <%= form_with url: words_path, method: :get, class: "header-search" do %>
         <%= text_field_tag :q, nil, placeholder: t("layouts.search_placeholder"),
               class: "header-search__input", aria: { label: t("searches.q_label") } %>
-        <button type="submit" class="header-search__submit" aria-label="<%= t("searches.simple.submit") %>"><%= icon "magnifying_glass" %></button>
+        <button type="submit" class="header-search__submit" aria-label="<%= t("layouts.search_submit") %>"><%= icon "magnifying_glass" %></button>
       <% end %>
     </div>
   </div>

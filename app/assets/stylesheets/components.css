@@ -318,7 +318,7 @@ a.tag:hover {
 /* 一覧の絞り込み中インジケータ(どのファセットで絞っているか + 解除) */
 .active-facet {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-3);
   margin: var(--space-3) 0 var(--space-2);
@@ -326,17 +326,20 @@ a.tag:hover {
   border-bottom: 1px solid var(--rule);
 }
 
-.active-facet__label {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  color: var(--ink-3);
+.active-facet .condition-list {
+  margin: 0;
 }
 
-.active-facet__value {
-  font-family: var(--font-mincho);
-  font-size: 20px;
-  color: var(--ink);
+.active-facet__edit {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.active-facet__edit:hover {
+  color: var(--shu);
 }
 
 .active-facet__clear {
@@ -519,17 +522,68 @@ a.tag:hover {
   font-size: 14px;
   letter-spacing: 0.12em;
   color: var(--ink-3);
+  margin-bottom: var(--space-1);
+}
+
+/* 検索フォームは全項目の幅を揃えた1カラムの墨1px枠パネル(カード)で、ページ中央に置く。
+   内容の幅は50音表に合わせる(セル34px×16列 + すき間4px×15 = 604px)。
+   影はサイト全体では使わない方針だが、このカードだけオーナー判断でごく薄く敷く。 */
+.search-form {
+  max-width: calc(604px + var(--space-6) * 2 + 2px);
+  margin: var(--space-6) auto var(--space-7);
+  border: 1px solid var(--ink);
+  padding: var(--space-7) var(--space-6);
+  box-shadow: 0 2px 12px rgba(25, 24, 19, 0.07);
+}
+
+/* 項目(fieldset / .field)同士の間隔。
+   後続の .field / .kana-field 等の margin 指定に負けないよう詳細度を上げている */
+.search-form > fieldset,
+.search-form > .field {
   margin-bottom: var(--space-3);
 }
 
-.search-form > * {
-  margin-bottom: var(--space-6);
+/* 罫線と見分けが付くよう、検索フォームのテキスト入力は下線でなく墨1pxの箱にする */
+.search-form .field input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--rule-mid);
+  padding: 8px 12px;
+  background: var(--bg);
 }
 
-.search-form__cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-5);
+.search-form .field input[type="text"]:focus {
+  border-color: var(--shu);
+}
+
+/* 文字タイプ列の入力キー(あ/ア/漢/A/@)。押すたびに末尾へ追記する */
+.char-type-keys {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.char-type-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--rule-mid);
+  background: transparent;
+  font-size: 15px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.char-type-key:hover {
+  border-color: var(--ink);
+}
+
+.char-type-key:active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
 }
 
 .slider-field,
@@ -583,6 +637,8 @@ a.tag:hover {
   appearance: none;
   width: 16px;
   height: 16px;
+  /* トラック(36px)の中央線にツマミを重ねる: (36 - 16) / 2 */
+  margin-top: 10px;
   background: var(--ink);
   border: 2px solid var(--bg);
   cursor: pointer;
@@ -597,20 +653,33 @@ a.tag:hover {
   cursor: pointer;
 }
 
-/* 50音表: 正方格子のセル。選択で墨に反転 */
+/* 50音表: 伝統的な縦書きの並び。上から下に「アイウエオ」、右から左に「ア→カ→サ…」。
+   direction: rtl で列を右から並べる(スクロール初期位置も右=ア行になる) */
 .kana-grid {
+  display: flex;
+  direction: rtl;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.kana-col {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.kana-row {
-  display: flex;
-  gap: 4px;
-}
-
 .kana-cell {
   cursor: pointer;
+}
+
+/* 段を揃えるための空セル(ヤ・ワ・ン列) */
+.kana-cell--blank {
+  width: 34px;
+  height: 34px;
+  cursor: default;
 }
 
 .kana-cell__face {
@@ -652,8 +721,7 @@ a.tag:hover {
   cursor: pointer;
 }
 
-.check-chip__face,
-.genre-chip {
+.check-chip__face {
   display: inline-block;
   border: 1px solid var(--rule-mid);
   color: var(--ink-2);
@@ -665,58 +733,63 @@ a.tag:hover {
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.check-chip__face:hover,
-.genre-chip:hover {
+.check-chip__face:hover {
   border-color: var(--ink);
 }
 
-.check-chip input:checked + .check-chip__face,
-.genre-chip[aria-pressed="true"] {
+.check-chip input:checked + .check-chip__face {
   background: var(--ink);
   color: var(--bg);
   border-color: var(--ink);
 }
 
-.check-chip input:focus-visible + .check-chip__face,
-.genre-chip:focus-visible {
+.check-chip input:focus-visible + .check-chip__face {
   outline: 2px solid var(--shu);
   outline-offset: 1px;
 }
 
-/* ジャンル階層フィルタ: 各階層を段組みで */
+/* ジャンル階層フィルタ: 初期は大分類のみ。選ぶと直下のグループがフェードインで現れる */
 .genre-filter {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
 
-/* 開閉式の追加条件 */
-.search-form__advanced summary {
+.genre-filter__group {
+  border-left: 2px solid var(--rule-mid);
+  padding-left: var(--space-3);
+}
+
+.genre-filter__group:not([hidden]) {
+  animation: genre-group-fade-in 0.25s ease;
+}
+
+@keyframes genre-group-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .genre-filter__group:not([hidden]) {
+    animation: none;
+  }
+}
+
+/* どの親のグループかを示すラベル(朱区切りのパンくず) */
+.genre-filter__group-label {
   font-family: var(--font-mono);
   font-size: 14px;
   letter-spacing: 0.1em;
-  color: var(--ink-2);
-  cursor: pointer;
+  color: var(--ink-3);
+  margin: 0 0 var(--space-2);
 }
 
-.search-form__advanced .field {
-  margin-top: var(--space-4);
+.genre-filter__sep {
+  color: var(--shu);
+  margin: 0 0.4em;
 }
 
-/* 検索結果: 墨2px の見出しでヒット数を大きく、条件をチップで明示 */
-.search-results {
-  border-top: 2px solid var(--ink);
-  padding-top: var(--space-4);
-  margin-top: var(--space-6);
-}
-
-.search-results__count {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(24px, 4vw, 34px);
-  margin: 0;
-}
-
+/* 適用中の検索条件チップ(単語一覧の絞り込みヘッダで使う) */
 .condition-list {
   list-style: none;
   margin: var(--space-3) 0 var(--space-5);
