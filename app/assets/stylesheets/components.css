@@ -526,10 +526,11 @@ a.tag:hover {
 }
 
 /* 検索フォームは全項目の幅を揃えた1カラムの墨1px枠パネル(カード)で、ページ中央に置く。
-   内容の幅は50音表に合わせる(セル34px×16列 + すき間4px×15 = 604px)。
+   内容の幅は50音表の最小幅(セル34px×16列 + すき間4px×15 = 604px)より余裕を持たせ、
+   PCサイズで50音表がスクロールバー無しに収まるようにする。
    影はサイト全体では使わない方針だが、このカードだけオーナー判断でごく薄く敷く。 */
 .search-form {
-  max-width: calc(604px + var(--space-6) * 2 + 2px);
+  max-width: calc(720px + var(--space-6) * 2 + 2px);
   margin: var(--space-6) auto var(--space-7);
   border: 1px solid var(--ink);
   padding: var(--space-7) var(--space-6);
@@ -592,6 +593,12 @@ a.tag:hover {
   border: none;
   padding: 0;
   margin: 0;
+}
+
+/* fieldset は既定で中身の最小サイズより縮まない(min-width: min-content 相当)ため、
+   .kana-grid の overflow-x: auto が効かず狭幅ではみ出す。0 にして内側だけをスクロールさせる */
+.kana-field {
+  min-width: 0;
 }
 
 /* 読み文字数の二つまみスライダー */
@@ -907,6 +914,25 @@ a.tag:hover {
   font-size: 15px;
   color: var(--ink-3);
   margin-left: 5px;
+}
+
+/* 375px 想定の狭幅: 3項目が中途半端に折り返さないよう縦積みにする(区切りは上罫に) */
+@media (max-width: 767px) {
+  .stats-grid {
+    flex-direction: column;
+  }
+
+  .stats-grid__item {
+    min-width: 0;
+    border-left: none;
+    border-top: 1px solid var(--rule-mid);
+    padding: var(--space-3) 0;
+  }
+
+  .stats-grid__item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
 }
 
 /* --- 管理コンソール(ダッシュボード): 墨枠パネルの入口カード --- */
