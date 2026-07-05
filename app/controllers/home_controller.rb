@@ -9,7 +9,10 @@ class HomeController < ApplicationController
     @word_count = Word.annotated.count
     @sense_count = WordSense.published.count
     @genre_count = Genre.small.count
-    @recent_words = Word.annotated.includes(:word_senses).order(created_at: :desc, id: :desc).limit(RECENT_WORDS_LIMIT)
+    @recent_words = Word.annotated
+                        .includes(word_senses: [ :part_of_speech, :entity_type ])
+                        .order(created_at: :desc, id: :desc)
+                        .limit(RECENT_WORDS_LIMIT)
     @featured_word = featured_word
   end
 

@@ -1,8 +1,18 @@
-<%# 一覧の1行(型見本のリスト): 読みを小さく上に、言葉を大きな明朝で。local: word %>
-<div class="entry-row">
-  <div class="entry-row__main">
+<%# 一覧の1行(型見本のリスト)。行全体をリンクにし、読み→言葉→データ(文字数・品詞/種別・語義数)。local: word %>
+<% primary = word.word_senses.first %>
+<%= link_to word_path(word), class: "entry-row" do %>
+  <span class="entry-row__main">
     <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
-    <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
-  </div>
-  <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
-</div>
+    <span class="entry-row__surface"><%= word.surface %></span>
+  </span>
+  <span class="entry-row__data">
+    <span class="entry-row__len"><%= t("words.index.char_count", count: word.surface.length) %></span>
+    <% if primary&.part_of_speech %>
+      <span class="entry-row__tag"><%= primary.part_of_speech.name %></span>
+    <% end %>
+    <% if primary&.entity_type %>
+      <span class="entry-row__tag"><%= primary.entity_type.name %></span>
+    <% end %>
+    <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
+  </span>
+<% end %>

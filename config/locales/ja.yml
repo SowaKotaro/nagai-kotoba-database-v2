@@ -106,6 +106,7 @@ ja:
       empty: "まだ単語が登録されていません。"
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
+      char_count: "%{count} 字"
     show:
       headword: "見出し語"
       record_number: "No. %{id}"

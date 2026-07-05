@@ -5,7 +5,9 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
   test "一覧は未認証で閲覧できる" do
     get words_path
     assert_response :success
-    assert_select "a", text: words(:abc_murder).surface
+    # 行全体が詳細へのリンクで、語は surface として表示される。
+    assert_select "a.entry-row[href=?]", word_path(words(:abc_murder))
+    assert_select ".entry-row__surface", text: words(:abc_murder).surface
   end
 
   test "詳細は未認証で閲覧できる" do
@@ -13,11 +15,19 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "一覧の各行に文字数と品詞が表示される" do
+    get words_path
+    assert_response :success
+    assert_select "a.entry-row .entry-row__len", text: I18n.t("words.index.char_count", count: words(:abc_murder).surface.length)
+    assert_select "a.entry-row .entry-row__tag", text: parts_of_speech(:noun).name
+  end
+
   # --- 公開: 未注釈は出さない ---
   test "未注釈の語は一覧に出ない" do
     get words_path
     assert_response :success
-    assert_select "a", text: words(:pending_haruhi).surface, count: 0
+    assert_select ".entry-row__surface", text: words(:pending_haruhi).surface, count: 0
+    assert_select "a.entry-row[href=?]", word_path(words(:pending_haruhi)), count: 0
   end
 
   test "未注釈の語の詳細は 404" do
