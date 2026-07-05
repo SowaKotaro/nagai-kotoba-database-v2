@@ -80,7 +80,9 @@
 - `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
   `entity_type` / `part_of_speech` / `linguistic_feature` / `word_origin` / `word_sense_origin`（語種の多対多）/
   `word_sense_variant`（別表記）/ 値オブジェクト `char_type_pattern` / `rhythm_pattern` / `mora_count` / `vowel_pattern` /
+  `levenshtein`（読みの類似度）/ フォームオブジェクト `bulk_word_registration`（箇条書き一括登録の解析→登録）/
   クエリオブジェクト `word_sense_search`（検索条件の組み立て）
+- `app/services/` … `reading_extractor`（MeCab CLI を Open3 で呼び、表層形→読みを自動取得）
 - `app/controllers/` … `application_controller` / `home_controller` / `sessions_controller` /
   `words_controller`（公開閲覧の一覧・詳細）/ `searches_controller`（公開の検索・絞り込み）/
   `admin/`（`base` / `words` / `genres`。管理者専用 CRUD。名前空間 `Admin` は `Admin` モデルが保持）/
@@ -103,6 +105,24 @@ bin/rails server              # 起動
 ```
 - `config/database.yml` の development/test は既定で `127.0.0.1:3307` に接続
   （`DATABASE_HOST` / `DATABASE_PORT` で上書き可）。production は従来どおり socket + 環境変数。
+
+### 一括登録（3ステップ）と読みの自動取得
+- 管理者の一括登録（`/admin/words/new`）は3ステップ: **入力**（箇条書き）→ **読み**（step2）→ **重複**（step3）→ 登録。
+  画面上部にフェーズ表示（`_steps.html.erb`）。重複判定は step2 で確定した読みに対して行う（誤読の取りこぼし防止）。
+- step2 は箇条書きの表層形から **MeCab CLI** で読みを自動取得する
+  （`app/services/reading_extractor.rb` が `mecab -Oyomi` を Open3 で呼ぶ）。
+- 辞書は既定で **mecab-ipadic-neologd**。環境変数 `MECAB_DICT` でパスを上書き可。辞書が無ければ既定辞書へフォールバック。
+- **mecab が未インストールの環境では読みは空欄**になり、確認画面で手入力する（機能は止まらない）。
+- そのため **本番サーバ（Capistrano）と CI（GitHub Actions）で読みを自動取得するには、`mecab` 本体＋neologd 辞書の導入が別途必要**。
+  テストは `ReadingExtractor.call` をスタブするため mecab 無しでも通る。
+
+### 読み強化（オフライン調査 / アプリと切り離し）
+- MeCab は誤読しうる（例「花は桜木人は武士」の 人＝ヒト を ジン と誤読）。これを独立ソースで正すため、
+  **オフライン調査スキル** `.claude/skills/word-reading-research/` を用意（アプリの実行時には LLM/API を呼ばない方針）。
+- 使い方: 別セッションの Claude Code に単語（表層形のみ）を渡すと、Web検索で裏取りして「最も一般的な表記＋読み（カタカナ）」を
+  `schema.json` の形式で JSON 出力する。**MeCab の読みは入力に含めない**（追認バイアス回避）。
+- step2 の「調査結果（JSON）を反映」欄にその JSON を貼ると、MeCab の暫定読みと突き合わせて行ごとに
+  一致／不一致／調査のみを表示し、候補チップ（Stimulus `reading-choice`）で読みを確定できる。
 - 管理者は seed が credentials / 環境変数から作成する。ローカルで任意の値にするには:
   ```bash
   ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed   # ローカル DB のみに反映

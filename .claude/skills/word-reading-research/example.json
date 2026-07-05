@@ -1,0 +1,23 @@
+{
+  "version": "1",
+  "words": [
+    {
+      "input": "日本",
+      "surface": "日本",
+      "reading": "ニホン",
+      "alternatives": [
+        { "reading": "ニッポン", "note": "公的・強調では ニッポン も一般的" }
+      ],
+      "confidence": "high",
+      "notes": "読みが割れる代表例。最も一般的なのは ニホン。"
+    },
+    {
+      "input": "Dead by Daylight",
+      "surface": "Dead by Daylight",
+      "reading": "デッドバイデイライト",
+      "alternatives": [],
+      "confidence": "high",
+      "notes": "ゲームタイトル。空白を含む表層形はそのまま1語として扱う。"
+    }
+  ]
+}

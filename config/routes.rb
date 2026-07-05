@@ -11,7 +11,14 @@ Rails.application.routes.draw do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
     root "dashboard#index"
     # 詳細(show)は公開閲覧側(Issue 8)で扱うため管理側には持たせない。
-    resources :words, except: :show
+    # 一括登録は3ステップ: new(入力) → readings(step2 読み) → duplicates(step3 重複) → create(登録)。
+    resources :words, except: :show do
+      collection do
+        post :readings
+        post :apply_research
+        post :duplicates
+      end
+    end
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。
     resources :annotations, only: %i[index show update]
     # ジャンルの大→中→小 依存選択用に、子ジャンルの取得と、その場での新規追加。

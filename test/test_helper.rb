@@ -11,6 +11,14 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    # クラス/シングルトンメソッドをブロックの間だけ差し替える。
+    # minitest 6 は Object#stub を持たないため、テスト用に自前で用意する。
+    def stub_method(object, method_name, replacement)
+      original = object.method(method_name)
+      object.singleton_class.define_method(method_name) { |*args, **kwargs| replacement.call(*args, **kwargs) }
+      yield
+    ensure
+      object.singleton_class.define_method(method_name, original)
+    end
   end
 end

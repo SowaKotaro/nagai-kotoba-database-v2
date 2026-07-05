@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WordReadingResearch",
+  "description": "単語の一般的な表記と読み(カタカナ)の調査結果。step2 の取り込みに使う。",
+  "type": "object",
+  "required": ["version", "words"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string", "const": "1" },
+    "words": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["input", "surface", "reading", "confidence"],
+        "additionalProperties": false,
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "渡された原文のまま。step2 が表層形で突き合わせるキー。"
+          },
+          "surface": {
+            "type": "string",
+            "description": "最も一般的な表記。多くは input と同じ。異体字/旧字を一般表記へ正規化した場合のみ変える。"
+          },
+          "reading": {
+            "type": "string",
+            "description": "最も一般的な読み(カタカナ)。長音は「ー」、助詞は表記どおり(は→ハ/へ→ヘ/を→ヲ)。",
+            "pattern": "^[ァ-ヶー]+$"
+          },
+          "alternatives": {
+            "type": "array",
+            "description": "他にありうる一般的な読み。無ければ空配列。",
+            "items": {
+              "type": "object",
+              "required": ["reading"],
+              "additionalProperties": false,
+              "properties": {
+                "reading": { "type": "string", "pattern": "^[ァ-ヶー]+$" },
+                "note": { "type": "string" }
+              }
+            }
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "high=定番/裏取り済み, medium=妥当だが未検証, low=不確実。"
+          },
+          "notes": {
+            "type": "string",
+            "description": "任意。判断根拠や語の説明。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+<% content_for :title, t("admin.words.bulk.duplicates.title") %>
+
+<h1 class="page-title"><%= t("admin.words.bulk.duplicates.title") %></h1>
+
+<%= render "steps", current: 3 %>
+
+<p class="field-hint"><%= t("admin.words.bulk.duplicates.lead") %></p>
+
+<%= form_with url: admin_words_path, method: :post, scope: :bulk_word_registration, data: { turbo: false } do %>
+  <div class="bulk-review">
+    <table class="bulk-review__table">
+      <thead>
+        <tr>
+          <th class="bulk-review__no"><%= t("admin.words.bulk.duplicates.col_no") %></th>
+          <th><%= t("admin.words.bulk.duplicates.col_surface") %></th>
+          <th><%= t("admin.words.bulk.duplicates.col_reading") %></th>
+          <th><%= t("admin.words.bulk.duplicates.col_warning") %></th>
+          <th class="bulk-review__exclude-col"><%= t("admin.words.bulk.duplicates.col_exclude") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @analyzed.each do |entry| %>
+          <tr class="<%= "bulk-review__row--warn" if entry.warnings? %>">
+            <td class="bulk-review__no"><%= entry.index + 1 %></td>
+            <td class="bulk-review__surface">
+              <%= entry.surface %>
+              <%= hidden_field_tag "bulk_word_registration[entries][][surface]", entry.surface %>
+            </td>
+            <td class="bulk-review__reading">
+              <span class="bulk-review__reading-text"><%= entry.reading.presence || "—" %></span>
+              <%= hidden_field_tag "bulk_word_registration[entries][][reading]", entry.reading %>
+            </td>
+            <td class="bulk-review__warnings">
+              <% if entry.warnings? %>
+                <% if entry.batch_matches.any? %>
+                  <p class="bulk-review__warn-label"><%= t("admin.words.bulk.duplicates.warn_batch") %></p>
+                  <ul class="bulk-review__matches">
+                    <% entry.batch_matches.each do |match| %>
+                      <li><%= render "match", match: match %></li>
+                    <% end %>
+                  </ul>
+                <% end %>
+                <% if entry.db_matches.any? %>
+                  <p class="bulk-review__warn-label"><%= t("admin.words.bulk.duplicates.warn_db") %></p>
+                  <ul class="bulk-review__matches">
+                    <% entry.db_matches.each do |match| %>
+                      <li><%= render "match", match: match %></li>
+                    <% end %>
+                  </ul>
+                <% end %>
+              <% else %>
+                <span class="bulk-review__ok"><%= t("admin.words.bulk.duplicates.no_warning") %></span>
+              <% end %>
+            </td>
+            <td class="bulk-review__exclude-col">
+              <label class="bulk-review__exclude-label">
+                <%= check_box_tag "bulk_word_registration[entries][][_exclude]", "1", false,
+                      class: "bulk-review__exclude", id: nil %>
+                <span><%= t("admin.words.bulk.duplicates.exclude") %></span>
+              </label>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bulk-review__actions">
+    <%= submit_tag t("admin.words.bulk.duplicates.submit"), class: "btn btn--primary" %>
+    <%= link_to t("admin.words.bulk.duplicates.back"), new_admin_word_path, class: "btn" %>
+  </div>
+<% end %>
