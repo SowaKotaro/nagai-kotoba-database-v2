@@ -131,6 +131,27 @@ ja:
       next: "次へ"
       status: "%{page} / %{total} ページ"
   admin:
+    dashboard:
+      title: "管理コンソール"
+      eyebrow: "オーナー用"
+      stats:
+        words: "総単語数"
+        annotated: "注釈済み・公開"
+        unannotated: "未注釈"
+        senses: "語義数"
+        unit_word: "語"
+        unit_sense: "件"
+      actions_label: "作業"
+      register_title: "単語を登録"
+      register_desc: "表層形と読みをまとめて入力し、一括で登録します。ジャンル等は後でアノテーションで付与します。"
+      register_tag: "テキスト入力"
+      annotate_title: "アノテーション"
+      annotate_desc: "登録済みの語にジャンル・品詞・エンティティ・特徴などをボタン操作で付与します。"
+      annotate_tag: "未注釈 %{count} 語"
+      manage_title: "単語の管理"
+      manage_desc: "登録済みの単語の一覧・編集・削除。"
+      manage_tag: "一覧・編集"
+      view_site: "公開サイトを見る →"
     words:
       title: "単語の管理"
       new: "単語を登録"

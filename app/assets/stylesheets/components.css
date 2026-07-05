@@ -480,6 +480,58 @@ a.tag:hover {
   margin-left: 5px;
 }
 
+/* --- 管理コンソール(ダッシュボード): 墨枠パネルの入口カード --- */
+.admin-dash-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: var(--space-6);
+}
+
+.admin-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ink);
+  padding: var(--space-5);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-card:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.admin-card__title {
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  font-size: 21px;
+}
+
+.admin-card__desc {
+  margin-top: var(--space-3);
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--ink-2);
+}
+
+.admin-card:hover .admin-card__desc {
+  color: var(--on-ink-dim);
+}
+
+.admin-card__tag {
+  margin-top: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--shu);
+}
+
+.admin-card:hover .admin-card__tag {
+  color: var(--bg);
+}
+
 /* --- セクション見出し --- */
 .section-header {
   display: flex;

@@ -15,7 +15,7 @@
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
         <%= link_to t("layouts.nav.search"), search_path, class: ("is-current" if request.path == search_path) %>
         <% if authenticated? %>
-          <%= link_to t("layouts.nav.admin"), admin_words_path, class: ("is-current" if request.path.start_with?("/admin")) %>
+          <%= link_to t("layouts.nav.admin"), admin_root_path, class: ("is-current" if request.path.start_with?("/admin")) %>
           <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>
         <% end %>
       </nav>

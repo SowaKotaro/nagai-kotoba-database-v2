@@ -9,6 +9,8 @@ Rails.application.routes.draw do
 
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do
+    # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
+    root "dashboard#index"
     # 詳細(show)は公開閲覧側(Issue 8)で扱うため管理側には持たせない。
     resources :words, except: :show
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。

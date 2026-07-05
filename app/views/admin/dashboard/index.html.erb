@@ -1,0 +1,49 @@
+<% content_for :title, t("admin.dashboard.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.dashboard.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.dashboard.title") %></h1>
+
+<dl class="stats-grid">
+  <div class="stats-grid__item">
+    <dt><%= t("admin.dashboard.stats.words") %></dt>
+    <dd><%= number_with_delimiter(@word_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_word") %></span></dd>
+  </div>
+  <div class="stats-grid__item">
+    <dt><%= t("admin.dashboard.stats.annotated") %></dt>
+    <dd><%= number_with_delimiter(@annotated_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_word") %></span></dd>
+  </div>
+  <div class="stats-grid__item">
+    <dt><%= t("admin.dashboard.stats.unannotated") %></dt>
+    <dd><%= number_with_delimiter(@unannotated_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_word") %></span></dd>
+  </div>
+  <div class="stats-grid__item">
+    <dt><%= t("admin.dashboard.stats.senses") %></dt>
+    <dd><%= number_with_delimiter(@sense_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_sense") %></span></dd>
+  </div>
+</dl>
+
+<p class="section-label"><%= t("admin.dashboard.actions_label") %></p>
+
+<div class="admin-dash-grid">
+  <%= link_to new_admin_word_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= t("admin.dashboard.register_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.register_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.register_tag") %></span>
+  <% end %>
+
+  <%= link_to admin_annotations_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= t("admin.dashboard.annotate_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.annotate_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.annotate_tag", count: @unannotated_count) %></span>
+  <% end %>
+
+  <%= link_to admin_words_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= t("admin.dashboard.manage_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.manage_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.manage_tag") %></span>
+  <% end %>
+</div>
+
+<p class="search-switch">
+  <%= link_to t("admin.dashboard.view_site"), root_path %>
+</p>
