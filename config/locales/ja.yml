@@ -155,6 +155,21 @@ ja:
     words:
       title: "単語の管理"
       new: "単語を登録"
+      bulk:
+        legend: "まとめて登録"
+        hint: "1行に1件、「表層形␣読み」の形式で貼り付けてください（区切りは半角空白／全角空白／タブ）。ジャンル・品詞などは登録後にアノテーションで付与します。"
+        label: "単語（表層形と読み）"
+        placeholder: "銀河鉄道の夜　ギンガテツドウノヨル\n活版印刷術　カッパンインサツジュツ"
+        submit: "まとめて登録"
+        created: "%{count} 語を登録しました（既存スキップ %{skipped} 件）。"
+        partial: "一部の行を登録できませんでした。エラーを確認して修正してください。"
+        result_title: "登録結果"
+        result_created: "登録 %{count} 件"
+        result_skipped: "既存スキップ %{count} 件"
+        result_errors: "エラー %{count} 件"
+        error_line: "%{line} 行目: %{detail}"
+        errors:
+          missing_field: "表層形と読みの両方が必要です"
       edit_title: "単語を編集"
       edit: "編集"
       destroy: "削除"

@@ -731,6 +731,57 @@ textarea {
   padding: 0 var(--space-2);
 }
 
+/* 入力欄の補足説明 */
+.field-hint {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-2);
+  margin: 0 0 var(--space-3);
+}
+
+/* 一括登録の貼り付け欄: 等幅で桁を揃える */
+.bulk-input {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* フォーム上部の警告(一部失敗など): 朱テキスト */
+.form-alert {
+  border: 1px solid var(--shu);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  color: var(--shu);
+  font-size: 13px;
+}
+
+/* 一括登録の結果サマリ */
+.bulk-result {
+  border: 1px solid var(--ink);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.bulk-result__summary {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.bulk-result__errors {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+  color: var(--shu);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
 /* バリデーションエラー: 朱テキストのみ(背景を塗らない) */
 .error-explanation {
   border: 1px solid var(--shu);

@@ -1,5 +1,44 @@
-<h1><%= t("admin.words.new") %></h1>
+<% content_for :title, t("admin.words.new") %>
 
-<%= render "form" %>
+<h1 class="page-title"><%= t("admin.words.new") %></h1>
+
+<% if flash.now[:alert] %>
+  <p class="form-alert"><%= flash.now[:alert] %></p>
+<% end %>
+
+<% if @result %>
+  <div class="bulk-result">
+    <p class="section-label"><%= t("admin.words.bulk.result_title") %></p>
+    <ul class="bulk-result__summary">
+      <li><%= t("admin.words.bulk.result_created", count: @result.created) %></li>
+      <li><%= t("admin.words.bulk.result_skipped", count: @result.skipped) %></li>
+      <li><%= t("admin.words.bulk.result_errors", count: @result.errors.size) %></li>
+    </ul>
+    <% if @result.errors.any? %>
+      <ul class="bulk-result__errors">
+        <% @result.errors.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+<% end %>
+
+<%= form_with model: @registration, url: admin_words_path, method: :post, scope: :bulk_word_registration do |form| %>
+  <fieldset class="fieldset-card">
+    <legend><%= t("admin.words.bulk.legend") %></legend>
+    <p class="field-hint"><%= t("admin.words.bulk.hint") %></p>
+
+    <div class="field">
+      <%= form.label :text, t("admin.words.bulk.label") %>
+      <%= form.text_area :text, rows: 12, class: "bulk-input",
+            placeholder: t("admin.words.bulk.placeholder") %>
+    </div>
+  </fieldset>
+
+  <div>
+    <%= form.submit t("admin.words.bulk.submit"), class: "btn btn--primary" %>
+  </div>
+<% end %>
 
 <p><%= link_to t("admin.words.back_to_index"), admin_words_path %></p>

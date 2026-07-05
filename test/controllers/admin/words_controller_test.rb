@@ -32,86 +32,64 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: @word.surface
   end
 
-  test "新規フォームを表示できる" do
+  test "新規フォーム(一括登録)を表示できる" do
     sign_in_as(Admin.take)
     get new_admin_word_path
     assert_response :success
+    assert_select "textarea.bulk-input"
   end
 
-  test "語義・特徴つきで単語を登録できる" do
+  test "表層形と読みをまとめて登録できる(未注釈のまま)" do
     sign_in_as(Admin.take)
 
-    assert_difference [ "Word.count", "WordSense.count", "WordSenseFeature.count" ], 1 do
+    assert_difference [ "Word.count", "WordSense.count" ], 2 do
       post admin_words_path, params: {
-        word: {
-          surface: "硫黄島からの手紙",
-          word_senses_attributes: {
-            "0" => {
-              reading: "イオウジマカラノテガミ",
-              genre_id: genres(:small_novel).id,
-              entity_type_id: entity_types(:book_title).id,
-              part_of_speech_id: parts_of_speech(:noun).id,
-              meaning: "映画のタイトル",
-              word_sense_features_attributes: {
-                "0" => { linguistic_feature_id: linguistic_features(:rendaku).id,
-                         target: "手紙", target_reading: "テガミ" }
-              }
-            }
-          }
-        }
+        bulk_word_registration: { text: "銀河鉄道の夜　ギンガテツドウノヨル\n活版印刷術　カッパンインサツジュツ" }
       }
     end
 
     assert_redirected_to admin_words_path
-    word = Word.find_by(surface: "硫黄島からの手紙")
-    assert_equal "漢漢漢あああ漢漢", word.char_type_pattern
-    sense = word.word_senses.sole
-    assert_equal "ioujimakaranotegami", sense.rhythm_pattern
-    assert_equal [ linguistic_features(:rendaku) ], sense.linguistic_features
+    word = Word.find_by(surface: "銀河鉄道の夜")
+    assert_equal "ギンガテツドウノヨル", word.word_senses.sole.reading
+    assert_nil word.annotated_at
   end
 
-  test "空の語義行はスキップして登録できる" do
+  test "表層形に半角空白を含む語も登録できる(行末の空白で読みと分ける)" do
     sign_in_as(Admin.take)
 
     assert_difference -> { Word.count }, 1 do
-      assert_no_difference -> { WordSense.count } do
-        post admin_words_path, params: {
-          word: {
-            surface: "空語義テスト",
-            word_senses_attributes: { "0" => { reading: "", meaning: "" } }
-          }
-        }
-      end
+      post admin_words_path, params: {
+        bulk_word_registration: { text: "Dead by Daylight　デッドバイデイライト" }
+      }
     end
+    assert Word.exists?(surface: "Dead by Daylight")
   end
 
-  test "surface が空だと登録に失敗し 422 を返す" do
+  test "既存の(表層形・読み)はスキップする(冪等)" do
+    sign_in_as(Admin.take)
+    line = "#{words(:abc_murder).surface}　#{word_senses(:murder).reading}"
+
+    assert_no_difference [ "Word.count", "WordSense.count" ] do
+      post admin_words_path, params: { bulk_word_registration: { text: line } }
+    end
+    assert_redirected_to admin_words_path
+  end
+
+  test "読み欠落の行はエラーにして 422 を返す" do
     sign_in_as(Admin.take)
 
     assert_no_difference -> { Word.count } do
-      post admin_words_path, params: { word: { surface: "" } }
+      post admin_words_path, params: { bulk_word_registration: { text: "読みなし語" } }
     end
     assert_response :unprocessable_entity
+    assert_select ".bulk-result__errors li"
   end
 
-  test "該当部分が表層形に無いと登録に失敗する" do
+  test "テキストが空だと 422 を返す" do
     sign_in_as(Admin.take)
 
-    assert_no_difference [ "Word.count", "WordSenseFeature.count" ] do
-      post admin_words_path, params: {
-        word: {
-          surface: "犬",
-          word_senses_attributes: {
-            "0" => {
-              reading: "いぬ",
-              word_sense_features_attributes: {
-                "0" => { linguistic_feature_id: linguistic_features(:rendaku).id,
-                         target: "猫", target_reading: "ねこ" }
-              }
-            }
-          }
-        }
-      }
+    assert_no_difference -> { Word.count } do
+      post admin_words_path, params: { bulk_word_registration: { text: "" } }
     end
     assert_response :unprocessable_entity
   end
