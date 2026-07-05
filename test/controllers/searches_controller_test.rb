@@ -6,30 +6,53 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "条件で絞り込んだ結果が表示される" do
-    get search_path, params: { first_char: "さ" }
+  test "結果は単語一覧(entry_row)で表示される" do
+    get search_path
     assert_response :success
-    assert_select "td", text: words(:abc_murder).surface
-    assert_select "td", text: words(:curry).surface, count: 0
+    assert_select ".search-results__count"
+    assert_select "a.entry-row__surface"
   end
 
-  test "キーワード(q)で絞り込める(ヘッダー検索・ホーム検索の入口)" do
+  # --- 各条件(結果は単語単位) ---
+  test "先頭文字(50音・複数OR)で絞り込める" do
+    get search_path, params: { first_char: [ word_senses(:curry).first_char ] }
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
+  end
+
+  test "末尾文字で絞り込める" do
+    get search_path, params: { last_char: [ word_senses(:curry).last_char ] }
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+  end
+
+  test "キーワード(q)で絞り込める" do
     get search_path, params: { q: "カレー" }
-    assert_response :success
-    assert_select "td", text: words(:curry).surface
-    assert_select "td", text: words(:abc_murder).surface, count: 0
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
   end
 
-  test "一致が無いときはメッセージを表示する" do
-    get search_path, params: { first_char: "ん" }
-    assert_response :success
-    assert_select "p", text: I18n.t("searches.empty")
+  test "エンティティ種別(複数選択)で絞り込める" do
+    get search_path, params: { entity_type_id: [ entity_types(:book_title).id ] }
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry)), count: 0
   end
 
   test "ジャンル階層(大)で絞り込める" do
     get search_path, params: { genre_id: genres(:large_literature).id }
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+  end
+
+  test "一致が無いときはメッセージを表示する" do
+    get search_path, params: { first_char: [ "ヲ" ] }
     assert_response :success
-    assert_select "td", text: words(:abc_murder).surface
+    assert_select "p", text: I18n.t("searches.empty")
+    assert_select ".search-results__count", text: I18n.t("searches.result_count", count: 0)
+  end
+
+  test "適用中の検索条件がチップで表示される" do
+    get search_path, params: { q: "カレー" }
+    assert_select ".condition-chip__value", text: "カレー"
   end
 
   test "page パラメータを付けても開ける" do

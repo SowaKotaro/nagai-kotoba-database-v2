@@ -105,4 +105,21 @@ class WordSenseSearchTest < ActiveSupport::TestCase
   test "語種で絞れる" do
     assert_equal [ word_senses(:murder).id ], ids(word_origin_id: word_origins(:kango).id)
   end
+
+  # --- 複数選択(同一項目内は OR) ---
+  test "先頭文字は複数指定(OR)で絞れる" do
+    both = ids(first_char: [ word_senses(:murder).first_char, word_senses(:curry).first_char ])
+    assert_equal [ word_senses(:curry).id, word_senses(:murder).id ].sort, both
+  end
+
+  test "品詞の複数指定(OR)で絞れる" do
+    # murder / curry はいずれも名詞。名詞1つでも配列でも両方返る。
+    assert_equal [ word_senses(:curry).id, word_senses(:murder).id ].sort,
+                 ids(part_of_speech_id: [ parts_of_speech(:noun).id ])
+  end
+
+  test "単一値(ファセットリンク)でも配列でも同じ結果になる" do
+    assert_equal ids(first_char: word_senses(:curry).first_char),
+                 ids(first_char: [ word_senses(:curry).first_char ])
+  end
 end

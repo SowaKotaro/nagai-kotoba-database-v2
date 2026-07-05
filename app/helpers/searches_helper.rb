@@ -1,18 +1,58 @@
 module SearchesHelper
-  # ジャンルを 大 > 中 > 小 の階層順に、深さ分だけ字下げした select 用の選択肢を返す。
-  # どの階層を選んでも配下の小分類で絞り込めるよう、全階層を選択肢に含める。
-  # 全ジャンルを1クエリで読み、メモリ上で木を組み立てる(N+1 を避ける)。
-  def hierarchical_genre_options
-    genres_by_parent = Genre.order(:level, :name).group_by(&:parent_id)
-    genre_option_rows(genres_by_parent, nil, 0)
+  # 先頭/末尾文字の 50音表(カタカナ・濁音/半濁音含む)。読みはカタカナ基準。
+  KANA_ROWS = [
+    %w[ア イ ウ エ オ],
+    %w[カ キ ク ケ コ],
+    %w[ガ ギ グ ゲ ゴ],
+    %w[サ シ ス セ ソ],
+    %w[ザ ジ ズ ゼ ゾ],
+    %w[タ チ ツ テ ト],
+    %w[ダ ヂ ヅ デ ド],
+    %w[ナ ニ ヌ ネ ノ],
+    %w[ハ ヒ フ ヘ ホ],
+    %w[バ ビ ブ ベ ボ],
+    %w[パ ピ プ ペ ポ],
+    %w[マ ミ ム メ モ],
+    %w[ヤ ユ ヨ],
+    %w[ラ リ ル レ ロ],
+    %w[ワ ヲ ン]
+  ].freeze
+
+  # 適用中の検索条件を [ラベル, 値の文字列] の配列で返す(結果ヘッダのチップ表示用)。
+  def applied_search_conditions(search)
+    conditions = []
+    conditions << [ t("searches.q_label"), search.q ] if search.q.present?
+    if search.reading_length_min || search.reading_length_max
+      conditions << [ t("searches.reading_length"), reading_length_phrase(search) ]
+    end
+    conditions << [ t("searches.first_char"), search.first_char.join("・") ] if search.first_char.present?
+    conditions << [ t("searches.last_char"), search.last_char.join("・") ] if search.last_char.present?
+    conditions << [ WordSense.human_attribute_name(:genre), master_name(Genre, search.genre_id) ] if search.genre_id.present?
+    conditions << [ WordSense.human_attribute_name(:part_of_speech), master_names(PartOfSpeech, search.part_of_speech_id) ] if search.part_of_speech_id.present?
+    conditions << [ WordSense.human_attribute_name(:entity_type), master_names(EntityType, search.entity_type_id) ] if search.entity_type_id.present?
+    conditions << [ t("searches.linguistic_feature"), master_names(LinguisticFeature, search.linguistic_feature_id) ] if search.linguistic_feature_id.present?
+    conditions << [ t("searches.rhythm_pattern"), search.rhythm_pattern ] if search.rhythm_pattern.present?
+    conditions << [ t("searches.char_type_pattern"), search.char_type_pattern ] if search.char_type_pattern.present?
+    conditions
   end
 
   private
 
-  def genre_option_rows(genres_by_parent, parent_id, depth)
-    Array(genres_by_parent[parent_id]).flat_map do |genre|
-      [ [ "#{'　' * depth}#{genre.name}", genre.id ] ] +
-        genre_option_rows(genres_by_parent, genre.id, depth + 1)
+  def reading_length_phrase(search)
+    min = search.reading_length_min
+    max = search.reading_length_max
+    if min && max && min == max then t("words.show.chars", count: min)
+    elsif max.nil? then t("searches.length_at_least", count: min)
+    elsif min.nil? then t("searches.length_at_most", count: max)
+    else t("searches.length_between", min: min, max: max)
     end
+  end
+
+  def master_name(model, id)
+    model.find_by(id: id)&.name
+  end
+
+  def master_names(model, ids)
+    model.where(id: ids).order(:name).pluck(:name).join("・")
   end
 end

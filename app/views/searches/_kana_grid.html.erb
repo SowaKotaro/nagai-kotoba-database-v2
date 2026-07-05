@@ -1,0 +1,17 @@
+<%# 50音表(カタカナ・濁音/半濁音含む)。複数選択可のチェックボックス。
+    locals: name(パラメータ名), selected(選択中の配列), legend(見出し) %>
+<fieldset class="kana-field">
+  <legend class="field-legend"><%= legend %></legend>
+  <div class="kana-grid">
+    <% SearchesHelper::KANA_ROWS.each do |row| %>
+      <div class="kana-row">
+        <% row.each do |kana| %>
+          <label class="kana-cell">
+            <%= check_box_tag "#{name}[]", kana, selected.include?(kana), id: nil, class: "visually-hidden" %>
+            <span class="kana-cell__face"><%= kana %></span>
+          </label>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</fieldset>

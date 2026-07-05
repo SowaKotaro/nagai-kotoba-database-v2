@@ -33,15 +33,16 @@ class WordSenseSearch
   def reading_length_max = positive_integer(:reading_length_max)
   def reading_length = positive_integer(:reading_length)
   def mora_count = positive_integer(:mora_count)
-  def first_char = @params[:first_char].to_s.strip
-  def last_char = @params[:last_char].to_s.strip
   def char_type_pattern = @params[:char_type_pattern].to_s.strip
   def rhythm_pattern = @params[:rhythm_pattern].to_s.strip
   def genre_id = @params[:genre_id].presence
-  def part_of_speech_id = @params[:part_of_speech_id].presence
-  def entity_type_id = @params[:entity_type_id].presence
   def word_origin_id = @params[:word_origin_id].presence
-  def linguistic_feature_id = @params[:linguistic_feature_id].presence
+  # 複数選択(OR)の条件。単一値でも配列でも受ける(詳細検索は配列、ファセットリンクは単一)。
+  def first_char = value_list(:first_char)
+  def last_char = value_list(:last_char)
+  def part_of_speech_id = value_list(:part_of_speech_id)
+  def entity_type_id = value_list(:entity_type_id)
+  def linguistic_feature_id = value_list(:linguistic_feature_id)
 
   private
 
@@ -49,6 +50,11 @@ class WordSenseSearch
   def positive_integer(key)
     value = @params[key].to_i
     value if value.positive?
+  end
+
+  # 単一値/配列いずれの入力も、空を除いた配列に正規化する。
+  def value_list(key)
+    Array(@params[key]).map { |v| v.to_s.strip }.reject(&:blank?)
   end
 
   # 選択したジャンル(大/中/小いずれか)を、末端(小分類)の id 群に展開する。
