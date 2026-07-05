@@ -48,7 +48,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-4);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .site-nav a {
@@ -78,7 +78,7 @@
   background: none;
   border: none;
   padding: var(--space-2) 2px;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--ink-2);
   cursor: pointer;
 }
@@ -93,7 +93,7 @@
   border-bottom: 1px solid var(--rule-mid);
   background: transparent;
   padding: 4px 2px;
-  font-size: 12px;
+  font-size: 15px;
   width: 160px;
   color: var(--ink);
 }
@@ -143,7 +143,7 @@ main.container {
 }
 
 .site-footer__desc {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 2;
   color: var(--on-ink-dim);
   margin: 0;
@@ -153,7 +153,7 @@ main.container {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .site-footer__nav a {
@@ -176,7 +176,7 @@ main.container {
   margin: 0 auto;
   padding: var(--space-3) var(--space-5);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 14px;
   letter-spacing: 0.1em;
   color: var(--on-ink-dim);
 }
@@ -185,7 +185,7 @@ main.container {
 .flash {
   border: 1px solid var(--ink);
   padding: var(--space-2) var(--space-4);
-  font-size: 13px;
+  font-size: 15px;
   margin-bottom: var(--space-5);
 }
 
