@@ -22,6 +22,9 @@ class WordSense < ApplicationRecord
   validates :reading, presence: true
   validate :genre_must_be_small
 
+  # 公開対象。注釈済み(word.annotated_at あり)の語にぶら下がる語義だけ。
+  scope :published, -> { joins(:word).where.not(words: { annotated_at: nil }) }
+
   # --- 検索・絞り込み用スコープ(生成カラム/インデックスを活用。Issue 9) ---
   # キーワード(表層形・読みの部分一致)。ワイルドカードはエスケープする。
   scope :keyword, lambda { |text|

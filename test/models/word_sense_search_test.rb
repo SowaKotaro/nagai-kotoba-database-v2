@@ -9,8 +9,14 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     WordSenseSearch.new(params).results.pluck(:id).sort
   end
 
-  test "条件なしなら全語義を返す" do
-    assert_equal WordSense.pluck(:id).sort, ids({})
+  test "条件なしなら公開(注釈済み)の全語義を返す" do
+    assert_equal WordSense.published.pluck(:id).sort, ids({})
+  end
+
+  test "未注釈語の語義は検索結果に出ない" do
+    # pending は未注釈語 pending_haruhi にぶら下がる語義。
+    assert_not_includes ids({}), word_senses(:pending).id
+    assert_equal [], ids(q: "涼宮ハルヒ")
   end
 
   # --- キーワード(表層形・読みの部分一致) ---
@@ -84,6 +90,6 @@ class WordSenseSearchTest < ActiveSupport::TestCase
   end
 
   test "0 や不正な文字数は無視する" do
-    assert_equal WordSense.pluck(:id).sort, ids(reading_length_min: "0", reading_length_max: "abc")
+    assert_equal WordSense.published.pluck(:id).sort, ids(reading_length_min: "0", reading_length_max: "abc")
   end
 end

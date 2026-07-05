@@ -13,6 +13,18 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # --- 公開: 未注釈は出さない ---
+  test "未注釈の語は一覧に出ない" do
+    get words_path
+    assert_response :success
+    assert_select "a", text: words(:pending_haruhi).surface, count: 0
+  end
+
+  test "未注釈の語の詳細は 404" do
+    get word_path(words(:pending_haruhi))
+    assert_response :not_found
+  end
+
   # --- 詳細の表示内容 ---
   test "詳細に語義の読み・韻・意味が表示される" do
     sense = word_senses(:murder)

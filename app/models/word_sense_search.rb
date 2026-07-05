@@ -6,9 +6,10 @@ class WordSenseSearch
     @params = params || {}
   end
 
-  # 絞り込み済みで並び順を付けた Relation を返す(空条件なら全件)。
+  # 絞り込み済みで並び順を付けた Relation を返す(空条件なら公開全件)。
+  # 公開検索なので注釈済み(published)の語義のみを対象にする。
   def results
-    relation = WordSense.all
+    relation = WordSense.published
     relation = relation.keyword(q) if q.present?
     relation = relation.reading_length_at_least(reading_length_min) if reading_length_min
     relation = relation.reading_length_at_most(reading_length_max) if reading_length_max
