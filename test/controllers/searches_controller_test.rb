@@ -92,6 +92,6 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
 
   test "簡素検索から詳細検索への導線がある" do
     get simple_search_path, params: { q: "殺人" }
-    assert_select "a.search-switch, .search-switch a", text: I18n.t("searches.simple.to_advanced")
+    assert_select ".search-switch a[href=?]", search_path(q: "殺人")
   end
 end

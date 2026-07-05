@@ -6,9 +6,12 @@
 
 <% if @active_facet %>
   <p class="active-facet">
+    <%= icon "funnel" %>
     <span class="active-facet__label"><%= @active_facet.first %></span>
     <span class="active-facet__value"><%= @active_facet.last %></span>
-    <%= link_to t("words.index.clear_filter"), words_path, class: "active-facet__clear" %>
+    <%= link_to words_path, class: "active-facet__clear icon-label" do %>
+      <%= icon "x" %><%= t("words.index.clear_filter") %>
+    <% end %>
   </p>
 <% end %>
 

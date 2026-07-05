@@ -5,7 +5,9 @@
 <h1 class="page-title"><%= t("searches.title") %></h1>
 
 <p class="search-switch">
-  <%= link_to t("searches.to_simple"), simple_search_path(q: @search.q.presence) %>
+  <%= link_to simple_search_path(q: @search.q.presence), class: "icon-label" do %>
+    <%= icon "magnifying_glass" %><%= t("searches.to_simple") %>
+  <% end %>
 </p>
 
 <%= form_with url: search_path, method: :get, data: { turbo_action: "advance" }, class: "search-form" do %>

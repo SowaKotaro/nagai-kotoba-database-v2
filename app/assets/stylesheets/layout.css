@@ -87,10 +87,20 @@
   color: var(--ink);
 }
 
-/* 常設のキーワード検索(枠で囲わず下線1本) */
+/* 常設のキーワード検索(枠で囲わず下線1本 + 虫眼鏡アイコン) */
+.header-search {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+  border-bottom: 1px solid var(--rule-mid);
+}
+
+.header-search:focus-within {
+  border-bottom-color: var(--shu);
+}
+
 .header-search__input {
   border: none;
-  border-bottom: 1px solid var(--rule-mid);
   background: transparent;
   padding: 4px 2px;
   font-size: 15px;
@@ -99,7 +109,21 @@
 }
 
 .header-search__input:focus {
-  border-bottom-color: var(--shu);
+  outline: none;
+}
+
+.header-search__submit {
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  padding: 4px 2px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.header-search__submit:hover {
+  color: var(--shu);
 }
 
 .header-search__input::placeholder {

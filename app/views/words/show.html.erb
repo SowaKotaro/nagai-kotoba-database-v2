@@ -141,4 +141,8 @@
   </div>
 <% end %>
 
-<p><%= link_to t("words.show.back"), words_path, class: "back-link" %></p>
+<p>
+  <%= link_to words_path, class: "back-link icon-label" do %>
+    <%= icon "arrow_left" %><%= t("words.show.back") %>
+  <% end %>
+</p>

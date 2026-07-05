@@ -114,8 +114,8 @@ ja:
       results: "「%{q}」の検索結果（%{count}語）"
       empty: "「%{q}」に一致する単語はありません。"
       prompt: "キーワードを入力して単語を探せます。"
-      to_advanced: "長さ・ジャンル・エンティティ種別で詳細に絞り込む →"
-    to_simple: "キーワードだけで探す →"
+      to_advanced: "長さ・ジャンル・エンティティ種別で詳細に絞り込む"
+    to_simple: "キーワードだけで探す"
   words:
     index:
       title: "単語一覧"
@@ -123,7 +123,7 @@ ja:
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
       char_count: "%{count} 字"
-      clear_filter: "絞り込みを解除 ×"
+      clear_filter: "絞り込みを解除"
     show:
       headword: "見出し語"
       record_number: "No. %{id}"

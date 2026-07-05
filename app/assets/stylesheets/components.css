@@ -2,6 +2,25 @@
    言葉を巨大な明朝で組み、データは極小の等幅ラベルで添える(スケール対比)。
    構造は「墨の罫線」と「墨の枠(1px)」で作る。角丸・影は使わない。 */
 
+/* --- アイコン(Phosphor Light をインライン SVG。currentColor でトークン連動) --- */
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: currentColor;
+  flex: none;
+}
+
+.icon--lg { width: 1.35em; height: 1.35em; }
+
+/* テキストに添えるアイコン(戻る・切替リンクなど) */
+.icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
 /* --- パンくず --- */
 .breadcrumbs {
   display: flex;

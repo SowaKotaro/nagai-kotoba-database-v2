@@ -11,7 +11,9 @@
 <% end %>
 
 <p class="search-switch">
-  <%= link_to t("searches.simple.to_advanced"), search_path(q: @q.presence) %>
+  <%= link_to search_path(q: @q.presence), class: "icon-label" do %>
+    <%= icon "funnel" %><%= t("searches.simple.to_advanced") %>
+  <% end %>
 </p>
 
 <% if @q.blank? %>
