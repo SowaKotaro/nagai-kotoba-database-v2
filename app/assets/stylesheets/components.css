@@ -258,13 +258,77 @@ a.tag:hover {
   color: var(--bg);
 }
 
+/* 表示のみのタグ(語種など、絞り込み対象でないもの) */
+.tag--static {
+  color: var(--ink);
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* 別表記の一覧 */
+.variant-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.variant-list rt {
+  font-size: 10px;
+  color: var(--shu);
+}
+
+/* 一覧の絞り込み中インジケータ(どのファセットで絞っているか + 解除) */
+.active-facet {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
+}
+
+.active-facet__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+}
+
+.active-facet__value {
+  font-family: var(--font-mincho);
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.active-facet__clear {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--shu);
+  text-decoration: none;
+}
+
+.active-facet__clear:hover {
+  color: var(--shu-deep);
+  text-decoration: underline;
+}
+
 /* --- 一覧: 型見本のリスト(読みを小さく上に、言葉を大きく) --- */
 .entry-list {
   border-top: 2px solid var(--ink);
 }
 
-/* 行全体がリンク(クリック判定を行全体に)。色は継承し、hover で語だけ朱に */
+/* 行全体を詳細リンクに(surface のストレッチで実現)。タグは上に載る実リンク。 */
 .entry-row {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -272,8 +336,6 @@ a.tag:hover {
   flex-wrap: wrap;
   padding: var(--space-4) 2px;
   border-bottom: 1px solid var(--rule);
-  color: inherit;
-  text-decoration: none;
 }
 
 .entry-row__main {
@@ -299,8 +361,10 @@ a.tag:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* 一覧のタグは表示のみ(行全体がリンクのため入れ子リンクにしない) */
+/* 一覧のタグは各ファセットの絞り込み(単語一覧)への実リンク。行リンクの上に載せる。 */
 .entry-row__tag {
+  position: relative;
+  z-index: 1;
   border: 1px solid var(--rule-mid);
   color: var(--ink-2);
   font-size: 11px;
@@ -308,6 +372,13 @@ a.tag:hover {
   line-height: 1.5;
   padding: 0 8px;
   white-space: nowrap;
+  text-decoration: none;
+}
+
+.entry-row__tag:hover {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
 }
 
 .entry-row__reading {
@@ -322,9 +393,17 @@ a.tag:hover {
   font-weight: 600;
   font-size: clamp(24px, 3.6vw, 32px);
   line-height: 1.4;
+  color: var(--ink);
   text-decoration: none;
   overflow-wrap: anywhere;
   transition: color 0.15s;
+}
+
+/* surface のリンク領域を行全体に広げる(タグ以外はどこを押しても詳細へ) */
+.entry-row__surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
 .entry-row:hover .entry-row__surface {

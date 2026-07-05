@@ -36,9 +36,9 @@
           <ul class="annotations">
             <% sense.word_sense_features.each do |feature| %>
               <li class="annotation">
-                <%# チップは同じ特徴での検索へ、該当部分は朱ハイライト+読みルビ %>
+                <%# チップは同じ特徴の単語一覧へ、該当部分は朱ハイライト+読みルビ %>
                 <%= link_to feature.linguistic_feature.name,
-                      search_path(linguistic_feature_id: feature.linguistic_feature_id), class: "chip" %>
+                      words_path(linguistic_feature_id: feature.linguistic_feature_id), class: "chip" %>
                 <ruby class="annotation-target"><%= feature.target %><rt><%= feature.target_reading %></rt></ruby>
               </li>
             <% end %>
@@ -50,12 +50,12 @@
             <div class="sense-attrs__item sense-attrs__item--wide">
               <dt><%= WordSense.human_attribute_name(:genre) %></dt>
               <dd>
-                <%# 各階層から検索絞り込みへ飛べるパンくず。末端は少し強調 %>
+                <%# 各階層から単語一覧の絞り込みへ飛べるパンくず。末端は少し強調 %>
                 <nav class="genre-path">
                   <% hierarchy = sense.genre.self_and_ancestors %>
                   <% hierarchy.each.with_index(1) do |genre, depth| %>
                     <% current = depth == hierarchy.size %>
-                    <%= link_to genre.name, search_path(genre_id: genre.id),
+                    <%= link_to genre.name, words_path(genre_id: genre.id),
                           class: ("genre-path__current" if current) %>
                     <% unless current %><span class="genre-path__sep">›</span><% end %>
                   <% end %>
@@ -68,7 +68,7 @@
             <div class="sense-attrs__item">
               <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
               <dd><%= link_to sense.part_of_speech.name,
-                        search_path(part_of_speech_id: sense.part_of_speech_id), class: "tag" %></dd>
+                        words_path(part_of_speech_id: sense.part_of_speech_id), class: "tag" %></dd>
             </div>
           <% end %>
 
@@ -76,7 +76,18 @@
             <div class="sense-attrs__item">
               <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
               <dd><%= link_to sense.entity_type.name,
-                        search_path(entity_type_id: sense.entity_type_id), class: "tag" %></dd>
+                        words_path(entity_type_id: sense.entity_type_id), class: "tag" %></dd>
+            </div>
+          <% end %>
+
+          <% if sense.word_origins.any? %>
+            <div class="sense-attrs__item">
+              <dt><%= t("words.show.origins") %></dt>
+              <dd class="tag-row">
+                <% sense.word_origins.each do |origin| %>
+                  <span class="tag tag--static"><%= origin.name %></span>
+                <% end %>
+              </dd>
             </div>
           <% end %>
 
@@ -85,10 +96,42 @@
             <dd><%= t("words.show.chars", count: sense.reading_length) %></dd>
           </div>
 
+          <% if sense.mora_count %>
+            <div class="sense-attrs__item">
+              <dt><%= t("words.show.mora_count") %></dt>
+              <dd><%= t("words.show.mora", count: sense.mora_count) %></dd>
+            </div>
+          <% end %>
+
+          <div class="sense-attrs__item">
+            <dt><%= t("words.show.first_last_char") %></dt>
+            <dd class="mono"><%= sense.first_char %> … <%= sense.last_char %></dd>
+          </div>
+
           <div class="sense-attrs__item">
             <dt><%= WordSense.human_attribute_name(:rhythm_pattern) %></dt>
             <dd class="mono"><%= sense.rhythm_pattern %></dd>
           </div>
+
+          <% if sense.vowel_pattern.present? %>
+            <div class="sense-attrs__item">
+              <dt><%= t("words.show.vowel_pattern") %></dt>
+              <dd class="mono"><%= sense.vowel_pattern %></dd>
+            </div>
+          <% end %>
+
+          <% if sense.word_sense_variants.any? %>
+            <div class="sense-attrs__item sense-attrs__item--wide">
+              <dt><%= t("words.show.variants") %></dt>
+              <dd>
+                <ul class="variant-list">
+                  <% sense.word_sense_variants.each do |variant| %>
+                    <li><ruby><%= variant.surface %><rt><%= variant.reading %></rt></ruby></li>
+                  <% end %>
+                </ul>
+              </dd>
+            </div>
+          <% end %>
         </dl>
       </section>
     <% end %>

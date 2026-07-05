@@ -1,18 +1,23 @@
-<%# 一覧の1行(型見本のリスト)。行全体をリンクにし、読み→言葉→データ(文字数・品詞/種別・語義数)。local: word %>
+<%# 一覧の1行。行全体は詳細へのリンク(surface をストレッチ)。タグは各ファセットの
+    単語一覧(絞り込み)への実リンク。文字数は読みの文字数。local: word %>
 <% primary = word.word_senses.first %>
-<%= link_to word_path(word), class: "entry-row" do %>
+<div class="entry-row">
   <span class="entry-row__main">
     <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
-    <span class="entry-row__surface"><%= word.surface %></span>
+    <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
   </span>
   <span class="entry-row__data">
-    <span class="entry-row__len"><%= t("words.index.char_count", count: word.surface.length) %></span>
+    <% if primary&.reading_length %>
+      <span class="entry-row__len"><%= t("words.index.char_count", count: primary.reading_length) %></span>
+    <% end %>
     <% if primary&.part_of_speech %>
-      <span class="entry-row__tag"><%= primary.part_of_speech.name %></span>
+      <%= link_to primary.part_of_speech.name,
+            words_path(part_of_speech_id: primary.part_of_speech_id), class: "entry-row__tag" %>
     <% end %>
     <% if primary&.entity_type %>
-      <span class="entry-row__tag"><%= primary.entity_type.name %></span>
+      <%= link_to primary.entity_type.name,
+            words_path(entity_type_id: primary.entity_type_id), class: "entry-row__tag" %>
     <% end %>
     <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
   </span>
-<% end %>
+</div>
