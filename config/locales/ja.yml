@@ -100,6 +100,15 @@ ja:
     submit: "検索"
     results: "検索結果（%{count}件）"
     empty: "条件に一致する語義はありません。"
+    simple:
+      title: "キーワード検索"
+      placeholder: "表層形・読みで検索（例：小春日和、コハル）"
+      submit: "検索"
+      results: "「%{q}」の検索結果（%{count}語）"
+      empty: "「%{q}」に一致する単語はありません。"
+      prompt: "キーワードを入力して単語を探せます。"
+      to_advanced: "長さ・ジャンル・エンティティ種別で詳細に絞り込む →"
+    to_simple: "キーワードだけで探す →"
   words:
     index:
       title: "単語一覧"

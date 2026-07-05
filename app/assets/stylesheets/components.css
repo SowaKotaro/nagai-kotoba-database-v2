@@ -390,6 +390,26 @@ a.tag:hover {
   color: var(--ink-3);
 }
 
+/* 簡素↔詳細 検索の切替リンク(等幅小・朱 hover) */
+.search-switch {
+  margin: var(--space-3) 0 var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.search-switch a {
+  color: var(--ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-mid);
+  padding-bottom: 2px;
+}
+
+.search-switch a:hover {
+  color: var(--shu);
+  border-color: var(--shu);
+}
+
 /* ホームの検索窓: 下線1本を太く */
 .hero-search {
   display: flex;

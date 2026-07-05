@@ -20,8 +20,8 @@
         <% end %>
       </nav>
 
-      <%# 常設のキーワード検索(下線1本。枠で囲わない)。Enter で /search へ %>
-      <%= form_with url: search_path, method: :get, class: "header-search" do %>
+      <%# 常設のキーワード検索(下線1本。枠で囲わない)。Enter で簡素検索へ %>
+      <%= form_with url: simple_search_path, method: :get, class: "header-search" do %>
         <%= text_field_tag :q, nil, placeholder: t("layouts.search_placeholder"),
               class: "header-search__input", aria: { label: t("searches.q_label") } %>
       <% end %>

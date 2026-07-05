@@ -4,6 +4,10 @@
 
 <h1 class="page-title"><%= t("searches.title") %></h1>
 
+<p class="search-switch">
+  <%= link_to t("searches.to_simple"), simple_search_path(q: @search.q.presence) %>
+</p>
+
 <%= form_with url: search_path, method: :get, data: { turbo_action: "advance" } do %>
   <div class="field field--keyword">
     <%= label_tag :q, t("searches.q_label") %>

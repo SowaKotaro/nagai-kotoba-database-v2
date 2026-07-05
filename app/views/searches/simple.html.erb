@@ -1,0 +1,37 @@
+<% content_for :title, t("searches.simple.title") %>
+
+<%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("searches.simple.title"), nil ] ] %>
+
+<h1 class="page-title"><%= t("searches.simple.title") %></h1>
+
+<%= form_with url: simple_search_path, method: :get, data: { turbo_action: "advance" }, class: "hero-search" do %>
+  <%= text_field_tag :q, @q, placeholder: t("searches.simple.placeholder"),
+        class: "hero-search__input", aria: { label: t("searches.q_label") } %>
+  <%= submit_tag t("searches.simple.submit"), class: "btn btn--primary" %>
+<% end %>
+
+<p class="search-switch">
+  <%= link_to t("searches.simple.to_advanced"), search_path(q: @q.presence) %>
+</p>
+
+<% if @q.blank? %>
+  <p class="empty-note"><%= t("searches.simple.prompt") %></p>
+<% elsif @words.empty? %>
+  <p class="empty-note"><%= t("searches.simple.empty", q: @q) %></p>
+<% else %>
+  <h2 class="section-heading"><%= t("searches.simple.results", q: @q, count: @total_count) %></h2>
+
+  <div class="entry-list">
+    <%= render partial: "words/entry_row", collection: @words, as: :word %>
+  </div>
+
+  <nav class="pagination">
+    <% if @page > 1 %>
+      <%= link_to t("words.pagination.prev"), simple_search_path(q: @q, page: @page - 1) %>
+    <% end %>
+    <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
+    <% if @page < @total_pages %>
+      <%= link_to t("words.pagination.next"), simple_search_path(q: @q, page: @page + 1) %>
+    <% end %>
+  </nav>
+<% end %>

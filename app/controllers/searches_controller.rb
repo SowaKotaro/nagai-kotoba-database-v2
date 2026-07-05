@@ -1,9 +1,10 @@
 # 語義の公開検索・絞り込み(Issue 9)。誰でも利用できる。
 class SearchesController < ApplicationController
-  allow_unauthenticated_access only: :index
+  allow_unauthenticated_access only: %i[index simple]
 
   PER_PAGE = 50
 
+  # 詳細な検索(長さ・ジャンル・エンティティなど全条件)。
   def index
     @search = WordSenseSearch.new(search_params)
     scope = @search.results
@@ -14,6 +15,20 @@ class SearchesController < ApplicationController
     @word_senses = scope.preload(:word, :genre, :entity_type, :part_of_speech)
                         .limit(PER_PAGE)
                         .offset((@page - 1) * PER_PAGE)
+  end
+
+  # 簡素な検索(キーワードのみ・表層形/読みの部分一致)。単語単位で一覧表示する。
+  def simple
+    @q = params[:q].to_s.strip
+    @page = [ params[:page].to_i, 1 ].max
+    scope = @q.present? ? Word.annotated.keyword(@q) : Word.none
+
+    @total_count = scope.count
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
+    @words = scope.includes(word_senses: [ :part_of_speech, :entity_type ])
+                  .order(:surface)
+                  .limit(PER_PAGE)
+                  .offset((@page - 1) * PER_PAGE)
   end
 
   private
