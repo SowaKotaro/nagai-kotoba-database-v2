@@ -20,3 +20,18 @@ curry:
   rhythm_pattern: karee
   vowel_pattern: aee
   mora_count: 3
+
+# 未注釈語の語義(読みのみ)。公開検索(published)には出ない。
+pending:
+  word: pending_haruhi
+  reading: すずみやはるひのゆううつ
+  rhythm_pattern: suzumiyaharuhinoyuuutsu
+  vowel_pattern: uuiaauioouuu
+  mora_count: 12
+
+pending2:
+  word: pending_bermuda
+  reading: バミューダトライアングル
+  rhythm_pattern: bamyuudatoraianguru
+  vowel_pattern: auuaoaiauuu
+  mora_count: 11

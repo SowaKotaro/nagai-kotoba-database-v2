@@ -1,0 +1,49 @@
+<%# ジャンル階層フィルタ。初期状態は大分類のみを表示し、親を選ぶと直下の分類が
+    フェードインで現れる(複数の親を同時に展開できる)。チェックは genre_id[] で送信し、
+    上位と下位を同時に選んだ場合はサーバ側(WordSenseSearch)が下位を優先する。
+    どの親のグループかは朱区切りのラベルで示す。 %>
+<fieldset class="chips-field">
+  <legend class="field-legend"><%= WordSense.human_attribute_name(:genre) %></legend>
+
+  <% selected = @search.genre_id %>
+  <% roots = @genres_by_parent[nil] || [] %>
+  <div class="genre-filter" data-controller="genre-filter">
+    <div class="genre-filter__level">
+      <% roots.each do |large| %>
+        <%= render "genre_chip", genre: large, parent: nil, selected: selected %>
+      <% end %>
+    </div>
+
+    <%# 中分類のグループ(大分類ごと)。親が選択済みのときだけ表示する %>
+    <% roots.each do |large| %>
+      <% mediums = @genres_by_parent[large.id] || [] %>
+      <% next if mediums.empty? %>
+      <div class="genre-filter__group" data-genre-filter-target="group"
+           data-parent="<%= large.id %>" <%= "hidden" unless selected.include?(large.id.to_s) %>>
+        <p class="genre-filter__group-label"><%= large.name %></p>
+        <div class="genre-filter__level">
+          <% mediums.each do |medium| %>
+            <%= render "genre_chip", genre: medium, parent: large, selected: selected %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# 小分類のグループ(中分類ごと)。ラベルは 大分類 › 中分類 %>
+    <% roots.each do |large| %>
+      <% (@genres_by_parent[large.id] || []).each do |medium| %>
+        <% smalls = @genres_by_parent[medium.id] || [] %>
+        <% next if smalls.empty? %>
+        <div class="genre-filter__group" data-genre-filter-target="group"
+             data-parent="<%= medium.id %>" <%= "hidden" unless selected.include?(medium.id.to_s) %>>
+          <p class="genre-filter__group-label"><%= large.name %><span class="genre-filter__sep">›</span><%= medium.name %></p>
+          <div class="genre-filter__level">
+            <% smalls.each do |small| %>
+              <%= render "genre_chip", genre: small, parent: medium, selected: selected %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</fieldset>

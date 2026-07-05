@@ -6,34 +6,44 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "条件で絞り込んだ結果が表示される" do
-    get search_path, params: { first_char: "さ" }
+  test "結果は表示せず、検索フォームのみを描画する" do
+    get search_path
     assert_response :success
-    assert_select "td", text: words(:abc_murder).surface
-    assert_select "td", text: words(:curry).surface, count: 0
+    assert_select "form.search-form"
+    assert_select ".entry-list", count: 0
   end
 
-  test "キーワード(q)で絞り込める(ヘッダー検索・ホーム検索の入口)" do
+  # --- 検索実行(送信)は単語一覧へのリダイレクト ---
+  test "検索を実行すると空条件を除いて単語一覧へリダイレクトする" do
+    get search_path, params: { commit: I18n.t("searches.submit"), q: "カレー",
+                               rhythm_pattern: "", char_type_pattern: "",
+                               first_char: [ "カ" ], last_char: [] }
+    assert_redirected_to words_path(q: "カレー", first_char: [ "カ" ])
+  end
+
+  test "ジャンル(複数選択)も単語一覧へ引き継がれる" do
+    get search_path, params: { commit: I18n.t("searches.submit"),
+                               genre_id: [ genres(:large_literature).id.to_s ] }
+    assert_redirected_to words_path(genre_id: [ genres(:large_literature).id ])
+  end
+
+  test "commit なし(リンクからの遷移)はリダイレクトせずフォームに条件を反映する" do
     get search_path, params: { q: "カレー" }
     assert_response :success
-    assert_select "td", text: words(:curry).surface
-    assert_select "td", text: words(:abc_murder).surface, count: 0
+    assert_select "input#q[value=?]", "カレー"
   end
 
-  test "一致が無いときはメッセージを表示する" do
-    get search_path, params: { first_char: "ん" }
-    assert_response :success
-    assert_select "p", text: I18n.t("searches.empty")
+  test "文字タイプ列の入力キー(あ/ア/漢/A/@)が表示される" do
+    get search_path
+    %w[あ ア 漢 A @].each do |char|
+      assert_select "button.char-type-key[data-char-type-char-param=?]", char, text: char
+    end
   end
 
-  test "ジャンル階層(大)で絞り込める" do
-    get search_path, params: { genre_id: genres(:large_literature).id }
-    assert_response :success
-    assert_select "td", text: words(:abc_murder).surface
-  end
-
-  test "page パラメータを付けても開ける" do
-    get search_path, params: { page: 2 }
-    assert_response :success
+  test "選択したジャンルの直下グループだけが展開されて描画される" do
+    get search_path, params: { genre_id: [ genres(:large_literature).id ] }
+    # 大「文学」を選択 → 中分類グループが表示、中「日本文学」未選択なので小分類グループは hidden。
+    assert_select ".genre-filter__group[data-parent=?]:not([hidden])", genres(:large_literature).id.to_s
+    assert_select ".genre-filter__group[data-parent=?][hidden]", genres(:medium_japanese).id.to_s
   end
 end

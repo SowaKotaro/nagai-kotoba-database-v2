@@ -8,6 +8,16 @@ class Word < ApplicationRecord
 
   # アノテーション・コンソールの未注釈キュー(annotated_at が未セットの語)。
   scope :unannotated, -> { where(annotated_at: nil) }
+  # 公開対象。注釈済み(annotated_at あり)の語だけを全世界に見せる。
+  scope :annotated, -> { where.not(annotated_at: nil) }
+
+  # 簡素検索(キーワードのみ): 表層形・読みの部分一致。ワイルドカードはエスケープする。
+  scope :keyword, lambda { |text|
+    pattern = "%#{sanitize_sql_like(text)}%"
+    joins(:word_senses)
+      .where("words.surface LIKE :pattern OR word_senses.reading LIKE :pattern", pattern: pattern)
+      .distinct
+  }
 
   # 注釈完了とみなす時刻をセットする(保存は呼び出し側で行う)。
   def mark_annotated

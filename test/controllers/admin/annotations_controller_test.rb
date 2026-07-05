@@ -2,9 +2,10 @@ require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
 class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
+  # コンソールは未注釈語(annotated_at なし)を対象にする。
   setup do
-    @word = words(:abc_murder)
-    @sense = word_senses(:murder)
+    @word = words(:pending_haruhi)
+    @sense = word_senses(:pending)
   end
 
   # --- 認可: 未認証は弾く ---
@@ -57,8 +58,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @word.annotated_at
     assert_equal "更新後の意味", @sense.reload.meaning
     assert_equal [ word_origins(:kango).id, word_origins(:wago).id ].sort, @sense.word_origin_ids.sort
-    # 残る未注釈(curry)へ誘導する。
-    assert_redirected_to admin_annotation_path(words(:curry))
+    # 残る未注釈(pending_bermuda)へ誘導する。
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda))
   end
 
   test "別表記と特徴をネストして保存できる" do
@@ -71,7 +72,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
         } } }
       }
     end
-    assert_redirected_to admin_annotation_path(words(:curry))
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda))
   end
 
   # --- マスタのその場追加 ---

@@ -30,4 +30,11 @@ class WordTest < ActiveSupport::TestCase
     word = Word.create!(surface: "犬", char_type_pattern: "でたらめ")
     assert_equal "漢", word.char_type_pattern
   end
+
+  test "annotated / unannotated scope は annotated_at の有無で分かれる" do
+    assert_includes Word.annotated, words(:abc_murder)
+    assert_not_includes Word.annotated, words(:pending_haruhi)
+    assert_includes Word.unannotated, words(:pending_haruhi)
+    assert_not_includes Word.unannotated, words(:abc_murder)
+  end
 end

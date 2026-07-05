@@ -10,7 +10,7 @@
     </div>
   <% end %>
 
-  <%= form_with url: search_path, method: :get, class: "hero-search" do %>
+  <%= form_with url: words_path, method: :get, class: "hero-search" do %>
     <%= text_field_tag :q, nil, placeholder: t("home.index.search_placeholder"),
           class: "hero-search__input", aria: { label: t("searches.q_label") } %>
     <%= submit_tag t("home.index.search_submit"), class: "btn btn--primary" %>

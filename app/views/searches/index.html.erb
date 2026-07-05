@@ -4,102 +4,61 @@
 
 <h1 class="page-title"><%= t("searches.title") %></h1>
 
-<%= form_with url: search_path, method: :get, data: { turbo_action: "advance" } do %>
-  <div class="field field--keyword">
-    <%= label_tag :q, t("searches.q_label") %>
+<%= form_with url: search_path, method: :get, data: { turbo_action: "advance" }, class: "search-form" do %>
+  <div class="field">
+    <%= label_tag :q, t("searches.q_label"), class: "field-legend" %>
     <%= text_field_tag :q, @search.q %>
   </div>
 
-  <fieldset class="fieldset-card">
-    <legend><%= t("searches.legend.reading") %></legend>
-
-    <div class="field">
-      <%= label_tag :reading_length_min, t("searches.reading_length_min") %>
-      <%= number_field_tag :reading_length_min, @search.reading_length_min, min: 1 %>
-      <%= label_tag :reading_length_max, t("searches.reading_length_max") %>
-      <%= number_field_tag :reading_length_max, @search.reading_length_max, min: 1 %>
-    </div>
-
-    <div class="field">
-      <%= label_tag :first_char, WordSense.human_attribute_name(:first_char) %>
-      <%= text_field_tag :first_char, @search.first_char, maxlength: 1 %>
-      <%= label_tag :last_char, WordSense.human_attribute_name(:last_char) %>
-      <%= text_field_tag :last_char, @search.last_char, maxlength: 1 %>
-    </div>
-
-    <div class="field">
-      <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern") %>
-      <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
-    </div>
-
-    <div class="field">
-      <%= label_tag :char_type_pattern, t("searches.char_type_pattern") %>
-      <%= text_field_tag :char_type_pattern, @search.char_type_pattern %>
+  <%# 読みの文字数: 二つまみスライダー(10〜30)。上限30は「以上」。 %>
+  <fieldset class="slider-field">
+    <legend class="field-legend"><%= t("searches.reading_length") %></legend>
+    <div class="length-slider" data-controller="range-slider"
+         data-range-slider-min-value="10" data-range-slider-max-value="30">
+      <p class="length-slider__message" data-range-slider-target="message"></p>
+      <div class="length-slider__track" data-range-slider-target="track">
+        <input type="range" min="10" max="30" value="<%= @search.reading_length_min || 10 %>"
+               class="length-slider__thumb" data-range-slider-target="minThumb"
+               data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_min') %>">
+        <input type="range" min="10" max="30" value="<%= @search.reading_length_max || 30 %>"
+               class="length-slider__thumb" data-range-slider-target="maxThumb"
+               data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_max') %>">
+      </div>
+      <%= hidden_field_tag :reading_length_min, @search.reading_length_min, data: { range_slider_target: "minField" } %>
+      <%= hidden_field_tag :reading_length_max, @search.reading_length_max, data: { range_slider_target: "maxField" } %>
     </div>
   </fieldset>
 
-  <fieldset class="fieldset-card">
-    <legend><%= t("searches.legend.category") %></legend>
+  <%= render "kana_grid", name: "first_char", selected: @search.first_char, legend: t("searches.first_char") %>
+  <%= render "kana_grid", name: "last_char", selected: @search.last_char, legend: t("searches.last_char") %>
 
-    <div class="field">
-      <%= label_tag :genre_id, WordSense.human_attribute_name(:genre) %>
-      <%= select_tag :genre_id,
-            options_for_select(hierarchical_genre_options, @search.genre_id),
-            include_blank: true %>
-    </div>
+  <%= render "genre_filter" %>
 
-    <div class="field">
-      <%= label_tag :part_of_speech_id, WordSense.human_attribute_name(:part_of_speech) %>
-      <%= select_tag :part_of_speech_id,
-            options_from_collection_for_select(PartOfSpeech.order(:name), :id, :name, @search.part_of_speech_id),
-            include_blank: true %>
-    </div>
+  <%= render "check_chips", name: "part_of_speech_id", collection: @parts_of_speech,
+        selected: @search.part_of_speech_id, legend: WordSense.human_attribute_name(:part_of_speech) %>
+  <%= render "check_chips", name: "entity_type_id", collection: @entity_types,
+        selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type) %>
 
-    <div class="field">
-      <%= label_tag :entity_type_id, WordSense.human_attribute_name(:entity_type) %>
-      <%= select_tag :entity_type_id,
-            options_from_collection_for_select(EntityType.order(:name), :id, :name, @search.entity_type_id),
-            include_blank: true %>
-    </div>
+  <%= render "check_chips", name: "linguistic_feature_id", collection: @linguistic_features,
+        selected: @search.linguistic_feature_id, legend: t("searches.linguistic_feature") %>
 
-    <div class="field">
-      <%= label_tag :linguistic_feature_id, t("searches.linguistic_feature") %>
-      <%= select_tag :linguistic_feature_id,
-            options_from_collection_for_select(LinguisticFeature.order(:name), :id, :name, @search.linguistic_feature_id),
-            include_blank: true %>
+  <div class="field">
+    <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "field-legend" %>
+    <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
+  </div>
+
+  <div class="field" data-controller="char-type">
+    <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
+    <%# 入力キー。押すたびに対応する記号を入力欄の末尾へ追記する(削除は通常のテキスト編集で) %>
+    <div class="char-type-keys">
+      <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
+           CharTypePattern::ALPHABET, CharTypePattern::OTHER ].each do |char| %>
+        <button type="button" class="char-type-key" data-action="char-type#append"
+                data-char-type-char-param="<%= char %>"><%= char %></button>
+      <% end %>
     </div>
-  </fieldset>
+    <%= text_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
+  </div>
 
   <%= submit_tag t("searches.submit"), class: "btn btn--primary" %>
-<% end %>
-
-<h2 class="section-heading"><%= t("searches.results", count: @total_count) %></h2>
-
-<% if @word_senses.empty? %>
-  <p class="empty-note"><%= t("searches.empty") %></p>
-<% else %>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th><%= Word.human_attribute_name(:surface) %></th>
-        <th><%= WordSense.human_attribute_name(:reading) %></th>
-        <th><%= t("searches.reading_length") %></th>
-        <th><%= WordSense.human_attribute_name(:genre) %></th>
-        <th><%= WordSense.human_attribute_name(:part_of_speech) %></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @word_senses.each do |sense| %>
-        <tr>
-          <td><%= link_to sense.word.surface, word_path(sense.word) %></td>
-          <td><%= sense.reading %></td>
-          <td><%= sense.reading_length %></td>
-          <td><%= sense.genre ? sense.genre.self_and_ancestors.map(&:name).join(" › ") : "" %></td>
-          <td><%= sense.part_of_speech&.name %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-
-  <%= render "pagination" %>
 <% end %>

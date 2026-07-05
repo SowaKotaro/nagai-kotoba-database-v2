@@ -1,0 +1,22 @@
+<%# 50音表(カタカナ・濁音/半濁音含む)。伝統的な縦書きの並び:
+    上から下に「アイウエオ」、右から左に「ア→カ→サ…」。複数選択可のチェックボックス。
+    locals: name(パラメータ名), selected(選択中の配列), legend(見出し) %>
+<fieldset class="kana-field">
+  <legend class="field-legend"><%= legend %></legend>
+  <div class="kana-grid">
+    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+      <div class="kana-col">
+        <% column.each do |kana| %>
+          <% if kana %>
+            <label class="kana-cell">
+              <%= check_box_tag "#{name}[]", kana, selected.include?(kana), id: nil, class: "visually-hidden" %>
+              <span class="kana-cell__face"><%= kana %></span>
+            </label>
+          <% else %>
+            <span class="kana-cell--blank" aria-hidden="true"></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</fieldset>

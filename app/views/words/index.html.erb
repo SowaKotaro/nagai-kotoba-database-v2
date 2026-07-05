@@ -3,6 +3,28 @@
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), nil ] ] %>
 
 <h1 class="page-title"><%= t("words.index.title") %></h1>
+
+<% conditions = applied_search_conditions(@search) %>
+<% if conditions.any? %>
+  <div class="active-facet">
+    <%= icon "funnel" %>
+    <ul class="condition-list">
+      <% conditions.each do |label, value| %>
+        <li class="condition-chip">
+          <span class="condition-chip__label"><%= label %></span>
+          <span class="condition-chip__value"><%= value %></span>
+        </li>
+      <% end %>
+    </ul>
+    <%= link_to search_path(request.query_parameters.except("page")), class: "active-facet__edit icon-label" do %>
+      <%= icon "magnifying_glass" %><%= t("words.index.edit_conditions") %>
+    <% end %>
+    <%= link_to words_path, class: "active-facet__clear icon-label" do %>
+      <%= icon "x" %><%= t("words.index.clear_filter") %>
+    <% end %>
+  </div>
+<% end %>
+
 <p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>
 
 <% if @words.empty? %>
