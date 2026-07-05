@@ -63,13 +63,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.chip[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id), text: "連濁"
   end
 
-  test "詳細にモーラ数・母音パターンなどの拡張情報が表示される" do
+  test "詳細に韻・母音パターンが見出し語の近くに表示される" do
     get word_path(word_senses(:murder).word)
 
-    assert_select "dt", text: I18n.t("words.show.mora_count")
-    assert_select "dt", text: I18n.t("words.show.vowel_pattern")
-    # murder の母音パターンは auiie。
-    assert_match word_senses(:murder).vowel_pattern, response.body
+    assert_select ".sense-heading-meta", text: /#{word_senses(:murder).rhythm_pattern}/
+    assert_select ".sense-heading-meta", text: /#{word_senses(:murder).vowel_pattern}/
+  end
+
+  test "詳細の拡張データ(語種・文字数・モーラ数・先頭/末尾)は単語一覧の絞り込みリンク" do
+    sense = word_senses(:murder)
+    get word_path(sense.word)
+
+    assert_select "a.tag[href=?]", words_path(word_origin_id: word_origins(:kango).id)
+    assert_select "a.tag[href=?]", words_path(reading_length: sense.reading_length)
+    assert_select "a.tag[href=?]", words_path(mora_count: sense.mora_count)
+    assert_select "a.tag[href=?]", words_path(first_char: sense.first_char)
+    assert_select "a.tag[href=?]", words_path(last_char: sense.last_char)
   end
 
   test "詳細に言語学的特徴が該当部分つきで表示される" do
@@ -94,6 +103,27 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get words_path(genre_id: genres(:large_literature).id)
     assert_response :success
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+  end
+
+  test "語種で単語一覧を絞り込める" do
+    get words_path(word_origin_id: word_origins(:kango).id)
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry)), count: 0
+  end
+
+  test "読みの文字数で単語一覧を絞り込める" do
+    get words_path(reading_length: word_senses(:curry).reading_length)
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
+  end
+
+  test "先頭文字で単語一覧を絞り込める" do
+    get words_path(first_char: word_senses(:curry).first_char)
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
   end
 
   test "絞り込み中はインジケータと解除リンクを表示する" do

@@ -92,4 +92,17 @@ class WordSenseSearchTest < ActiveSupport::TestCase
   test "0 や不正な文字数は無視する" do
     assert_equal WordSense.published.pluck(:id).sort, ids(reading_length_min: "0", reading_length_max: "abc")
   end
+
+  # --- 完全一致系のファセット(一覧の絞り込みで使う) ---
+  test "読みの文字数(完全一致)で絞れる" do
+    assert_equal [ word_senses(:curry).id ], ids(reading_length: "3")
+  end
+
+  test "モーラ数で絞れる" do
+    assert_equal [ word_senses(:curry).id ], ids(mora_count: "3")
+  end
+
+  test "語種で絞れる" do
+    assert_equal [ word_senses(:murder).id ], ids(word_origin_id: word_origins(:kango).id)
+  end
 end

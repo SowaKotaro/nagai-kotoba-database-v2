@@ -27,6 +27,14 @@
           <ruby><%= @word.surface %><rt><%= sense.reading %></rt></ruby>
         </h2>
 
+        <%# 韻・母音パターンは検索対象ではなく、見出し語の直下にメタとして添える %>
+        <p class="sense-heading-meta">
+          <span><%= WordSense.human_attribute_name(:rhythm_pattern) %>：<span class="mono"><%= sense.rhythm_pattern %></span></span>
+          <% if sense.vowel_pattern.present? %>
+            <span><%= t("words.show.vowel_pattern") %>：<span class="mono"><%= sense.vowel_pattern %></span></span>
+          <% end %>
+        </p>
+
         <% if sense.meaning.present? %>
           <p class="sense-meaning"><%= sense.meaning %></p>
         <% end %>
@@ -85,7 +93,7 @@
               <dt><%= t("words.show.origins") %></dt>
               <dd class="tag-row">
                 <% sense.word_origins.each do |origin| %>
-                  <span class="tag tag--static"><%= origin.name %></span>
+                  <%= link_to origin.name, words_path(word_origin_id: origin.id), class: "tag" %>
                 <% end %>
               </dd>
             </div>
@@ -93,32 +101,27 @@
 
           <div class="sense-attrs__item">
             <dt><%= t("words.show.reading_length") %></dt>
-            <dd><%= t("words.show.chars", count: sense.reading_length) %></dd>
+            <dd><%= link_to t("words.show.chars", count: sense.reading_length),
+                      words_path(reading_length: sense.reading_length), class: "tag" %></dd>
           </div>
 
           <% if sense.mora_count %>
             <div class="sense-attrs__item">
               <dt><%= t("words.show.mora_count") %></dt>
-              <dd><%= t("words.show.mora", count: sense.mora_count) %></dd>
+              <dd><%= link_to t("words.show.mora", count: sense.mora_count),
+                        words_path(mora_count: sense.mora_count), class: "tag" %></dd>
             </div>
           <% end %>
 
           <div class="sense-attrs__item">
-            <dt><%= t("words.show.first_last_char") %></dt>
-            <dd class="mono"><%= sense.first_char %> … <%= sense.last_char %></dd>
+            <dt><%= t("words.show.first_char") %></dt>
+            <dd><%= link_to sense.first_char, words_path(first_char: sense.first_char), class: "tag" %></dd>
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= WordSense.human_attribute_name(:rhythm_pattern) %></dt>
-            <dd class="mono"><%= sense.rhythm_pattern %></dd>
+            <dt><%= t("words.show.last_char") %></dt>
+            <dd><%= link_to sense.last_char, words_path(last_char: sense.last_char), class: "tag" %></dd>
           </div>
-
-          <% if sense.vowel_pattern.present? %>
-            <div class="sense-attrs__item">
-              <dt><%= t("words.show.vowel_pattern") %></dt>
-              <dd class="mono"><%= sense.vowel_pattern %></dd>
-            </div>
-          <% end %>
 
           <% if sense.word_sense_variants.any? %>
             <div class="sense-attrs__item sense-attrs__item--wide">

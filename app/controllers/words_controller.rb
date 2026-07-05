@@ -4,9 +4,11 @@ class WordsController < ApplicationController
 
   PER_PAGE = 50
 
-  # 一覧のファセット絞り込み(ジャンル・品詞・エンティティ・言語学的特徴)。
-  # 詳細/一覧のタグから単一条件で単語一覧に絞り込むための入口。
-  FACET_KEYS = %i[genre_id part_of_speech_id entity_type_id linguistic_feature_id].freeze
+  # 一覧のファセット絞り込み。詳細/一覧の各データから単一条件で単語一覧に絞り込む入口。
+  FACET_KEYS = %i[
+    genre_id part_of_speech_id entity_type_id linguistic_feature_id word_origin_id
+    reading_length mora_count first_char last_char
+  ].freeze
 
   def index
     @page = [ params[:page].to_i, 1 ].max
@@ -53,14 +55,30 @@ class WordsController < ApplicationController
 
   # 現在の絞り込み条件を [ラベル, 値] で返す(表示用)。無ければ nil。
   def active_facet_label
-    if (record = params[:genre_id].presence && Genre.find_by(id: params[:genre_id]))
-      [ WordSense.human_attribute_name(:genre), record.name ]
-    elsif (record = params[:part_of_speech_id].presence && PartOfSpeech.find_by(id: params[:part_of_speech_id]))
-      [ WordSense.human_attribute_name(:part_of_speech), record.name ]
-    elsif (record = params[:entity_type_id].presence && EntityType.find_by(id: params[:entity_type_id]))
-      [ WordSense.human_attribute_name(:entity_type), record.name ]
-    elsif (record = params[:linguistic_feature_id].presence && LinguisticFeature.find_by(id: params[:linguistic_feature_id]))
-      [ t("searches.linguistic_feature"), record.name ]
+    if (name = facet_name(Genre, :genre_id))
+      [ WordSense.human_attribute_name(:genre), name ]
+    elsif (name = facet_name(PartOfSpeech, :part_of_speech_id))
+      [ WordSense.human_attribute_name(:part_of_speech), name ]
+    elsif (name = facet_name(EntityType, :entity_type_id))
+      [ WordSense.human_attribute_name(:entity_type), name ]
+    elsif (name = facet_name(LinguisticFeature, :linguistic_feature_id))
+      [ t("searches.linguistic_feature"), name ]
+    elsif (name = facet_name(WordOrigin, :word_origin_id))
+      [ t("words.show.origins"), name ]
+    elsif params[:reading_length].present?
+      [ t("words.show.reading_length"), t("words.show.chars", count: params[:reading_length]) ]
+    elsif params[:mora_count].present?
+      [ t("words.show.mora_count"), t("words.show.mora", count: params[:mora_count]) ]
+    elsif params[:first_char].present?
+      [ t("words.show.first_char"), params[:first_char] ]
+    elsif params[:last_char].present?
+      [ t("words.show.last_char"), params[:last_char] ]
     end
+  end
+
+  # マスタ(ジャンル・品詞など)を id で引いて名前を返す。無ければ nil。
+  def facet_name(model, key)
+    id = params[key].presence
+    id && model.find_by(id: id)&.name
   end
 end

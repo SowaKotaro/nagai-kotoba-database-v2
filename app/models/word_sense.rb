@@ -31,12 +31,19 @@ class WordSense < ApplicationRecord
     pattern = "%#{sanitize_sql_like(text)}%"
     joins(:word).where("words.surface LIKE :pattern OR word_senses.reading LIKE :pattern", pattern: pattern)
   }
-  # 読みの長さ(生成カラム reading_length)の範囲。
+  # 読みの長さ(生成カラム reading_length)の範囲・完全一致。
   scope :reading_length_at_least, ->(n) { where(reading_length: n..) }
   scope :reading_length_at_most, ->(n) { where(reading_length: ..n) }
+  scope :reading_length_is, ->(n) { where(reading_length: n) }
+  # モーラ数の完全一致。
+  scope :mora_count_is, ->(n) { where(mora_count: n) }
   # 先頭/末尾文字(生成カラム first_char/last_char)。
   scope :first_char_is, ->(char) { where(first_char: char) }
   scope :last_char_is, ->(char) { where(last_char: char) }
+  # 指定した語種を持つ語義(語種は多対多)。
+  scope :with_word_origin, lambda { |id|
+    where(id: WordSenseOrigin.where(word_origin_id: id).select(:word_sense_id))
+  }
   # 韻(rhythm_pattern)の部分一致。ワイルドカードはエスケープする。
   scope :rhythm_containing, ->(text) { where("rhythm_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
   # 文字タイプ列(words.char_type_pattern)の完全一致。

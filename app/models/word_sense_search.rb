@@ -13,12 +13,15 @@ class WordSenseSearch
     relation = relation.keyword(q) if q.present?
     relation = relation.reading_length_at_least(reading_length_min) if reading_length_min
     relation = relation.reading_length_at_most(reading_length_max) if reading_length_max
+    relation = relation.reading_length_is(reading_length) if reading_length
+    relation = relation.mora_count_is(mora_count) if mora_count
     relation = relation.first_char_is(first_char) if first_char.present?
     relation = relation.last_char_is(last_char) if last_char.present?
     relation = relation.char_type_pattern_is(char_type_pattern) if char_type_pattern.present?
     relation = relation.rhythm_containing(rhythm_pattern) if rhythm_pattern.present?
     relation = relation.with_part_of_speech(part_of_speech_id) if part_of_speech_id.present?
     relation = relation.with_entity_type(entity_type_id) if entity_type_id.present?
+    relation = relation.with_word_origin(word_origin_id) if word_origin_id.present?
     relation = relation.with_linguistic_feature(linguistic_feature_id) if linguistic_feature_id.present?
     relation = relation.with_genre_ids(genre_filter_ids) if genre_filter_ids
     relation.order(:reading, :id)
@@ -28,6 +31,8 @@ class WordSenseSearch
   def q = @params[:q].to_s.strip
   def reading_length_min = positive_integer(:reading_length_min)
   def reading_length_max = positive_integer(:reading_length_max)
+  def reading_length = positive_integer(:reading_length)
+  def mora_count = positive_integer(:mora_count)
   def first_char = @params[:first_char].to_s.strip
   def last_char = @params[:last_char].to_s.strip
   def char_type_pattern = @params[:char_type_pattern].to_s.strip
@@ -35,6 +40,7 @@ class WordSenseSearch
   def genre_id = @params[:genre_id].presence
   def part_of_speech_id = @params[:part_of_speech_id].presence
   def entity_type_id = @params[:entity_type_id].presence
+  def word_origin_id = @params[:word_origin_id].presence
   def linguistic_feature_id = @params[:linguistic_feature_id].presence
 
   private
