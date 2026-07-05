@@ -44,6 +44,55 @@
   flex-wrap: wrap;
 }
 
+/* ハンバーガー(狭幅のみ表示。デスクトップ/タブレットは非表示のまま)。
+   開閉で×に変形する(aria-expanded を JS が切り替え、CSS だけでモーフィングさせる)。 */
+.nav-toggle {
+  display: none;
+  border: none;
+  background: none;
+  padding: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.nav-toggle__bars {
+  display: block;
+  position: relative;
+  width: 22px;
+  height: 16px;
+}
+
+.nav-toggle__bar {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease;
+}
+
+.nav-toggle__bar:nth-child(1) { top: 0; }
+.nav-toggle__bar:nth-child(2) { top: 7px; }
+.nav-toggle__bar:nth-child(3) { top: 14px; }
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
+  top: 7px;
+  transform: rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
+  top: 7px;
+  transform: rotate(-45deg);
+}
+
+.nav-drawer__scrim {
+  display: none;
+}
+
 .site-nav {
   display: flex;
   align-items: baseline;
@@ -216,4 +265,81 @@ main.container {
 .flash--alert {
   color: var(--shu); /* エラーは朱テキストのみ。背景は塗らない */
   border-color: var(--shu);
+}
+
+/* 375px 想定の狭幅: ナビ+検索をハンバーガーで開閉するサイドパネルに格納する */
+@media (max-width: 767px) {
+  .nav-toggle {
+    display: block;
+    position: relative;
+    z-index: 21; /* ドロワー(20)・スクリム(19)より前面に置き、開いた後も押せるようにする */
+  }
+
+  .site-header__right {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 20;
+    width: min(280px, 80vw);
+    height: 100vh;
+    margin: 0;
+    background: var(--bg);
+    border-left: 1px solid var(--ink);
+    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-5);
+    padding: var(--space-5);
+    transform: translateX(100%);
+    transition: transform 0.2s ease;
+    overflow-y: auto;
+  }
+
+  .site-header__right.is-open {
+    transform: translateX(0);
+  }
+
+  /* リンクの行全体をタップ領域にする(文字だけでなく行いっぱいを押せるように) */
+  .site-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-top: var(--space-6);
+  }
+
+  .site-nav a,
+  .site-nav form {
+    display: block;
+  }
+
+  .site-nav a,
+  .site-nav form button {
+    width: 100%;
+    padding: var(--space-4) 2px;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+
+  .header-search {
+    width: 100%;
+  }
+
+  .header-search__input {
+    width: 100%;
+  }
+
+  .nav-drawer__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    background: rgba(25, 24, 19, 0.4);
+  }
+
+  .nav-drawer__scrim.is-open {
+    display: block;
+  }
+
+  body.nav-drawer-open {
+    overflow: hidden;
+  }
 }

@@ -3,6 +3,7 @@ module SearchesHelper
   # 1列 = 1行(ア行・カ行…)を上から下(ア段→オ段)に並べる。nil は段を揃える空セル。
   KANA_COLUMNS = [
     %w[ア イ ウ エ オ],
+    [ nil, nil, "ヴ", nil, nil ],
     %w[カ キ ク ケ コ],
     %w[ガ ギ グ ゲ ゴ],
     %w[サ シ ス セ ソ],

@@ -1,5 +1,8 @@
-<%# グローバルヘッダー(docs/design.md §5.1)。印章ロゴ + ナビ(現在地表示) + 常設のキーワード検索。 %>
-<header class="site-header">
+<%# グローバルヘッダー(docs/design.md §5.1)。印章ロゴ + ナビ(現在地表示) + 常設のキーワード検索。
+    狭幅ではナビ+検索をハンバーガーで開閉するサイドパネルに格納する(nav-drawer コントローラ)。 %>
+<header class="site-header" data-controller="nav-drawer"
+        data-nav-drawer-open-label-value="<%= t("layouts.menu_open") %>"
+        data-nav-drawer-close-label-value="<%= t("layouts.menu_close") %>">
   <div class="site-header__inner">
     <%= link_to root_path, class: "site-brand" do %>
       <%# ブランド印章(落款)。インライン SVG なので色はトークンを参照できる %>
@@ -10,7 +13,16 @@
       <span class="site-brand__name"><%= t("layouts.brand") %></span>
     <% end %>
 
-    <div class="site-header__right">
+    <button type="button" class="nav-toggle" aria-label="<%= t("layouts.menu_open") %>" aria-expanded="false"
+            data-nav-drawer-target="button" data-action="nav-drawer#toggle">
+      <span class="nav-toggle__bars" aria-hidden="true">
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+      </span>
+    </button>
+
+    <div class="site-header__right" data-nav-drawer-target="panel">
       <nav class="site-nav">
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
         <%= link_to t("layouts.nav.search"), search_path, class: ("is-current" if request.path == search_path) %>
@@ -27,5 +39,7 @@
         <button type="submit" class="header-search__submit" aria-label="<%= t("layouts.search_submit") %>"><%= icon "magnifying_glass" %></button>
       <% end %>
     </div>
+
+    <div class="nav-drawer__scrim" data-nav-drawer-target="scrim" data-action="click->nav-drawer#close"></div>
   </div>
 </header>
