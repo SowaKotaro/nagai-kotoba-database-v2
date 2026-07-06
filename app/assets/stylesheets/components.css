@@ -330,6 +330,61 @@ a.tag:hover {
   color: var(--ink);
 }
 
+/* --- ジャンル・ハブページ(Issue 21) --- */
+.genre-hub {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.genre-hub__large + .genre-hub__large {
+  border-top: 2px solid var(--ink);
+  padding-top: var(--space-6);
+}
+
+.genre-hub__large-title {
+  font-size: clamp(20px, 3vw, 28px);
+  margin: 0 0 var(--space-4);
+}
+
+.genre-hub__medium {
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--rule-mid);
+}
+
+.genre-hub__medium-title {
+  font-size: 16px;
+  margin: 0 0 var(--space-3);
+}
+
+.genre-hub__smalls {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* タグ内に件数を等幅で添える(絞り込み導線。docs/design.md §5.5) */
+.genre-hub__small {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* 分類名の右に添える公開件数 */
+.genre-hub__count {
+  font-size: 13px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+
+a:hover > .genre-hub__count,
+a.tag:hover .genre-hub__count {
+  color: var(--bg);
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;
