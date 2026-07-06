@@ -99,6 +99,14 @@
   letter-spacing: 0.1em;
 }
 
+/* 見出し語ブロック内の自己完結リード文(定義文)。本文体で読ませる(Issue 18) */
+.page-header .page-lead {
+  margin: var(--space-4) 0 0;
+  max-width: 46em;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
 /* --- 語義パネル: 墨の1px枠(印刷物のフレーム) --- */
 .sense-list {
   display: grid;

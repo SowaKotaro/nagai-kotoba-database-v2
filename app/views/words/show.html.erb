@@ -12,6 +12,11 @@
   <p class="page-title-meta">
     <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
   </p>
+  <%# 自己完結の定義文。読み・文字数・ジャンルを散文化(Issue 18)。meta/JSON-LD にも流用 %>
+  <% lead = word_lead_sentence(@word) %>
+  <% if lead.present? %>
+    <p class="page-lead"><%= lead %></p>
+  <% end %>
 </header>
 
 <% if @word.word_senses.empty? %>
