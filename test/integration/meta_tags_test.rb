@@ -32,9 +32,10 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='og:url'][content=?]", "#{HOST}/words/#{word.id}"
   end
 
-  test "canonical はクエリパラメータを含めず現在のパスのみを使う" do
-    get words_path(genre_id: 1, page: 2)
+  test "canonical はクエリパラメータを含めず現在のパスのみを使う(既定の挙動)" do
+    # /words は Issue 17 で canonical を正規化上書きするため、上書きしない /search で既定挙動を確認する。
+    get search_path(q: "テスト", genre_id: 1)
     assert_response :success
-    assert_select "link[rel=canonical][href=?]", "#{HOST}/words"
+    assert_select "link[rel=canonical][href=?]", "#{HOST}/search"
   end
 end
