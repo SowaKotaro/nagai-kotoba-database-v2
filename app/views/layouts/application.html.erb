@@ -38,6 +38,9 @@
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+
+    <%# サイト自身と検索アクションの構造化データ(Issue 16) %>
+    <%= website_json_ld %>
   </head>
 
   <body>

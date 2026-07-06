@@ -5,8 +5,11 @@ module WordsHelper
   # 代表として先頭(最小 id)の語義を用いる。語義が無ければ空文字を返す。
   def word_lead_sentence(word)
     sense = word.word_senses.min_by(&:id)
-    return "" if sense.nil?
+    sense ? word_sense_lead_sentence(word, sense) : ""
+  end
 
+  # 語義単位の定義文。JSON-LD(Issue 16)の語義ごとの description にも使う。
+  def word_sense_lead_sentence(word, sense)
     metrics = [ t("words.show.chars", count: sense.reading_length) ]
     metrics << t("words.show.mora", count: sense.mora_count) if sense.mora_count
 
