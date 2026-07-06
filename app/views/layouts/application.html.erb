@@ -1,10 +1,22 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <title><%= content_for?(:title) ? "#{yield(:title)} | #{t("layouts.brand")}" : t("layouts.brand") %></title>
+    <title><%= page_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+
+    <%# 検索・SNS・LLM 向けのメタ情報(Issue 14)。値はヘルパーで一元化 %>
+    <meta name="description" content="<%= page_description %>">
+    <link rel="canonical" href="<%= canonical_url %>">
+    <meta property="og:type" content="<%= page_og_type %>">
+    <meta property="og:site_name" content="<%= t("layouts.brand") %>">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:title" content="<%= page_title %>">
+    <meta property="og:description" content="<%= page_description %>">
+    <meta property="og:url" content="<%= canonical_url %>">
+    <meta property="og:image" content="<%= page_og_image %>">
+    <meta name="twitter:card" content="summary_large_image">
 
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="icon" href="/favicon.ico" sizes="32x32">
