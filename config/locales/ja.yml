@@ -155,6 +155,8 @@ ja:
       prev: "前へ"
       next: "次へ"
       status: "%{page} / %{total} ページ"
+    feed:
+      title: "新着の長い言葉"
   admin:
     dashboard:
       title: "管理コンソール"

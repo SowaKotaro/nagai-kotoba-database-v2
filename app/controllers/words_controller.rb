@@ -3,20 +3,20 @@ class WordsController < ApplicationController
   allow_unauthenticated_access only: %i[index show]
 
   PER_PAGE = 50
+  FEED_LIMIT = 20
 
   # 一覧の絞り込み。詳細検索(searches#index)からのリダイレクトと、
   # 詳細/一覧の各データからの単一条件ファセットリンクの両方を受ける。
+  # HTML/JSON は絞り込み+ページネーション、Atom(Issue 28)は絞り込みに依らず新着を返す。
   def index
     @page = [ params[:page].to_i, 1 ].max
     @search = WordSenseSearch.new(search_filter_params)
-    scope = filtered_words
 
-    @total_count = scope.count
-    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
-    @words = scope.includes(word_senses: [ :entity_type, :part_of_speech ])
-                  .order(:surface)
-                  .limit(PER_PAGE)
-                  .offset((@page - 1) * PER_PAGE)
+    respond_to do |format|
+      format.html { load_paginated_words }
+      format.json { load_paginated_words }
+      format.atom { @words = feed_words }
+    end
   end
 
   def show
@@ -38,6 +38,25 @@ class WordsController < ApplicationController
   end
 
   private
+
+  # 絞り込み+ページネーションした一覧(HTML/JSON 用)。
+  def load_paginated_words
+    scope = filtered_words
+    @total_count = scope.count
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
+    @words = scope.includes(word_senses: [ :entity_type, :part_of_speech ])
+                  .order(:surface)
+                  .limit(PER_PAGE)
+                  .offset((@page - 1) * PER_PAGE)
+  end
+
+  # 新着フィード(Atom 用)。注釈された順に新しいものから FEED_LIMIT 件。
+  def feed_words
+    Word.annotated
+        .includes(word_senses: :genre)
+        .order(annotated_at: :desc, id: :desc)
+        .limit(FEED_LIMIT)
+  end
 
   # 条件指定があれば、その条件を満たす語義を持つ注釈済みの語だけに絞る。
   # 絞り込みロジックは詳細検索(WordSenseSearch)を再利用する。
