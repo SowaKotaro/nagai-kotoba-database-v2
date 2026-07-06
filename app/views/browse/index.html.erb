@@ -1,0 +1,54 @@
+<% content_for :title, t("browse.index.title") %>
+<% content_for :description, t("browse.index.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("browse.index.title"), nil ] ] %>
+
+<header class="page-header">
+  <p class="page-eyebrow"><span><%= t("browse.index.eyebrow") %></span></p>
+  <h1 class="page-title"><%= t("browse.index.title") %></h1>
+  <p class="page-lead"><%= t("browse.index.lead") %></p>
+</header>
+
+<section class="browse-section">
+  <h2 class="section-heading"><%= t("browse.index.by_first_char") %></h2>
+  <div class="kana-grid">
+    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+      <div class="kana-col">
+        <% column.each do |kana| %>
+          <% if kana.nil? %>
+            <span class="kana-cell--blank" aria-hidden="true"></span>
+          <% elsif (count = @first_char_counts[kana].to_i).positive? %>
+            <%= link_to words_path(first_char: kana), class: "kana-cell kana-cell--link" do %>
+              <span class="kana-cell__face"><%= kana %></span>
+              <span class="kana-cell__count mono"><%= count %></span>
+            <% end %>
+          <% else %>
+            <span class="kana-cell kana-cell--muted">
+              <span class="kana-cell__face"><%= kana %></span>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<section class="browse-section">
+  <h2 class="section-heading"><%= t("browse.index.by_reading_length") %></h2>
+  <% lengths = @reading_length_counts.keys.compact.sort %>
+  <% if lengths.empty? %>
+    <p class="empty-note"><%= t("browse.index.empty") %></p>
+  <% else %>
+    <ul class="browse-lengths">
+      <% lengths.each do |length| %>
+        <li>
+          <%= link_to words_path(reading_length: length), class: "tag browse-length" do %>
+            <span><%= t("words.show.chars", count: length) %></span>
+            <span class="browse-length__count mono"><%= @reading_length_counts[length] %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

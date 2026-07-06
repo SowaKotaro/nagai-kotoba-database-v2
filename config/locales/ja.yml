@@ -64,6 +64,7 @@ ja:
     nav:
       words: "一覧"
       genres: "ジャンル"
+      browse: "索引"
       search: "検索"
       about: "サイトについて"
       admin: "管理"
@@ -307,6 +308,16 @@ ja:
       new_origin_placeholder: "例：タミル語"
       new_pos_placeholder: "新しい品詞"
       new_entity_placeholder: "新しい種別"
+  browse:
+    index:
+      title: "索引"
+      eyebrow: "50音・文字数"
+      description: "収録している長い言葉を、読みの先頭文字(50音)や読みの文字数から辿れる索引です。件数つき。"
+      lead: "読みの先頭文字(50音)や、読みの文字数から言葉を探せます。数字はその条件に当てはまる公開語義の数です。"
+      by_first_char: "先頭文字（50音）から"
+      by_reading_length: "読みの文字数から"
+      empty: "まだ公開されている語がありません。"
+
   genres:
     index:
       title: "ジャンルから探す"
