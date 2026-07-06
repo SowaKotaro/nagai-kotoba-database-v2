@@ -1,0 +1,22 @@
+# <%= t("layouts.brand") %>
+
+> <%= t("pages.about.lead") %>
+
+## 概要
+
+<%= t("pages.about.criteria_body") %>
+<%= t("pages.about.curation_body") %>
+
+## 主要ページ
+
+- [単語一覧](<%= @host %>/words): 収録している言葉の一覧。ジャンル・品詞・エンティティ・語種・先頭文字・読みの文字数などで絞り込める。
+- [詳細検索](<%= @host %>/search): 複数条件を組み合わせた検索フォーム。
+- [このサイトについて](<%= @host %>/about): 目的・収録基準・データの精査方針・利用条件・連絡先。
+- [サイトマップ](<%= @host %>/sitemap.xml): 公開している全単語ページの一覧。
+
+## 引用・ライセンス
+
+単語データは <%= t("pages.about.license_name") %> の下で提供しています。
+引用・二次利用の際は、次のクレジットを明記してください。
+
+<%= t("pages.about.license_credit", url: @host) %>
