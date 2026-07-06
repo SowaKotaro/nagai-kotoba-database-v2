@@ -24,4 +24,40 @@ module WordsHelper
 
     sentence
   end
+
+  # 単一ファセット(Issue 17)の一覧に付ける動的見出し(title/h1 兼用)。
+  # インデックス対象の単一ファセットでなければ nil を返す(=素の「単語一覧」を使う)。
+  FACET_MASTERS = {
+    genre_id: Genre, part_of_speech_id: PartOfSpeech,
+    entity_type_id: EntityType, word_origin_id: WordOrigin
+  }.freeze
+
+  def facet_heading(search)
+    facet = search.indexable_facet
+    return nil unless facet
+
+    key, value = facet
+    if key == :first_char
+      t("words.index.facet_heading.first_char", char: value)
+    else
+      name = FACET_MASTERS[key].where(id: value).pick(:name)
+      name && t("words.index.facet_heading.default", name: name)
+    end
+  end
+
+  # canonical に使う正規化済みのパス(Issue 17)。
+  # 単一ファセットは実際のリンクと同じスカラ形、それ以外は条件をキー順に整列した自身。
+  def canonical_index_path(search, page)
+    facet = search.indexable_facet
+    params =
+      if facet
+        { facet.first => facet.last } # 単一ファセットは実際のリンクと同じスカラ形
+      elsif search.conditions?
+        search.to_query_params.sort.to_h # 複数条件はキー順に整列した自身
+      else
+        {}
+      end
+    params[:page] = page if page > 1
+    words_path(params)
+  end
 end

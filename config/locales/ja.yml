@@ -115,6 +115,10 @@ ja:
       char_count: "%{count} 字"
       clear_filter: "絞り込みを解除"
       edit_conditions: "条件を変更"
+      facet_heading:
+        default: "%{name}の長い言葉"
+        first_char: "「%{char}」から始まる長い言葉"
+      facet_description: "%{label}の一覧。日本語の長い言葉を、読みの長さ・文字の構成・韻・ジャンルなどから絞り込めます。"
     show:
       headword: "見出し語"
       record_number: "No. %{id}"

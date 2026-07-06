@@ -68,6 +68,25 @@ class WordSenseSearch
   # 何かひとつでも絞り込み条件が指定されているか。
   def conditions? = to_query_params.any?
 
+  # インデックス(検索エンジン登録)を許可するファセット。単一値のカテゴリ的条件のみ(Issue 17)。
+  # 読みの長さ・モーラ・キーワード等は組合せ爆発・重複コンテンツになるため含めない。
+  INDEXABLE_FACET_KEYS = %i[genre_id part_of_speech_id entity_type_id word_origin_id first_char].freeze
+
+  # 条件がちょうど1つで、それが単一値のインデックス許可ファセットなら [key, value] を返す。
+  # それ以外(複数条件・キーワード・複数選択・非対象の軸)は nil。
+  def indexable_facet
+    params = to_query_params
+    return nil unless params.size == 1
+
+    key, value = params.first
+    return nil unless INDEXABLE_FACET_KEYS.include?(key)
+
+    values = Array(value)
+    return nil unless values.size == 1
+
+    [ key, values.first ]
+  end
+
   # 選択したジャンルのうち、選択済みの下位を持つ上位を除いた「実効の節点」。
   # 例: 大「文学」と中「日本文学」を両方選んだら、より具体的な「日本文学」を採用する。
   # 条件チップの表示(SearchesHelper)でも使うため公開している。

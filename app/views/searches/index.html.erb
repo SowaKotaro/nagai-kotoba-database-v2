@@ -1,4 +1,6 @@
 <% content_for :title, t("searches.title") %>
+<%# 検索フォームはインデックス不要(結果は /words 側に集約。Issue 17) %>
+<% content_for :robots, "noindex,follow" %>
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("searches.title"), nil ] ] %>
 
