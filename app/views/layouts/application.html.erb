@@ -6,6 +6,11 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# サーチコンソール所有権確認(任意・環境変数。DNS 確認が使えないとき用。Issue 19) %>
+    <% if google_site_verification %><meta name="google-site-verification" content="<%= google_site_verification %>"><% end %>
+    <% if bing_site_verification %><meta name="msvalidate.01" content="<%= bing_site_verification %>"><% end %>
+    <%= render "layouts/analytics" %>
+
     <%# 検索・SNS・LLM 向けのメタ情報(Issue 14)。値はヘルパーで一元化 %>
     <meta name="description" content="<%= page_description %>">
     <link rel="canonical" href="<%= canonical_url %>">
