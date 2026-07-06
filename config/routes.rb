@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
 
+  # サイト概要・収録基準・利用条件などの恒久ページ。Issue 20。
+  get "about", to: "pages#about", as: :about
+
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。

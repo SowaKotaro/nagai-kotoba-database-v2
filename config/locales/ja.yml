@@ -64,6 +64,7 @@ ja:
     nav:
       words: "一覧"
       search: "検索"
+      about: "サイトについて"
       admin: "管理"
       logout: "ログアウト"
     menu_open: "メニューを開く"
@@ -299,6 +300,25 @@ ja:
       new_origin_placeholder: "例：タミル語"
       new_pos_placeholder: "新しい品詞"
       new_entity_placeholder: "新しい種別"
+  pages:
+    about:
+      title: "このサイトについて"
+      description: "「長い言葉のデータベース」の目的・収録基準・データの精査方針・利用条件(CC BY 4.0)・連絡先。"
+      lead: "「長い言葉のデータベース」は、日本語の長い言葉を収集・解析して公開するデータベースです。読みの長さ・文字の構成・韻・ジャンルなど、さまざまな軸から言葉を引ける形に整理しています。"
+      criteria_title: "収録の基準"
+      criteria_body: "読みが10文字以上の言葉を収録対象としています。単語ごとに、読み・語義・ジャンル・品詞・語種・言語学的特徴といった情報を付与しています。"
+      curation_title: "データの精査"
+      curation_body: "収録しているデータは、すべて運営者が一つずつ確認・精査したうえで登録・公開しています。精査が済んでいない語は公開されません。"
+      license_title: "データの利用条件"
+      license_intro: "本サイトの単語データは、次のライセンスの下で提供します。"
+      license_name: "クリエイティブ・コモンズ 表示 4.0 国際 (CC BY 4.0)"
+      license_credit_label: "ご利用の際は、次のクレジットを明記してください。"
+      license_credit: "長い言葉のデータベース (%{url})"
+      license_note: "コード(ソフトウェア)部分のライセンスとは別に、単語データ(コンテンツ)に適用される条件です。"
+      contact_title: "お問い合わせ"
+      contact_body: "ご意見・誤りのご指摘などは、下記までお願いします。"
+      contact_email: "specialnamahamu@gmail.com"
+
   sessions:
     new:
       title: "管理者ログイン"
