@@ -391,6 +391,35 @@ a.browse-length:hover .browse-length__count {
   color: var(--bg);
 }
 
+/* --- シェア導線(Issue 30) --- */
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.share__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 12px;
+  border: 1px solid var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.share__btn:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
 /* --- 関連語セクション(Issue 23) --- */
 .related {
   margin-top: var(--space-6);

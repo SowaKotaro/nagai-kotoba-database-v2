@@ -69,6 +69,19 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
             "ジャンルは 文学 › 日本文学 › 小説。人を殺す事件"
   end
 
+  test "詳細にシェア導線(X共有・URLコピー)がある" do
+    word = words(:abc_murder)
+    canonical = "https://nagai-kotoba-database.jp/words/#{word.id}"
+    get word_path(word)
+
+    # X 共有(intent リンク・canonical URL をエンコードして含む)
+    assert_select "a.share__btn[href^=?]", "https://x.com/intent/post"
+    assert_select "a.share__btn[href*=?]", "nagai-kotoba-database.jp%2Fwords%2F#{word.id}"
+    # URL コピー(Stimulus)
+    assert_select "div.share[data-clipboard-text-value=?]", canonical
+    assert_select "button.share__btn[data-action=?]", "clipboard#copy"
+  end
+
   test "詳細に関連語セクションが表示され単語間リンクになる" do
     # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
     sibling = Word.create!(surface: "同ジャンルの別語", annotated_at: Time.current)

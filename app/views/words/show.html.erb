@@ -21,6 +21,20 @@
   <% if lead.present? %>
     <p class="page-lead"><%= lead %></p>
   <% end %>
+
+  <%# シェア導線(Issue 30)。X共有 + URLコピー。アイコンはインラインSVG %>
+  <% share_url = canonical_url %>
+  <% x_href = "https://x.com/intent/post?" + { text: (lead.presence || @word.surface), url: share_url }.to_query %>
+  <div class="share" data-controller="clipboard"
+       data-clipboard-text-value="<%= share_url %>"
+       data-clipboard-copied-label-value="<%= t('words.show.share.copied') %>">
+    <%= link_to x_href, class: "share__btn", target: "_blank", rel: "noopener" do %>
+      <%= icon "x_logo" %><span><%= t("words.show.share.x") %></span>
+    <% end %>
+    <button type="button" class="share__btn" data-action="clipboard#copy">
+      <%= icon "link" %><span data-clipboard-target="label"><%= t("words.show.share.copy") %></span>
+    </button>
+  </div>
 </header>
 
 <% if @word.word_senses.empty? %>
