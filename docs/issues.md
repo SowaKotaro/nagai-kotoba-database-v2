@@ -172,6 +172,31 @@
 
 ## イシュー一覧
 
+### 実装ステータス（2026-07-06 実装。チェック済み = main マージ済み）
+
+- [x] Issue 13: favicon / apple-touch-icon 差し替え（PR #34）
+- [x] Issue 14: メタ情報の動的生成（description・OGP・canonical）（PR #36）
+- [x] Issue 15: sitemap.xml + robots.txt（PR #37）
+- [x] Issue 16: 構造化データ JSON-LD（PR #40）
+- [x] Issue 17: ファセットのインデックス方針（PR #38）
+- [x] Issue 18: 単語詳細の自動リード文（PR #35）
+- [x] Issue 19: GA4 + Search Console（PR #39。本番で `GA4_MEASUREMENT_ID` 設定・所有権確認は公開時に手動）
+- [x] Issue 20: About ページ（PR #41）
+- [x] Issue 21: /genres ハブページ（PR #43）
+- [x] Issue 22: 50音・文字数の索引ページ /browse（PR #45）
+- [x] Issue 23: 関連語セクション（PR #44）
+- [x] Issue 24: llms.txt（PR #42）
+- [x] Issue 25: 公開 JSON API（PR #46）
+- [x] Issue 26: HTTP/fragment キャッシュ（PR #47）
+- [ ] Issue 27: config.hosts + canonical 301 ／ **保留**（com→jp 移行タイミングに合わせて実施。インフラ変更）
+- [x] Issue 28: 新着単語 Atom フィード（PR #48）
+- [ ] Issue 29: OGP 画像の動的生成 ／ 未着手（ロードマップ通り、収録が数百語を超えてから）
+- [x] Issue 30: シェア導線（X 共有・URL コピー）（PR #49）
+- [ ] Issue 31: Web フォントのセルフホスト化 ／ 未着手（woff2 サブセット取得が必要）
+- [x] Issue 32: エラーページの日本語化・ブランド化（PR #50）
+- [ ] Issue 33: 用例フィールドの追加 ／ 未着手（**着手前に運用方針を相談**）
+- [ ] Issue 34: 統計ページ ／ 未着手（**着手前に相談**。Phase1 から）
+
 ## [bug] Issue 13: favicon.ico / apple-touch-icon が 0 バイトの空ファイル
 - 種別: bug
 - 観点: A / H
