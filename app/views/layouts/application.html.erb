@@ -30,6 +30,9 @@
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+    <%# 新着単語の Atom フィード(autodiscovery。Issue 28) %>
+    <%= auto_discovery_link_tag :atom, words_path(format: :atom), title: t("words.feed.title") %>
+
     <%# 見出し用の明朝のみ web フォントで読む(本文は OS 標準ゴシック。docs/design.md §2)。
         display=swap で LCP を阻害しない。 %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
