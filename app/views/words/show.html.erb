@@ -150,6 +150,23 @@
   </div>
 <% end %>
 
+<% if @related_word_groups.any? %>
+  <section class="related">
+    <h2 class="related__title"><%= t("words.show.related.title") %></h2>
+    <% @related_word_groups.each do |group| %>
+      <div class="related__group">
+        <p class="section-label"><%= t("words.show.related.#{group.key}") %></p>
+        <div class="entry-list">
+          <%= render partial: "words/entry_row", collection: group.words, as: :word %>
+        </div>
+        <%= link_to words_path(group.facet_params), class: "related__more icon-label" do %>
+          <%= t("words.show.related.more") %><%= icon "arrow_right" %>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+<% end %>
+
 <p>
   <%= link_to words_path, class: "back-link icon-label" do %>
     <%= icon "arrow_left" %><%= t("words.show.back") %>

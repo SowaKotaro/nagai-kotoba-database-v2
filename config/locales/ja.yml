@@ -138,6 +138,12 @@ ja:
       features: "言語学的特徴"
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
+      related:
+        title: "関連する言葉"
+        genre: "同じジャンルの言葉"
+        reading_length: "同じ文字数の言葉"
+        first_char: "同じ先頭文字の言葉"
+        more: "もっと見る"
     lead:
       base: "「%{surface}」は、読み「%{reading}」（%{metrics}）の日本語の長い言葉。"
       metrics_separator: "・"

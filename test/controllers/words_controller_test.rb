@@ -59,6 +59,20 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
             "ジャンルは 文学 › 日本文学 › 小説。人を殺す事件"
   end
 
+  test "詳細に関連語セクションが表示され単語間リンクになる" do
+    # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
+    sibling = Word.create!(surface: "同ジャンルの別語", annotated_at: Time.current)
+    sibling.word_senses.create!(reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
+
+    get word_path(words(:abc_murder))
+    assert_response :success
+    assert_select "section.related .related__title", text: I18n.t("words.show.related.title")
+    # 同ジャンルグループに別語への実リンクがある(単語→単語の内部リンク)
+    assert_select "section.related a.entry-row__surface[href=?]", word_path(sibling)
+    # 「もっと見る」はファセット一覧へ
+    assert_select "section.related a.related__more[href=?]", words_path(genre_id: genres(:small_novel).id)
+  end
+
   test "詳細のジャンル階層は単語一覧の絞り込みリンク付きパンくずで表示される" do
     get word_path(word_senses(:murder).word)
 
