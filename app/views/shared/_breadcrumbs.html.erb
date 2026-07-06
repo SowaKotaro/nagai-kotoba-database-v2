@@ -9,3 +9,5 @@
     <% unless index == items.size - 1 %><span class="breadcrumbs__sep">›</span><% end %>
   <% end %>
 </nav>
+<%# パンくずと同じ内容を BreadcrumbList(JSON-LD)としても出力する(Issue 16) %>
+<%= breadcrumb_json_ld(items) %>

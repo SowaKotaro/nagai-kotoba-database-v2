@@ -3,6 +3,8 @@
 <% lead = word_lead_sentence(@word) %>
 <% content_for :description, lead if lead.present? %>
 <% content_for :og_type, "article" %>
+<%# 語義ごとの DefinedTerm(構造化データ。Issue 16) %>
+<%= word_json_ld(@word) %>
 
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), words_path ], [ @word.surface, nil ] ] %>
