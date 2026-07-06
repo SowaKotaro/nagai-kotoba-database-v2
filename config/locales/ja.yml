@@ -132,6 +132,12 @@ ja:
       features: "言語学的特徴"
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
+    lead:
+      base: "「%{surface}」は、読み「%{reading}」（%{metrics}）の日本語の長い言葉。"
+      metrics_separator: "・"
+      genre_separator: " › "
+      genre: "ジャンルは %{path}。"
+      meaning: "%{meaning}"
     pagination:
       prev: "前へ"
       next: "次へ"

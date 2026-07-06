@@ -48,6 +48,17 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_match sense.meaning, response.body
   end
 
+  test "詳細の見出し語ブロックに自己完結の定義文(リード文)が表示される" do
+    sense = word_senses(:murder)
+    get word_path(sense.word)
+
+    assert_response :success
+    # 読み・文字数・ジャンルを散文化した定義文(Issue 18)
+    assert_select ".page-header .page-lead",
+      text: "「ABC殺人事件」は、読み「さつじんじけん」（7文字・7モーラ）の日本語の長い言葉。" \
+            "ジャンルは 文学 › 日本文学 › 小説。人を殺す事件"
+  end
+
   test "詳細のジャンル階層は単語一覧の絞り込みリンク付きパンくずで表示される" do
     get word_path(word_senses(:murder).word)
 
