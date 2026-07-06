@@ -30,6 +30,20 @@ module ApplicationHelper
     content_for?(:og_type) ? content_for(:og_type).to_s : "website"
   end
 
+  # GA4 の測定ID(G-XXXXXXX)。本番の環境変数から読む。未設定なら計測タグを出さない(Issue 19)。
+  def ga_measurement_id
+    ENV["GA4_MEASUREMENT_ID"].presence
+  end
+
+  def analytics_enabled?
+    ga_measurement_id.present?
+  end
+
+  # 各サーチコンソールの所有権確認メタ(DNS 確認が使えない場合の代替。任意)。
+  # 値はいずれも環境変数から。未設定ならタグを出さない。
+  def google_site_verification = ENV["GOOGLE_SITE_VERIFICATION"].presence
+  def bing_site_verification = ENV["BING_SITE_VERIFICATION"].presence
+
   private
 
   # サイトの正規ホストを前置した絶対URLを返す。
