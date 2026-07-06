@@ -33,11 +33,40 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#q[value=?]", "カレー"
   end
 
-  test "文字タイプ列の入力キー(あ/ア/漢/A/@)が表示される" do
+  test "文字種の入力キー(あ/ア/漢/A/@)が表示される" do
     get search_path
     %w[あ ア 漢 A @].each do |char|
       assert_select "button.char-type-key[data-char-type-char-param=?]", char, text: char
     end
+  end
+
+  test "文字種は削除ボタンとコンソール表示を持ち、手入力の text 欄は無い" do
+    get search_path
+    assert_select "button.char-type-key--backspace[data-action=?]", "char-type#remove"
+    # 送信値は hidden、組み立て表示はコンソール(display ターゲット)
+    assert_select "input[type=hidden]#char_type_pattern"
+    assert_select ".char-type-console [data-char-type-target=display]"
+    # 手入力できる text 欄は無い(ボタン専用=バリデーション兼用)
+    assert_select "input[type=text]#char_type_pattern", count: 0
+  end
+
+  test "語種フィルタ(check_chips)が表示される" do
+    get search_path
+    word_origins(:kango, :eigo).each do |origin|
+      assert_select "input[type=checkbox][name=?][value=?]", "word_origin_id[]", origin.id.to_s
+    end
+  end
+
+  test "母音パターン検索の入力欄が表示される" do
+    get search_path
+    assert_select "input#vowel_reading"
+    assert_select ".field-hint", text: I18n.t("searches.vowel_pattern_hint")
+  end
+
+  test "語種(複数選択)も単語一覧へ引き継がれる" do
+    get search_path, params: { commit: I18n.t("searches.submit"),
+                               word_origin_id: [ word_origins(:kango).id.to_s ] }
+    assert_redirected_to words_path(word_origin_id: [ word_origins(:kango).id ])
   end
 
   test "選択したジャンルの直下グループだけが展開されて描画される" do

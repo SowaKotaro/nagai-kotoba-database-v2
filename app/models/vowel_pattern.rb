@@ -1,4 +1,4 @@
-# 韻パターン(rhythm_pattern, ヘボン式ローマ字)から母音 aiueo のみを抜き出した文字列を
+# ヘボン式ローマ字(rhythm_pattern)から母音 aiueo のみを抜き出した文字列を
 # 生成する値オブジェクト。母音一致での押韻検索・分類の軸に使う。
 # 生成は Ruby 側で行い、WordSense の before_validation で(rhythm_pattern の後に)自動セットする。
 #

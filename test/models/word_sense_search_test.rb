@@ -56,7 +56,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [ word_senses(:murder).id ], ids(rhythm_pattern: "tsuji")
   end
 
-  test "文字タイプ列の完全一致で絞れる(words と join)" do
+  test "文字種の完全一致で絞れる(words と join)" do
     pattern = words(:abc_murder).char_type_pattern
     assert_equal [ word_senses(:murder).id ], ids(char_type_pattern: pattern)
   end
@@ -120,6 +120,24 @@ class WordSenseSearchTest < ActiveSupport::TestCase
 
   test "語種で絞れる" do
     assert_equal [ word_senses(:murder).id ], ids(word_origin_id: word_origins(:kango).id)
+  end
+
+  test "語種は複数指定(OR)でも絞れる" do
+    both = ids(word_origin_id: [ word_origins(:kango).id, word_origins(:eigo).id ])
+    assert_equal [ word_senses(:curry).id, word_senses(:murder).id ].sort, both
+  end
+
+  # --- 母音パターン検索(読みのカナ入力 → 母音のみで押韻検索) ---
+  test "母音パターン検索は読みのカナ入力を母音へ変換して絞れる" do
+    # カレー → karee → 母音 aee。curry の vowel_pattern と一致する。
+    result = ids(vowel_reading: "カレー")
+    assert_includes result, word_senses(:curry).id
+    assert_not_includes result, word_senses(:murder).id
+  end
+
+  test "母音パターン検索は部分一致(押韻)で絞れる" do
+    # 「ケー」→ kee → 母音 ee。curry(aee)は末尾で韻を踏むので該当する。
+    assert_includes ids(vowel_reading: "ケー"), word_senses(:curry).id
   end
 
   # --- 複数選択(同一項目内は OR) ---

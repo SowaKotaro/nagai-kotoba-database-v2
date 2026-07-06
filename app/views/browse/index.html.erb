@@ -19,12 +19,18 @@
           <% if kana.nil? %>
             <span class="kana-cell--blank" aria-hidden="true"></span>
           <% elsif (count = @first_char_counts[kana].to_i).positive? %>
-            <%= link_to words_path(first_char: kana), class: "kana-cell kana-cell--link" do %>
+            <%# 件数はセルの朱の濃淡(ヒート)で示し、実数はホバー(title)で見せる。
+                こうすると 50音表の行・列の整列が崩れず、分布が一目で分かる %>
+            <% fill = @first_char_max.positive? ? (count.to_f / @first_char_max).round(3) : 0 %>
+            <%= link_to words_path(first_char: kana),
+                  class: "kana-cell kana-cell--link kana-cell--heat",
+                  style: "--fill: #{fill}",
+                  title: t("browse.index.count_label", char: kana, count: count) do %>
               <span class="kana-cell__face"><%= kana %></span>
-              <span class="kana-cell__count mono"><%= count %></span>
             <% end %>
           <% else %>
-            <span class="kana-cell kana-cell--muted">
+            <span class="kana-cell kana-cell--muted"
+                  title="<%= t('browse.index.count_label', char: kana, count: 0) %>">
               <span class="kana-cell__face"><%= kana %></span>
             </span>
           <% end %>
@@ -44,8 +50,8 @@
       <% lengths.each do |length| %>
         <li>
           <%= link_to words_path(reading_length: length), class: "tag browse-length" do %>
-            <span><%= t("words.show.chars", count: length) %></span>
-            <span class="browse-length__count mono"><%= @reading_length_counts[length] %></span>
+            <span class="browse-length__label"><%= t("words.show.chars", count: length) %></span>
+            <span class="browse-length__count mono"><%= t("browse.index.count_unit", count: @reading_length_counts[length]) %></span>
           <% end %>
         </li>
       <% end %>

@@ -45,9 +45,11 @@ class WordSense < ApplicationRecord
   scope :with_word_origin, lambda { |id|
     where(id: WordSenseOrigin.where(word_origin_id: id).select(:word_sense_id))
   }
-  # 韻(rhythm_pattern)の部分一致。ワイルドカードはエスケープする。
+  # ヘボン式ローマ字(rhythm_pattern)の部分一致。ワイルドカードはエスケープする。
   scope :rhythm_containing, ->(text) { where("rhythm_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
-  # 文字タイプ列(words.char_type_pattern)の完全一致。
+  # 母音パターン(vowel_pattern)の部分一致。押韻検索(母音の並びで韻を探す)に使う。
+  scope :vowel_containing, ->(text) { where("vowel_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
+  # 文字種(words.char_type_pattern)の完全一致。
   scope :char_type_pattern_is, ->(pattern) { joins(:word).where(words: { char_type_pattern: pattern }) }
   # マスタでの絞り込み。
   scope :with_genre_ids, ->(ids) { where(genre_id: ids) }

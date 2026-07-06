@@ -23,6 +23,19 @@ class BrowseControllerTest < ActionDispatch::IntegrationTest
     assert_select ".kana-cell--muted", minimum: 1
   end
 
+  test "50音セルは件数を朱ヒートとホバー(title)で示し、実数をセルに並べない" do
+    get browse_path
+    # カ(curry) は該当ありなのでヒートセルになり、件数は title(ホバー)に入る
+    assert_select "a.kana-cell--heat[href=?][title]", words_path(first_char: "カ")
+    # 件数をセル内に文字として並べない(50音表の行・列の整列を崩さない)
+    assert_select ".kana-cell__count", count: 0
+  end
+
+  test "文字数の索引は件数を「件」単位で示し、条件の数字と混同させない" do
+    get browse_path
+    assert_select ".browse-length__count", text: /\A\d+件\z/, minimum: 1
+  end
+
   test "索引はヘッダー/フッター/sitemap からリンクされる" do
     get root_path
     assert_select "header a[href=?]", browse_path, text: I18n.t("layouts.nav.browse")

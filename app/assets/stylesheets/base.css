@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+/* 固定ヘッダーの下にアンカー/フォーカス先が隠れないよう、スクロール位置を上げる */
+html {
+  scroll-padding-top: 72px;
+}
+
 body {
   margin: 0;
   background: var(--bg);

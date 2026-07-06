@@ -1,7 +1,7 @@
 require "test_helper"
 
 class CharTypePatternTest < ActiveSupport::TestCase
-  test "各文字タイプが正しい記号に写像される" do
+  test "各文字種が正しい記号に写像される" do
     assert_equal "漢", CharTypePattern.call("殺")
     assert_equal "あ", CharTypePattern.call("き")
     assert_equal "ア", CharTypePattern.call("カ")

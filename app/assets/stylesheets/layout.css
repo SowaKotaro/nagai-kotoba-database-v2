@@ -1,7 +1,13 @@
 /* ページ骨格(docs/design.md §5.1)。ヘッダーは墨の1本罫、フッターは墨のベタ面で締める。 */
 
 /* --- グローバルヘッダー --- */
+/* スクロールしても常に上部へ留める。ドロワー/スクリム(z-index 19〜21)は
+   このヘッダー内にあるので、ヘッダーを stacking context にしても相対順序は保たれる */
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--bg);
   border-bottom: 1px solid var(--ink);
 }
 
@@ -184,6 +190,16 @@ main.container {
   max-width: var(--content-width);
   margin: 0 auto;
   padding: var(--space-6) var(--space-5) var(--space-7);
+  /* 想定外の広い子でもページ全体が横スクロールしないようにする backstop。
+     clip なので内側の overflow-x:auto(50音表など)のスクロールには影響しない */
+  overflow-x: clip;
+}
+
+/* モバイルは左右パディングを詰めて実効幅を確保する */
+@media (max-width: 560px) {
+  main.container {
+    padding: var(--space-5) var(--space-4) var(--space-6);
+  }
 }
 
 /* --- フッター: 墨のベタ面で締める --- */

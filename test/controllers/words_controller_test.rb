@@ -63,10 +63,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get word_path(sense.word)
 
     assert_response :success
-    # 読み・文字数・ジャンルを散文化した定義文(Issue 18)
-    assert_select ".page-header .page-lead",
+    # 読み・文字数・ジャンルを散文化した定義文(Issue 18)。「説明」パネルに収めて表示する
+    assert_select ".word-flavor .word-flavor__text",
       text: "「ABC殺人事件」は、読み「さつじんじけん」（7文字・7モーラ）の日本語の長い言葉。" \
             "ジャンルは 文学 › 日本文学 › 小説。人を殺す事件"
+  end
+
+  test "詳細は未登録の属性を「未定義」として表示する" do
+    # curry は ジャンル・エンティティ・言語学的特徴・別表記が未登録(語種 英語 はあり)。
+    curry = word_senses(:curry)
+    get word_path(curry.word)
+
+    assert_response :success
+    # 未登録の属性は「未定義」を明示する
+    assert_select ".sense-undefined", text: I18n.t("words.show.undefined"), minimum: 1
+    # 登録済みの語種(英語)は「未定義」にならず、値が出る
+    assert_select ".sense-attrs__item", text: /語種.*英語/m
   end
 
   test "詳細にシェア導線(X共有・URLコピー)がある" do
