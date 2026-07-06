@@ -139,6 +139,10 @@ ja:
       features: "言語学的特徴"
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
+      share:
+        x: "Xでシェア"
+        copy: "URLをコピー"
+        copied: "コピーしました"
       related:
         title: "関連する言葉"
         genre: "同じジャンルの言葉"
