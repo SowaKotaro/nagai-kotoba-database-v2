@@ -1,4 +1,8 @@
 <% content_for :title, @word.surface %>
+<%# 自己完結の定義文(Issue 18)。meta description(Issue 14)に流用する %>
+<% lead = word_lead_sentence(@word) %>
+<% content_for :description, lead if lead.present? %>
+<% content_for :og_type, "article" %>
 
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), words_path ], [ @word.surface, nil ] ] %>
@@ -12,8 +16,6 @@
   <p class="page-title-meta">
     <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
   </p>
-  <%# 自己完結の定義文。読み・文字数・ジャンルを散文化(Issue 18)。meta/JSON-LD にも流用 %>
-  <% lead = word_lead_sentence(@word) %>
   <% if lead.present? %>
     <p class="page-lead"><%= lead %></p>
   <% end %>

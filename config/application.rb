@@ -27,5 +27,9 @@ module NagaiKotobaDatabaseV2
     # 日本語アプリのため既定ロケールを日本語にする。
     config.i18n.default_locale = :ja
     config.i18n.available_locales = %i[ja en]
+
+    # canonical / OGP の絶対URLの基点(本番ドメイン。docs/issues.md 確定事項1)。
+    # 末尾スラッシュ無し。ENV で上書き可(検証環境・ステージング用)。
+    config.x.canonical_host = ENV.fetch("CANONICAL_HOST", "https://nagai-kotoba-database.jp")
   end
 end
