@@ -102,4 +102,14 @@ class WordSenseTest < ActiveSupport::TestCase
                                              target: "殺人", target_reading: "さつじん")
     end
   end
+
+  test "語義の更新で親 word の updated_at が進む(touch。Issue 26)" do
+    word = words(:abc_murder)
+    word.update_column(:updated_at, 1.day.ago)
+    before = word.reload.updated_at
+
+    word.word_senses.first.update!(meaning: "更新後の意味")
+
+    assert_operator word.reload.updated_at, :>, before
+  end
 end

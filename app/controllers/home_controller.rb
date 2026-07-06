@@ -5,10 +5,17 @@ class HomeController < ApplicationController
   RECENT_WORDS_LIMIT = 5
 
   def index
-    # 公開統計・一覧は注釈済み(公開対象)の語だけを数える・見せる。
-    @word_count = Word.annotated.count
-    @sense_count = WordSense.published.count
-    @genre_count = Genre.small.count
+    # 公開統計は毎リクエスト COUNT を3本発行していた。短TTLでキャッシュする(Issue 26)。
+    stats = Rails.cache.fetch("home/stats", expires_in: 1.hour) do
+      {
+        words: Word.annotated.count,
+        senses: WordSense.published.count,
+        genres: Genre.small.count
+      }
+    end
+    @word_count = stats[:words]
+    @sense_count = stats[:senses]
+    @genre_count = stats[:genres]
     @recent_words = Word.annotated
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
                         .order(created_at: :desc, id: :desc)
