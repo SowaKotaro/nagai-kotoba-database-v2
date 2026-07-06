@@ -1,1 +1,8 @@
 # See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+User-agent: *
+# 管理・認証・検索フォームはインデックス不要(検索結果ページの重複を避ける。Issue 17)。
+Disallow: /admin
+Disallow: /session
+Disallow: /search
+
+Sitemap: https://nagai-kotoba-database.jp/sitemap.xml
