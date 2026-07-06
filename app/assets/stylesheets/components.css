@@ -107,6 +107,34 @@
   line-height: 1.9;
 }
 
+/* 恒久ページ(About 等)の本文。読みやすい幅と見出しの間(Issue 20) */
+.prose {
+  max-width: 46em;
+  font-size: 15px;
+}
+
+.prose section + section {
+  margin-top: var(--space-6);
+}
+
+.prose h2 {
+  margin: 0 0 var(--space-3);
+  font-size: clamp(18px, 2.4vw, 22px);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule-mid);
+}
+
+/* クレジット文は等幅で「そのまま貼れる」体裁にする */
+.prose__credit {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.prose__note {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
 /* --- 語義パネル: 墨の1px枠(印刷物のフレーム) --- */
 .sense-list {
   display: grid;

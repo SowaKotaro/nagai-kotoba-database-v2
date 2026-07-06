@@ -63,6 +63,7 @@
         <nav class="site-footer__nav" aria-label="<%= t("layouts.footer.nav_label") %>">
           <%= link_to t("layouts.nav.words"), words_path %>
           <%= link_to t("layouts.nav.search"), search_path %>
+          <%= link_to t("layouts.nav.about"), about_path %>
           <% if authenticated? %>
             <%= link_to t("layouts.nav.admin"), admin_words_path %>
           <% else %>

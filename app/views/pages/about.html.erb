@@ -1,0 +1,42 @@
+<% content_for :title, t("pages.about.title") %>
+<% content_for :description, t("pages.about.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("pages.about.title"), nil ] ] %>
+
+<header class="page-header">
+  <p class="page-eyebrow"><span><%= t("pages.about.title") %></span></p>
+  <h1 class="page-title"><%= t("layouts.brand") %></h1>
+  <p class="page-lead"><%= t("pages.about.lead") %></p>
+</header>
+
+<div class="prose">
+  <section>
+    <h2><%= t("pages.about.criteria_title") %></h2>
+    <p><%= t("pages.about.criteria_body") %></p>
+  </section>
+
+  <section>
+    <h2><%= t("pages.about.curation_title") %></h2>
+    <p><%= t("pages.about.curation_body") %></p>
+  </section>
+
+  <section>
+    <h2><%= t("pages.about.license_title") %></h2>
+    <p><%= t("pages.about.license_intro") %></p>
+    <p>
+      <%= link_to t("pages.about.license_name"),
+            "https://creativecommons.org/licenses/by/4.0/deed.ja",
+            rel: "license noopener", target: "_blank" %>
+    </p>
+    <p><%= t("pages.about.license_credit_label") %></p>
+    <p class="prose__credit"><%= t("pages.about.license_credit", url: Rails.application.config.x.canonical_host) %></p>
+    <p class="prose__note"><%= t("pages.about.license_note") %></p>
+  </section>
+
+  <section>
+    <h2><%= t("pages.about.contact_title") %></h2>
+    <p><%= t("pages.about.contact_body") %></p>
+    <p><%= mail_to t("pages.about.contact_email") %></p>
+  </section>
+</div>
