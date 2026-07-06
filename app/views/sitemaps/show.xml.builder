@@ -1,7 +1,7 @@
 xml.instruct! :xml, version: "1.0", encoding: "UTF-8"
 xml.urlset(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do
-  # 静的ページ(トップ・単語一覧・ジャンル・About)。lastmod は付けない。
-  [ "/", words_path, genres_path, about_path ].each do |path|
+  # 静的ページ(トップ・単語一覧・ジャンル・索引・About)。lastmod は付けない。
+  [ "/", words_path, genres_path, browse_path, about_path ].each do |path|
     xml.url do
       xml.loc "#{@host}#{path}"
     end

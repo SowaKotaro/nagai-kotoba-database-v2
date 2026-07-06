@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   # ジャンル階層のハブページ(全ジャンル面へのクロール導線)。Issue 21。
   resources :genres, only: :index
 
+  # 50音・読みの文字数の索引(ブラウズ導線)。Issue 22。
+  get "browse", to: "browse#index", as: :browse
+
   # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
 
