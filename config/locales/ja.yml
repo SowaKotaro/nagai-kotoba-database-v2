@@ -63,6 +63,7 @@ ja:
     breadcrumbs_label: "現在位置"
     nav:
       words: "一覧"
+      genres: "ジャンル"
       search: "検索"
       about: "サイトについて"
       admin: "管理"
@@ -300,6 +301,14 @@ ja:
       new_origin_placeholder: "例：タミル語"
       new_pos_placeholder: "新しい品詞"
       new_entity_placeholder: "新しい種別"
+  genres:
+    index:
+      title: "ジャンルから探す"
+      eyebrow: "ジャンル一覧"
+      description: "収録している日本語の長い言葉を、大・中・小のジャンル階層から辿れます。各分類の公開件数つき。"
+      lead: "大分類から小分類まで、ジャンルの階層をたどって長い言葉を探せます。数字はそのジャンルに含まれる公開語義の数です。"
+      empty: "まだ公開されているジャンルがありません。"
+
   pages:
     about:
       title: "このサイトについて"

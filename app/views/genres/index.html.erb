@@ -1,0 +1,47 @@
+<% content_for :title, t("genres.index.title") %>
+<% content_for :description, t("genres.index.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("genres.index.title"), nil ] ] %>
+
+<header class="page-header">
+  <p class="page-eyebrow"><span><%= t("genres.index.eyebrow") %></span></p>
+  <h1 class="page-title"><%= t("genres.index.title") %></h1>
+  <p class="page-lead"><%= t("genres.index.lead") %></p>
+</header>
+
+<% larges = genres_with_published(nil, @genres_by_parent, @published_counts) %>
+<% if larges.empty? %>
+  <p class="empty-note"><%= t("genres.index.empty") %></p>
+<% else %>
+  <div class="genre-hub">
+    <% larges.each do |large| %>
+      <section class="genre-hub__large">
+        <h2 class="genre-hub__large-title">
+          <%= link_to large.name, words_path(genre_id: large.id) %>
+          <span class="genre-hub__count mono"><%= genre_published_count(large, @genres_by_parent, @published_counts) %></span>
+        </h2>
+
+        <% genres_with_published(large.id, @genres_by_parent, @published_counts).each do |medium| %>
+          <div class="genre-hub__medium">
+            <h3 class="genre-hub__medium-title">
+              <%= link_to medium.name, words_path(genre_id: medium.id) %>
+              <span class="genre-hub__count mono"><%= genre_published_count(medium, @genres_by_parent, @published_counts) %></span>
+            </h3>
+
+            <ul class="genre-hub__smalls">
+              <% genres_with_published(medium.id, @genres_by_parent, @published_counts).each do |small| %>
+                <li>
+                  <%= link_to words_path(genre_id: small.id), class: "tag genre-hub__small" do %>
+                    <span><%= small.name %></span>
+                    <span class="genre-hub__count mono"><%= genre_published_count(small, @genres_by_parent, @published_counts) %></span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+<% end %>

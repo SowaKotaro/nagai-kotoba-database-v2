@@ -25,6 +25,7 @@
     <div class="site-header__right" data-nav-drawer-target="panel">
       <nav class="site-nav">
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
+        <%= link_to t("layouts.nav.genres"), genres_path, class: ("is-current" if request.path == genres_path) %>
         <%= link_to t("layouts.nav.search"), search_path, class: ("is-current" if request.path == search_path) %>
         <% if authenticated? %>
           <%= link_to t("layouts.nav.admin"), admin_root_path, class: ("is-current" if request.path.start_with?("/admin")) %>

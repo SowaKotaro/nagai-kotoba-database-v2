@@ -6,6 +6,9 @@ Rails.application.routes.draw do
   # 公開の詳細検索フォーム。キーワードだけの検索はヘッダー等から words#index の q で行う。
   get "search", to: "searches#index", as: :search
 
+  # ジャンル階層のハブページ(全ジャンル面へのクロール導線)。Issue 21。
+  resources :genres, only: :index
+
   # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
 
