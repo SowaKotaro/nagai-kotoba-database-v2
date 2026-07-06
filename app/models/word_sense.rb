@@ -1,6 +1,7 @@
 class WordSense < ApplicationRecord
   # 1つの表層形(word)に複数の語義がぶら下がる(同音異義語に対応)。
-  belongs_to :word
+  # 語義の変更で word.updated_at を進め、詳細ページの fresh_when / sitemap の lastmod を正しくする(Issue 26)。
+  belongs_to :word, touch: true
   # genre_id は末端(小分類=level3)を指す。entity_type / part_of_speech は任意。
   belongs_to :genre, optional: true
   belongs_to :entity_type, optional: true

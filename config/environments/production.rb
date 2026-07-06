@@ -64,8 +64,9 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
+  # 公開ページの統計キャッシュ・fresh_when 用(Issue 26)。まずはプロセス内メモリで十分。
+  # 恒常的なジョブ/キャッシュ基盤が要るようになったら Solid Cache を検討する。
+  config.cache_store = :memory_store
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   # config.active_job.queue_adapter = :resque

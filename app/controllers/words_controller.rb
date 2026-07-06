@@ -27,6 +27,11 @@ class WordsController < ApplicationController
         { word_sense_features: :linguistic_feature }
       ]
     ).find(params[:id])
+
+    # 条件付きGET(ETag/Last-Modified)。更新が無ければ 304 を返し、関連語の
+    # 組み立てもスキップする(Issue 26)。word_senses 等は touch: true で反映される。
+    return unless stale?(@word, public: true)
+
     # 単語間の内部リンク(関連語)。同ジャンル/同文字数/同先頭文字を各数件(Issue 23)。
     # JSON(Issue 25)では不要なので HTML のときだけ組み立てる。
     @related_word_groups = RelatedWords.new(@word).groups if request.format.html?

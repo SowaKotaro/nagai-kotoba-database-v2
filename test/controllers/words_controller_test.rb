@@ -24,6 +24,16 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
       text: parts_of_speech(:noun).name
   end
 
+  test "詳細は ETag を返し If-None-Match で 304 になる(Issue 26)" do
+    get word_path(words(:abc_murder))
+    assert_response :success
+    etag = response.headers["ETag"]
+    assert etag.present?
+
+    get word_path(words(:abc_murder)), headers: { "If-None-Match" => etag }
+    assert_response :not_modified
+  end
+
   # --- 公開: 未注釈は出さない ---
   test "未注釈の語は一覧に出ない" do
     get words_path
