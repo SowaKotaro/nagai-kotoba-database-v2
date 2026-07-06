@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   # サイト概要・収録基準・利用条件などの恒久ページ。Issue 20。
   get "about", to: "pages#about", as: :about
 
+  # LLM(AI 検索・エージェント)向けのサイト案内。Issue 24。
+  get "llms.txt", to: "llms#show", defaults: { format: "text" }, as: :llms
+
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
