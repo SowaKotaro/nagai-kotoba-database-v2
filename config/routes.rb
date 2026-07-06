@@ -6,6 +6,9 @@ Rails.application.routes.draw do
   # 公開の詳細検索フォーム。キーワードだけの検索はヘッダー等から words#index の q で行う。
   get "search", to: "searches#index", as: :search
 
+  # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
+  get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
+
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
