@@ -27,6 +27,8 @@ class WordsController < ApplicationController
         { word_sense_features: :linguistic_feature }
       ]
     ).find(params[:id])
+    # 単語間の内部リンク(関連語)。同ジャンル/同文字数/同先頭文字を各数件(Issue 23)。
+    @related_word_groups = RelatedWords.new(@word).groups
   end
 
   private

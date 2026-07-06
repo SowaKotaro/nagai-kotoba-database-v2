@@ -330,6 +330,30 @@ a.tag:hover {
   color: var(--ink);
 }
 
+/* --- 関連語セクション(Issue 23) --- */
+.related {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 2px solid var(--ink);
+}
+
+.related__title {
+  font-size: clamp(18px, 2.6vw, 24px);
+  margin: 0 0 var(--space-4);
+}
+
+.related__group + .related__group {
+  margin-top: var(--space-5);
+}
+
+.related__more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 14px;
+}
+
 /* --- ジャンル・ハブページ(Issue 21) --- */
 .genre-hub {
   display: grid;
