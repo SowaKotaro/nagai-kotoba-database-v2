@@ -107,6 +107,28 @@
   line-height: 1.9;
 }
 
+/* 動的に組み立てる解説文。細罫の下に控えめに置き、突拍子ない印象を避ける。
+   横幅は親(見出し語ブロック)いっぱいまで取り、ひっそりと添える */
+.word-flavor {
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule);
+}
+
+.word-flavor__label {
+  margin: 0 0 var(--space-1);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--ink-3);
+}
+
+.word-flavor__text {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.85;
+}
+
 /* 恒久ページ(About 等)の本文。読みやすい幅と見出しの間(Issue 20) */
 .prose {
   max-width: 46em;
@@ -207,26 +229,27 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-4) var(--space-6);
+  gap: var(--space-3) var(--space-4);
 }
 
 .annotation {
   display: flex;
   align-items: flex-end;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
-/* 注釈対象は大きめの明朝 + 朱の下線(校正記号の文法) */
+/* 注釈対象は明朝 + 朱の下線(校正記号の文法)。コンパクトに添える */
 .annotation-target {
   font-family: var(--font-mincho);
   font-weight: 500;
-  font-size: 22px;
+  font-size: 20px;
+  line-height: 1.3;
   border-bottom: 2px solid var(--shu);
-  padding-bottom: 3px;
+  padding-bottom: 2px;
 }
 
 .annotation-target rt {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--shu);
 }
 
@@ -255,11 +278,21 @@ a.chip:hover {
 
 .sense-attrs__item {
   display: grid;
-  grid-template-columns: 130px 1fr;
+  /* 値側は minmax(0,1fr) にして、長いジャンルパス等でも列が伸びず内側で折り返す
+     (これが 1fr だと min-content で押し広げられ、main/section が横にはみ出す) */
+  grid-template-columns: 130px minmax(0, 1fr);
   gap: var(--space-4);
   align-items: baseline;
   padding: var(--space-2) 0;
   border-top: 1px solid var(--rule);
+}
+
+/* モバイルではラベルと値を縦に積む(固定 130px 列が画面幅を圧迫しないように) */
+@media (max-width: 560px) {
+  .sense-attrs__item {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
 }
 
 .sense-attrs dt {
@@ -273,6 +306,14 @@ a.chip:hover {
   margin: 0;
   font-size: 15px;
   overflow-wrap: anywhere;
+}
+
+/* 属性が未登録のときの「未定義」表示。データが無いことを控えめに示す */
+.sense-undefined {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
 }
 
 /* ジャンル階層: リンク付きパンくず(各階層から検索絞り込みへ) */
@@ -361,10 +402,11 @@ a.tag:hover {
   color: var(--rule-mid);
 }
 
-.kana-cell__count {
-  font-size: 11px;
-  color: var(--ink-3);
-  letter-spacing: 0.04em;
+/* 件数ヒート: --fill(0〜1)に応じて朱の濃淡でセルを塗る。多いマスほど濃い朱。
+   単色の塗り(グラデーションではない)で 50音表の分布を一目で示す。実数はホバー表示 */
+.kana-cell--heat .kana-cell__face {
+  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 70%), transparent);
+  border-color: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 55% + 12%), var(--rule-mid));
 }
 
 .browse-lengths {
@@ -382,13 +424,17 @@ a.tag:hover {
   gap: var(--space-2);
 }
 
+/* 「11文字」(条件)と「2件」(該当数)が別物と一目で分かるよう、細罫で仕切る */
 .browse-length__count {
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--rule-mid);
   font-size: 13px;
   color: var(--ink-3);
 }
 
 a.browse-length:hover .browse-length__count {
   color: var(--bg);
+  border-left-color: var(--on-ink-rule);
 }
 
 /* --- シェア導線(Issue 30) --- */
@@ -761,11 +807,72 @@ a.tag:hover .genre-hub__count {
   border-color: var(--shu);
 }
 
-/* 文字タイプ列の入力キー(あ/ア/漢/A/@)。押すたびに末尾へ追記する */
+/* 文字種の組み立て表示(ターミナル風)。キー/⌫ で操作し、押した文字がここに並ぶ。
+   点滅カーソルで「ここに入力される」ことを示す */
+.char-type-console {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--ink);
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+}
+
+.char-type-console__prompt {
+  font-size: 13px;
+  color: var(--shu);
+}
+
+.char-type-console__value {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 未入力のときは薄い案内文を出す(placeholder 相当) */
+.char-type-console__value:empty::before {
+  content: attr(data-placeholder);
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+
+.char-type-console__caret {
+  flex: none;
+  width: 9px;
+  height: 1.1em;
+  background: var(--ink);
+  animation: char-type-blink 1.05s steps(1) infinite;
+}
+
+@keyframes char-type-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .char-type-console__caret { animation: none; }
+}
+
+/* 文字種の入力キー(あ/ア/漢/A/@ と ⌫)。キーで末尾へ追記、⌫ で末尾を1文字削除 */
 .char-type-keys {
   display: flex;
   gap: var(--space-1);
   margin-bottom: var(--space-2);
+}
+
+/* 削除ボタンは一番右の「@」から少し離して置く */
+.char-type-key--backspace {
+  margin-inline-start: var(--space-3);
+  color: var(--ink-3);
+}
+
+.char-type-key--backspace .icon {
+  width: 18px;
+  height: 18px;
 }
 
 .char-type-key {
@@ -873,6 +980,8 @@ a.tag:hover .genre-hub__count {
   gap: 4px;
   width: fit-content;
   max-width: 100%;
+  /* fit-content の箱を親内で左右中央に置く */
+  margin-inline: auto;
   overflow-x: auto;
   padding-bottom: 4px;
 }

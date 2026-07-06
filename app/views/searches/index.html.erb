@@ -41,25 +41,49 @@
   <%= render "check_chips", name: "entity_type_id", collection: @entity_types,
         selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type) %>
 
+  <%= render "check_chips", name: "word_origin_id", collection: @word_origins,
+        selected: @search.word_origin_id, legend: t("searches.word_origin") %>
+
   <%= render "check_chips", name: "linguistic_feature_id", collection: @linguistic_features,
         selected: @search.linguistic_feature_id, legend: t("searches.linguistic_feature") %>
 
+  <%# 母音パターン検索: 読みをカナで入れると母音の並び(例 ououaa)で押韻検索する %>
+  <div class="field">
+    <%= label_tag :vowel_reading, t("searches.vowel_pattern"), class: "field-legend" %>
+    <%= text_field_tag :vowel_reading, @search.vowel_reading,
+          placeholder: "トウキョウタワー", autocomplete: "off" %>
+    <p class="field-hint"><%= t("searches.vowel_pattern_hint") %></p>
+  </div>
+
   <div class="field">
     <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "field-legend" %>
-    <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern %>
+    <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off" %>
   </div>
 
   <div class="field" data-controller="char-type">
     <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
-    <%# 入力キー。押すたびに対応する記号を入力欄の末尾へ追記する(削除は通常のテキスト編集で) %>
+    <%# 入力はキー(あ/ア/漢/A/@)と削除ボタン(⌫)だけ。組み立て中の文字種は下のコンソールに
+        表示され、手入力は受け付けない(常に妥当なパターンだけが入る=バリデーション兼用)。 %>
     <div class="char-type-keys">
       <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
            CharTypePattern::ALPHABET, CharTypePattern::OTHER ].each do |char| %>
         <button type="button" class="char-type-key" data-action="char-type#append"
                 data-char-type-char-param="<%= char %>"><%= char %></button>
       <% end %>
+      <button type="button" class="char-type-key char-type-key--backspace"
+              data-action="char-type#remove"
+              aria-label="<%= t('searches.char_type_backspace') %>">
+        <%= icon "backspace" %>
+      </button>
     </div>
-    <%= text_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
+    <%# ボタンを押すと文字が並ぶ表示欄(ターミナル風)。点滅カーソルで入力位置を示す %>
+    <output class="char-type-console" for="char_type_pattern">
+      <span class="char-type-console__prompt" aria-hidden="true">▸</span>
+      <span class="char-type-console__value" data-char-type-target="display"
+            data-placeholder="<%= t('searches.char_type_console_placeholder') %>"><%= @search.char_type_pattern %></span>
+      <span class="char-type-console__caret" aria-hidden="true"></span>
+    </output>
+    <%= hidden_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
   </div>
 
   <%= submit_tag t("searches.submit"), class: "btn btn--primary" %>

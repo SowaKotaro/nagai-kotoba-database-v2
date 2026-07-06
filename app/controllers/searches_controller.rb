@@ -18,19 +18,22 @@ class SearchesController < ApplicationController
   private
 
   # フォームの選択肢(ドロップダウンをやめて一覧/階層で選ばせるため一括読み込み)。
+  # 並びは seeds の投入順(= id 順)に揃える。
   def load_filter_masters
-    @genres_by_parent = Genre.order(:name).group_by(&:parent_id)
-    @parts_of_speech = PartOfSpeech.order(:name)
-    @entity_types = EntityType.order(:name)
-    @linguistic_features = LinguisticFeature.order(:name)
+    @genres_by_parent = Genre.order(:id).group_by(&:parent_id)
+    @parts_of_speech = PartOfSpeech.order(:id)
+    @entity_types = EntityType.order(:id)
+    @word_origins = WordOrigin.order(:id)
+    @linguistic_features = LinguisticFeature.order(:id)
   end
 
   def search_params
-    # genre_id はフォームからは配列、ファセットリンクからは単一値で届くため両方許可する。
+    # genre_id / word_origin_id はフォームからは配列、ファセットリンクからは単一値で
+    # 届くため両方許可する。vowel_reading は母音パターン検索用の生カナ入力。
     params.permit(
       :q, :reading_length_min, :reading_length_max,
-      :char_type_pattern, :rhythm_pattern, :genre_id,
-      genre_id: [], first_char: [], last_char: [],
+      :char_type_pattern, :rhythm_pattern, :vowel_reading, :genre_id, :word_origin_id,
+      genre_id: [], first_char: [], last_char: [], word_origin_id: [],
       part_of_speech_id: [], entity_type_id: [], linguistic_feature_id: []
     )
   end

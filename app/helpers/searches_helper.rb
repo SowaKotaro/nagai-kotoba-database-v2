@@ -41,8 +41,9 @@ module SearchesHelper
     conditions << [ WordSense.human_attribute_name(:entity_type), master_names(EntityType, search.entity_type_id) ] if search.entity_type_id.present?
     conditions << [ t("searches.linguistic_feature"), master_names(LinguisticFeature, search.linguistic_feature_id) ] if search.linguistic_feature_id.present?
     conditions << [ t("words.show.origins"), master_names(WordOrigin, search.word_origin_id) ] if search.word_origin_id.present?
-    conditions << [ t("searches.rhythm_pattern"), search.rhythm_pattern ] if search.rhythm_pattern.present?
-    conditions << [ t("searches.char_type_pattern"), search.char_type_pattern ] if search.char_type_pattern.present?
+    conditions << [ t("searches.vowel_pattern"), search.vowel_reading ] if search.vowel_reading.present?
+    conditions << [ WordSense.human_attribute_name(:rhythm_pattern), search.rhythm_pattern ] if search.rhythm_pattern.present?
+    conditions << [ t("words.show.char_type_pattern"), search.char_type_pattern ] if search.char_type_pattern.present?
     conditions
   end
 

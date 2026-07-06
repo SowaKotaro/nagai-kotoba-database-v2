@@ -18,8 +18,12 @@
   <p class="page-title-meta">
     <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
   </p>
+  <%# 動的に組み立てる解説文。図鑑の説明欄のように、墨1px枠のパネルへ収める %>
   <% if lead.present? %>
-    <p class="page-lead"><%= lead %></p>
+    <figure class="word-flavor">
+      <figcaption class="word-flavor__label mono"><%= t("words.show.flavor_label") %></figcaption>
+      <p class="word-flavor__text"><%= lead %></p>
+    </figure>
   <% end %>
 
   <%# シェア導線(Issue 30)。X共有 + URLコピー。アイコンはインラインSVG %>
@@ -62,8 +66,8 @@
           <p class="sense-meaning"><%= sense.meaning %></p>
         <% end %>
 
+        <p class="section-label"><%= t("words.show.features") %></p>
         <% if sense.word_sense_features.any? %>
-          <p class="section-label"><%= t("words.show.features") %></p>
           <ul class="annotations">
             <% sense.word_sense_features.each do |feature| %>
               <li class="annotation">
@@ -74,13 +78,17 @@
               </li>
             <% end %>
           </ul>
+        <% else %>
+          <p class="sense-undefined"><%= t("words.show.undefined") %></p>
         <% end %>
 
         <dl class="sense-attrs">
-          <% if sense.genre %>
-            <div class="sense-attrs__item sense-attrs__item--wide">
-              <dt><%= WordSense.human_attribute_name(:genre) %></dt>
-              <dd>
+          <%# 表示順: (言語学的特徴は上の注釈ブロック) → ジャンル → エンティティ → 品詞 →
+              語種 → 文字数 → モーラ数 → 先頭文字 → 末尾文字 → 別表記。未登録は「未定義」を明示 %>
+          <div class="sense-attrs__item sense-attrs__item--wide">
+            <dt><%= WordSense.human_attribute_name(:genre) %></dt>
+            <dd>
+              <% if sense.genre %>
                 <%# 各階層から単語一覧の絞り込みへ飛べるパンくず。末端は少し強調 %>
                 <nav class="genre-path">
                   <% hierarchy = sense.genre.self_and_ancestors %>
@@ -91,36 +99,50 @@
                     <% unless current %><span class="genre-path__sep">›</span><% end %>
                   <% end %>
                 </nav>
-              </dd>
-            </div>
-          <% end %>
+              <% else %>
+                <span class="sense-undefined"><%= t("words.show.undefined") %></span>
+              <% end %>
+            </dd>
+          </div>
 
-          <% if sense.part_of_speech %>
-            <div class="sense-attrs__item">
-              <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
-              <dd><%= link_to sense.part_of_speech.name,
-                        words_path(part_of_speech_id: sense.part_of_speech_id), class: "tag" %></dd>
-            </div>
-          <% end %>
+          <div class="sense-attrs__item">
+            <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
+            <dd>
+              <% if sense.entity_type %>
+                <%= link_to sense.entity_type.name,
+                      words_path(entity_type_id: sense.entity_type_id), class: "tag" %>
+              <% else %>
+                <span class="sense-undefined"><%= t("words.show.undefined") %></span>
+              <% end %>
+            </dd>
+          </div>
 
-          <% if sense.entity_type %>
-            <div class="sense-attrs__item">
-              <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
-              <dd><%= link_to sense.entity_type.name,
-                        words_path(entity_type_id: sense.entity_type_id), class: "tag" %></dd>
-            </div>
-          <% end %>
+          <div class="sense-attrs__item">
+            <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
+            <dd>
+              <% if sense.part_of_speech %>
+                <%= link_to sense.part_of_speech.name,
+                      words_path(part_of_speech_id: sense.part_of_speech_id), class: "tag" %>
+              <% else %>
+                <span class="sense-undefined"><%= t("words.show.undefined") %></span>
+              <% end %>
+            </dd>
+          </div>
 
-          <% if sense.word_origins.any? %>
-            <div class="sense-attrs__item">
-              <dt><%= t("words.show.origins") %></dt>
-              <dd class="tag-row">
-                <% sense.word_origins.each do |origin| %>
-                  <%= link_to origin.name, words_path(word_origin_id: origin.id), class: "tag" %>
-                <% end %>
-              </dd>
-            </div>
-          <% end %>
+          <div class="sense-attrs__item">
+            <dt><%= t("words.show.origins") %></dt>
+            <dd>
+              <% if sense.word_origins.any? %>
+                <span class="tag-row">
+                  <% sense.word_origins.each do |origin| %>
+                    <%= link_to origin.name, words_path(word_origin_id: origin.id), class: "tag" %>
+                  <% end %>
+                </span>
+              <% else %>
+                <span class="sense-undefined"><%= t("words.show.undefined") %></span>
+              <% end %>
+            </dd>
+          </div>
 
           <div class="sense-attrs__item">
             <dt><%= t("words.show.reading_length") %></dt>
@@ -146,18 +168,20 @@
             <dd><%= link_to sense.last_char, words_path(last_char: sense.last_char), class: "tag" %></dd>
           </div>
 
-          <% if sense.word_sense_variants.any? %>
-            <div class="sense-attrs__item sense-attrs__item--wide">
-              <dt><%= t("words.show.variants") %></dt>
-              <dd>
+          <div class="sense-attrs__item sense-attrs__item--wide">
+            <dt><%= t("words.show.variants") %></dt>
+            <dd>
+              <% if sense.word_sense_variants.any? %>
                 <ul class="variant-list">
                   <% sense.word_sense_variants.each do |variant| %>
                     <li><ruby><%= variant.surface %><rt><%= variant.reading %></rt></ruby></li>
                   <% end %>
                 </ul>
-              </dd>
-            </div>
-          <% end %>
+              <% else %>
+                <span class="sense-undefined"><%= t("words.show.undefined") %></span>
+              <% end %>
+            </dd>
+          </div>
         </dl>
       </section>
     <% end %>

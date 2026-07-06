@@ -19,6 +19,7 @@ class WordSenseSearch
     relation = relation.last_char_is(last_char) if last_char.present?
     relation = relation.char_type_pattern_is(char_type_pattern) if char_type_pattern.present?
     relation = relation.rhythm_containing(rhythm_pattern) if rhythm_pattern.present?
+    relation = relation.vowel_containing(vowel_pattern_query) if vowel_pattern_query.present?
     relation = relation.with_part_of_speech(part_of_speech_id) if part_of_speech_id.present?
     relation = relation.with_entity_type(entity_type_id) if entity_type_id.present?
     relation = relation.with_word_origin(word_origin_id) if word_origin_id.present?
@@ -35,13 +36,15 @@ class WordSenseSearch
   def mora_count = positive_integer(:mora_count)
   def char_type_pattern = @params[:char_type_pattern].to_s.strip
   def rhythm_pattern = @params[:rhythm_pattern].to_s.strip
-  def word_origin_id = @params[:word_origin_id].presence
+  # 母音パターン検索のフォーム入力(押韻したい読みのカナ)。表示はこの生入力のまま返す。
+  def vowel_reading = @params[:vowel_reading].to_s.strip
   # 複数選択(OR)の条件。単一値でも配列でも受ける(詳細検索は配列、ファセットリンクは単一)。
   def genre_id = value_list(:genre_id)
   def first_char = value_list(:first_char)
   def last_char = value_list(:last_char)
   def part_of_speech_id = value_list(:part_of_speech_id)
   def entity_type_id = value_list(:entity_type_id)
+  def word_origin_id = value_list(:word_origin_id)
   def linguistic_feature_id = value_list(:linguistic_feature_id)
 
   # 指定された条件だけを、空を除いたハッシュで返す。
@@ -59,8 +62,9 @@ class WordSenseSearch
       part_of_speech_id: part_of_speech_id.presence,
       entity_type_id: entity_type_id.presence,
       linguistic_feature_id: linguistic_feature_id.presence,
-      word_origin_id: word_origin_id,
+      word_origin_id: word_origin_id.presence,
       rhythm_pattern: rhythm_pattern.presence,
+      vowel_reading: vowel_reading.presence,
       char_type_pattern: char_type_pattern.presence
     }.compact
   end
@@ -97,6 +101,15 @@ class WordSenseSearch
     ancestor_ids = selected.filter_map(&:parent_id)
     ancestor_ids |= Genre.where(id: ancestor_ids).filter_map(&:parent_id)
     @effective_genres = selected.reject { |genre| ancestor_ids.include?(genre.id) }
+  end
+
+  # 母音パターン検索のクエリ文字列。フォームには読みをカナで入力してもらい、
+  # ヘボン式ローマ字→母音のみ(aiueo)へ変換して vowel_pattern と部分一致させる。
+  # (例: 「トウキョウタワー」→「ououaa」)。母音字を直接入れた場合もそのまま通る。
+  def vowel_pattern_query
+    return @vowel_pattern_query if defined?(@vowel_pattern_query)
+
+    @vowel_pattern_query = VowelPattern.call(RhythmPattern.call(vowel_reading))
   end
 
   private
