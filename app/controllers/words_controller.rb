@@ -28,7 +28,8 @@ class WordsController < ApplicationController
       ]
     ).find(params[:id])
     # 単語間の内部リンク(関連語)。同ジャンル/同文字数/同先頭文字を各数件(Issue 23)。
-    @related_word_groups = RelatedWords.new(@word).groups
+    # JSON(Issue 25)では不要なので HTML のときだけ組み立てる。
+    @related_word_groups = RelatedWords.new(@word).groups if request.format.html?
   end
 
   private
