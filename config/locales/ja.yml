@@ -28,6 +28,9 @@ ja:
         name: "名称"
       linguistic_feature:
         name: "名称"
+      word:
+        surface: "表層形"
+        char_type_pattern: "文字種"
       word_sense:
         word: "単語"
         genre: "ジャンル"
