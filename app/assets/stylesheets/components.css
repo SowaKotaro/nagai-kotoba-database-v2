@@ -1441,6 +1441,89 @@ a.tag:hover .genre-hub__count {
   cursor: pointer;
 }
 
+/* Claude Code 連携(Issue 38): 一覧の導線と書き出し/取り込み画面 */
+.admin-words-claude {
+  font-size: 14px;
+  margin-bottom: var(--space-2);
+}
+
+.admin-words-claude .sep {
+  color: var(--shu);
+  margin: 0 var(--space-2);
+}
+
+.proposal-lead {
+  font-size: 14px;
+  color: var(--ink-2);
+  max-width: 46em;
+  margin: var(--space-3) 0 var(--space-4);
+}
+
+.proposal-limit {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.proposal-limit__label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+
+.proposal-limit__input {
+  width: 5em;
+  border: none;
+  border-bottom: 1px solid var(--rule-mid);
+  font-size: 15px;
+  padding: 4px 2px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.proposal-limit__count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.proposal-json__bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.proposal-json__hint {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* JSON は等幅・墨1px枠(コード面) */
+.proposal-json__area {
+  width: 100%;
+  border: 1px solid var(--ink);
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  background: transparent;
+}
+
+.proposal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+.proposal-next {
+  margin-top: var(--space-4);
+  font-size: 14px;
+}
+
 .admin-words-table__check {
   width: 28px;
   text-align: center;

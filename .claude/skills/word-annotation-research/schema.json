@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "word-annotation-research output",
+  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins)は書き出し JSON の masters と一字一句同じ表記にする。",
+  "type": "object",
+  "required": ["version", "proposals"],
+  "properties": {
+    "version": { "const": "1" },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["word_id"],
+        "properties": {
+          "word_id": { "type": "integer", "description": "書き出し JSON の word_id をそのまま返す(突き合わせキー)" },
+          "surface": { "type": "string", "description": "表層形(確認用。取り込みでは word_id を使う)" },
+          "meaning": { "type": "string", "description": "意味の下書き。公開リード文のトーンで1〜2文・常体" },
+          "genre_path": {
+            "type": "array", "items": { "type": "string" },
+            "description": "ジャンルの名前パス(大→中→小)。masters.genres から末端まで選ぶ。新設提案は既存の大・中の下に新しい小分類名を置く"
+          },
+          "genre_new": { "type": "boolean", "description": "genre_path の末端が新設候補のとき true" },
+          "entity_type": { "type": "string", "description": "エンティティ名(固有名詞のみ)。masters.entity_types から" },
+          "part_of_speech": { "type": "string", "description": "品詞名。masters.parts_of_speech から" },
+          "word_origins": {
+            "type": "array", "items": { "type": "string" },
+            "description": "語種名(複数可)。masters.word_origins から"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["surface"],
+              "properties": {
+                "surface": { "type": "string", "description": "別表記の表層形" },
+                "reading": { "type": "string", "description": "読みが変わる場合のみ" }
+              }
+            }
+          },
+          "confidence": { "enum": ["high", "medium", "low"], "description": "low のときは notes 必須" },
+          "notes": { "type": "string", "description": "判断に迷った点・確認してほしい点" }
+        }
+      }
+    }
+  }
+}

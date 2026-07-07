@@ -1,0 +1,76 @@
+<%# Claude の提案パネル(Issue 38)。提案値・confidence・判断メモを見せ、「提案を反映」で
+    フォームに初期値として流し込む(保存＝承認は人間の操作のみ)。
+    未知のマスタ名は新設候補(朱)として表示し、各行のその場追加で作ってから反映し直す。 %>
+<div class="ann-proposal">
+  <div class="ann-proposal__head">
+    <span class="ann-proposal__title"><%= t("admin.annotations.proposal.title") %></span>
+    <% if proposal.confidence %>
+      <span class="ann-proposal__confidence ann-proposal__confidence--<%= proposal.confidence %>">
+        <%= t("admin.annotations.proposal.confidence.#{proposal.confidence}",
+              default: proposal.confidence) %>
+      </span>
+    <% end %>
+    <span class="spacer"></span>
+    <%= link_to t("admin.annotations.proposal.apply"),
+          admin_annotation_path(word, apply_proposal: 1, proposed: params[:proposed].presence),
+          class: "btn btn--sm", data: { turbo_frame: "annotation-console" } %>
+  </div>
+
+  <dl class="ann-proposal__grid">
+    <% if proposal.meaning %>
+      <dt><%= t("admin.annotations.meaning") %></dt>
+      <dd><%= proposal.meaning %></dd>
+    <% end %>
+
+    <% if proposal.genre_path.any? %>
+      <dt><%= t("admin.annotations.genre") %></dt>
+      <dd>
+        <% proposal.genre_path.each_with_index do |name, i| %>
+          <% if i.positive? %><span class="sep">›</span><% end %><span><%= name %></span>
+        <% end %>
+        <% unless proposal.resolved_genre %>
+          <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <% end %>
+      </dd>
+    <% end %>
+
+    <% if proposal.entity_type_name %>
+      <dt><%= t("admin.annotations.entity") %></dt>
+      <dd>
+        <%= proposal.entity_type_name %>
+        <% unless proposal.resolved_entity_type %>
+          <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <% end %>
+      </dd>
+    <% end %>
+
+    <% if proposal.part_of_speech_name %>
+      <dt><%= t("admin.annotations.pos") %></dt>
+      <dd>
+        <%= proposal.part_of_speech_name %>
+        <% unless proposal.resolved_part_of_speech %>
+          <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <% end %>
+      </dd>
+    <% end %>
+
+    <% if proposal.word_origin_names.any? %>
+      <dt><%= t("admin.annotations.origins") %></dt>
+      <dd>
+        <%= proposal.resolved_word_origins.map(&:name).join("・") %>
+        <% proposal.unknown_word_origin_names.each do |name| %>
+          <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <% end %>
+      </dd>
+    <% end %>
+
+    <% if proposal.variants.any? %>
+      <dt><%= t("admin.annotations.variants") %></dt>
+      <dd><%= proposal.variants.map { |v| v["surface"] }.join("・") %></dd>
+    <% end %>
+  </dl>
+
+  <% if proposal.notes %>
+    <p class="ann-proposal__notes"><%= t("admin.annotations.proposal.notes") %>　<%= proposal.notes %></p>
+  <% end %>
+</div>

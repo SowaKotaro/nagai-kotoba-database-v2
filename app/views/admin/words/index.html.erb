@@ -21,6 +21,15 @@
   </nav>
 </div>
 
+<%# Claude Code 連携(Issue 38): 調査用データの書き出し → スキルで調査 → 提案 JSON の取り込み %>
+<p class="admin-words-claude">
+  <%= link_to t("admin.annotation_proposals.export.title"), export_admin_annotation_proposals_path %>
+  <span class="sep">›</span>
+  <%= link_to t("admin.annotation_proposals.new.title"), new_admin_annotation_proposal_path %>
+  <span class="sep">›</span>
+  <%= link_to t("admin.annotation_proposals.proposed_queue"), admin_annotations_path(proposed: 1) %>
+</p>
+
 <p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@total_count)) %></p>
 
 <% if @words.any? %>

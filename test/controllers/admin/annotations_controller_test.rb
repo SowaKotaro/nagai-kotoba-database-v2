@@ -62,6 +62,67 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotation_path(words(:pending_bermuda))
   end
 
+  # --- Claude の提案(Issue 38) ---
+  test "提案のある語には提案パネルが出る" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal" do
+      assert_select ".ann-proposal__grid dd", text: /谷川流/
+      assert_select "a", text: "提案を反映"
+    end
+    # 提案の無い語には出ない
+    get admin_annotation_path(words(:pending_bermuda))
+    assert_select ".ann-proposal", count: 0
+  end
+
+  test "「提案を反映」でフォームに提案値がプレフィルされる(保存はしない)" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word, apply_proposal: 1)
+    assert_response :success
+
+    # 意味・ジャンル(解決済み)・エンティティ・品詞・語種・別表記
+    assert_select "textarea.js-meaning", text: /谷川流/
+    assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s
+    assert_select "input[type=radio][value=?][checked]", entity_types(:book_title).id.to_s
+    assert_select "input[type=radio][value=?][checked]", parts_of_speech(:noun).id.to_s
+    assert_select "input[type=checkbox][value=?][checked]", word_origins(:wago).id.to_s
+    assert_select "input[value=?]", "ハルヒ"
+
+    # プレフィルは表示だけで、DB には書き込まない
+    @sense.reload
+    assert_nil @sense.meaning
+    assert_nil @sense.genre_id
+    assert_empty @sense.word_origin_ids
+  end
+
+  test "保存(承認)すると提案が applied になる" do
+    sign_in_as(Admin.take)
+    proposal = annotation_proposals(:haruhi_proposal)
+
+    patch admin_annotation_path(@word), params: {
+      word: { word_senses_attributes: { "0" => {
+        id: @sense.id, reading: @sense.reading, meaning: "確認済みの意味。"
+      } } }
+    }
+
+    assert proposal.reload.applied?
+    assert_not_nil @word.reload.annotated_at
+  end
+
+  test "?proposed=1 のキューは未承認の提案がある語だけを辿る" do
+    sign_in_as(Admin.take)
+    # 提案があるのは haruhi だけなので、index はそこへ誘導する
+    get admin_annotations_path(proposed: 1)
+    assert_redirected_to admin_annotation_path(@word, proposed: 1)
+
+    # 保存後、提案のある語が尽きたら完了(index)へ。フィルタは保たれる
+    patch admin_annotation_path(@word), params: {
+      proposed: "1",
+      word: { word_senses_attributes: { "0" => { id: @sense.id, reading: @sense.reading } } }
+    }
+    assert_redirected_to admin_annotations_path(proposed: 1)
+  end
+
   # --- 表層形の訂正(Issue 36: 編集画面をコンソールへ統合) ---
   test "コンソールに表層形の編集欄が出る" do
     sign_in_as(Admin.take)

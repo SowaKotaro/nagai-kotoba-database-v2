@@ -1,0 +1,33 @@
+<% content_for :title, t("admin.annotation_proposals.export.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.annotation_proposals.export.title") %></h1>
+
+<p class="proposal-lead"><%= t("admin.annotation_proposals.export.lead") %></p>
+
+<%# 件数指定(未注釈で提案がまだ無い語の先頭から) %>
+<%= form_with url: export_admin_annotation_proposals_path, method: :get, class: "proposal-limit" do %>
+  <label for="export_limit" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.limit_label") %></label>
+  <%= number_field_tag :limit, @limit, id: "export_limit", min: 1, max: 200, class: "proposal-limit__input" %>
+  <%= submit_tag t("admin.annotation_proposals.export.reload"), class: "btn btn--sm" %>
+  <span class="proposal-limit__count"><%= t("admin.annotation_proposals.export.count", count: @word_count) %></span>
+<% end %>
+
+<% if @word_count.positive? %>
+  <div class="proposal-json" data-controller="clipboard"
+       data-clipboard-text-value="<%= @export_json %>"
+       data-clipboard-copied-label-value="<%= t("admin.annotation_proposals.export.copied") %>">
+    <div class="proposal-json__bar">
+      <span class="proposal-json__hint"><%= t("admin.annotation_proposals.export.hint") %></span>
+      <button type="button" class="btn btn--sm" data-action="clipboard#copy">
+        <span data-clipboard-target="label"><%= t("admin.annotation_proposals.export.copy") %></span>
+      </button>
+    </div>
+    <%= text_area_tag :export_json, @export_json, readonly: true, rows: 18, class: "proposal-json__area" %>
+  </div>
+
+  <p class="proposal-next"><%= t("admin.annotation_proposals.export.next_step") %>
+    <%= link_to t("admin.annotation_proposals.new.title"), new_admin_annotation_proposal_path %></p>
+<% else %>
+  <p class="empty-note"><%= t("admin.annotation_proposals.export.empty") %></p>
+<% end %>

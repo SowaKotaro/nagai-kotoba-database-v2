@@ -36,6 +36,10 @@ Rails.application.routes.draw do
     end
     # 一覧で選択した語への共通属性の一括適用(Issue 37)。
     resource :bulk_annotation, only: :create
+    # Claude Code 連携(Issue 38): 調査用データの書き出しと、提案 JSON の取り込み。
+    resources :annotation_proposals, only: %i[new create] do
+      get :export, on: :collection
+    end
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。
     resources :annotations, only: %i[index show update]
     # ジャンルの大→中→小 依存選択用に、子ジャンルの取得と、その場での新規追加。
