@@ -24,6 +24,12 @@
 .ann-word { font-family: var(--font-mincho); font-weight: 600; font-size: clamp(34px, 7vw, 76px); line-height: 1.06; margin: var(--space-1) 0 2px; letter-spacing: 0.01em; overflow-wrap: anywhere; }
 .ann-word-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding-bottom: var(--space-4); border-bottom: 2px solid var(--ink); }
 
+/* 表層形の訂正(Issue 36: 編集画面をコンソールへ統合)。誤字直し用の控えめな1行 */
+.ann-surface { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: var(--space-3) 0 0; }
+.ann-surface__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); }
+.ann-surface__input { font-family: var(--font-mincho); font-weight: 500; font-size: 17px; border-bottom: 1px solid var(--rule-mid); min-width: 16em; }
+.ann-surface__note { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-3); }
+
 /* 語義パネル(墨1px枠・番号刻印) */
 .ann-sense { border: 1px solid var(--ink); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
 .ann-sense__head { display: flex; align-items: center; justify-content: space-between; margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5)) var(--space-3); }

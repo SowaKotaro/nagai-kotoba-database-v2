@@ -62,6 +62,24 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotation_path(words(:pending_bermuda))
   end
 
+  # --- 表層形の訂正(Issue 36: 編集画面をコンソールへ統合) ---
+  test "コンソールに表層形の編集欄が出る" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word)
+    assert_select "input.ann-surface__input[name=?][value=?]", "word[surface]", @word.surface
+  end
+
+  test "表層形を訂正すると char_type_pattern が再生成される" do
+    sign_in_as(Admin.take)
+    patch admin_annotation_path(@word), params: {
+      word: { surface: "すずみやハルヒの憂鬱",
+              word_senses_attributes: { "0" => { id: @sense.id, reading: @sense.reading } } }
+    }
+    @word.reload
+    assert_equal "すずみやハルヒの憂鬱", @word.surface
+    assert_equal "ああああアアアあ漢漢", @word.char_type_pattern
+  end
+
   test "別表記と特徴をネストして保存できる" do
     sign_in_as(Admin.take)
     assert_difference -> { WordSenseVariant.count } => 1 do
