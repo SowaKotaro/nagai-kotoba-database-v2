@@ -12,6 +12,7 @@ class Admin::AnnotationsController < Admin::BaseController
 
   def show
     @word.word_senses.build if @word.word_senses.empty?
+    apply_sticky_defaults
     load_masters
     set_navigation
   end
@@ -19,7 +20,9 @@ class Admin::AnnotationsController < Admin::BaseController
   def update
     @word.assign_attributes(annotation_params)
     @word.mark_annotated
+    remember_sticky_toggle
     if @word.save
+      remember_sticky_values
       next_word = Word.unannotated.where.not(id: @word.id).order(:id).first
       redirect_to(next_word ? admin_annotation_path(next_word) : admin_annotations_path,
                   notice: t("admin.annotations.saved"))
@@ -44,6 +47,52 @@ class Admin::AnnotationsController < Admin::BaseController
     @entity_types = EntityType.order(:name)
     @linguistic_features = LinguisticFeature.order(:name)
     @large_genres = Genre.large.order(:name)
+  end
+
+  # --- スティッキー引き継ぎ(Issue 37) ---
+  # 同質な語が並ぶキューで、直前に保存した語のジャンル・エンティティ・品詞・語種を
+  # 次の語の初期値にする。トグル(画面のチェックボックス)の状態と直前の値はセッションに持つ。
+
+  # 属性が何も付いていない語義にだけ、直前の値を初期値として流し込む。
+  # GET で呼ぶため保存はしない。語種は ids 代入だと永続化済みの語義で即時に
+  # DB へ書かれてしまうので、読み込み済みの関連 target をメモリ上で差し替える。
+  def apply_sticky_defaults
+    return unless session[:annotation_sticky]
+
+    values = session[:annotation_sticky_values]
+    return if values.blank?
+
+    sticky_origins = WordOrigin.where(id: values["word_origin_ids"]).to_a
+
+    @word.word_senses.each do |sense|
+      next if sense.genre_id || sense.entity_type_id || sense.part_of_speech_id || sense.word_origins.any?
+
+      sense.genre_id = values["genre_id"]
+      sense.entity_type_id = values["entity_type_id"]
+      sense.part_of_speech_id = values["part_of_speech_id"]
+      sense.association(:word_origins).target = sticky_origins.dup
+    end
+  end
+
+  # トグルの ON/OFF は保存の成否に関わらず記憶する(OFF にしたら直前の値も忘れる)。
+  def remember_sticky_toggle
+    session[:annotation_sticky] = params[:sticky] == "1"
+    session.delete(:annotation_sticky_values) unless session[:annotation_sticky]
+  end
+
+  # 保存に成功した語の先頭語義から、引き継ぐ値を覚える。
+  def remember_sticky_values
+    return unless session[:annotation_sticky]
+
+    sense = @word.word_senses.reject(&:marked_for_destruction?).first
+    return unless sense
+
+    session[:annotation_sticky_values] = {
+      "genre_id" => sense.genre_id,
+      "entity_type_id" => sense.entity_type_id,
+      "part_of_speech_id" => sense.part_of_speech_id,
+      "word_origin_ids" => sense.word_origin_ids
+    }
   end
 
   # キューの残数と、スキップ(次の未注釈)・戻る(直前の語)のリンク先。

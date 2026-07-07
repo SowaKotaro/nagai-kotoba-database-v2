@@ -62,6 +62,22 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".pagination span", text: "1 / 1 ページ"
   end
 
+  test "一覧に一括適用パネルと選択チェックボックスが出る(Issue 37)" do
+    sign_in_as(Admin.take)
+    get admin_words_path
+    # パネル(ジャンルピッカー・チップ・テンプレ文・注釈済みチェック)
+    assert_select ".bulk-annotation form#bulk-annotation-form" do
+      assert_select "input.js-genre-value"
+      assert_select "input[name=?]", "bulk_annotation[entity_type_id]"
+      assert_select "input[name=?]", "bulk_annotation[meaning_template]"
+      # 注釈済みフラグは既定 OFF
+      assert_select "input[name=?][checked]", "bulk_annotation[mark_annotated]", count: 0
+    end
+    # 行のチェックボックスは form 属性で外のフォームに紐づく
+    assert_select "tbody input[type=checkbox][name=?][form=bulk-annotation-form][value=?]",
+                  "bulk_annotation[word_ids][]", @word.id.to_s
+  end
+
   test "一覧を表層形・読みで検索できる" do
     sign_in_as(Admin.take)
     # 表層形の部分一致

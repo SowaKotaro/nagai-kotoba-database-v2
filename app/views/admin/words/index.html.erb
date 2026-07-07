@@ -24,9 +24,16 @@
 <p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@total_count)) %></p>
 
 <% if @words.any? %>
+  <%= render "bulk_annotation" %>
+
+  <div data-controller="check-all">
   <table class="data-table admin-words-table">
     <thead>
       <tr>
+        <th class="admin-words-table__check">
+          <input type="checkbox" aria-label="<%= t("admin.bulk_annotations.select_all") %>"
+                 data-check-all-target="toggle" data-action="check-all#toggle">
+        </th>
         <th><%= Word.human_attribute_name(:surface) %></th>
         <th><%= t("admin.words.index.col_reading") %></th>
         <th class="admin-words-table__num"><%= t("admin.words.senses_count") %></th>
@@ -37,6 +44,12 @@
     <tbody>
       <% @words.each do |word| %>
         <tr>
+          <td class="admin-words-table__check">
+            <%# フォームの外にあるため form 属性で一括適用フォームに紐づける %>
+            <input type="checkbox" name="bulk_annotation[word_ids][]" value="<%= word.id %>"
+                   form="bulk-annotation-form" aria-label="<%= t("admin.bulk_annotations.select_word", surface: word.surface) %>"
+                   data-check-all-target="item" data-action="check-all#sync">
+          </td>
           <td><%= link_to word.surface, admin_annotation_path(word), data: { turbo_frame: "_top" } %></td>
           <td class="admin-words-table__reading"><%= word.word_senses.map(&:reading).uniq.join("、") %></td>
           <td class="admin-words-table__num"><%= word.word_senses.size %></td>
@@ -59,6 +72,7 @@
       <% end %>
     </tbody>
   </table>
+  </div>
 
   <nav class="pagination">
     <%# 検索・絞り込み条件を保持したままページ送りする %>

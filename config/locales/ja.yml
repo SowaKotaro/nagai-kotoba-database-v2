@@ -1,4 +1,10 @@
 ja:
+  activemodel:
+    errors:
+      models:
+        bulk_annotation:
+          no_words: "適用する語が選択されていません。"
+          no_attributes: "適用する属性が選択されていません。"
   errors:
     messages:
       blank: "を入力してください"
@@ -283,6 +289,23 @@ ja:
         col_status: "注釈状態"
         annotate: "アノテーション"
         empty: "該当する単語がありません。"
+    bulk_annotations:
+      summary: "選択した語に共通属性を一括適用"
+      hint: "同質な語群（例: 同じ作品のキャラクター名）に、ジャンル・エンティティ・品詞・語種・意味のテンプレ文をまとめて付与します。指定した項目だけを上書きします。複数語義の語は同音異義語への誤爆を防ぐためスキップされます。"
+      genre: "ジャンル"
+      entity: "エンティティ"
+      pos: "品詞"
+      origins: "語種"
+      meaning: "意味（テンプレ文）"
+      meaning_placeholder: "例: 漫画『ONE PIECE』の登場人物。"
+      keep: "変更しない"
+      mark_annotated: "注釈済みにする（意味まで揃うときのみ推奨）"
+      submit: "選択した語に適用"
+      confirm: "選択した語に一括適用します。よろしいですか？"
+      select_all: "表示中の語をすべて選択"
+      select_word: "%{surface} を選択"
+      applied: "%{applied} 語に適用しました。"
+      applied_with_skipped: "%{applied} 語に適用しました（複数語義のためスキップ %{skipped} 語）。"
     annotations:
       title: "アノテーション"
       nav: "アノテーション"
@@ -291,6 +314,8 @@ ja:
       remaining: "未注釈"
       eyebrow: "見出し語"
       char_type: "文字種"
+      sticky: "前の語の値を引き継ぐ"
+      sticky_hint: "ONにすると、直前に保存した語のジャンル・エンティティ・品詞・語種が次の語の初期値になります"
       surface: "表層形"
       surface_note: "誤字の訂正はここで。変更すると文字種は保存時に自動で再生成されます"
       reading: "読み"

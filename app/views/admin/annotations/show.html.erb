@@ -51,6 +51,12 @@
       </div>
 
       <div class="ann-actionbar">
+        <%# スティッキー引き継ぎ(Issue 37): ON にすると直前に保存した語のジャンル・
+            エンティティ・品詞・語種が次の語の初期値になる(同質な語群を流すとき用) %>
+        <label class="ann-sticky" title="<%= t("admin.annotations.sticky_hint") %>">
+          <%= check_box_tag :sticky, "1", session[:annotation_sticky], class: "ann-sticky__input" %>
+          <%= t("admin.annotations.sticky") %>
+        </label>
         <% if @prev_word %>
           <%= link_to t("admin.annotations.back"), admin_annotation_path(@prev_word),
                       class: "btn", data: { queue_nav_target: "back" } %>
