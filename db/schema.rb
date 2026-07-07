@@ -10,13 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_04_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_07_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.string "username", null: false
     t.index ["username"], name: "index_admins_on_username", unique: true
+  end
+
+  create_table "annotation_proposals", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "payload", null: false, comment: "提案本体(意味・ジャンルパス・エンティティ・品詞・語種・別表記・confidence・メモ)"
+    t.integer "status", default: 0, null: false, comment: "0:pending 1:applied 2:dismissed"
+    t.datetime "updated_at", null: false
+    t.bigint "word_id", null: false
+    t.index ["status"], name: "idx_annotation_proposals_status"
+    t.index ["word_id"], name: "uq_annotation_proposals_word", unique: true
   end
 
   create_table "entity_types", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -135,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_04_110000) do
     t.index ["surface"], name: "uq_words_surface", unique: true, length: 191
   end
 
+  add_foreign_key "annotation_proposals", "words", name: "fk_annotation_proposals_word"
   add_foreign_key "genres", "genres", column: "parent_id"
   add_foreign_key "sessions", "admins"
   add_foreign_key "word_sense_features", "linguistic_features", name: "fk_wsf_linguistic_feature"

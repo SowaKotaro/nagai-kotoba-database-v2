@@ -289,6 +289,30 @@ ja:
         col_status: "注釈状態"
         annotate: "アノテーション"
         empty: "該当する単語がありません。"
+    annotation_proposals:
+      eyebrow: "Claude Code 連携"
+      proposed_queue: "提案ありの語をアノテーション"
+      imported: "%{saved} 件の提案を取り込みました。"
+      imported_with_unknown: "%{saved} 件の提案を取り込みました。存在しない word_id は無視しました: %{unknown}"
+      parse_error: "JSON を読み取れませんでした。word-annotation-research スキルの出力形式（{\"version\":\"1\",\"proposals\":[…]}）を確認してください。"
+      export:
+        title: "調査用データの書き出し"
+        lead: "未注釈で提案がまだ無い語と、マスタ一覧（ジャンル木・エンティティ・品詞・語種・特徴）をまとめた JSON です。Claude Code の word-annotation-research スキルに渡すと、語ごとの提案 JSON が返ります。"
+        limit_label: "書き出す語数"
+        reload: "再読込"
+        count: "%{count} 語"
+        hint: "この JSON をコピーして Claude Code に貼り付けてください。"
+        copy: "コピー"
+        copied: "コピーしました"
+        next_step: "調査結果が返ってきたら:"
+        empty: "書き出す語がありません（未注釈の語がないか、すべてに提案があります）。"
+      new:
+        title: "提案 JSON の取り込み"
+        lead: "word-annotation-research スキルの出力 JSON を貼り付けて保存します。提案は下書き（DB）に入るだけで、公開データには反映されません。反映はアノテーション・コンソールで1語ずつ確認して保存（承認）します。同じ語に再度貼り付けると上書きされます。"
+        placeholder: '{ "version": "1", "proposals": [ { "word_id": 1, "meaning": "…", "genre_path": ["…"], … } ] }'
+        submit: "下書きとして保存"
+        next_step: "取り込んだら:"
+        to_console: "提案ありの語からアノテーションを始める"
     bulk_annotations:
       summary: "選択した語に共通属性を一括適用"
       hint: "同質な語群（例: 同じ作品のキャラクター名）に、ジャンル・エンティティ・品詞・語種・意味のテンプレ文をまとめて付与します。指定した項目だけを上書きします。複数語義の語は同音異義語への誤爆を防ぐためスキップされます。"
@@ -314,6 +338,15 @@ ja:
       remaining: "未注釈"
       eyebrow: "見出し語"
       char_type: "文字種"
+      proposal:
+        title: "CLAUDE の提案"
+        apply: "提案を反映"
+        new_master: "新設候補"
+        notes: "判断メモ"
+        confidence:
+          high: "確信 高"
+          medium: "確信 中"
+          low: "確信 低"
       sticky: "前の語の値を引き継ぐ"
       sticky_hint: "ONにすると、直前に保存した語のジャンル・エンティティ・品詞・語種が次の語の初期値になります"
       surface: "表層形"

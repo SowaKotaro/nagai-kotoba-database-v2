@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "proposals": [
+    {
+      "word_id": 123,
+      "surface": "モンキー・D・ルフィ",
+      "meaning": "漫画『ONE PIECE』の主人公。麦わらの一味の船長で、ゴムの能力を持つ海賊。",
+      "genre_path": ["文化", "漫画・アニメ", "ONE PIECE"],
+      "genre_new": false,
+      "entity_type": "キャラクター名",
+      "part_of_speech": "固有名詞",
+      "word_origins": ["混種語"],
+      "variants": [{ "surface": "ルフィ" }],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "word_id": 124,
+      "surface": "天上天下唯我独尊",
+      "meaning": "釈迦が誕生時に唱えたと伝えられる言葉。この世で自分ほど尊いものはない、の意。",
+      "genre_path": ["思想・宗教", "仏教", "仏教語"],
+      "genre_new": true,
+      "part_of_speech": "名詞",
+      "word_origins": ["漢語"],
+      "confidence": "low",
+      "notes": "小分類「仏教語」は masters に無かったため新設候補。四字熟語として「言葉・表現」系に入れる選択肢もあり、どちらの木に置くかはオーナー判断を仰ぎたい。"
+    }
+  ]
+}

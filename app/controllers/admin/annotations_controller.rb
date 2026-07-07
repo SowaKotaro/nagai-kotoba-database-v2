@@ -1,18 +1,24 @@
 # 高速アノテーション・コンソール。1語を大きく表示し、語義・語種・ジャンル・品詞・
 # エンティティ・言語学的特徴・別表記を素早く付与して「保存して次へ」で流す。
 # キューは words.annotated_at が未セット(未注釈)の語を id 順に辿る。
+# ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
   before_action :set_word, only: %i[show update]
 
-  # 最初の未注釈へ誘導。無ければ完了画面(index ビュー)を出す。
+  # キューの最初の語へ誘導。無ければ完了画面(index ビュー)を出す。
   def index
-    first = Word.unannotated.order(:id).first
-    redirect_to admin_annotation_path(first) if first
+    first = queue_scope.order(:id).first
+    redirect_to admin_annotation_path(first, proposed: proposed_param) if first
   end
 
   def show
     @word.word_senses.build if @word.word_senses.empty?
-    apply_sticky_defaults
+    @proposal = AnnotationProposal.pending.find_by(word_id: @word.id)
+    if params[:apply_proposal] == "1" && @proposal
+      apply_proposal_defaults
+    else
+      apply_sticky_defaults
+    end
     load_masters
     set_navigation
   end
@@ -23,10 +29,13 @@ class Admin::AnnotationsController < Admin::BaseController
     remember_sticky_toggle
     if @word.save
       remember_sticky_values
-      next_word = Word.unannotated.where.not(id: @word.id).order(:id).first
-      redirect_to(next_word ? admin_annotation_path(next_word) : admin_annotations_path,
+      mark_proposal_applied
+      next_word = queue_scope.where.not(id: @word.id).order(:id).first
+      redirect_to(next_word ? admin_annotation_path(next_word, proposed: proposed_param)
+                            : admin_annotations_path(proposed: proposed_param),
                   notice: t("admin.annotations.saved"))
     else
+      @proposal = AnnotationProposal.pending.find_by(word_id: @word.id)
       load_masters
       set_navigation
       render :show, status: :unprocessable_entity
@@ -47,6 +56,55 @@ class Admin::AnnotationsController < Admin::BaseController
     @entity_types = EntityType.order(:name)
     @linguistic_features = LinguisticFeature.order(:name)
     @large_genres = Genre.large.order(:name)
+  end
+
+  # --- Claude の提案(Issue 38) ---
+
+  # 「提案を反映」: 提案の値をフォームの初期値として流し込む(保存はしない。人間が確認・修正
+  # して保存した時点で承認)。ジャンルは既存の木の小分類まで解決できたときだけ入れる。
+  # 語種はスティッキー引き継ぎと同じ理由(永続化済み語義での即時書き込み回避)で
+  # 関連 target をメモリ上で差し替える。
+  def apply_proposal_defaults
+    origins = @proposal.resolved_word_origins.to_a
+    genre = @proposal.resolved_genre
+
+    @word.word_senses.each do |sense|
+      next if sense.marked_for_destruction?
+
+      sense.meaning = @proposal.meaning if @proposal.meaning
+      sense.genre_id = genre.id if genre
+      sense.entity_type_id = @proposal.resolved_entity_type&.id if @proposal.entity_type_name
+      sense.part_of_speech_id = @proposal.resolved_part_of_speech&.id if @proposal.part_of_speech_name
+      sense.association(:word_origins).target = origins.dup if origins.any?
+      build_proposed_variants(sense)
+    end
+  end
+
+  # 提案の別表記を、まだ無いものだけフォームに足す(重複追加しない)。
+  def build_proposed_variants(sense)
+    existing = sense.word_sense_variants.map(&:surface)
+    @proposal.variants.each do |variant|
+      next if existing.include?(variant["surface"])
+
+      sense.word_sense_variants.build(surface: variant["surface"], reading: variant["reading"])
+    end
+  end
+
+  # 保存(承認)された語の提案は applied にする。
+  def mark_proposal_applied
+    AnnotationProposal.pending.find_by(word_id: @word.id)&.applied!
+  end
+
+  # 「提案あり」フィルタ(?proposed=1)を保ったままキューを辿るための値。
+  def proposed_param
+    params[:proposed].presence
+  end
+
+  # コンソールのキュー。既定は未注釈すべて、?proposed=1 なら未承認の提案が付いた語だけ。
+  def queue_scope
+    scope = Word.unannotated
+    scope = scope.with_pending_proposal if proposed_param
+    scope
   end
 
   # --- スティッキー引き継ぎ(Issue 37) ---
@@ -95,11 +153,11 @@ class Admin::AnnotationsController < Admin::BaseController
     }
   end
 
-  # キューの残数と、スキップ(次の未注釈)・戻る(直前の語)のリンク先。
+  # キューの残数と、スキップ(次の語)・戻る(直前の語)のリンク先。?proposed=1 も同じキューを辿る。
   def set_navigation
-    @remaining = Word.unannotated.count
-    @skip_word = Word.unannotated.where("id > ?", @word.id).order(:id).first ||
-                 Word.unannotated.where.not(id: @word.id).order(:id).first
+    @remaining = queue_scope.count
+    @skip_word = queue_scope.where("id > ?", @word.id).order(:id).first ||
+                 queue_scope.where.not(id: @word.id).order(:id).first
     @prev_word = Word.where("id < ?", @word.id).order(id: :desc).first
   end
 

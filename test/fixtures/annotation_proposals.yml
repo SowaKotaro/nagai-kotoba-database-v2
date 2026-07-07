@@ -1,0 +1,20 @@
+# Claude の提案(下書き)。pending_haruhi に未承認の提案が付いている状態。
+haruhi_proposal:
+  word: pending_haruhi
+  status: 0 # pending
+  payload:
+    surface: 涼宮ハルヒの憂鬱
+    meaning: 谷川流のライトノベル。SOS団を結成する涼宮ハルヒと周囲の騒動を描く。
+    genre_path:
+      - 文学
+      - 日本文学
+      - 小説
+    genre_new: false
+    entity_type: 書籍名
+    part_of_speech: 名詞
+    word_origins:
+      - 和語
+    variants:
+      - surface: ハルヒ
+    confidence: high
+    notes: シリーズ第1作の書名として扱った。

@@ -1,0 +1,19 @@
+<% content_for :title, t("admin.annotation_proposals.new.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.annotation_proposals.new.title") %></h1>
+
+<p class="proposal-lead"><%= t("admin.annotation_proposals.new.lead") %></p>
+
+<%= form_with url: admin_annotation_proposals_path, method: :post do %>
+  <%= text_area_tag :proposals_json, params[:proposals_json], rows: 14, class: "proposal-json__area",
+        placeholder: t("admin.annotation_proposals.new.placeholder") %>
+  <div class="proposal-actions">
+    <%= submit_tag t("admin.annotation_proposals.new.submit"), class: "btn btn--primary" %>
+  </div>
+<% end %>
+
+<p class="proposal-next">
+  <%= t("admin.annotation_proposals.new.next_step") %>
+  <%= link_to t("admin.annotation_proposals.new.to_console"), admin_annotations_path(proposed: 1) %>
+</p>
