@@ -62,6 +62,34 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotation_path(words(:pending_bermuda))
   end
 
+  # --- 用語解説パネル(Issue 39) ---
+  test "特徴欄に用語解説パネルが出る(「音韻添加ってなに?」への答え)" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word)
+    assert_select ".ann-features details.ann-glossary" do
+      assert_select "summary.ann-glossary__summary", text: /用語解説/
+      assert_select ".ann-glossary__item dt", text: "音韻添加"
+      assert_select ".ann-glossary__item dd", text: /まんなか/
+    end
+  end
+
+  # --- 立項スコア(Issue 39) ---
+  test "提案パネルに立項スコアが出て、3以下は朱バッジと理由が出る" do
+    sign_in_as(Admin.take)
+    # フィクスチャは entry_score 5(懸念なし)
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal__entry", text: "立項 5/5"
+    assert_select ".ann-proposal__entry--concern", count: 0
+
+    proposal = annotation_proposals(:haruhi_proposal)
+    proposal.update!(payload: proposal.payload.merge(
+      "entry_score" => 2, "entry_notes" => "公然性を欠く。第三者が確認できる媒体に存在しない。"
+    ))
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal__entry--concern", text: "立項 2/5"
+    assert_select ".ann-proposal__notes--entry", text: /公然性を欠く/
+  end
+
   # --- Claude の提案(Issue 38) ---
   test "提案のある語には提案パネルが出る" do
     sign_in_as(Admin.take)

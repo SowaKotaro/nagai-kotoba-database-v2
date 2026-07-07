@@ -28,6 +28,20 @@ class AnnotationProposal < ApplicationRecord
   def confidence = payload["confidence"].presence
   def notes = payload["notes"].presence
 
+  # 立項スコア(1〜5)。docs/annotation-guidelines.md の収録4原則への適合度。範囲外・未評価は nil。
+  def entry_score
+    value = payload["entry_score"].to_i
+    value if value.between?(1, 5)
+  end
+
+  # 立項の懸念理由(どの原則を・なぜ欠くか)。スコア3以下の語に付く。
+  def entry_notes = payload["entry_notes"].presence
+
+  # 3以下は「オーナー判断が必要」ゾーン。コンソールの提案パネルで朱バッジを出す。
+  def entry_concern?
+    entry_score.present? && entry_score <= 3
+  end
+
   # --- マスタ名の解決(見つからなければ nil = 新設候補) ---
 
   # ジャンルパスを既存の木から辿り、末端の小分類まで解決できたときだけ Genre を返す。

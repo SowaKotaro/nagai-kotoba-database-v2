@@ -7,7 +7,7 @@ class AnnotationProposalImport
 
   # payload に保持するキー(これ以外は捨てる。想定外のデータを溜め込まない)。
   PAYLOAD_KEYS = %w[surface meaning genre_path genre_new entity_type part_of_speech
-                    word_origins variants confidence notes].freeze
+                    word_origins variants confidence notes entry_score entry_notes].freeze
 
   def initialize(json_text)
     @json_text = json_text.to_s
