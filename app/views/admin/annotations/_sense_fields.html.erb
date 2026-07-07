@@ -150,6 +150,22 @@
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.features") %></div>
     <div class="ann-features" data-controller="nested-form" data-nested-form-placeholder-value="NEW_FEATURE">
+      <%# 用語解説(Issue 39): 「音韻添加ってなに?」に作業中そのまま答える控えめなパネル。
+          定義は config/linguistic_features_glossary.yml が単一ソース(docs/annotation-guidelines.md §6) %>
+      <details class="ann-glossary">
+        <summary class="ann-glossary__summary"><%= t("admin.annotations.glossary.summary") %></summary>
+        <dl class="ann-glossary__list">
+          <% LinguisticFeatureGlossary.all.each do |entry| %>
+            <div class="ann-glossary__item">
+              <dt><%= entry.name %></dt>
+              <dd>
+                <%= entry.description %>
+                <span class="ann-glossary__examples"><%= entry.examples.join("　／　") %></span>
+              </dd>
+            </div>
+          <% end %>
+        </dl>
+      </details>
       <div data-nested-form-target="container">
         <%= form.fields_for :word_sense_features do |feature_form| %>
           <%= render "feature_fields", form: feature_form %>

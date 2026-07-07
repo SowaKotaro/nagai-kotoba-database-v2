@@ -48,6 +48,17 @@ class AnnotationProposalImportTest < ActiveSupport::TestCase
     assert_nil words(:pending_bermuda).reload.annotation_proposal.payload["evil"]
   end
 
+  test "立項スコアと懸念理由を保持する(Issue 39)" do
+    import_json([ {
+      word_id: words(:pending_bermuda).id, entry_score: 2, entry_notes: "公然性を欠く。"
+    } ])
+
+    proposal = words(:pending_bermuda).reload.annotation_proposal
+    assert_equal 2, proposal.entry_score
+    assert_equal "公然性を欠く。", proposal.entry_notes
+    assert proposal.entry_concern?
+  end
+
   test "壊れた JSON・形式違いは nil を返す" do
     assert_nil AnnotationProposalImport.new("{ 壊れた").import
     assert_nil AnnotationProposalImport.new({ words: [] }.to_json).import

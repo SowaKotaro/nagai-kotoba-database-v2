@@ -10,6 +10,12 @@
               default: proposal.confidence) %>
       </span>
     <% end %>
+    <%# 立項スコア(docs/annotation-guidelines.md §2)。3以下は朱でオーナー判断を促す %>
+    <% if proposal.entry_score %>
+      <span class="ann-proposal__entry <%= "ann-proposal__entry--concern" if proposal.entry_concern? %>">
+        <%= t("admin.annotations.proposal.entry_score", score: proposal.entry_score) %>
+      </span>
+    <% end %>
     <span class="spacer"></span>
     <%= link_to t("admin.annotations.proposal.apply"),
           admin_annotation_path(word, apply_proposal: 1, proposed: params[:proposed].presence),
@@ -70,6 +76,9 @@
     <% end %>
   </dl>
 
+  <% if proposal.entry_notes %>
+    <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>
+  <% end %>
   <% if proposal.notes %>
     <p class="ann-proposal__notes"><%= t("admin.annotations.proposal.notes") %>　<%= proposal.notes %></p>
   <% end %>

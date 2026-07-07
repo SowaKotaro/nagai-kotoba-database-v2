@@ -43,6 +43,27 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     assert_equal %w[タミル語], @proposal.unknown_word_origin_names
   end
 
+  test "立項スコアを読み出せて、3以下だけ懸念になる(Issue 39)" do
+    assert_equal 5, @proposal.entry_score
+    assert_not @proposal.entry_concern?
+
+    @proposal.payload["entry_score"] = 3
+    @proposal.payload["entry_notes"] = "慣用性にグレーがある。"
+    assert_equal 3, @proposal.entry_score
+    assert @proposal.entry_concern?
+    assert_equal "慣用性にグレーがある。", @proposal.entry_notes
+  end
+
+  test "立項スコアが未評価・範囲外なら nil で、懸念にもならない" do
+    @proposal.payload.delete("entry_score")
+    assert_nil @proposal.entry_score
+    assert_not @proposal.entry_concern?
+
+    @proposal.payload["entry_score"] = 9
+    assert_nil @proposal.entry_score
+    assert_not @proposal.entry_concern?
+  end
+
   test "語には提案は1件まで(上書き前提のユニーク制約)" do
     duplicate = AnnotationProposal.new(word: words(:pending_haruhi), payload: { "meaning" => "重複" })
     assert_raises(ActiveRecord::RecordNotUnique) { duplicate.save!(validate: false) }

@@ -24,6 +24,21 @@
 .ann-word { font-family: var(--font-mincho); font-weight: 600; font-size: clamp(34px, 7vw, 76px); line-height: 1.06; margin: var(--space-1) 0 2px; letter-spacing: 0.01em; overflow-wrap: anywhere; }
 .ann-word-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding-bottom: var(--space-4); border-bottom: 2px solid var(--ink); }
 
+/* 用語解説(Issue 39)。特徴選択の脇に置く控えめな開閉パネル(hover 限定にしない) */
+.ann-glossary { margin-bottom: var(--space-2); }
+.ann-glossary__summary { cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding: 2px 0; }
+.ann-glossary__summary:hover { color: var(--shu); }
+.ann-glossary[open] .ann-glossary__summary { color: var(--ink); }
+.ann-glossary__list { margin: var(--space-2) 0 0; border: 1px solid var(--rule-mid); padding: var(--space-3); max-height: 320px; overflow-y: auto; }
+.ann-glossary__item { display: grid; grid-template-columns: 120px 1fr; gap: 2px 14px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
+.ann-glossary__item:last-child { border-bottom: 0; }
+.ann-glossary__item dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink); padding-top: 2px; }
+.ann-glossary__item dd { margin: 0; font-size: 12px; line-height: 1.7; color: var(--ink-2); }
+.ann-glossary__examples { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.02em; color: var(--ink-3); margin-top: 2px; }
+@media (max-width: 560px) {
+  .ann-glossary__item { grid-template-columns: 1fr; }
+}
+
 /* Claude の提案パネル(Issue 38)。朱の1px枠で「機械の下書き」であることを示す */
 .ann-proposal { border: 1px solid var(--shu); padding: var(--space-3) var(--space-4); margin-top: var(--space-4); }
 .ann-proposal__head { display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-2); }
@@ -31,6 +46,10 @@
 .ann-proposal__title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; color: var(--shu); }
 .ann-proposal__confidence { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--rule-mid); padding: 1px 8px; color: var(--ink-2); }
 .ann-proposal__confidence--low { color: var(--shu); border-color: var(--shu); }
+/* 立項スコア(Issue 39)。3以下は朱でオーナー判断を促す */
+.ann-proposal__entry { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--rule-mid); padding: 1px 8px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ann-proposal__entry--concern { color: var(--shu); border-color: var(--shu); }
+.ann-proposal__notes--entry { color: var(--shu); }
 .ann-proposal__grid { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; margin: 0; }
 .ann-proposal__grid dt { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); padding-top: 3px; }
 .ann-proposal__grid dd { margin: 0; font-size: 14px; }

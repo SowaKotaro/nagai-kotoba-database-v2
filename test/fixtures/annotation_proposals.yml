@@ -4,6 +4,7 @@ haruhi_proposal:
   status: 0 # pending
   payload:
     surface: 涼宮ハルヒの憂鬱
+    entry_score: 5
     meaning: 谷川流のライトノベル。SOS団を結成する涼宮ハルヒと周囲の騒動を描く。
     genre_path:
       - 文学

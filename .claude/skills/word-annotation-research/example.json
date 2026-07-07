@@ -4,6 +4,7 @@
     {
       "word_id": 123,
       "surface": "モンキー・D・ルフィ",
+      "entry_score": 5,
       "meaning": "漫画『ONE PIECE』の主人公。麦わらの一味の船長で、ゴムの能力を持つ海賊。",
       "genre_path": ["文化", "漫画・アニメ", "ONE PIECE"],
       "genre_new": false,
@@ -17,6 +18,7 @@
     {
       "word_id": 124,
       "surface": "天上天下唯我独尊",
+      "entry_score": 5,
       "meaning": "釈迦が誕生時に唱えたと伝えられる言葉。この世で自分ほど尊いものはない、の意。",
       "genre_path": ["思想・宗教", "仏教", "仏教語"],
       "genre_new": true,
@@ -24,6 +26,14 @@
       "word_origins": ["漢語"],
       "confidence": "low",
       "notes": "小分類「仏教語」は masters に無かったため新設候補。四字熟語として「言葉・表現」系に入れる選択肢もあり、どちらの木に置くかはオーナー判断を仰ぎたい。"
+    },
+    {
+      "word_id": 125,
+      "surface": "たかしんちの白いポメラニアン",
+      "entry_score": 1,
+      "entry_notes": "公然性・同定可能性を欠く。第三者が確認できる公開媒体に存在せず、指す対象も当事者にしか特定できない(内輪の呼称)。削除候補。",
+      "confidence": "high",
+      "notes": "Web 検索でも該当する語・作品名は確認できなかった。"
     }
   ]
 }

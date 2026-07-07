@@ -338,10 +338,14 @@ ja:
       remaining: "未注釈"
       eyebrow: "見出し語"
       char_type: "文字種"
+      glossary:
+        summary: "用語解説（連濁・音韻添加など）"
       proposal:
         title: "CLAUDE の提案"
         apply: "提案を反映"
         new_master: "新設候補"
+        entry_score: "立項 %{score}/5"
+        entry_notes: "立項の懸念"
         notes: "判断メモ"
         confidence:
           high: "確信 高"
