@@ -1897,6 +1897,7 @@ textarea {
 
 .bulk-review__table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 15px;
 }
@@ -1933,8 +1934,13 @@ textarea {
 }
 
 .bulk-review__surface {
+  width: calc(50% - 1.5rem);
   font-family: var(--font-mincho);
   font-size: 18px;
+}
+
+.bulk-review__reading {
+  width: calc(50% - 1.5rem);
 }
 
 .bulk-review__reading-input {

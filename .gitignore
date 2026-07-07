@@ -36,3 +36,9 @@
 
 # Ignore editor-specific settings (SQLTools 接続設定など個人環境の設定)。
 /.vscode/
+
+# 一括登録(word-reading-research スキル)の調査結果の作業ファイル。毎回コミットしない。
+/reading_tmp.json
+
+# アノテーション調査(word-annotation-research スキル)の提案 JSON の作業ファイル。毎回コミットしない。
+/annotation_tmp.json
