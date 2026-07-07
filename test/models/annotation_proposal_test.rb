@@ -68,4 +68,34 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     duplicate = AnnotationProposal.new(word: words(:pending_haruhi), payload: { "meaning" => "重複" })
     assert_raises(ActiveRecord::RecordNotUnique) { duplicate.save!(validate: false) }
   end
+
+  # --- 複数語義(同音異義語・Issue 41) ---
+
+  test "トップレベル形式は単一語義として1件の senses になる(後方互換)" do
+    assert_equal 1, @proposal.senses.size
+    assert_not @proposal.multiple_senses?
+    assert_match "谷川流", @proposal.senses.first.meaning
+  end
+
+  test "payload に senses 配列があれば語義ごとに読み出せる" do
+    @proposal.payload = {
+      "senses" => [
+        { "meaning" => "通俗心理学の用語。", "genre_path" => %w[文学 日本文学 小説], "part_of_speech" => "名詞" },
+        { "meaning" => "同名のアイドルグループ。", "entity_type" => "書籍名", "reading" => "ピーターパンシンドローム" }
+      ],
+      "confidence" => "medium",
+      "entry_score" => 4
+    }
+    assert @proposal.multiple_senses?
+    assert_equal 2, @proposal.senses.size
+    assert_equal "通俗心理学の用語。", @proposal.senses.first.meaning
+    assert_equal genres(:small_novel), @proposal.senses.first.resolved_genre
+    assert_equal "同名のアイドルグループ。", @proposal.senses.second.meaning
+    assert_equal "ピーターパンシンドローム", @proposal.senses.second.reading
+    # 語全体のメタは語義に依らず読める
+    assert_equal "medium", @proposal.confidence
+    assert_equal 4, @proposal.entry_score
+    # 後方互換の委譲は先頭語義を指す
+    assert_equal "通俗心理学の用語。", @proposal.meaning
+  end
 end

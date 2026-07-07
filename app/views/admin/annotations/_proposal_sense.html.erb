@@ -1,0 +1,60 @@
+<%# 1つの語義提案の内訳(意味・ジャンル・エンティティ・品詞・語種・別表記)。
+    local: sense(AnnotationProposal::SenseProposal)。未知のマスタ名は新設候補(朱)で示す。 %>
+<dl class="ann-proposal__grid">
+  <% if sense.meaning %>
+    <dt><%= t("admin.annotations.meaning") %></dt>
+    <dd><%= sense.meaning %></dd>
+  <% end %>
+
+  <% if sense.reading %>
+    <dt><%= t("admin.annotations.reading") %></dt>
+    <dd><%= sense.reading %></dd>
+  <% end %>
+
+  <% if sense.genre_path.any? %>
+    <dt><%= t("admin.annotations.genre") %></dt>
+    <dd>
+      <% sense.genre_path.each_with_index do |name, i| %>
+        <% if i.positive? %><span class="sep">›</span><% end %><span><%= name %></span>
+      <% end %>
+      <% unless sense.resolved_genre %>
+        <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+      <% end %>
+    </dd>
+  <% end %>
+
+  <% if sense.entity_type_name %>
+    <dt><%= t("admin.annotations.entity") %></dt>
+    <dd>
+      <%= sense.entity_type_name %>
+      <% unless sense.resolved_entity_type %>
+        <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+      <% end %>
+    </dd>
+  <% end %>
+
+  <% if sense.part_of_speech_name %>
+    <dt><%= t("admin.annotations.pos") %></dt>
+    <dd>
+      <%= sense.part_of_speech_name %>
+      <% unless sense.resolved_part_of_speech %>
+        <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+      <% end %>
+    </dd>
+  <% end %>
+
+  <% if sense.word_origin_names.any? %>
+    <dt><%= t("admin.annotations.origins") %></dt>
+    <dd>
+      <%= sense.resolved_word_origins.map(&:name).join("・") %>
+      <% sense.unknown_word_origin_names.each do |name| %>
+        <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+      <% end %>
+    </dd>
+  <% end %>
+
+  <% if sense.variants.any? %>
+    <dt><%= t("admin.annotations.variants") %></dt>
+    <dd><%= sense.variants.map { |v| v["surface"] }.join("・") %></dd>
+  <% end %>
+</dl>

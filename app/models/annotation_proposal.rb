@@ -1,7 +1,11 @@
-# Claude Code の調査結果(アノテーション提案)。word と 1:1 の下書き(Issue 38)。
+# Claude Code の調査結果(アノテーション提案)。word ごとに1件の下書き(Issue 38)。
 # payload(JSON)は取り込み時の形をそのまま保持し、マスタ名 → id の解決は表示・反映時に
 # その都度行う(取り込み後にマスタを追加しても、再取り込みせずに解決できるように)。
 # annotated_at を立てる(公開する)のは人間のコンソール保存だけで、提案自体は公開面に影響しない。
+#
+# 語義は複数持てる(Issue 41: 同一表記の同音異義語)。payload["senses"] が配列ならそれを
+# 語義ごとの提案とみなし、無ければ従来のトップレベル形式(単一語義)を1件として扱う。
+# confidence / notes / entry_score / entry_notes は語全体のメタで語義に依らない。
 class AnnotationProposal < ApplicationRecord
   belongs_to :word
 
@@ -10,21 +14,60 @@ class AnnotationProposal < ApplicationRecord
 
   validates :payload, presence: true
 
-  # --- payload の読み出し(キーは文字列で保持) ---
-  def meaning = payload["meaning"].presence
+  # 語義ごとの提案(意味・ジャンル・エンティティ・品詞・語種・別表記・読み)を持つ値オブジェクト。
+  # マスタ名 → レコードの解決もここで行う(見つからなければ nil = 新設候補)。
+  class SenseProposal
+    def initialize(data)
+      @data = data.is_a?(Hash) ? data : {}
+    end
 
-  # ジャンルは名前のパス(大→中→小)で受け取る。
-  def genre_path = Array(payload["genre_path"]).map(&:to_s).reject(&:blank?)
+    def meaning = @data["meaning"].presence
+    # 語義ごとに読みが変わる場合のみ(通常は語の読みを共有するので省略される)。
+    def reading = @data["reading"].presence
 
-  def entity_type_name = payload["entity_type"].presence
-  def part_of_speech_name = payload["part_of_speech"].presence
-  def word_origin_names = Array(payload["word_origins"]).map(&:to_s).reject(&:blank?)
+    # ジャンルは名前のパス(大→中→小)で受け取る。
+    def genre_path = Array(@data["genre_path"]).map(&:to_s).reject(&:blank?)
 
-  # 別表記の提案(surface 必須・reading 任意)。
-  def variants
-    Array(payload["variants"]).select { |v| v.is_a?(Hash) && v["surface"].present? }
+    def entity_type_name = @data["entity_type"].presence
+    def part_of_speech_name = @data["part_of_speech"].presence
+    def word_origin_names = Array(@data["word_origins"]).map(&:to_s).reject(&:blank?)
+
+    # 別表記の提案(surface 必須・reading 任意)。
+    def variants
+      Array(@data["variants"]).select { |v| v.is_a?(Hash) && v["surface"].present? }
+    end
+
+    # ジャンルパスを既存の木から辿り、末端の小分類まで解決できたときだけ Genre を返す。
+    # 途中までしか無い・小分類でない場合は nil(コンソールのその場追加で作ってから反映する)。
+    def resolved_genre
+      genre = genre_path.inject(nil) do |parent, name|
+        found = Genre.find_by(name: name, parent_id: parent&.id)
+        break nil unless found
+
+        found
+      end
+      genre if genre&.small?
+    end
+
+    def resolved_entity_type = EntityType.find_by(name: entity_type_name)
+    def resolved_part_of_speech = PartOfSpeech.find_by(name: part_of_speech_name)
+
+    # 見つかった語種だけを返す(見つからない名前は unknown_word_origin_names)。
+    def resolved_word_origins = WordOrigin.where(name: word_origin_names)
+    def unknown_word_origin_names = word_origin_names - resolved_word_origins.pluck(:name)
   end
 
+  # 語義ごとの提案。payload["senses"] があればそれを、無ければトップレベル形式を1件とみなす。
+  def senses
+    raw = payload["senses"]
+    hashes = raw.is_a?(Array) && raw.any? ? raw.select { |h| h.is_a?(Hash) } : [ legacy_sense_hash ]
+    hashes.map { |hash| SenseProposal.new(hash) }
+  end
+
+  # 複数語義(同音異義語)の提案か(パネルの見出し出し分け・語義複製の判断に使う)。
+  def multiple_senses? = senses.size > 1
+
+  # --- 語全体のメタ(語義に依らない) ---
   def confidence = payload["confidence"].presence
   def notes = payload["notes"].presence
 
@@ -42,29 +85,19 @@ class AnnotationProposal < ApplicationRecord
     entry_score.present? && entry_score <= 3
   end
 
-  # --- マスタ名の解決(見つからなければ nil = 新設候補) ---
+  # --- 後方互換: 単一語義時代の呼び出し口は先頭語義に委譲する ---
+  delegate :meaning, :reading, :genre_path, :resolved_genre, :entity_type_name,
+           :resolved_entity_type, :part_of_speech_name, :resolved_part_of_speech,
+           :word_origin_names, :resolved_word_origins, :unknown_word_origin_names, :variants,
+           to: :first_sense
 
-  # ジャンルパスを既存の木から辿り、末端の小分類まで解決できたときだけ Genre を返す。
-  # 途中までしか無い・小分類でない場合は nil(コンソールのその場追加で作ってから反映する)。
-  def resolved_genre
-    genre = genre_path.inject(nil) do |parent, name|
-      found = Genre.find_by(name: name, parent_id: parent&.id)
-      break nil unless found
+  private
 
-      found
-    end
-    genre if genre&.small?
-  end
+  def first_sense = senses.first || SenseProposal.new({})
 
-  def resolved_entity_type = EntityType.find_by(name: entity_type_name)
-  def resolved_part_of_speech = PartOfSpeech.find_by(name: part_of_speech_name)
-
-  # 見つかった語種だけを返す(見つからない名前は unknown_word_origin_names)。
-  def resolved_word_origins
-    WordOrigin.where(name: word_origin_names)
-  end
-
-  def unknown_word_origin_names
-    word_origin_names - resolved_word_origins.pluck(:name)
+  # トップレベル形式(単一語義)を語義ハッシュに切り出す。
+  def legacy_sense_hash
+    payload.slice("meaning", "reading", "genre_path", "genre_new", "entity_type",
+                  "part_of_speech", "word_origins", "variants")
   end
 end

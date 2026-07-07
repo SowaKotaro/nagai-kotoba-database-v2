@@ -347,6 +347,10 @@ ja:
         title: "CLAUDE の提案"
         apply: "提案を反映"
         new_master: "新設候補"
+        status:
+          applied: "反映済み"
+          dismissed: "見送り"
+        multiple_senses: "同音異義語として %{count} 語義の提案。反映すると語義欄に順に流し込みます"
         entry_score: "立項 %{score}/5"
         entry_notes: "立項の懸念"
         notes: "判断メモ"

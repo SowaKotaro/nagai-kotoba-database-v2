@@ -46,10 +46,18 @@
 .ann-proposal__title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; color: var(--shu); }
 .ann-proposal__confidence { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--rule-mid); padding: 1px 8px; color: var(--ink-2); }
 .ann-proposal__confidence--low { color: var(--shu); border-color: var(--shu); }
+/* 反映済み/見送りの状態バッジ(注釈済みの語を見直しているとき) */
+.ann-proposal__status { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--ink); padding: 1px 8px; color: var(--on-ink); background: var(--ink); }
+.ann-proposal__status--dismissed { color: var(--ink-2); background: transparent; border-color: var(--rule-mid); }
 /* 立項スコア(Issue 39)。3以下は朱でオーナー判断を促す */
 .ann-proposal__entry { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--rule-mid); padding: 1px 8px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .ann-proposal__entry--concern { color: var(--shu); border-color: var(--shu); }
 .ann-proposal__notes--entry { color: var(--shu); }
+/* 複数語義(同音異義語・Issue 41)。語義ごとに細罫で区切り、極小の等幅で語義番号を打つ */
+.ann-proposal__senses-note { font-size: 12px; color: var(--ink-2); margin: 0 0 var(--space-2); }
+.ann-proposal__sense { border-top: 1px solid var(--rule); padding-top: var(--space-2); margin-top: var(--space-2); }
+.ann-proposal__sense:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.ann-proposal__sense-no { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--shu); margin-bottom: 4px; }
 .ann-proposal__grid { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; margin: 0; }
 .ann-proposal__grid dt { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); padding-top: 3px; }
 .ann-proposal__grid dd { margin: 0; font-size: 14px; }

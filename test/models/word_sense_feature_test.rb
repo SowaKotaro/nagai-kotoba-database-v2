@@ -63,4 +63,34 @@ class WordSenseFeatureTest < ActiveSupport::TestCase
                               target: "カレー", target_reading: "カレー")
     assert wsf.valid?
   end
+
+  # --- 同一文字列が繰り返す語(target_start による出現箇所の区別) ---
+
+  test "target_start 未指定なら最初の出現位置に補完される" do
+    # ABC殺人事件 の 殺人 は先頭から3文字目(0始まり)。
+    wsf = WordSenseFeature.new(valid_attributes(target: "殺人", target_reading: "さつじん", target_start: nil))
+    wsf.valid?
+    assert_equal 3, wsf.target_start
+  end
+
+  test "同じ該当部分でも出現位置が違えば複数登録できる" do
+    word = Word.create!(surface: "びしょびしょびしょ")
+    sense = word.word_senses.create!(reading: "ビショビショビショ")
+    feature = linguistic_features(:rendaku)
+    assert sense.word_sense_features.create!(linguistic_feature: feature, target: "びしょ",
+                                             target_reading: "ビショ", target_start: 0)
+    second = sense.word_sense_features.new(linguistic_feature: feature, target: "びしょ",
+                                           target_reading: "ビショ", target_start: 6)
+    assert second.valid?, "別の出現位置なら同じ該当部分でも追加できる"
+    dup = sense.word_sense_features.new(linguistic_feature: feature, target: "びしょ",
+                                        target_reading: "ビショ", target_start: 0)
+    assert_not dup.valid?, "同じ出現位置の重複は不可"
+    assert dup.errors.of_kind?(:target, :taken)
+  end
+
+  test "target_start が負だと無効" do
+    wsf = WordSenseFeature.new(valid_attributes(target: "殺人", target_reading: "さつじん", target_start: -1))
+    assert_not wsf.valid?
+    assert wsf.errors.added?(:target_start, :greater_than_or_equal_to, value: -1, count: 0)
+  end
 end

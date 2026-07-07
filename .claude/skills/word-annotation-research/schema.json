@@ -1,9 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "word-annotation-research output",
-  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins)は書き出し JSON の masters と一字一句同じ表記にする。",
+  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins)は書き出し JSON の masters と一字一句同じ表記にする。1つの表層形に複数の異なる語義(同名の作品・人物・団体など同音異義語)がある場合は senses 配列で複数の語義を返す。単一語義なら meaning などをトップレベルに置く従来形式でよい(取り込み側で1件の語義として扱う)。",
   "type": "object",
   "required": ["version", "proposals"],
+  "$defs": {
+    "sense": {
+      "type": "object",
+      "description": "1つの語義。意味・ジャンル・エンティティ・品詞・語種・別表記・(必要なら)読み。",
+      "properties": {
+        "meaning": { "type": "string", "description": "意味の下書き。公開リード文のトーンで1〜2文・常体" },
+        "reading": { "type": "string", "description": "この語義の読みが語の読みと異なる場合のみ(通常は省略し語の読みを共有する)" },
+        "genre_path": {
+          "type": "array", "items": { "type": "string" },
+          "description": "ジャンルの名前パス(大→中→小)。masters.genres から末端まで選ぶ。新設提案は既存の大・中の下に新しい小分類名を置く"
+        },
+        "genre_new": { "type": "boolean", "description": "genre_path の末端が新設候補のとき true" },
+        "entity_type": { "type": "string", "description": "エンティティ名(固有名詞のみ)。masters.entity_types から" },
+        "part_of_speech": { "type": "string", "description": "品詞名。masters.parts_of_speech から" },
+        "word_origins": {
+          "type": "array", "items": { "type": "string" },
+          "description": "語種名(複数可)。masters.word_origins から"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["surface"],
+            "properties": {
+              "surface": { "type": "string", "description": "別表記の表層形(最も一般的な表記を surface に採り、それ以外の流通表記をここに)" },
+              "reading": { "type": "string", "description": "読みが変わる場合のみ" }
+            }
+          }
+        }
+      }
+    }
+  },
   "properties": {
     "version": { "const": "1" },
     "proposals": {
@@ -14,19 +46,24 @@
         "properties": {
           "word_id": { "type": "integer", "description": "書き出し JSON の word_id をそのまま返す(突き合わせキー)" },
           "surface": { "type": "string", "description": "表層形(確認用。取り込みでは word_id を使う)" },
-          "entry_score": { "type": "integer", "minimum": 1, "maximum": 5, "description": "立項スコア(docs/annotation-guidelines.md の収録4原則への適合度)。5=明確に満たす〜1=立項不可相当。全語に付ける" },
+          "entry_score": { "type": "integer", "minimum": 1, "maximum": 5, "description": "立項スコア(docs/annotation-guidelines.md の収録4原則への適合度)。5=明確に満たす〜1=立項不可相当。全語に付ける。語全体のメタで語義に依らない" },
           "entry_notes": { "type": "string", "description": "立項の懸念(どの原則を・なぜ欠くか)。entry_score が3以下なら必須" },
-          "meaning": { "type": "string", "description": "意味の下書き。公開リード文のトーンで1〜2文・常体" },
+          "senses": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/sense" },
+            "description": "同一表記に複数の異なる語義(同音異義語)があるとき、語義ごとに1要素。1つでも複数でも使える。これを使う場合はトップレベルの meaning 等は置かない"
+          },
+          "meaning": { "type": "string", "description": "【単一語義の従来形式】意味の下書き。senses を使うなら不要" },
           "genre_path": {
             "type": "array", "items": { "type": "string" },
-            "description": "ジャンルの名前パス(大→中→小)。masters.genres から末端まで選ぶ。新設提案は既存の大・中の下に新しい小分類名を置く"
+            "description": "【単一語義の従来形式】ジャンルの名前パス(大→中→小)。senses を使うなら不要"
           },
-          "genre_new": { "type": "boolean", "description": "genre_path の末端が新設候補のとき true" },
-          "entity_type": { "type": "string", "description": "エンティティ名(固有名詞のみ)。masters.entity_types から" },
-          "part_of_speech": { "type": "string", "description": "品詞名。masters.parts_of_speech から" },
+          "genre_new": { "type": "boolean", "description": "【単一語義の従来形式】genre_path の末端が新設候補のとき true" },
+          "entity_type": { "type": "string", "description": "【単一語義の従来形式】エンティティ名。senses を使うなら不要" },
+          "part_of_speech": { "type": "string", "description": "【単一語義の従来形式】品詞名。senses を使うなら不要" },
           "word_origins": {
             "type": "array", "items": { "type": "string" },
-            "description": "語種名(複数可)。masters.word_origins から"
+            "description": "【単一語義の従来形式】語種名。senses を使うなら不要"
           },
           "variants": {
             "type": "array",
@@ -37,10 +74,11 @@
                 "surface": { "type": "string", "description": "別表記の表層形" },
                 "reading": { "type": "string", "description": "読みが変わる場合のみ" }
               }
-            }
+            },
+            "description": "【単一語義の従来形式】別表記。senses を使うなら各 sense の variants に置く"
           },
-          "confidence": { "enum": ["high", "medium", "low"], "description": "low のときは notes 必須" },
-          "notes": { "type": "string", "description": "判断に迷った点・確認してほしい点" }
+          "confidence": { "enum": ["high", "medium", "low"], "description": "low のときは notes 必須。語全体のメタ" },
+          "notes": { "type": "string", "description": "判断に迷った点・確認してほしい点。語全体のメタ" }
         }
       }
     }

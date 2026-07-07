@@ -6,7 +6,8 @@ class AnnotationProposalImport
   Result = Struct.new(:saved, :unknown_word_ids, keyword_init: true)
 
   # payload に保持するキー(これ以外は捨てる。想定外のデータを溜め込まない)。
-  PAYLOAD_KEYS = %w[surface meaning genre_path genre_new entity_type part_of_speech
+  # senses は複数語義(Issue 41)。meaning 等のトップレベル形式は単一語義の後方互換で残す。
+  PAYLOAD_KEYS = %w[surface senses meaning genre_path genre_new entity_type part_of_speech
                     word_origins variants confidence notes entry_score entry_notes].freeze
 
   def initialize(json_text)

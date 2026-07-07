@@ -59,4 +59,46 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_selector "input[value='ハルヒ']"
     assert_nil word_senses(:pending).reload.genre_id
   end
+
+  # 同じ文字列が繰り返す語で、該当部分の「出現位置」が保存されること(target_start)。
+  # 繰り返しの2つ目を選び、その位置(先頭からのオフセット)が記録されるのを担保する。
+  test "特徴の該当部分に繰り返しの2つ目の出現位置が保存される" do
+    word = Word.create!(surface: "びしょびしょの父")   # びしょ が2回出現(位置0と3)
+    sense = word.word_senses.create!(reading: "ビショビショノチチ")
+    feature = linguistic_features(:rendaku)
+
+    visit admin_annotation_path(word)
+    wait_for_stimulus "nested-form"             # 遅延読み込み完了を待ってから追加ボタンを押す
+    # 追加は冪等でない(押すたびに行が増える)ので、ヘッドレスで取りこぼしにくい JS クリックで1回だけ足す。
+    add_button = find(".ann-features button.ann-addrow", text: I18n.t("admin.annotations.add_feature"))
+    execute_script("arguments[0].click()", add_button)
+    assert_selector ".ann-feature .ann-cell", wait: 10   # feature-range が接続しストリップが描画された
+
+    within all(".ann-feature").last do
+      # 特徴のラジオを選ぶ(ネイティブクリックの取りこぼしを避けて JS で選択・change 発火)。
+      radio = find("input[type=radio][value='#{feature.id}']", visible: false)
+      execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", radio)
+      # tap ごとにストリップが再描画されセル参照が stale になるので都度引き直す。
+      # セルのネイティブクリックはヘッドレスで取りこぼすため JS クリックで確実に発火させる。
+      surface = ".ann-strip:not(.ann-strip--reading) .ann-cell"
+      reading = ".ann-strip--reading .ann-cell"
+      tap_cell = ->(css, i) { execute_script("arguments[0].click()", all(css)[i]) }
+      tap_cell.call(surface, 3)   # 単語: 2つ目の「びしょ」始点(位置3)
+      tap_cell.call(surface, 5)   # 終点(位置5)
+      tap_cell.call(reading, 0)   # 読み: 「ビショ」始点
+      tap_cell.call(reading, 2)   # 終点
+      # 隠しフィールドに単語側の出現位置(先頭からのオフセット)が入る
+      assert_equal "3", find("input[name$='[target_start]']", visible: false).value
+    end
+
+    submit = find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
+    execute_script("arguments[0].click()", submit)
+
+    # 保存された特徴が「びしょ / 位置3」で記録されている
+    assert wait_until { word.reload.annotated_at.present? }
+    saved = sense.word_sense_features.find_by(linguistic_feature: feature, target: "びしょ")
+    assert_not_nil saved
+    assert_equal 3, saved.target_start
+    assert_equal "ビショ", saved.target_reading
+  end
 end
