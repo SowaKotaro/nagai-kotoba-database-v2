@@ -202,6 +202,58 @@ main.container {
   }
 }
 
+/* --- 管理画面の共通サブナビ(Issue 35) --- */
+.admin-nav {
+  border-bottom: 1px solid var(--rule-mid);
+}
+
+.admin-nav__inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--space-5);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  /* 狭幅では折り返さず横スクロールで逃がす(管理画面のみなので許容) */
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.admin-nav__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+  padding: var(--space-2) 0;
+}
+
+.admin-nav__link {
+  text-decoration: none;
+  color: var(--ink-2);
+  font-size: 14px;
+  /* タップ領域確保(見た目は変えずに padding で広げる) */
+  padding: var(--space-2) 2px;
+}
+
+.admin-nav__link:hover {
+  color: var(--ink);
+}
+
+/* 現在地は朱の下線(グローバルナビと同じ文法) */
+.admin-nav__link[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 2px solid var(--shu);
+}
+
+/* 公開サイトへの出口リンクは右端に離す */
+.admin-nav__link--site {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* --- フッター: 墨のベタ面で締める --- */
 .site-footer {
   background: var(--ink);

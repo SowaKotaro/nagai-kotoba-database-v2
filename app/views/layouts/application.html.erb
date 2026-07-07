@@ -48,6 +48,8 @@
 
   <body>
     <%= render "shared/header" %>
+    <%# 管理画面だけに出す共通サブナビ(Issue 35) %>
+    <%= render "admin/nav" if admin_page? %>
 
     <main class="container">
       <%# フラッシュはここで一元表示する(各ビューでは表示しない) %>
