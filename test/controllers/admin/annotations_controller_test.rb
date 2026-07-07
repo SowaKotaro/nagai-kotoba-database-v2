@@ -93,6 +93,55 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotation_path(words(:pending_bermuda))
   end
 
+  # --- スティッキー引き継ぎ(Issue 37) ---
+  test "トグルONで保存すると、次の語にジャンル・品詞・語種が初期値として入る" do
+    sign_in_as(Admin.take)
+    patch admin_annotation_path(@word), params: {
+      sticky: "1",
+      word: { word_senses_attributes: { "0" => {
+        id: @sense.id, reading: @sense.reading,
+        genre_id: genres(:small_novel).id, part_of_speech_id: parts_of_speech(:noun).id,
+        word_origin_ids: [ word_origins(:wago).id ]
+      } } }
+    }
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda))
+
+    get admin_annotation_path(words(:pending_bermuda))
+    assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s
+    assert_select "input[type=radio][value=?][checked]", parts_of_speech(:noun).id.to_s
+    assert_select "input[type=checkbox][value=?][checked]", word_origins(:wago).id.to_s
+    # 引き継ぎはフォームの初期値のみで、DB には書き込まない
+    assert_nil word_senses(:pending2).reload.genre_id
+    assert_empty word_senses(:pending2).word_origin_ids
+  end
+
+  test "トグルOFF(既定)なら引き継がない" do
+    sign_in_as(Admin.take)
+    patch admin_annotation_path(@word), params: {
+      word: { word_senses_attributes: { "0" => {
+        id: @sense.id, reading: @sense.reading, genre_id: genres(:small_novel).id
+      } } }
+    }
+
+    get admin_annotation_path(words(:pending_bermuda))
+    assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s, count: 0
+  end
+
+  test "属性が既に付いている語義には引き継ぎで上書きしない" do
+    sign_in_as(Admin.take)
+    patch admin_annotation_path(@word), params: {
+      sticky: "1",
+      word: { word_senses_attributes: { "0" => {
+        id: @sense.id, reading: @sense.reading, genre_id: genres(:small_novel).id
+      } } }
+    }
+
+    # abc_murder は品詞・ジャンル等が設定済みなので、そのまま表示される
+    get admin_annotation_path(words(:abc_murder))
+    murder_sense = word_senses(:murder)
+    assert_select "input.js-genre-value[value=?]", murder_sense.genre_id.to_s
+  end
+
   # --- マスタのその場追加 ---
   test "語種をその場で追加できる(JSON)" do
     sign_in_as(Admin.take)

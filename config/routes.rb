@@ -34,6 +34,8 @@ Rails.application.routes.draw do
         post :duplicates
       end
     end
+    # 一覧で選択した語への共通属性の一括適用(Issue 37)。
+    resource :bulk_annotation, only: :create
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。
     resources :annotations, only: %i[index show update]
     # ジャンルの大→中→小 依存選択用に、子ジャンルの取得と、その場での新規追加。

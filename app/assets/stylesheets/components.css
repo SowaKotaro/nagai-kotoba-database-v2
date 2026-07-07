@@ -1378,6 +1378,74 @@ a.tag:hover .genre-hub__count {
   margin-bottom: var(--space-3);
 }
 
+/* 一括適用(Issue 37)。パネルは墨1px枠、中身はコンソールの ann-row/ann-chip を流用 */
+.bulk-annotation {
+  border: 1px solid var(--ink);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.bulk-annotation__summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+}
+
+.bulk-annotation__summary:hover {
+  color: var(--shu);
+}
+
+.bulk-annotation[open] .bulk-annotation__summary {
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  display: block;
+  padding-bottom: var(--space-2);
+}
+
+.bulk-annotation__hint {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: var(--space-2) 0;
+  max-width: 46em;
+}
+
+.bulk-annotation__meaning {
+  width: 100%;
+  max-width: 34em;
+  border-bottom: 1px solid var(--rule-mid);
+  font-size: 15px;
+  padding: 4px 2px;
+}
+
+.bulk-annotation__meaning:focus {
+  outline: none;
+  border-bottom-color: var(--shu);
+}
+
+.bulk-annotation__actionbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+}
+
+.bulk-annotation__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.admin-words-table__check {
+  width: 28px;
+  text-align: center;
+}
+
 .admin-words-table__reading {
   font-family: var(--font-mono);
   font-size: 13px;

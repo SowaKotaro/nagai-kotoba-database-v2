@@ -21,6 +21,7 @@ class Admin::WordsController < Admin::BaseController
                   .order(:surface)
                   .limit(PER_PAGE)
                   .offset((@page - 1) * PER_PAGE)
+    load_masters_for_bulk
   end
 
   # step1: 表層形を箇条書きでまとめて貼り付ける。
@@ -99,6 +100,14 @@ class Admin::WordsController < Admin::BaseController
     scope = scope.keyword(@query) if @query.present?
     scope = scope.public_send(@status) if @status
     scope
+  end
+
+  # 一括適用パネル(Issue 37)のチップ選択で使うマスタ一式。
+  def load_masters_for_bulk
+    @word_origins = WordOrigin.order(:name)
+    @parts_of_speech = PartOfSpeech.order(:name)
+    @entity_types = EntityType.order(:name)
+    @large_genres = Genre.large.order(:name)
   end
 
   # step1 の入力(箇条書きの貼り付けテキスト)。
