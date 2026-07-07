@@ -169,6 +169,14 @@ ja:
     feed:
       title: "新着の長い言葉"
   admin:
+    nav:
+      aria: "管理メニュー"
+      label: "管理"
+      dashboard: "ダッシュボード"
+      register: "単語を登録"
+      annotations: "アノテーション"
+      words: "単語の管理"
+      view_site: "公開サイトへ"
     dashboard:
       title: "管理コンソール"
       eyebrow: "オーナー用"

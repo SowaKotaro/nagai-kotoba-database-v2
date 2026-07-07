@@ -1,0 +1,14 @@
+<%# 管理画面の共通サブナビ(Issue 35)。全管理ページからダッシュボード・各作業へ戻れる導線を常設する。
+    現在地は aria-current="page"(朱の2px下線)。デザインは docs/design.md 準拠(墨/細罫・等幅ラベル)。 %>
+<nav class="admin-nav" aria-label="<%= t("admin.nav.aria") %>">
+  <div class="admin-nav__inner">
+    <span class="admin-nav__label"><%= t("admin.nav.label") %></span>
+    <%= admin_nav_link t("admin.nav.dashboard"), admin_root_path, :dashboard %>
+    <%= admin_nav_link t("admin.nav.register"), new_admin_word_path, :register %>
+    <%= admin_nav_link t("admin.nav.annotations"), admin_annotations_path, :annotations %>
+    <%= admin_nav_link t("admin.nav.words"), admin_words_path, :words %>
+    <%= link_to root_path, class: "admin-nav__link admin-nav__link--site" do %>
+      <%= t("admin.nav.view_site") %><%= icon "arrow_right" %>
+    <% end %>
+  </div>
+</nav>
