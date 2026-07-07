@@ -25,9 +25,9 @@ Rails.application.routes.draw do
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
     root "dashboard#index"
-    # 詳細(show)は公開閲覧側(Issue 8)で扱うため管理側には持たせない。
+    # 詳細(show)は公開閲覧側(Issue 8)で扱う。編集はアノテーション・コンソールに統合済み(Issue 36)。
     # 一括登録は3ステップ: new(入力) → readings(step2 読み) → duplicates(step3 重複) → create(登録)。
-    resources :words, except: :show do
+    resources :words, only: %i[index new create destroy] do
       collection do
         post :readings
         post :apply_research

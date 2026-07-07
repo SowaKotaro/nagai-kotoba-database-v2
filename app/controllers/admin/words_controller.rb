@@ -1,10 +1,26 @@
-# 単語の登録(表層形+読みの一括登録)と、編集・削除。
-# ジャンル・品詞などの付与はアノテーション・コンソール(Admin::AnnotationsController)が担う。
+# 単語の登録(表層形+読みの一括登録)と、一覧・削除。
+# 表層形の訂正やジャンル・品詞などの付与はアノテーション・コンソール(Admin::AnnotationsController)が担う。
 class Admin::WordsController < Admin::BaseController
-  before_action :set_word, only: %i[edit update destroy]
+  PER_PAGE = 50
+  # 注釈状態の絞り込み(Word の同名スコープをそのまま使う)。
+  STATUS_FILTERS = %w[unannotated annotated].freeze
 
+  before_action :set_word, only: :destroy
+
+  # 一覧: 6,000語規模でも運用できるよう、検索(表層形・読み)+注釈状態の絞り込み+ページネーション。
+  # 各行から /admin/annotations/:id へ直接飛べる(ピンポイント・アノテーション)。
   def index
-    @words = Word.includes(:word_senses).order(:surface)
+    @query = params[:q].to_s.strip
+    @status = params[:status].presence_in(STATUS_FILTERS)
+    @page = [ params[:page].to_i, 1 ].max
+
+    scope = filtered_words
+    @total_count = scope.count
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
+    @words = scope.includes(:word_senses)
+                  .order(:surface)
+                  .limit(PER_PAGE)
+                  .offset((@page - 1) * PER_PAGE)
   end
 
   # step1: 表層形を箇条書きでまとめて貼り付ける。
@@ -66,17 +82,6 @@ class Admin::WordsController < Admin::BaseController
     end
   end
 
-  def edit
-  end
-
-  def update
-    if @word.update(word_params)
-      redirect_to admin_words_path, notice: t("admin.words.updated")
-    else
-      render :edit, status: :unprocessable_entity
-    end
-  end
-
   def destroy
     @word.destroy
     redirect_to admin_words_path, notice: t("admin.words.destroyed")
@@ -86,6 +91,14 @@ class Admin::WordsController < Admin::BaseController
 
   def set_word
     @word = Word.find(params[:id])
+  end
+
+  # 一覧の絞り込み(キーワード + 注釈状態)。
+  def filtered_words
+    scope = Word.all
+    scope = scope.keyword(@query) if @query.present?
+    scope = scope.public_send(@status) if @status
+    scope
   end
 
   # step1 の入力(箇条書きの貼り付けテキスト)。
@@ -101,10 +114,5 @@ class Admin::WordsController < Admin::BaseController
   # step2 の任意入力: 調査 JSON(貼り付けテキスト)。
   def research_json_param
     params.require(:bulk_word_registration).permit(:research_json)[:research_json]
-  end
-
-  # 編集は表層形と読みの訂正のみ(ジャンル等の付与はアノテーションに集約)。
-  def word_params
-    params.require(:word).permit(:surface, word_senses_attributes: %i[id _destroy reading])
   end
 end

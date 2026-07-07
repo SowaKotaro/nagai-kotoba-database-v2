@@ -47,11 +47,56 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 認証済みの正常系 ---
-  test "一覧を表示できる" do
+  test "一覧に読み・語義数・注釈状態とコンソールへのリンクが出る" do
     sign_in_as(Admin.take)
     get admin_words_path
     assert_response :success
-    assert_select "td", text: @word.surface
+    # 表層形はコンソール(ピンポイント・アノテーション)へのリンク
+    assert_select "td a[href=?]", admin_annotation_path(@word), text: @word.surface
+    # 読み・注釈状態(注釈済みは日付、未注釈は朱ラベル)
+    assert_select "td.admin-words-table__reading", text: /さつじんじけん/
+    assert_select ".admin-words-table__annotated", text: @word.annotated_at.strftime("%Y-%m-%d")
+    assert_select ".admin-words-table__unannotated", text: "未注釈", minimum: 1
+    # 件数表示とページネーション
+    assert_select ".admin-words-count", text: /#{Word.count}\s*語/
+    assert_select ".pagination span", text: "1 / 1 ページ"
+  end
+
+  test "一覧を表層形・読みで検索できる" do
+    sign_in_as(Admin.take)
+    # 表層形の部分一致
+    get admin_words_path(q: "ハルヒ")
+    assert_select "td a", text: words(:pending_haruhi).surface
+    assert_select "td a", text: @word.surface, count: 0
+    # 読みの部分一致
+    get admin_words_path(q: "さつじん")
+    assert_select "td a", text: @word.surface
+  end
+
+  test "一覧を注釈状態で絞り込める" do
+    sign_in_as(Admin.take)
+    get admin_words_path(status: "unannotated")
+    assert_select "td a", text: words(:pending_haruhi).surface
+    assert_select "td a", text: @word.surface, count: 0
+    assert_select ".admin-status-tabs__tab[aria-current=page]", text: "未注釈"
+
+    get admin_words_path(status: "annotated")
+    assert_select "td a", text: @word.surface
+    assert_select "td a", text: words(:pending_haruhi).surface, count: 0
+  end
+
+  test "一覧は50語ごとにページ送りする" do
+    sign_in_as(Admin.take)
+    # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)
+    Word.insert_all((1..60).map { |i| { surface: "ページ送り検証語#{format('%02d', i)}", char_type_pattern: "漢" } })
+
+    get admin_words_path
+    assert_select "tbody tr", count: 50
+    assert_select ".pagination a", text: "次へ"
+
+    get admin_words_path(page: 2)
+    assert_select ".pagination a", text: "前へ"
+    assert_select ".pagination span", text: "2 / 2 ページ"
   end
 
   test "新規フォーム(箇条書き貼り付け)を表示できる" do
@@ -256,30 +301,13 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_admin_word_path
   end
 
-  # --- 編集・更新・削除 ---
-  test "編集フォームを表示できる" do
+  # --- 削除(編集はコンソールへ統合済み。Issue 36) ---
+  test "編集画面のルートは存在しない(コンソールへ統合済み)" do
     sign_in_as(Admin.take)
-    get edit_admin_word_path(@word)
-    assert_response :success
-  end
-
-  test "surface を更新できる" do
-    sign_in_as(Admin.take)
-    patch admin_word_path(@word), params: { word: { surface: "更新後の表層" } }
-    assert_redirected_to admin_words_path
-    assert_equal "更新後の表層", @word.reload.surface
-  end
-
-  test "語義を _destroy で削除できる" do
-    sign_in_as(Admin.take)
-    sense = word_senses(:curry)
-
-    assert_difference -> { WordSense.count }, -1 do
-      patch admin_word_path(sense.word), params: {
-        word: { word_senses_attributes: { "0" => { id: sense.id, _destroy: "1" } } }
-      }
-    end
-    assert_redirected_to admin_words_path
+    get "/admin/words/#{@word.id}/edit"
+    assert_response :not_found
+    patch "/admin/words/#{@word.id}"
+    assert_response :not_found
   end
 
   test "単語を削除できる(語義・特徴も連鎖削除)" do

@@ -55,9 +55,11 @@ class Admin::AnnotationsController < Admin::BaseController
   end
 
   # 語種は多対多(word_origin_ids)、ジャンル/品詞/エンティティは belongs_to の *_id、
-  # 特徴・別表記はネスト属性。表層形(surface)は語単位で確定済みのため受け付けない。
+  # 特徴・別表記はネスト属性。表層形(surface)の訂正もここで受ける(Issue 36: 編集画面を
+  # コンソールへ統合。char_type_pattern は before_validation で再生成される)。
   def annotation_params
     params.require(:word).permit(
+      :surface,
       word_senses_attributes: [
         :id, :_destroy, :reading, :meaning, :genre_id, :entity_type_id, :part_of_speech_id,
         { word_origin_ids: [],

@@ -1301,6 +1301,108 @@ a.tag:hover .genre-hub__count {
   color: var(--bg);
 }
 
+/* --- 単語の管理一覧(Issue 36): 検索 + 注釈状態タブ + テーブル --- */
+.admin-words-toolbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+/* 検索はヘッダー検索と同じ文法(下線1本 + 虫眼鏡) */
+.admin-words-search {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+  border-bottom: 1px solid var(--rule-mid);
+}
+
+.admin-words-search:focus-within {
+  border-bottom-color: var(--shu);
+}
+
+.admin-words-search__input {
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  padding: 6px 2px;
+  width: 16em;
+}
+
+.admin-words-search__input:focus {
+  outline: none;
+}
+
+.admin-words-search__submit {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 4px;
+  color: var(--ink-2);
+}
+
+.admin-words-search__submit:hover {
+  color: var(--shu);
+}
+
+.admin-status-tabs {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.admin-status-tabs__tab {
+  text-decoration: none;
+  color: var(--ink-2);
+  font-size: 14px;
+  padding: var(--space-2) 2px;
+}
+
+.admin-status-tabs__tab:hover {
+  color: var(--ink);
+}
+
+.admin-status-tabs__tab[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 2px solid var(--shu);
+}
+
+.admin-words-count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  margin-bottom: var(--space-3);
+}
+
+.admin-words-table__reading {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+
+.admin-words-table__num {
+  text-align: right;
+}
+
+.admin-words-table__annotated {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* 未注釈は朱(注意を引く現在の作業対象) */
+.admin-words-table__unannotated {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--shu);
+}
+
 /* --- セクション見出し --- */
 .section-header {
   display: flex;
