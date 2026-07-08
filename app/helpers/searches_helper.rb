@@ -43,7 +43,7 @@ module SearchesHelper
     conditions << [ t("words.show.origins"), master_names(WordOrigin, search.word_origin_id) ] if search.word_origin_id.present?
     conditions << [ t("searches.vowel_pattern"), search.vowel_reading ] if search.vowel_reading.present?
     conditions << [ WordSense.human_attribute_name(:rhythm_pattern), search.rhythm_pattern ] if search.rhythm_pattern.present?
-    conditions << [ t("words.show.char_type_pattern"), search.char_type_pattern ] if search.char_type_pattern.present?
+    conditions << [ t("words.show.char_type_pattern"), char_type_pattern_phrase(search) ] if search.char_type_pattern.present?
     conditions
   end
 
@@ -57,6 +57,13 @@ module SearchesHelper
     elsif min.nil? then t("searches.length_at_most", count: max)
     else t("searches.length_between", min: min, max: max)
     end
+  end
+
+  # 文字種の条件チップ表示。パターンに一致方法・大小区別を添える。
+  def char_type_pattern_phrase(search)
+    detail = [ t("searches.char_type_match_#{search.char_type_partial? ? 'partial' : 'exact'}"),
+               t("searches.char_type_case_#{search.char_type_case_sensitive? ? 'sensitive' : 'insensitive'}") ].join("・")
+    "#{search.char_type_pattern}（#{detail}）"
   end
 
   def master_names(model, ids)

@@ -72,7 +72,15 @@
 /* 表層形の訂正(Issue 36: 編集画面をコンソールへ統合)。誤字直し用の控えめな1行 */
 .ann-surface { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: var(--space-3) 0 0; }
 .ann-surface__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); }
-.ann-surface__input { font-family: var(--font-mincho); font-weight: 500; font-size: 17px; border-bottom: 1px solid var(--rule-mid); min-width: 16em; }
+/* 表層形は textarea。長い語(例: 50字超)も折り返して全文が見えるよう全幅・自動高。下線1本の見た目は維持 */
+.ann-surface__input {
+  flex: 1 1 100%; width: 100%; box-sizing: border-box;
+  font-family: var(--font-mincho); font-weight: 500; font-size: 17px; line-height: 1.5;
+  border: 0; border-bottom: 1px solid var(--rule-mid); background: transparent;
+  padding: 4px 2px; margin: 0; resize: none; field-sizing: content;
+  min-height: 1.7em; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.ann-surface__input:focus { border-bottom-color: var(--shu); }
 .ann-surface__note { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-3); }
 
 /* 語義パネル(墨1px枠・番号刻印) */
@@ -87,7 +95,15 @@
 .ann-row:last-child { border-bottom: 0; }
 .ann-row__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); padding-top: 6px; }
 
-.ann-reading { font-size: 17px; letter-spacing: 0.04em; border-bottom: 1px solid var(--rule-mid); }
+/* 読みも textarea。長い読み(例: 70字超)を折り返して全文表示。下線1本の見た目は維持 */
+.ann-reading {
+  width: 100%; box-sizing: border-box; display: block;
+  font-size: 17px; letter-spacing: 0.04em; line-height: 1.5;
+  border: 0; border-bottom: 1px solid var(--rule-mid); background: transparent;
+  padding: 4px 2px; margin: 0; resize: none; field-sizing: content;
+  min-height: 1.7em; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.ann-reading:focus { border-bottom-color: var(--shu); }
 .ann-derived { display: flex; gap: 16px; flex-wrap: wrap; margin-top: var(--space-2); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-3); }
 .ann-derived b { color: var(--ink); font-weight: 400; }
 

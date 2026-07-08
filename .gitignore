@@ -37,8 +37,14 @@
 # Ignore editor-specific settings (SQLTools 接続設定など個人環境の設定)。
 /.vscode/
 
-# 一括登録(word-reading-research スキル)の調査結果の作業ファイル。毎回コミットしない。
+# Claude Code のオフライン調査スキル(word-notation / word-reading / word-annotation)の
+# ファイル入出力の作業ファイル。毎回コミットしない。
+/inputs_word_tmp.txt
+/outputs_word_tmp.txt
+/inputs_reading_tmp.txt
+/outputs_reading_tmp.json
+/inputs_annotation_tmp.json
+/outputs_annotation_tmp.json
+# 旧名(上のパターンに一致しない既存の作業ファイルも念のため除外)
 /reading_tmp.json
-
-# アノテーション調査(word-annotation-research スキル)の提案 JSON の作業ファイル。毎回コミットしない。
 /annotation_tmp.json

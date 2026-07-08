@@ -167,10 +167,13 @@ class Admin::AnnotationsController < Admin::BaseController
 
   # キューの残数と、スキップ(次の語)・戻る(直前の語)のリンク先。?proposed=1 も同じキューを辿る。
   def set_navigation
+    # queue_scope は ?proposed=1 で annotation_proposals を joins するため、
+    # 素の id は words.id / annotation_proposals.id で曖昧になる。words.id に明示修飾する。
+    words_id = Word.arel_table[:id]
     @remaining = queue_scope.count
-    @skip_word = queue_scope.where("id > ?", @word.id).order(:id).first ||
-                 queue_scope.where.not(id: @word.id).order(:id).first
-    @prev_word = Word.where("id < ?", @word.id).order(id: :desc).first
+    @skip_word = queue_scope.where(words_id.gt(@word.id)).order(words_id).first ||
+                 queue_scope.where.not(id: @word.id).order(words_id).first
+    @prev_word = Word.where(words_id.lt(@word.id)).order(words_id.desc).first
   end
 
   # 語種は多対多(word_origin_ids)、ジャンル/品詞/エンティティは belongs_to の *_id、

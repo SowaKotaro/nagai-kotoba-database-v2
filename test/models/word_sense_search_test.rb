@@ -56,9 +56,27 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [ word_senses(:murder).id ], ids(rhythm_pattern: "tsuji")
   end
 
-  test "文字種の完全一致で絞れる(words と join)" do
+  # --- 文字種(words.char_type_pattern)。abc_murder は "AAA漢漢漢漢" ---
+  test "文字種はパターン全体で絞れる(words と join)" do
     pattern = words(:abc_murder).char_type_pattern
     assert_equal [ word_senses(:murder).id ], ids(char_type_pattern: pattern)
+  end
+
+  test "文字種は既定(完全一致)で部分文字列では絞れない" do
+    assert_equal [], ids(char_type_pattern: "漢漢漢漢")
+  end
+
+  test "部分一致トグルを入れると部分文字列でも絞れる" do
+    assert_equal [ word_senses(:murder).id ], ids(char_type_pattern: "漢漢漢漢", char_type_partial: "1")
+  end
+
+  test "文字種は既定(大文字小文字を区別)で小文字パターンは一致しない" do
+    assert_equal [], ids(char_type_pattern: "aaa漢漢漢漢")
+  end
+
+  test "大小を区別しないトグルを入れると小文字パターンでも一致する" do
+    assert_equal [ word_senses(:murder).id ],
+                 ids(char_type_pattern: "aaa漢漢漢漢", char_type_ignore_case: "1")
   end
 
   test "品詞で絞れる" do

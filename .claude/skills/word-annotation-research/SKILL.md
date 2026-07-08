@@ -1,6 +1,6 @@
 ---
 name: word-annotation-research
-description: nagai-kotoba-database-v2 のアノテーション(注釈)を助けるオフライン調査。管理画面の「調査用データの書き出し」JSON(対象語+マスタ一覧)を渡されたら、各語の意味・ジャンル・エンティティ・品詞・語種・別表記を調査し、取り込み画面に貼れる提案JSONを出力する。「アノテーションを調べて」「注釈の提案JSONを作って」と言われたとき、または words と masters を含む調査用JSONを貼られたときに使う。提案はDBの下書きに入り、人間がコンソールで承認する。
+description: nagai-kotoba-database-v2 のアノテーション(注釈)を助けるオフライン調査。管理画面の「調査用データの書き出し」JSON(対象語+マスタ一覧)を保存した inputs_annotation_tmp.json を読み、各語の意味・ジャンル・エンティティ・品詞・語種・別表記を調査して、取り込み画面に貼れる提案JSONを outputs_annotation_tmp.json に書き出す。「アノテーションを調べて」「inputs_annotation_tmp.json を調べて」「注釈の提案JSONを作って」と言われたときに使う。提案はDBの下書きに入り、人間がコンソールで承認する。
 ---
 
 # 単語のアノテーション調査（オフライン）
@@ -22,8 +22,9 @@ nagai-kotoba-database-v2 のアノテーション作業を助けるための、*
 - **固有名詞・作品名・新語は WebSearch で裏取りする。** 意味の記述・ジャンル判定・エンティティ判定の
   根拠を最低1つの信頼できる情報源で確認する。裏取りできなければ confidence を下げる。
 
-## 入力
-管理画面が書き出す JSON:
+## 入力（ファイル）
+リポジトリ直下 `inputs_annotation_tmp.json` を読む。中身は管理画面の「調査用データの書き出し」が出力する
+JSON（対象語 + マスタ一覧）を保存したもの:
 - `words`: 調査対象。`word_id`（取り込みのキー。**そのまま返す**）・`surface`（表層形）・`reading`（読み）
 - `masters`: 選択肢。`genres`（大→中→小のパスの配列）・`entity_types`・`parts_of_speech`・
   `word_origins`・`linguistic_features`（いずれも名前の配列）
@@ -78,8 +79,9 @@ nagai-kotoba-database-v2 のアノテーション作業を助けるための、*
 9. `confidence` を付ける: `high`=裏取り済みか定番 / `medium`=妥当だが未検証 / `low`=不確実。
    `low` のときは必ず `notes` に「何に迷ったか・何を確認してほしいか」を書く。
 
-## 出力（これだけを出す）
-- 説明文を付けず、**下記スキーマの JSON を1つだけ** コードブロックで出力する（取り込み画面にそのまま貼れるように）。
+## 出力（ファイル）
+- リポジトリ直下 `outputs_annotation_tmp.json` に、**下記スキーマの JSON だけ**を書き出す（**上書き**。説明文は入れない）。
+  このファイルの中身をそのまま管理画面の「提案 JSON の取り込み」に貼れる。
 - `word_id` は入力の値をそのまま返す（取り込みの突き合わせキー）。
 - 値の無いキーは省略してよい。スキーマの定義と例は同ディレクトリの
   [`schema.json`](schema.json) / [`example.json`](example.json) を参照。

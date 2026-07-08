@@ -187,11 +187,21 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotations_path(proposed: 1)
   end
 
+  test "?proposed=1 で語の詳細を表示できる(キューの id 曖昧を回避)" do
+    sign_in_as(Admin.take)
+    # show は set_navigation で annotation_proposals を joins したキューを辿る。
+    # 素の id だと words.id と annotation_proposals.id で曖昧になり
+    # StatementInvalid になっていた(回帰防止)。
+    get admin_annotation_path(@word, proposed: 1)
+    assert_response :success
+  end
+
   # --- 表層形の訂正(Issue 36: 編集画面をコンソールへ統合) ---
   test "コンソールに表層形の編集欄が出る" do
     sign_in_as(Admin.take)
     get admin_annotation_path(@word)
-    assert_select "input.ann-surface__input[name=?][value=?]", "word[surface]", @word.surface
+    # 長い表層形も全文表示するため textarea。値は要素の中身に入る(value 属性ではない)。
+    assert_select "textarea.ann-surface__input[name=?]", "word[surface]", text: @word.surface
   end
 
   test "表層形を訂正すると char_type_pattern が再生成される" do

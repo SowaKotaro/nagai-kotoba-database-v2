@@ -33,11 +33,35 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#q[value=?]", "カレー"
   end
 
-  test "文字種の入力キー(あ/ア/漢/A/@)が表示される" do
+  test "文字種の入力キー(あ/ア/漢/1/A/a/@)が表示される" do
     get search_path
-    %w[あ ア 漢 A @].each do |char|
+    %w[あ ア 漢 1 A a @].each do |char|
       assert_select "button.char-type-key[data-char-type-char-param=?]", char, text: char
     end
+  end
+
+  test "文字種の切替アイコン(Aa/ab)が既定=厳密(点灯)で表示される" do
+    get search_path
+    # 既定は完全一致・大文字小文字を区別 → どちらのアイコンも点灯(aria-pressed=true)
+    assert_select "button.char-type-flag__btn[aria-pressed=true]", count: 2
+    # 緩い側のときだけ hidden に "1"。既定は厳密なので空
+    assert_select "input[type=hidden][name=char_type_partial][value=?]", ""
+    assert_select "input[type=hidden][name=char_type_ignore_case][value=?]", ""
+  end
+
+  test "文字種の切替アイコンは指定に応じて消灯し hidden に反映される" do
+    get search_path, params: { char_type_pattern: "漢", char_type_partial: "1", char_type_ignore_case: "1" }
+    assert_select "button.char-type-flag__btn[aria-pressed=false]", count: 2
+    assert_select "input[type=hidden][name=char_type_partial][value=?]", "1"
+    assert_select "input[type=hidden][name=char_type_ignore_case][value=?]", "1"
+  end
+
+  test "文字種の区別トグルも単語一覧へ引き継がれる" do
+    get search_path, params: { commit: I18n.t("searches.submit"),
+                               char_type_pattern: "漢漢", char_type_partial: "1",
+                               char_type_ignore_case: "1" }
+    assert_redirected_to words_path(char_type_pattern: "漢漢",
+                                    char_type_partial: "1", char_type_ignore_case: "1")
   end
 
   test "文字種は削除ボタンとコンソール表示を持ち、手入力の text 欄は無い" do
@@ -45,7 +69,7 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.char-type-key--backspace[data-action=?]", "char-type#remove"
     # 送信値は hidden、組み立て表示はコンソール(display ターゲット)
     assert_select "input[type=hidden]#char_type_pattern"
-    assert_select ".char-type-console [data-char-type-target=display]"
+    assert_select ".char-type-display [data-char-type-target=display]"
     # 手入力できる text 欄は無い(ボタン専用=バリデーション兼用)
     assert_select "input[type=text]#char_type_pattern", count: 0
   end

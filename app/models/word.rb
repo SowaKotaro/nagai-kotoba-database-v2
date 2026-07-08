@@ -28,10 +28,18 @@ class Word < ApplicationRecord
     self.annotated_at = Time.current
   end
 
+  # 表層形は textarea 入力(折り返し表示)のため、混入した改行を先に除去する。
+  before_validation :strip_surface_newlines
   # char_type_pattern は surface から常に導出する(手入力させない)。
   before_validation :assign_char_type_pattern
 
   private
+
+  def strip_surface_newlines
+    # 改行は語の区切りになり得るため空白へ置換し(例: 貼り付けの折り返し)、前後の空白を除去する。
+    # 内部の既存スペース(例「Dead by Daylight」)は保持する。
+    self.surface = surface.gsub(/[\r\n]+/, " ").strip if surface
+  end
 
   def assign_char_type_pattern
     self.char_type_pattern = CharTypePattern.call(surface)

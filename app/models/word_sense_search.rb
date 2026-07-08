@@ -17,7 +17,11 @@ class WordSenseSearch
     relation = relation.mora_count_is(mora_count) if mora_count
     relation = relation.first_char_is(first_char) if first_char.present?
     relation = relation.last_char_is(last_char) if last_char.present?
-    relation = relation.char_type_pattern_is(char_type_pattern) if char_type_pattern.present?
+    if char_type_pattern.present?
+      relation = relation.char_type_pattern_matching(char_type_pattern,
+                                                     partial: char_type_partial?,
+                                                     case_sensitive: char_type_case_sensitive?)
+    end
     relation = relation.rhythm_containing(rhythm_pattern) if rhythm_pattern.present?
     relation = relation.vowel_containing(vowel_pattern_query) if vowel_pattern_query.present?
     relation = relation.with_part_of_speech(part_of_speech_id) if part_of_speech_id.present?
@@ -35,6 +39,10 @@ class WordSenseSearch
   def reading_length = positive_integer(:reading_length)
   def mora_count = positive_integer(:mora_count)
   def char_type_pattern = @params[:char_type_pattern].to_s.strip
+  # 文字種検索の一致方法。既定は完全一致で、トグル(char_type_partial)を入れたときだけ部分一致。
+  def char_type_partial? = boolean(:char_type_partial)
+  # 文字種検索の大文字小文字。既定は区別する。トグル(char_type_ignore_case)で区別しない。
+  def char_type_case_sensitive? = !boolean(:char_type_ignore_case)
   def rhythm_pattern = @params[:rhythm_pattern].to_s.strip
   # 母音パターン検索のフォーム入力(押韻したい読みのカナ)。表示はこの生入力のまま返す。
   def vowel_reading = @params[:vowel_reading].to_s.strip
@@ -65,7 +73,10 @@ class WordSenseSearch
       word_origin_id: word_origin_id.presence,
       rhythm_pattern: rhythm_pattern.presence,
       vowel_reading: vowel_reading.presence,
-      char_type_pattern: char_type_pattern.presence
+      char_type_pattern: char_type_pattern.presence,
+      # トグルは既定と異なる(=有効な)ときだけ引き継ぐ。文字種パターンがある場合に限る。
+      char_type_partial: ("1" if char_type_pattern.present? && char_type_partial?),
+      char_type_ignore_case: ("1" if char_type_pattern.present? && !char_type_case_sensitive?)
     }.compact
   end
 
@@ -118,6 +129,11 @@ class WordSenseSearch
   def positive_integer(key)
     value = @params[key].to_i
     value if value.positive?
+  end
+
+  # チェックボックス由来の真偽値("1"/"true" などを true に)。
+  def boolean(key)
+    ActiveModel::Type::Boolean.new.cast(@params[key])
   end
 
   # 単一値/配列いずれの入力も、空を除いた配列に正規化する。

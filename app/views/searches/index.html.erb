@@ -60,13 +60,15 @@
     <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off" %>
   </div>
 
-  <div class="field" data-controller="char-type">
+  <div class="field char-type-field" data-controller="char-type">
     <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
-    <%# 入力はキー(あ/ア/漢/A/@)と削除ボタン(⌫)だけ。組み立て中の文字種は下のコンソールに
-        表示され、手入力は受け付けない(常に妥当なパターンだけが入る=バリデーション兼用)。 %>
+
+    <%# 入力はキーボード風のキー(あ/ア/漢/1/A/a/@)と削除キー(⌫)だけ。手入力は受け付けず、
+        押したキーの文字種が下の表示欄に並ぶ(組み立て中のパターンを見せる読み取り専用の欄)。 %>
     <div class="char-type-keys">
       <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
-           CharTypePattern::ALPHABET, CharTypePattern::OTHER ].each do |char| %>
+           CharTypePattern::DIGIT, CharTypePattern::UPPER, CharTypePattern::LOWER,
+           CharTypePattern::OTHER ].each do |char| %>
         <button type="button" class="char-type-key" data-action="char-type#append"
                 data-char-type-char-param="<%= char %>"><%= char %></button>
       <% end %>
@@ -76,13 +78,42 @@
         <%= icon "backspace" %>
       </button>
     </div>
-    <%# ボタンを押すと文字が並ぶ表示欄(ターミナル風)。点滅カーソルで入力位置を示す %>
-    <output class="char-type-console" for="char_type_pattern">
-      <span class="char-type-console__prompt" aria-hidden="true">▸</span>
-      <span class="char-type-console__value" data-char-type-target="display"
+    <%# 先頭に「>」のプロンプト。上のキーを押すと文字種が左に等幅で並ぶ。右端は VSCode 風の
+        切替アイコン(text-aa=大文字小文字, 自作"ab"=完全/部分一致)。塗り(背景)= 厳密側が有効。
+        切り替えた瞬間だけ状態ラベルを 3 秒フェード表示する(ホバーには依存しない)。 %>
+    <div class="char-type-display">
+      <span class="char-type-display__prompt" aria-hidden="true">&gt;</span>
+      <span class="char-type-display__value" data-char-type-target="display"
             data-placeholder="<%= t('searches.char_type_console_placeholder') %>"><%= @search.char_type_pattern %></span>
-      <span class="char-type-console__caret" aria-hidden="true"></span>
-    </output>
+      <span class="char-type-display__flags">
+        <span class="char-type-flag" data-controller="char-type-toggle">
+          <%= hidden_field_tag :char_type_ignore_case, (@search.char_type_case_sensitive? ? "" : "1"),
+                data: { char_type_toggle_target: "input" } %>
+          <button type="button" class="char-type-flag__btn"
+                  data-char-type-toggle-target="button" data-action="char-type-toggle#toggle"
+                  data-title-strict="<%= t('searches.char_type_case_sensitive') %>"
+                  data-title-relaxed="<%= t('searches.char_type_case_insensitive') %>"
+                  aria-pressed="<%= @search.char_type_case_sensitive? %>"
+                  aria-label="<%= @search.char_type_case_sensitive? ? t('searches.char_type_case_sensitive') : t('searches.char_type_case_insensitive') %>">
+            <%= icon "text_aa" %>
+          </button>
+          <span class="char-type-flag__tip" data-char-type-toggle-target="tip" aria-hidden="true"></span>
+        </span>
+        <span class="char-type-flag" data-controller="char-type-toggle">
+          <%= hidden_field_tag :char_type_partial, (@search.char_type_partial? ? "1" : ""),
+                data: { char_type_toggle_target: "input" } %>
+          <button type="button" class="char-type-flag__btn"
+                  data-char-type-toggle-target="button" data-action="char-type-toggle#toggle"
+                  data-title-strict="<%= t('searches.char_type_match_exact') %>"
+                  data-title-relaxed="<%= t('searches.char_type_match_partial') %>"
+                  aria-pressed="<%= !@search.char_type_partial? %>"
+                  aria-label="<%= @search.char_type_partial? ? t('searches.char_type_match_partial') : t('searches.char_type_match_exact') %>">
+            <%= icon "quote_ab" %>
+          </button>
+          <span class="char-type-flag__tip" data-char-type-toggle-target="tip" aria-hidden="true"></span>
+        </span>
+      </span>
+    </div>
     <%= hidden_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
   </div>
 
