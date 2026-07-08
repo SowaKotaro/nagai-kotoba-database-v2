@@ -71,7 +71,8 @@ class WordsController < ApplicationController
   def search_filter_params
     params.permit(
       :q, :reading_length_min, :reading_length_max, :reading_length, :mora_count,
-      :char_type_pattern, :rhythm_pattern, :vowel_reading, :word_origin_id,
+      :char_type_pattern, :char_type_partial, :char_type_ignore_case,
+      :rhythm_pattern, :vowel_reading, :word_origin_id,
       :genre_id, :first_char, :last_char,
       :part_of_speech_id, :entity_type_id, :linguistic_feature_id,
       genre_id: [], first_char: [], last_char: [], word_origin_id: [],

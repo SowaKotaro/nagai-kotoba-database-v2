@@ -250,12 +250,17 @@ class BulkWordRegistration
   def parse_research_words
     return [] if research_json.blank?
 
-    parsed = JSON.parse(research_json)
+    parsed = JSON.parse(strip_code_fence(research_json))
     words = parsed.is_a?(Hash) ? parsed["words"] : nil
     words.is_a?(Array) ? words : (@research_error = true) && []
   rescue JSON::ParserError
     @research_error = true
     []
+  end
+
+  # チャット等からの貼り付けで付いてくる ```json フェンスを剥がす(前後の空白も含めて)。
+  def strip_code_fence(json_text)
+    json_text.to_s.strip.sub(/\A```(?:json)?\s*\n/, "").sub(/\n?```\z/, "")
   end
 
   # entries の1件と、対応する調査データから MergedEntry を組み立てる。

@@ -11,7 +11,8 @@
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.reading") %></div>
     <div>
-      <%= form.text_field :reading, class: "ann-reading js-reading", placeholder: t("admin.annotations.reading_placeholder") %>
+      <%# 長い読み(例: 70字超)も全文が見えるよう、折り返して縦に伸びる textarea にする。改行はモデル側で除去 %>
+      <%= form.text_area :reading, rows: 1, class: "ann-reading js-reading", placeholder: t("admin.annotations.reading_placeholder") %>
       <div class="ann-derived">
         韻 <b><%= sense.rhythm_pattern.presence || "—" %></b>　母音 <b><%= sense.vowel_pattern.presence || "—" %></b>　モーラ <b><%= sense.mora_count || "—" %></b>　<span><%= t("admin.annotations.derived_note") %></span>
       </div>

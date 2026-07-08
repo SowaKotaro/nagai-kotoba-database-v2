@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_07_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -82,10 +82,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_100000) do
     t.bigint "linguistic_feature_id", null: false
     t.string "target", limit: 768, null: false, comment: "該当部分(表層形の一部) 例: 硫黄島"
     t.string "target_reading", limit: 768, null: false, comment: "該当部分の読み 例: イオウジマ"
+    t.integer "target_start", null: false, comment: "該当部分の出現位置(表層形の先頭からの文字オフセット・0始まり)"
     t.datetime "updated_at", null: false
     t.bigint "word_sense_id", null: false
     t.index ["linguistic_feature_id"], name: "idx_wsf_feature"
-    t.index ["word_sense_id", "linguistic_feature_id", "target"], name: "uq_wsf_sense_feature_target", unique: true, length: { target: 191 }
+    t.index ["word_sense_id", "linguistic_feature_id", "target", "target_start"], name: "uq_wsf_sense_feature_target_start", unique: true, length: { target: 191 }
   end
 
   create_table "word_sense_origins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

@@ -49,8 +49,19 @@ class WordSense < ApplicationRecord
   scope :rhythm_containing, ->(text) { where("rhythm_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
   # 母音パターン(vowel_pattern)の部分一致。押韻検索(母音の並びで韻を探す)に使う。
   scope :vowel_containing, ->(text) { where("vowel_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
-  # 文字種(words.char_type_pattern)の完全一致。
-  scope :char_type_pattern_is, ->(pattern) { joins(:word).where(words: { char_type_pattern: pattern }) }
+  # 文字種(words.char_type_pattern)で絞り込む。
+  # partial:        真なら部分一致(LIKE %...%)、偽なら完全一致(=)。
+  # case_sensitive: 真なら大文字小文字を区別する。カラムは utf8mb4_0900_ai_ci で
+  #                 既定では A=a とみなすため、区別する時だけ utf8mb4_bin で厳密比較する。
+  # ワイルドカードはエスケープする。
+  scope :char_type_pattern_matching, lambda { |pattern, partial:, case_sensitive:|
+    column = case_sensitive ? "words.char_type_pattern COLLATE utf8mb4_bin" : "words.char_type_pattern"
+    if partial
+      joins(:word).where("#{column} LIKE ?", "%#{sanitize_sql_like(pattern)}%")
+    else
+      joins(:word).where("#{column} = ?", pattern)
+    end
+  }
   # マスタでの絞り込み。
   scope :with_genre_ids, ->(ids) { where(genre_id: ids) }
   scope :with_part_of_speech, ->(id) { where(part_of_speech_id: id) }
@@ -60,11 +71,18 @@ class WordSense < ApplicationRecord
     where(id: WordSenseFeature.where(linguistic_feature_id: id).select(:word_sense_id))
   }
 
+  # 読みは textarea 入力(折り返し表示)のため、混入した改行を先に除去する。
+  before_validation :strip_reading_newlines
   # 読み(reading)由来の派生値は常に reading から導出する(手入力させない)。
   # vowel_pattern は rhythm_pattern から作るため、rhythm_pattern の後に生成する。
   before_validation :assign_reading_derivations
 
   private
+
+  def strip_reading_newlines
+    # 読みは空白を持たないため、混入した改行は除去して前後の空白も落とす。
+    self.reading = reading.gsub(/[\r\n]+/, "").strip if reading
+  end
 
   def assign_reading_derivations
     self.rhythm_pattern = RhythmPattern.call(reading)

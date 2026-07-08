@@ -15,7 +15,7 @@ class WordTest < ActiveSupport::TestCase
 
   test "保存時に surface から char_type_pattern が自動生成される" do
     word = Word.create!(surface: "令和6年")
-    assert_equal "漢漢@漢", word.char_type_pattern
+    assert_equal "漢漢1漢", word.char_type_pattern
   end
 
   test "surface を変更すると char_type_pattern も追従する" do
@@ -29,6 +29,11 @@ class WordTest < ActiveSupport::TestCase
   test "char_type_pattern に手入力しても surface から上書きされる" do
     word = Word.create!(surface: "犬", char_type_pattern: "でたらめ")
     assert_equal "漢", word.char_type_pattern
+  end
+
+  test "surface に混入した改行は保存時に除去される(内部の空白は残す)" do
+    word = Word.create!(surface: "Dead by\r\nDaylight\n")
+    assert_equal "Dead by Daylight", word.surface
   end
 
   test "annotated / unannotated scope は annotated_at の有無で分かれる" do

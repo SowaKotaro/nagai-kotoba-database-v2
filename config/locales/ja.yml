@@ -111,9 +111,15 @@ ja:
     rhythm_pattern: "ヘボン式ローマ字（部分一致）"
     vowel_pattern: "母音で韻を探す"
     vowel_pattern_hint: "押韻したい読みをカタカナで入力（例：トウキョウタワー → ououaa）"
-    char_type_pattern: "文字種（完全一致）"
+    char_type_pattern: "文字種"
     char_type_console_placeholder: "キーを押して文字種を組み立て"
     char_type_backspace: "末尾を1文字削除"
+    # 文字種切替アイコン("ab"=完全/部分一致, Aa=大文字小文字)のツールチップ兼
+    # 適用中の条件チップに添える文言
+    char_type_match_exact: "完全一致"
+    char_type_match_partial: "部分一致"
+    char_type_case_sensitive: "大文字小文字を区別する"
+    char_type_case_insensitive: "大文字小文字を区別しない"
     word_origin: "語種"
     linguistic_feature: "言語学的特徴"
     reading_length: "読みの文字数"
@@ -347,6 +353,10 @@ ja:
         title: "CLAUDE の提案"
         apply: "提案を反映"
         new_master: "新設候補"
+        status:
+          applied: "反映済み"
+          dismissed: "見送り"
+        multiple_senses: "同音異義語として %{count} 語義の提案。反映すると語義欄に順に流し込みます"
         entry_score: "立項 %{score}/5"
         entry_notes: "立項の懸念"
         notes: "判断メモ"

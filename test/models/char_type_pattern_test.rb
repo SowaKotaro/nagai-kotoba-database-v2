@@ -5,7 +5,9 @@ class CharTypePatternTest < ActiveSupport::TestCase
     assert_equal "漢", CharTypePattern.call("殺")
     assert_equal "あ", CharTypePattern.call("き")
     assert_equal "ア", CharTypePattern.call("カ")
+    assert_equal "1", CharTypePattern.call("7")
     assert_equal "A", CharTypePattern.call("A")
+    assert_equal "a", CharTypePattern.call("z")
     assert_equal "@", CharTypePattern.call("!")
   end
 
@@ -26,12 +28,13 @@ class CharTypePatternTest < ActiveSupport::TestCase
     assert_equal "アアアア", CharTypePattern.call("ｺｰﾋｰ")
   end
 
-  test "全角・半角の英字はどちらも A" do
-    assert_equal "AAAAAA", CharTypePattern.call("AbＡｂzＺ")
+  test "英字は大文字A・小文字aを区別し、全角半角は区別しない" do
+    # A(半角大) b(半角小) Ａ(全角大) ｂ(全角小) z(半角小) Ｚ(全角大)
+    assert_equal "AaAaaA", CharTypePattern.call("AbＡｂzＺ")
   end
 
-  test "数字は半角・全角ともに その他(@)" do
-    assert_equal "@@@@", CharTypePattern.call("12３４")
+  test "数字は半角・全角ともに 1" do
+    assert_equal "1111", CharTypePattern.call("12３４")
   end
 
   test "記号・空白・絵文字は その他(@)" do
@@ -44,7 +47,12 @@ class CharTypePatternTest < ActiveSupport::TestCase
   end
 
   test "漢字と数字の混在(年は漢字)" do
-    assert_equal "漢漢@漢", CharTypePattern.call("令和6年")
+    assert_equal "漢漢1漢", CharTypePattern.call("令和6年")
+  end
+
+  test "英数字混在で大小・数字を写し取る(全角半角は畳む)" do
+    # Ｗ(全角大) ｅ(全角小) ｂ(全角小) ３(全角数字) .(記号) ０(全角数字)
+    assert_equal "Aaa1@1", CharTypePattern.call("Ｗｅｂ３.０")
   end
 
   test "nil と空文字は空文字列を返す" do

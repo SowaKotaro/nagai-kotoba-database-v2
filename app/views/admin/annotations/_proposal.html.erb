@@ -4,6 +4,12 @@
 <div class="ann-proposal">
   <div class="ann-proposal__head">
     <span class="ann-proposal__title"><%= t("admin.annotations.proposal.title") %></span>
+    <%# 反映済み/見送りの提案(注釈済みの語を見直しているとき)は状態を明示する %>
+    <% unless proposal.pending? %>
+      <span class="ann-proposal__status ann-proposal__status--<%= proposal.status %>">
+        <%= t("admin.annotations.proposal.status.#{proposal.status}") %>
+      </span>
+    <% end %>
     <% if proposal.confidence %>
       <span class="ann-proposal__confidence ann-proposal__confidence--<%= proposal.confidence %>">
         <%= t("admin.annotations.proposal.confidence.#{proposal.confidence}",
@@ -22,59 +28,18 @@
           class: "btn btn--sm", data: { turbo_frame: "annotation-console" } %>
   </div>
 
-  <dl class="ann-proposal__grid">
-    <% if proposal.meaning %>
-      <dt><%= t("admin.annotations.meaning") %></dt>
-      <dd><%= proposal.meaning %></dd>
+  <%# 複数語義(同音異義語・Issue 41)は語義ごとに区切って見せる。単一なら見出しは付けない %>
+  <% if proposal.multiple_senses? %>
+    <p class="ann-proposal__senses-note"><%= t("admin.annotations.proposal.multiple_senses", count: proposal.senses.size) %></p>
+    <% proposal.senses.each_with_index do |sense, i| %>
+      <div class="ann-proposal__sense">
+        <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= format("%02d", i + 1) %></span>
+        <%= render "proposal_sense", sense: sense %>
+      </div>
     <% end %>
-
-    <% if proposal.genre_path.any? %>
-      <dt><%= t("admin.annotations.genre") %></dt>
-      <dd>
-        <% proposal.genre_path.each_with_index do |name, i| %>
-          <% if i.positive? %><span class="sep">›</span><% end %><span><%= name %></span>
-        <% end %>
-        <% unless proposal.resolved_genre %>
-          <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
-        <% end %>
-      </dd>
-    <% end %>
-
-    <% if proposal.entity_type_name %>
-      <dt><%= t("admin.annotations.entity") %></dt>
-      <dd>
-        <%= proposal.entity_type_name %>
-        <% unless proposal.resolved_entity_type %>
-          <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
-        <% end %>
-      </dd>
-    <% end %>
-
-    <% if proposal.part_of_speech_name %>
-      <dt><%= t("admin.annotations.pos") %></dt>
-      <dd>
-        <%= proposal.part_of_speech_name %>
-        <% unless proposal.resolved_part_of_speech %>
-          <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
-        <% end %>
-      </dd>
-    <% end %>
-
-    <% if proposal.word_origin_names.any? %>
-      <dt><%= t("admin.annotations.origins") %></dt>
-      <dd>
-        <%= proposal.resolved_word_origins.map(&:name).join("・") %>
-        <% proposal.unknown_word_origin_names.each do |name| %>
-          <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
-        <% end %>
-      </dd>
-    <% end %>
-
-    <% if proposal.variants.any? %>
-      <dt><%= t("admin.annotations.variants") %></dt>
-      <dd><%= proposal.variants.map { |v| v["surface"] }.join("・") %></dd>
-    <% end %>
-  </dl>
+  <% else %>
+    <%= render "proposal_sense", sense: proposal.senses.first %>
+  <% end %>
 
   <% if proposal.entry_notes %>
     <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>

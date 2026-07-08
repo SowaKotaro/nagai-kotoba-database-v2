@@ -6,7 +6,7 @@ import { Controller } from "@hotwired/stimulus"
 // 選んだ範囲の部分文字列を隠しフィールド(target / target_reading)へ書き込む。
 // キーボードを使わずに指定できるのが目的(スマホ/タブレット対応)。
 export default class extends Controller {
-  static targets = ["surfaceStrip", "readingStrip", "targetField", "targetReadingField", "result"]
+  static targets = ["surfaceStrip", "readingStrip", "targetField", "targetReadingField", "targetStartField", "result"]
   static values = { surface: String }
 
   connect() {
@@ -35,18 +35,26 @@ export default class extends Controller {
     return Array.from(which === "t" ? this.surfaceValue : this.reading)
   }
 
-  // 永続化済みの target / target_reading から範囲を復元(最初の一致箇所)。
+  // 永続化済みの target / target_reading から範囲を復元する。
+  // 単語側は保存済みの出現位置(target_start)があればその箇所を、無ければ最初の一致箇所を採る
+  // (同じ文字列が繰り返す語で、どの出現かを正しく復元するため)。
   restoreFromFields() {
-    this.restoreOne("t", this.targetFieldTarget.value)
-    this.restoreOne("r", this.targetReadingFieldTarget.value)
+    const start = this.hasTargetStartFieldTarget ? parseInt(this.targetStartFieldTarget.value, 10) : NaN
+    this.restoreOne("t", this.targetFieldTarget.value, Number.isNaN(start) ? null : start)
+    this.restoreOne("r", this.targetReadingFieldTarget.value, null)
   }
 
-  restoreOne(which, value) {
+  restoreOne(which, value, atIndex) {
     if (!value) return
     const chars = this.chars(which)
     const sub = Array.from(value)
+    const matches = (i) => i >= 0 && i + sub.length <= chars.length && sub.every((c, k) => chars[i + k] === c)
+    if (atIndex != null && matches(atIndex)) {
+      this.sel[which] = { s: atIndex, e: atIndex + sub.length - 1 }
+      return
+    }
     for (let i = 0; i + sub.length <= chars.length; i++) {
-      if (sub.every((c, k) => chars[i + k] === c)) {
+      if (matches(i)) {
         this.sel[which] = { s: i, e: i + sub.length - 1 }
         return
       }
@@ -84,6 +92,12 @@ export default class extends Controller {
   commit() {
     this.targetFieldTarget.value = this.substring("t")
     this.targetReadingFieldTarget.value = this.substring("r")
+    // 単語側の選択開始位置(出現箇所の識別子)を保存する。未選択なら空にする。
+    if (this.hasTargetStartFieldTarget) {
+      const sel = this.sel.t
+      this.targetStartFieldTarget.value =
+        sel.s != null && sel.e != null ? String(Math.min(sel.s, sel.e)) : ""
+    }
     this.updateResult()
   }
 

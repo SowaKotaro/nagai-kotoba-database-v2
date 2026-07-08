@@ -137,6 +137,42 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @word.reload.annotated_at
   end
 
+  # --- 複数語義の提案(同音異義語・Issue 41) ---
+  test "複数語義の提案を反映するとフォームに語義が並ぶ" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [
+        { "meaning" => "谷川流のライトノベル。" },
+        { "meaning" => "同名のアニメ作品。", "reading" => @sense.reading }
+      ]
+    })
+    get admin_annotation_path(@word, apply_proposal: 1)
+    assert_response :success
+    assert_select ".ann-sense", count: 2
+    assert_select "textarea.js-meaning", text: /谷川流/
+    assert_select "textarea.js-meaning", text: /アニメ作品/
+  end
+
+  test "複数語義の提案はパネルで語義ごとに区切って表示される" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "meaning" => "語義A。" }, { "meaning" => "語義B。" } ]
+    })
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal__sense", count: 2
+  end
+
+  # --- 注釈済みの語でも提案を見直せる(Issue 41 FB) ---
+  test "注釈済みの語でも Claude の提案が状態バッジ付きで表示される" do
+    sign_in_as(Admin.take)
+    @word.update!(annotated_at: Time.current)
+    annotation_proposals(:haruhi_proposal).applied!
+    get admin_annotation_path(@word)
+    assert_response :success
+    assert_select ".ann-proposal"
+    assert_select ".ann-proposal__status--applied", text: "反映済み"
+  end
+
   test "?proposed=1 のキューは未承認の提案がある語だけを辿る" do
     sign_in_as(Admin.take)
     # 提案があるのは haruhi だけなので、index はそこへ誘導する
@@ -151,11 +187,21 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotations_path(proposed: 1)
   end
 
+  test "?proposed=1 で語の詳細を表示できる(キューの id 曖昧を回避)" do
+    sign_in_as(Admin.take)
+    # show は set_navigation で annotation_proposals を joins したキューを辿る。
+    # 素の id だと words.id と annotation_proposals.id で曖昧になり
+    # StatementInvalid になっていた(回帰防止)。
+    get admin_annotation_path(@word, proposed: 1)
+    assert_response :success
+  end
+
   # --- 表層形の訂正(Issue 36: 編集画面をコンソールへ統合) ---
   test "コンソールに表層形の編集欄が出る" do
     sign_in_as(Admin.take)
     get admin_annotation_path(@word)
-    assert_select "input.ann-surface__input[name=?][value=?]", "word[surface]", @word.surface
+    # 長い表層形も全文表示するため textarea。値は要素の中身に入る(value 属性ではない)。
+    assert_select "textarea.ann-surface__input[name=?]", "word[surface]", text: @word.surface
   end
 
   test "表層形を訂正すると char_type_pattern が再生成される" do

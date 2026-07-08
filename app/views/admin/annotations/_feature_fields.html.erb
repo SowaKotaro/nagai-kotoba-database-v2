@@ -24,5 +24,7 @@
 
   <%= form.hidden_field :target, data: { feature_range_target: "targetField" } %>
   <%= form.hidden_field :target_reading, data: { feature_range_target: "targetReadingField" } %>
+  <%# 同一 target が繰り返す語で出現箇所を識別する位置(表層形の先頭からのオフセット) %>
+  <%= form.hidden_field :target_start, data: { feature_range_target: "targetStartField" } %>
   <p class="ann-feature__result" data-feature-range-target="result"></p>
 </div>

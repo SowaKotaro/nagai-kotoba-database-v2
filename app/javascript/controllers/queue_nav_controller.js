@@ -9,6 +9,14 @@ export default class extends Controller {
   connect() {
     this.handler = this.onKey.bind(this)
     document.addEventListener("keydown", this.handler)
+    // 「保存して次へ」で Turbo Frame の中身だけ差し替わると、その場で画面が変わり
+    // 遷移したか分かりにくい。見出し(NO.・見出し語)が見える位置まで先頭へ戻す。
+    this.scrollToTop()
+  }
+
+  // 見出しが見える位置(ページ先頭)へ戻す。スクロールしていなければ実質no-op。
+  scrollToTop() {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
   }
 
   disconnect() {

@@ -120,6 +120,17 @@ class BulkWordRegistrationTest < ActiveSupport::TestCase
     assert_equal "ネコ", row.chosen
   end
 
+  test "```json フェンス付きで貼り付けても読める" do
+    fenced = "```json\n#{research_json(input: '資本主義', surface: '資本主義', reading: 'シホンシュギ', confidence: 'high')}\n```"
+    reg = BulkWordRegistration.new(
+      entries: [ { surface: "資本主義", reading: "シホンシュギ" } ],
+      research_json: fenced
+    )
+    row = reg.merge_research.first
+    assert_not reg.research_error?
+    assert_equal :match, row.status
+  end
+
   # --- step3: 重複判定は確定した読み(entries)に対して行う ---
   test "読みが nil の語は重複判定で警告なし" do
     reg = BulkWordRegistration.new(entries: [ { surface: "未知語", reading: "" } ])

@@ -807,96 +807,192 @@ a.tag:hover .genre-hub__count {
   border-color: var(--shu);
 }
 
-/* 文字種の組み立て表示(ターミナル風)。キー/⌫ で操作し、押した文字がここに並ぶ。
-   点滅カーソルで「ここに入力される」ことを示す */
-.char-type-console {
+/* 押したキーの文字種が並ぶ表示欄。VSCode の検索窓のように、先頭に「>」プロンプト、
+   左に組み立て中のパターン、右端に切替アイコン(text-aa / "ab")を置く。手入力不可の読み取り専用。
+   枠線は他の入力欄と同じ(--rule-mid、focus で朱)。 */
+.char-type-display {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   min-height: 42px;
-  padding: 8px 12px;
-  border: 1px solid var(--ink);
+  padding: 5px 6px 5px 12px;
+  border: 1px solid var(--rule-mid);
   background: var(--bg);
+}
+
+.char-type-display:focus-within {
+  border-color: var(--shu);
+}
+
+.char-type-display__prompt {
+  flex: none;
   font-family: var(--font-mono);
   font-size: 16px;
-  letter-spacing: 0.15em;
+  color: var(--ink-3);
+}
+
+.char-type-display__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  line-height: 1.4;
   color: var(--ink);
-}
-
-.char-type-console__prompt {
-  font-size: 13px;
-  color: var(--shu);
-}
-
-.char-type-console__value {
+  /* 漢/あ/ア と 1/A/a/@ の字幅差を無くすため全角字形に揃える(表示のみ。送信値は半角のまま) */
+  text-transform: full-width;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 /* 未入力のときは薄い案内文を出す(placeholder 相当) */
-.char-type-console__value:empty::before {
+.char-type-display__value:empty::before {
   content: attr(data-placeholder);
+  font-family: var(--font-gothic);
+  font-size: 13px;
   color: var(--ink-3);
-  letter-spacing: 0.06em;
+  text-transform: none;
 }
 
-.char-type-console__caret {
+/* 右端の切替アイコン群 */
+.char-type-display__flags {
   flex: none;
-  width: 9px;
-  height: 1.1em;
-  background: var(--ink);
-  animation: char-type-blink 1.05s steps(1) infinite;
+  display: flex;
+  gap: 2px;
 }
 
-@keyframes char-type-blink {
-  0%, 50% { opacity: 1; }
-  50.01%, 100% { opacity: 0; }
+/* tip(状態ラベル)の絶対配置の基準 */
+.char-type-flag {
+  position: relative;
+  display: inline-flex;
+}
+
+.char-type-flag__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background 0.12s, color 0.12s;
+}
+
+.char-type-flag__btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.char-type-flag__btn:hover {
+  background: var(--rule);
+  color: var(--ink-2);
+}
+
+/* 選択中(aria-pressed=true = 厳密側が有効)は枠線でなく背景の塗りで示す。
+   墨ベタは主張が強いので、未選択ホバーと同じベージュ(--rule)の淡い塗りにする。 */
+.char-type-flag__btn[aria-pressed="true"] {
+  background: var(--rule);
+  color: var(--ink);
+}
+
+.char-type-flag__btn[aria-pressed="true"]:hover {
+  background: var(--rule-mid);
+}
+
+.char-type-flag__btn:focus-visible {
+  outline: 2px solid var(--shu);
+  outline-offset: 1px;
+}
+
+/* 切り替えた瞬間だけ状態ラベルを 3 秒フェード表示。ホバー tooltip は使わない(モバイル配慮) */
+.char-type-flag__tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  z-index: 2;
+  padding: 3px 8px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.char-type-flag__tip.is-visible {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .char-type-console__caret { animation: none; }
+  .char-type-flag__tip { transition: none; }
 }
 
-/* 文字種の入力キー(あ/ア/漢/A/@ と ⌫)。キーで末尾へ追記、⌫ で末尾を1文字削除 */
+/* 文字種の入力キー(あ/ア/漢/1/A/a/@ と ⌫)。キーで末尾へ追記、⌫ で末尾を1文字削除。
+   紙より少し濃いキー面＋下辺の淡い影で少しレトロなキーボード風。押すと沈み込む。
+   キー同士は詰めて置き、削除キーだけ少し離す。 */
 .char-type-keys {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-1);
   margin-bottom: var(--space-2);
 }
 
-/* 削除ボタンは一番右の「@」から少し離して置く */
-.char-type-key--backspace {
-  margin-inline-start: var(--space-3);
-  color: var(--ink-3);
-}
-
-.char-type-key--backspace .icon {
-  width: 18px;
-  height: 18px;
-}
-
 .char-type-key {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  box-sizing: border-box;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 5px;
   border: 1px solid var(--rule-mid);
-  background: transparent;
-  font-size: 15px;
+  background: var(--rule);
+  box-shadow: 0 2px 0 var(--rule-mid);
+  font-family: var(--font-mono);
+  font-size: 14px;
   color: var(--ink-2);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  /* 字形を表示欄と揃える。連打でダブルタップ拡大・文字選択が起きないようにする */
+  text-transform: full-width;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform 0.05s, background 0.12s, border-color 0.12s, box-shadow 0.05s;
 }
 
 .char-type-key:hover {
+  border-color: var(--ink-3);
+  box-shadow: 0 2px 0 var(--ink-3);
+}
+
+/* 押し込み: キーを影の上に沈める */
+.char-type-key:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--ink-3);
+  background: var(--ink);
+  color: var(--on-ink);
   border-color: var(--ink);
 }
 
-.char-type-key:active {
-  background: var(--ink);
-  color: var(--bg);
-  border-color: var(--ink);
+/* 削除キーは SVG アイコン。全角化の対象外にし、少し右に離して置く */
+.char-type-key--backspace {
+  margin-inline-start: var(--space-3);
+  color: var(--ink-3);
+  text-transform: none;
+}
+
+.char-type-key--backspace .icon {
+  width: 16px;
+  height: 16px;
 }
 
 .slider-field,
@@ -950,6 +1046,9 @@ a.tag:hover .genre-hub__count {
 
 .length-slider__thumb::-webkit-slider-runnable-track { background: transparent; height: 36px; }
 .length-slider__thumb::-moz-range-track { background: transparent; }
+
+/* ツマミ: 墨の丸ノブ(紙色フチで罫トラック/もう一方のツマミから分離)。
+   design.md は角丸禁止だが、スライダーのツマミはオーナー判断で丸を許可(掴む対象として自然)。 */
 .length-slider__thumb::-webkit-slider-thumb {
   pointer-events: auto;
   -webkit-appearance: none;
@@ -960,6 +1059,7 @@ a.tag:hover .genre-hub__count {
   margin-top: 10px;
   background: var(--ink);
   border: 2px solid var(--bg);
+  border-radius: 50%;
   cursor: pointer;
 }
 .length-slider__thumb::-moz-range-thumb {
@@ -968,7 +1068,7 @@ a.tag:hover .genre-hub__count {
   height: 16px;
   background: var(--ink);
   border: 2px solid var(--bg);
-  border-radius: 0;
+  border-radius: 50%;
   cursor: pointer;
 }
 
@@ -1897,6 +1997,7 @@ textarea {
 
 .bulk-review__table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 15px;
 }
@@ -1933,8 +2034,13 @@ textarea {
 }
 
 .bulk-review__surface {
+  width: calc(50% - 1.5rem);
   font-family: var(--font-mincho);
   font-size: 18px;
+}
+
+.bulk-review__reading {
+  width: calc(50% - 1.5rem);
 }
 
 .bulk-review__reading-input {
