@@ -79,6 +79,17 @@ class WordSenseSearchTest < ActiveSupport::TestCase
                  ids(char_type_pattern: "aaa漢漢漢漢", char_type_ignore_case: "1")
   end
 
+  test "大小を区別しないとき文字種パターンの小文字は大文字に畳まれる" do
+    search = WordSenseSearch.new(char_type_pattern: "Aa1あ", char_type_ignore_case: "1")
+    assert_equal "AA1あ", search.char_type_pattern
+    assert_equal "AA1あ", search.to_query_params[:char_type_pattern]
+  end
+
+  test "大小を区別するとき文字種パターンの小文字はそのまま残る" do
+    search = WordSenseSearch.new(char_type_pattern: "Aa1あ")
+    assert_equal "Aa1あ", search.char_type_pattern
+  end
+
   test "品詞で絞れる" do
     result = ids(part_of_speech_id: parts_of_speech(:noun).id)
     assert_includes result, word_senses(:murder).id

@@ -969,6 +969,12 @@ a.tag:hover .genre-hub__count {
   transition: transform 0.05s, background 0.12s, border-color 0.12s, box-shadow 0.05s;
 }
 
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
+   (大文字小文字を区別しないときに「a」キーを隠すのに使う) */
+.char-type-key[hidden] {
+  display: none;
+}
+
 .char-type-key:hover {
   border-color: var(--ink-3);
   box-shadow: 0 2px 0 var(--ink-3);
