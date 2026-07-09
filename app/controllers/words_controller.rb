@@ -21,16 +21,19 @@ class WordsController < ApplicationController
 
   def show
     # 未注釈の語は公開しない(RecordNotFound → 404)。
+    # ジャンルはパンくず(大→中→小)を出すため祖先まで preload する。
     @word = Word.annotated.includes(
       word_senses: [
-        :genre, :entity_type, :part_of_speech, :word_origins, :word_sense_variants,
+        { genre: { parent: :parent } }, :entity_type, :part_of_speech, :word_origins, :word_sense_variants,
         { word_sense_features: :linguistic_feature }
       ]
     ).find(params[:id])
 
     # 条件付きGET(ETag/Last-Modified)。更新が無ければ 304 を返し、関連語の
-    # 組み立てもスキップする(Issue 26)。word_senses 等は touch: true で反映される。
-    return unless stale?(@word, public: true)
+    # 組み立てもスキップする(Issue 26)。word_senses は touch: true で Word に伝わるが、
+    # ジャンル等のマスタは touch しないので、名称変更を拾えるよう明示的に含める。
+    records = @word.cache_dependencies
+    return unless stale?(etag: records, last_modified: records.map(&:updated_at).max, public: true)
 
     # 単語間の内部リンク(関連語)。同ジャンル/同文字数/同先頭文字を各数件(Issue 23)。
     # JSON(Issue 25)では不要なので HTML のときだけ組み立てる。

@@ -60,17 +60,23 @@
     <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off" %>
   </div>
 
-  <div class="field char-type-field" data-controller="char-type">
+  <div class="field char-type-field" data-controller="char-type"
+       data-char-type-lower-value="<%= CharTypePattern::LOWER %>"
+       data-char-type-upper-value="<%= CharTypePattern::UPPER %>">
     <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
 
     <%# 入力はキーボード風のキー(あ/ア/漢/1/A/a/@)と削除キー(⌫)だけ。手入力は受け付けず、
-        押したキーの文字種が下の表示欄に並ぶ(組み立て中のパターンを見せる読み取り専用の欄)。 %>
+        押したキーの文字種が下の表示欄に並ぶ(組み立て中のパターンを見せる読み取り専用の欄)。
+        「a」だけは大文字小文字トグル(Aa)が off のとき「A」に畳まれるので隠す。 %>
     <div class="char-type-keys">
       <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
            CharTypePattern::DIGIT, CharTypePattern::UPPER, CharTypePattern::LOWER,
            CharTypePattern::OTHER ].each do |char| %>
-        <button type="button" class="char-type-key" data-action="char-type#append"
-                data-char-type-char-param="<%= char %>"><%= char %></button>
+        <% lower_key = char == CharTypePattern::LOWER %>
+        <%= tag.button char, type: "button", class: "char-type-key",
+              hidden: (lower_key && !@search.char_type_case_sensitive?),
+              data: { action: "char-type#append", char_type_char_param: char,
+                      char_type_target: ("lowerKey" if lower_key) } %>
       <% end %>
       <button type="button" class="char-type-key char-type-key--backspace"
               data-action="char-type#remove"
@@ -86,7 +92,9 @@
       <span class="char-type-display__value" data-char-type-target="display"
             data-placeholder="<%= t('searches.char_type_console_placeholder') %>"><%= @search.char_type_pattern %></span>
       <span class="char-type-display__flags">
-        <span class="char-type-flag" data-controller="char-type-toggle">
+        <%# 大文字小文字トグル。切り替えを親の char-type へ伝え、「a」キーの表示を連動させる %>
+        <span class="char-type-flag" data-controller="char-type-toggle"
+              data-action="char-type-toggle:changed->char-type#caseSensitivityChanged">
           <%= hidden_field_tag :char_type_ignore_case, (@search.char_type_case_sensitive? ? "" : "1"),
                 data: { char_type_toggle_target: "input" } %>
           <button type="button" class="char-type-flag__btn"

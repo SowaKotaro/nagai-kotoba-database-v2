@@ -34,6 +34,57 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_modified
   end
 
+  test "詳細の見出しに Web 検索への外部リンク(別タブ)がある" do
+    word = words(:abc_murder)
+    get word_path(word)
+
+    href = "https://www.google.com/search?q=#{CGI.escape(word.surface)}"
+    assert_select "h1.page-title a.page-title__web-search[href=?]", href do |links|
+      assert_equal "_blank", links.first["target"]
+      assert_includes links.first["rel"], "noopener"
+    end
+  end
+
+  test "ジャンル名を変えると詳細の ETag も変わり、新しい名前が返る" do
+    genre = word_senses(:murder).genre
+    assert genre, "この検証には語義にジャンルが必要"
+
+    get word_path(words(:abc_murder))
+    etag = response.headers["ETag"]
+    assert_select ".genre-path", text: /#{Regexp.escape(genre.name)}/
+
+    genre.update!(name: "原始仏教")
+
+    get word_path(words(:abc_murder)), headers: { "If-None-Match" => etag }
+    assert_response :success
+    assert_select ".genre-path", text: /原始仏教/
+  end
+
+  test "上位ジャンル(祖先)の名前を変えても詳細のパンくずに反映される" do
+    parent = word_senses(:murder).genre.parent
+    assert parent, "この検証には親ジャンルが必要"
+
+    get word_path(words(:abc_murder))
+    etag = response.headers["ETag"]
+
+    parent.update!(name: "近現代文学")
+
+    get word_path(words(:abc_murder)), headers: { "If-None-Match" => etag }
+    assert_response :success
+    assert_select ".genre-path", text: /近現代文学/
+  end
+
+  test "品詞名を変えても詳細に反映される" do
+    get word_path(words(:abc_murder))
+    etag = response.headers["ETag"]
+
+    parts_of_speech(:noun).update!(name: "名詞(改)")
+
+    get word_path(words(:abc_murder)), headers: { "If-None-Match" => etag }
+    assert_response :success
+    assert_select "a.tag", text: "名詞(改)"
+  end
+
   # --- 公開: 未注釈は出さない ---
   test "未注釈の語は一覧に出ない" do
     get words_path

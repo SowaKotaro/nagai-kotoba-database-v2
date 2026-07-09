@@ -22,6 +22,8 @@ export default class extends Controller {
     const label = strict ? this.buttonTarget.dataset.titleStrict : this.buttonTarget.dataset.titleRelaxed
     this.buttonTarget.setAttribute("aria-label", label)
     this.showTip(label)
+    // 切替に連動したい相手(大文字小文字トグル → 「a」キーの表示)へ知らせる。
+    this.dispatch("changed", { detail: { strict } })
   }
 
   // 選択直後に状態ラベルを 3 秒だけ表示(フェードは CSS の transition が担う)。

@@ -38,7 +38,12 @@ class WordSenseSearch
   def reading_length_max = positive_integer(:reading_length_max)
   def reading_length = positive_integer(:reading_length)
   def mora_count = positive_integer(:mora_count)
-  def char_type_pattern = @params[:char_type_pattern].to_s.strip
+  # 大文字小文字を区別しないときは「a」と「A」が同義になるため「A」に畳んで返す。
+  # 検索結果は変わらないが、フォームの表示と引き継ぐ URL が一意になる。
+  def char_type_pattern
+    raw = @params[:char_type_pattern].to_s.strip
+    char_type_case_sensitive? ? raw : raw.tr(CharTypePattern::LOWER, CharTypePattern::UPPER)
+  end
   # 文字種検索の一致方法。既定は完全一致で、トグル(char_type_partial)を入れたときだけ部分一致。
   def char_type_partial? = boolean(:char_type_partial)
   # 文字種検索の大文字小文字。既定は区別する。トグル(char_type_ignore_case)で区別しない。

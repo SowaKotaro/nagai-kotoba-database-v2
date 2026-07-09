@@ -14,7 +14,12 @@
     <span><%= t("words.show.headword") %></span>
     <span class="mono"><%= t("words.show.record_number", id: @word.id) %></span>
   </p>
-  <h1 class="page-title"><%= @word.surface %></h1>
+  <%# 見出しの末尾にさりげない虫眼鏡。アプリ内検索ではなく Web 検索へ別タブで飛ばす。
+      リンク内に空白を作ると下線だけが浮くので、ブロックではなく引数で渡す %>
+  <h1 class="page-title"><%= @word.surface %><%= link_to icon("magnifying_glass"),
+        web_search_url(@word.surface), class: "page-title__web-search",
+        target: "_blank", rel: "noopener noreferrer external",
+        aria: { label: t("words.show.web_search", surface: @word.surface) } %></h1>
   <p class="page-title-meta">
     <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
   </p>

@@ -33,7 +33,8 @@ class AnnotationResearchExport
     end
   end
 
-  # ジャンルは末端(小分類)までのパスの一覧で渡す(提案はこのパスから選ぶか、新設を提案する)。
+  # ジャンルは中分類・小分類までのパスの一覧で渡す。提案は小分類パスから選ぶか、
+  # 既存の中分類の下に新しい小分類を提案する(大・中はスキル側で新設させない)。
   def masters
     {
       "genres" => genre_paths,
@@ -44,9 +45,11 @@ class AnnotationResearchExport
     }
   end
 
+  # 大分類は中分類パスの先頭に必ず現れるので、単独では渡さない。
+  # ソートすると親(中分類)が子(小分類)より先に並ぶ。
   def genre_paths
     genres = Genre.all.index_by(&:id)
-    genres.values.select(&:small?).map { |genre| path_names(genre, genres) }.sort
+    genres.values.reject(&:large?).map { |genre| path_names(genre, genres) }.sort
   end
 
   # 読み込み済みのハッシュから祖先を辿る(語数分の親クエリを出さない)。

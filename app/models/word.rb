@@ -28,6 +28,19 @@ class Word < ApplicationRecord
     self.annotated_at = Time.current
   end
 
+  # 詳細ページの鮮度判定(条件付きGET)に関わるレコード一式。
+  # word_senses は touch: true で Word の updated_at を動かすが、ジャンル・品詞などの
+  # マスタは touch しない。名称を変えただけでは Word が古いままになり、ETag/Last-Modified が
+  # 変わらず 304 で古い名前が返ってしまうため、表示に使うマスタもここに含める。
+  # 呼び出し側で関連を preload しておくこと(していないと N+1 になる)。
+  def cache_dependencies
+    masters = word_senses.flat_map do |sense|
+      [ *sense.genre&.self_and_ancestors, sense.entity_type, sense.part_of_speech,
+        *sense.word_origins, *sense.word_sense_features.map(&:linguistic_feature) ]
+    end
+    [ self, *masters.compact ]
+  end
+
   # 表層形は textarea 入力(折り返し表示)のため、混入した改行を先に除去する。
   before_validation :strip_surface_newlines
   # char_type_pattern は surface から常に導出する(手入力させない)。

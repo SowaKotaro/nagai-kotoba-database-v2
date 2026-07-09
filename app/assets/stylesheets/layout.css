@@ -106,19 +106,20 @@
   font-size: 15px;
 }
 
-.site-nav a {
+/* 直下のリンクだけを対象にする(プルダウン内のリンクは .nav-menu__panel a が受け持つ) */
+.site-nav > a {
   text-decoration: none;
   color: var(--ink-2);
   /* タップ領域確保(見た目は変えずに padding で広げる) */
   padding: var(--space-2) 2px;
 }
 
-.site-nav a:hover {
+.site-nav > a:hover {
   color: var(--ink);
 }
 
 /* 現在地は朱の下線 */
-.site-nav a.is-current {
+.site-nav > a.is-current {
   color: var(--ink);
   font-weight: 500;
   border-bottom: 2px solid var(--shu);
@@ -140,6 +141,95 @@
 
 .site-nav form button:hover {
   color: var(--ink);
+}
+
+/* --- ナビのプルダウン(「検索」→ ジャンル/索引/詳細検索) --- */
+.nav-menu {
+  position: relative;
+}
+
+.nav-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: var(--space-2) 2px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.nav-menu__trigger:hover {
+  color: var(--ink);
+}
+
+.nav-menu__trigger.is-current {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 2px solid var(--shu);
+}
+
+/* .icon(components.css)が後勝ちで 1em にするため、詳細度を上げて小さく保つ */
+.nav-menu__trigger .nav-menu__caret {
+  width: 0.72em;
+  height: 0.72em;
+  transition: transform 0.15s ease;
+}
+
+.nav-menu__trigger[aria-expanded="true"] .nav-menu__caret {
+  transform: rotate(180deg);
+}
+
+/* 墨 1px 枠のパネル(角丸・影なし) */
+.nav-menu__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 25;
+  min-width: 8.5rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--ink);
+}
+
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す */
+.nav-menu__panel[hidden] {
+  display: none;
+}
+
+.nav-menu__panel a {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-menu__panel a:last-child {
+  border-bottom: none;
+}
+
+/* hover は墨反転 */
+.nav-menu__panel a:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* 現在地は朱の縦罫(下線はパネルの区切り罫と衝突するので使わない) */
+.nav-menu__panel a.is-current {
+  border-left-color: var(--shu);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.nav-menu__panel a.is-current:hover {
+  color: var(--bg);
 }
 
 /* 常設のキーワード検索(枠で囲わず下線1本 + 虫眼鏡アイコン) */
@@ -375,17 +465,38 @@ main.container {
     margin-top: var(--space-6);
   }
 
-  .site-nav a,
+  .site-nav > a,
   .site-nav form {
     display: block;
   }
 
-  .site-nav a,
+  .site-nav > a,
+  .nav-menu__trigger,
   .site-nav form button {
     width: 100%;
     padding: var(--space-4) 2px;
     border-bottom: 1px solid var(--rule);
     text-align: left;
+  }
+
+  /* ドロワー内ではプルダウンを浮かせず、その場で開いて下の項目を押し下げる */
+  .nav-menu__trigger {
+    justify-content: space-between;
+  }
+
+  .nav-menu__panel {
+    position: static;
+    min-width: 0;
+    border: none;
+  }
+
+  .nav-menu__panel a {
+    padding: var(--space-4) 2px var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .nav-menu__panel a:last-child {
+    border-bottom: 1px solid var(--rule);
   }
 
   .header-search {

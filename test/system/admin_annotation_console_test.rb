@@ -30,6 +30,50 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_equal genres(:small_novel).id, word_senses(:pending).reload.genre_id
   end
 
+  # 最低限のアノテーション項目(読み・語種・ジャンル・品詞・エンティティ)が揃うと
+  # 語義カードの枠が緑(is-complete)になる。保存できるかどうかとは無関係の目印。
+  test "最低限の項目が揃うと語義カードが完了表示になり、ひとつ欠けると戻る" do
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "sense-completeness"
+
+    # 初期状態は読みだけ。ジャンル・語種・品詞・エンティティが未設定
+    assert_no_selector ".ann-sense.is-complete"
+
+    choose_hidden_input "input[type=checkbox][value='#{word_origins(:wago).id}']"
+    choose_hidden_input "input[type=radio][value='#{parts_of_speech(:noun).id}']"
+    choose_hidden_input "input[type=radio][value='#{entity_types(:book_title).id}']"
+    # ジャンルがまだ小分類まで決まっていないので完了にはならない
+    assert_no_selector ".ann-sense.is-complete"
+
+    within ".ann-genre" do
+      click_expecting(expect_css: ".ann-chip", text: "日本文学") { find("button.ann-chip", exact_text: "文学") }
+      click_expecting(expect_css: ".ann-chip", text: "小説") { find("button.ann-chip", exact_text: "日本文学") }
+      click_expecting(expect_css: ".ann-chip.is-on", text: "小説") { find("button.ann-chip", exact_text: "小説") }
+    end
+    assert_selector ".ann-sense.is-complete"
+
+    # 読みを消せば完了表示は外れる
+    find(".ann-reading").set("")
+    assert_no_selector ".ann-sense.is-complete"
+  end
+
+  test "ジャンルが中分類止まりでは語義カードは完了表示にならない" do
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "sense-completeness"
+
+    choose_hidden_input "input[type=checkbox][value='#{word_origins(:wago).id}']"
+    choose_hidden_input "input[type=radio][value='#{parts_of_speech(:noun).id}']"
+    choose_hidden_input "input[type=radio][value='#{entity_types(:book_title).id}']"
+
+    within ".ann-genre" do
+      click_expecting(expect_css: ".ann-chip", text: "日本文学") { find("button.ann-chip", exact_text: "文学") }
+      click_expecting(expect_css: ".ann-chip", text: "小説") { find("button.ann-chip", exact_text: "日本文学") }
+    end
+    # 小分類を選ぶまで genre_id は空のまま
+    assert_equal "", find(".js-genre-value", visible: false).value
+    assert_no_selector ".ann-sense.is-complete"
+  end
+
   test "用語解説パネルを開くと特徴の定義と例が読める" do
     visit admin_annotation_path(@word)
 
@@ -100,5 +144,14 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_not_nil saved
     assert_equal 3, saved.target_start
     assert_equal "ビショ", saved.target_reading
+  end
+
+  private
+
+  # チップの input は視覚的に隠れているため、ネイティブクリックに頼らず
+  # 選択して change を発火させる(ヘッドレスでの取りこぼしを避ける)。
+  def choose_hidden_input(selector)
+    input = find(selector, visible: false)
+    execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", input)
   end
 end

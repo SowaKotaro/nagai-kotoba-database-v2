@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "word-annotation-research output",
-  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins)は書き出し JSON の masters と一字一句同じ表記にする。1つの表層形に複数の異なる語義(同名の作品・人物・団体など同音異義語)がある場合は senses 配列で複数の語義を返す。単一語義なら meaning などをトップレベルに置く従来形式でよい(取り込み側で1件の語義として扱う)。",
+  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins)は書き出し JSON の masters と一字一句同じ表記にする。ジャンルとエンティティは軸が違う: ジャンルはその語が「どこに属するか」(所属)、エンティティはその語が「一体何であるか」(正体)。取り違えない。両方とも品詞に関わらず全語に付ける。1つの表層形に複数の異なる語義(同名の作品・人物・団体など同音異義語)がある場合は senses 配列で複数の語義を返す。単一語義なら meaning などをトップレベルに置く従来形式でよい(取り込み側で1件の語義として扱う)。",
   "type": "object",
   "required": ["version", "proposals"],
   "$defs": {
@@ -12,15 +12,15 @@
         "meaning": { "type": "string", "description": "意味の下書き。公開リード文のトーンで1〜2文・常体" },
         "reading": { "type": "string", "description": "この語義の読みが語の読みと異なる場合のみ(通常は省略し語の読みを共有する)" },
         "genre_path": {
-          "type": "array", "items": { "type": "string" },
-          "description": "ジャンルの名前パス(大→中→小)。masters.genres から末端まで選ぶ。新設提案は既存の大・中の下に新しい小分類名を置く"
+          "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 3,
+          "description": "ジャンル=その語の「所属」。名前パス(大→中→小)で必ず長さ3。masters.genres の小分類パス(長さ3)があればそれを使う。無ければ masters.genres の中分類パス(長さ2)を選びその下に新しい小分類名を1つ足す。大分類・中分類は新設しない。新設する小分類は親の中分類の分割軸に揃える(親が地域軸なら地域軸)"
         },
-        "genre_new": { "type": "boolean", "description": "genre_path の末端が新設候補のとき true" },
-        "entity_type": { "type": "string", "description": "エンティティ名(固有名詞のみ)。masters.entity_types から" },
-        "part_of_speech": { "type": "string", "description": "品詞名。masters.parts_of_speech から" },
+        "genre_new": { "type": "boolean", "description": "genre_path の末端(小分類)が新設候補のとき true" },
+        "entity_type": { "type": "string", "description": "エンティティ=その語が「一体何であるか」(人名/書籍名/出来事/疾患名など)。品詞に関わらず全語に付ける(普通名詞も省略しない)。masters.entity_types から選び、無ければ新しい名前を書いてよい。分野名(歴史・心理学など)は所属なのでここに書かずジャンルへ。ジャンル末端と同名になったらどちらかが誤り" },
+        "part_of_speech": { "type": "string", "description": "品詞名。masters.parts_of_speech から一字一句同じ表記で。多くは普通名詞/固有名詞(「名詞」というマスタは無い)" },
         "word_origins": {
           "type": "array", "items": { "type": "string" },
-          "description": "語種名(複数可)。masters.word_origins から"
+          "description": "語種名(複数可)。masters.word_origins から。「外来語」ではなく言語名(日本語/中国語/英語…)で持つ。漢語=中国語、和語=日本語。混種語は複数並べる。由来言語がマスタに無ければ新しい言語名を書く"
         },
         "variants": {
           "type": "array",
@@ -55,15 +55,15 @@
           },
           "meaning": { "type": "string", "description": "【単一語義の従来形式】意味の下書き。senses を使うなら不要" },
           "genre_path": {
-            "type": "array", "items": { "type": "string" },
-            "description": "【単一語義の従来形式】ジャンルの名前パス(大→中→小)。senses を使うなら不要"
+            "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 3,
+            "description": "【単一語義の従来形式】ジャンル(所属)の名前パス(大→中→小)。規則は $defs/sense の genre_path と同じ。senses を使うなら不要"
           },
-          "genre_new": { "type": "boolean", "description": "【単一語義の従来形式】genre_path の末端が新設候補のとき true" },
-          "entity_type": { "type": "string", "description": "【単一語義の従来形式】エンティティ名。senses を使うなら不要" },
+          "genre_new": { "type": "boolean", "description": "【単一語義の従来形式】genre_path の末端(小分類)が新設候補のとき true" },
+          "entity_type": { "type": "string", "description": "【単一語義の従来形式】エンティティ(その語が何であるか)。senses を使うなら不要" },
           "part_of_speech": { "type": "string", "description": "【単一語義の従来形式】品詞名。senses を使うなら不要" },
           "word_origins": {
             "type": "array", "items": { "type": "string" },
-            "description": "【単一語義の従来形式】語種名。senses を使うなら不要"
+            "description": "【単一語義の従来形式】語種名(言語名)。senses を使うなら不要"
           },
           "variants": {
             "type": "array",

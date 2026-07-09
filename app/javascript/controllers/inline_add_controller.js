@@ -40,6 +40,8 @@ export default class extends Controller {
 
     const html = this.chipTarget.innerHTML.replaceAll("__ID__", data.id).replaceAll("__NAME__", data.name)
     this.element.insertAdjacentHTML("beforebegin", html)
+    // 選択済みのチップを DOM に挿すだけでは change が飛ばないので明示的に知らせる。
+    this.dispatch("added", { detail: { id: data.id } })
     this.close()
   }
 

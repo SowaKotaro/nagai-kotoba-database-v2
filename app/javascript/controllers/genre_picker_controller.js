@@ -33,6 +33,7 @@ export default class extends Controller {
     this.mediumChipsTarget.innerHTML = ""
     this.smallChipsTarget.innerHTML = ""
     this.deactivate(this.largeChipsTarget)
+    this.notifyChanged()
   }
 
   async pickLarge(event) {
@@ -43,6 +44,7 @@ export default class extends Controller {
     this.smallChipsTarget.innerHTML = ""
     await this.fill(this.mediumChipsTarget, this.largeId, "pickMedium", this.largeId)
     this.mediumLevelTarget.hidden = false
+    this.notifyChanged()
   }
 
   async pickMedium(event) {
@@ -51,11 +53,19 @@ export default class extends Controller {
     this.valueTarget.value = ""
     await this.fill(this.smallChipsTarget, this.mediumId, "pickSmall", this.mediumId)
     this.smallLevelTarget.hidden = false
+    this.notifyChanged()
   }
 
   pickSmall(event) {
     this.activate(this.smallChipsTarget, event.currentTarget)
     this.valueTarget.value = event.currentTarget.dataset.id
+    this.notifyChanged()
+  }
+
+  // 隠しフィールドを直接書き換えるので input/change は飛ばない。
+  // 選択状態に依存する表示(語義カードの完了枠)へ明示的に知らせる。
+  notifyChanged() {
+    this.dispatch("changed")
   }
 
   // 子ジャンルを取得してチップを敷き詰め、末尾に「その場追加」を付ける。
