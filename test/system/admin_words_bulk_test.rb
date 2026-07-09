@@ -24,24 +24,15 @@ class AdminWordsBulkTest < ApplicationSystemTestCase
       find("thead input[type=checkbox]")
     end
 
-    # 送信して confirm(出た場合)を承認する。適用の成否は DB で判定する
-    # (送信後の描画タイミングはこの環境では不安定なため)。クリックが落ちて
-    # 何も起きなかったときだけ押し直す
+    # 送信して confirm を承認する。ダイアログは必ず出る(turbo_confirm)ので、
+    # 出なければ accept_confirm が失敗し、送信が中止されたことに気づける。
+    # 適用の成否は DB で判定する(送信後の描画タイミングはこの環境では不安定なため)。
     sense = word_senses(:pending)
     book_title_id = entity_types(:book_title).id
-    attempts = 0
-    begin
-      attempts += 1
-      submit = find("input[type=submit][value='#{I18n.t("admin.bulk_annotations.submit")}']")
-      page.scroll_to(submit, align: :center)
-      submit.click
-      accept_confirm_if_present
-      assert wait_until { sense.reload.entity_type_id == book_title_id }, "一括適用が反映されませんでした"
-    rescue Minitest::Assertion
-      raise if attempts >= 3 || sense.reload.entity_type_id == book_title_id
-
-      retry
-    end
+    submit = find("input[type=submit][value='#{I18n.t("admin.bulk_annotations.submit")}']")
+    page.scroll_to(submit, align: :center)
+    accept_confirm(I18n.t("admin.bulk_annotations.confirm")) { submit.click }
+    assert wait_until { sense.reload.entity_type_id == book_title_id }, "一括適用が反映されませんでした"
 
     # 全語が単一語義なので全件に適用される(他の語も確認)
     assert_equal book_title_id, word_senses(:curry).reload.entity_type_id
