@@ -148,6 +148,7 @@ ja:
       record_number: "No. %{id}"
       sense_number: "語義 %{number}"
       char_type_pattern: "文字種"
+      web_search: "「%{surface}」をWebで検索（別タブ）"
       flavor_label: "説明"
       undefined: "未定義"
       reading_length: "読みの文字数"
@@ -174,10 +175,15 @@ ja:
         more: "もっと見る"
     lead:
       base: "「%{surface}」は、読み「%{reading}」（%{metrics}）の日本語の長い言葉。"
+      # 語義ごとに読みが違う語(異読)は、字数・モーラが定まらないので読みだけを並べる
+      base_multi_reading: "「%{surface}」は、読み%{readings}の日本語の長い言葉。"
+      reading: "「%{reading}」"
       metrics_separator: "・"
       genre_separator: " › "
       genre: "ジャンルは %{path}。"
       meaning: "%{meaning}"
+      sense_count: "語義は%{count}つ。"
+      sense_meaning: "%{number} %{meaning}"
     pagination:
       prev: "前へ"
       next: "次へ"

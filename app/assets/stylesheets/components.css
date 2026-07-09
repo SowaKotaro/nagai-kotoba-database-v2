@@ -53,6 +53,22 @@
   overflow-wrap: anywhere;
 }
 
+/* 見出し末尾の Web 検索(外部リンク)。主役は言葉なので、墨の最も弱い色で小さく添える。
+   見出しは最大 92px まで伸びるため、font-size を継承させず独立して小さく保つ。 */
+.page-title__web-search {
+  margin-left: 0.5em;
+  font-size: clamp(15px, 1.6vw, 20px);
+  line-height: 1;
+  color: var(--ink-3);
+  text-decoration: none;
+  /* 大きな字面のなかほどへ少し持ち上げ、ベースラインに沈めない */
+  vertical-align: 0.2em;
+}
+
+.page-title__web-search:hover {
+  color: var(--shu);
+}
+
 .page-eyebrow {
   display: flex;
   justify-content: space-between;

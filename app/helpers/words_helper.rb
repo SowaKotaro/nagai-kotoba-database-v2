@@ -1,22 +1,33 @@
 module WordsHelper
+  # 見出し語を Web(アプリ外)で検索するための外部リンク先。
+  WEB_SEARCH_BASE_URL = "https://www.google.com/search".freeze
+
+  def web_search_url(query)
+    "#{WEB_SEARCH_BASE_URL}?#{{ q: query }.to_query}"
+  end
+
   # 単語詳細の自己完結リード文(定義文)を決定的に組み立てる(Issue 18)。
   # 読み・文字数・モーラ・ジャンルという構造データを散文に起こし、
   # meta description(Issue 14)や JSON-LD の description(Issue 16)にも流用する。
-  # 代表として先頭(最小 id)の語義を用いる。語義が無ければ空文字を返す。
+  # 語義が1つならその語義の定義文をそのまま使う。複数(同音異義語)なら、共通の見出し文に
+  # 語義数と各語義の意味を①②…で並べる(ジャンルは下の語義カードにあるので省く)。
+  # 語義が無ければ空文字を返す。
   def word_lead_sentence(word)
-    sense = word.word_senses.min_by(&:id)
-    sense ? word_sense_lead_sentence(word, sense) : ""
+    senses = word.word_senses.sort_by(&:id)
+    return "" if senses.empty?
+    return word_sense_lead_sentence(word, senses.first) if senses.one?
+
+    word_headline_sentence(word, senses) +
+      t("words.lead.sense_count", count: senses.size) +
+      numbered_sense_meanings(senses)
   end
 
   # 語義単位の定義文。JSON-LD(Issue 16)の語義ごとの description にも使う。
   def word_sense_lead_sentence(word, sense)
-    metrics = [ t("words.show.chars", count: sense.reading_length) ]
-    metrics << t("words.show.mora", count: sense.mora_count) if sense.mora_count
-
     sentence = t("words.lead.base",
                  surface: word.surface,
                  reading: sense.reading,
-                 metrics: metrics.join(t("words.lead.metrics_separator")))
+                 metrics: sense_metrics(sense))
 
     if sense.genre
       path = sense.genre.self_and_ancestors.map(&:name).join(t("words.lead.genre_separator"))
@@ -63,4 +74,47 @@ module WordsHelper
     params[:page] = page if page > 1
     words_path(params)
   end
+
+  private
+
+  # 読みの文字数・モーラ数。モーラ数は未算出のことがある。
+  def sense_metrics(sense)
+    metrics = [ t("words.show.chars", count: sense.reading_length) ]
+    metrics << t("words.show.mora", count: sense.mora_count) if sense.mora_count
+    metrics.join(t("words.lead.metrics_separator"))
+  end
+
+  # 複数語義に共通の見出し文。語義ごとに読みが違う場合は字数・モーラが定まらないため、
+  # それらは添えずに読みだけを並べる。
+  def word_headline_sentence(word, senses)
+    readings = senses.map(&:reading).uniq
+    if readings.one?
+      t("words.lead.base", surface: word.surface, reading: readings.first,
+                           metrics: sense_metrics(senses.first))
+    else
+      t("words.lead.base_multi_reading", surface: word.surface,
+                                         readings: readings.map { |reading| t("words.lead.reading", reading:) }.join)
+    end
+  end
+
+  # ①②… を振った意味の列挙。番号は語義カード(語義 01/02…)と同じ並び順に対応する。
+  # 意味が未登録の語義は文にできないので飛ばす(番号は詰めない)。
+  def numbered_sense_meanings(senses)
+    senses.each_with_index.filter_map do |sense, index|
+      next if sense.meaning.blank?
+
+      t("words.lead.sense_meaning", number: circled_number(index + 1),
+                                    meaning: ensure_sentence_end(sense.meaning.strip))
+    end.join
+  end
+
+  CIRCLED_NUMBERS = ("①".."⑳").to_a.freeze
+
+  def circled_number(number) = CIRCLED_NUMBERS[number - 1] || "(#{number})"
+
+  # 意味は句点で終わるとは限らない。並べたときに次の語義と地続きにならないよう補う。
+  SENTENCE_ENDINGS = /[。．.！？!?]\z/
+  private_constant :SENTENCE_ENDINGS
+
+  def ensure_sentence_end(text) = text.match?(SENTENCE_ENDINGS) ? text : "#{text}。"
 end
