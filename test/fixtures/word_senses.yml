@@ -1,7 +1,7 @@
 # 語義フィクスチャ。
-# rhythm_pattern / vowel_pattern / mora_count はフィクスチャ読込ではコールバックが走らないため、
-# reading に対応する値を明示する。
-# reading_length / first_char / last_char は DB の STORED 生成カラムのため指定しない。
+# rhythm_pattern / vowel_pattern / mora_count / last_char はフィクスチャ読込ではコールバックが
+# 走らないため、reading に対応する値を明示する。
+# reading_length / first_char は DB の STORED 生成カラムのため指定しない。
 murder:
   word: abc_murder
   genre: small_novel
@@ -11,6 +11,7 @@ murder:
   rhythm_pattern: satsujinjiken
   vowel_pattern: auiie
   mora_count: 7
+  last_char: ん
   meaning: 人を殺す事件
 
 curry:
@@ -20,6 +21,7 @@ curry:
   rhythm_pattern: karee
   vowel_pattern: aee
   mora_count: 3
+  last_char: レ
 
 # 未注釈語の語義(読みのみ)。公開検索(published)には出ない。
 pending:
@@ -28,6 +30,7 @@ pending:
   rhythm_pattern: suzumiyaharuhinoyuuutsu
   vowel_pattern: uuiaauioouuu
   mora_count: 12
+  last_char: つ
 
 pending2:
   word: pending_bermuda
@@ -35,3 +38,4 @@ pending2:
   rhythm_pattern: bamyuudatoraianguru
   vowel_pattern: auuaoaiauuu
   mora_count: 11
+  last_char: ル

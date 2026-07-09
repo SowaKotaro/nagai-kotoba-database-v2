@@ -4,7 +4,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
   # フィクスチャ:
   #   murder  … 読み さつじんじけん(7文字/先頭さ/末尾ん) 韻 satsujinjiken
   #             genre 小説, 品詞 名詞, entity 書籍名, 特徴 連濁/重箱読み
-  #   curry   … 読み カレー(3文字/先頭カ/末尾ー) 韻 karee, 品詞 名詞, genre/entity/特徴 なし
+  #   curry   … 読み カレー(3文字/先頭カ/末尾レ。末尾は長音「ー」なので直前の レ) 韻 karee, 品詞 名詞, genre/entity/特徴 なし
   def ids(params)
     WordSenseSearch.new(params).results.pluck(:id).sort
   end
@@ -49,7 +49,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
   end
 
   test "末尾文字で絞れる" do
-    assert_equal [ word_senses(:curry).id ], ids(last_char: "ー")
+    assert_equal [ word_senses(:curry).id ], ids(last_char: "レ")
   end
 
   test "韻の部分一致で絞れる" do

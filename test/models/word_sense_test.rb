@@ -37,12 +37,26 @@ class WordSenseTest < ActiveSupport::TestCase
     assert_equal 4, word_sense.mora_count
   end
 
-  test "生成カラム(reading_length/first_char/last_char)が DB で計算される" do
+  test "生成カラム(reading_length/first_char)が DB で計算される" do
     word_sense = WordSense.create!(word: words(:abc_murder), reading: "さくら")
     word_sense.reload
     assert_equal 3, word_sense.reading_length
     assert_equal "さ", word_sense.first_char
+  end
+
+  test "保存時に reading から last_char が自動生成される" do
+    word_sense = WordSense.create!(word: words(:abc_murder), reading: "さくら")
     assert_equal "ら", word_sense.last_char
+  end
+
+  test "末尾が長音「ー」の場合、直前の長音以外の文字が last_char になる" do
+    word_sense = WordSense.create!(word: words(:abc_murder), reading: "ハンバーガー")
+    assert_equal "ガ", word_sense.last_char
+  end
+
+  test "末尾に長音が複数連続する場合も、直前の長音以外の文字が last_char になる" do
+    word_sense = WordSense.create!(word: words(:abc_murder), reading: "スーパーカーーー")
+    assert_equal "カ", word_sense.last_char
   end
 
   test "genre は小分類(level3)なら有効" do
