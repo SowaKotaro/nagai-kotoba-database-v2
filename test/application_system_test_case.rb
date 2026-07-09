@@ -9,6 +9,10 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # バイナリを指定できる(CI は google-chrome-stable を使うので未指定のまま)。
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ] do |options|
     options.binary = ENV["CHROME_BIN"] if ENV["CHROME_BIN"].present?
+    # confirm ダイアログをドライバに自動で閉じさせない。既定の "dismiss and notify" だと
+    # turbo_confirm の confirm() が false を返し、Turbo が送信をイベントも例外も出さずに
+    # 中止するため、テストからは「押しても何も起きない」ようにしか見えなくなる。
+    options.unhandled_prompt_behavior = :ignore
     # ヘッドレスの定番安定化(共有メモリ・GPU 由来の不安定さを避ける)
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -59,21 +63,6 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
       return false if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
 
       sleep 0.2
-    end
-  end
-
-  # confirm ダイアログが出ていれば承認する(出なければ何もしない)。
-  # turbo_confirm は Turbo の読み込みタイミング次第でダイアログ無しの素の送信に
-  # なり得るため、テストは最終状態(フラッシュ等)で判定し、ダイアログは任意扱いにする。
-  def accept_confirm_if_present(wait: 3)
-    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + wait
-    begin
-      page.driver.browser.switch_to.alert.accept
-    rescue Selenium::WebDriver::Error::NoSuchAlertError
-      if Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
-        sleep 0.2
-        retry
-      end
     end
   end
 
