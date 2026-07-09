@@ -25,9 +25,25 @@
     <div class="site-header__right" data-nav-drawer-target="panel">
       <nav class="site-nav">
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
-        <%= link_to t("layouts.nav.genres"), genres_path, class: ("is-current" if request.path == genres_path) %>
-        <%= link_to t("layouts.nav.browse"), browse_path, class: ("is-current" if request.path == browse_path) %>
-        <%= link_to t("layouts.nav.search"), search_path, class: ("is-current" if request.path == search_path) %>
+
+        <%# 「検索」はプルダウン。配下にジャンル・索引・詳細検索を束ねる %>
+        <% search_menu_paths = [ genres_path, browse_path, search_path ] %>
+        <div class="nav-menu" data-controller="nav-menu"
+             data-action="click@window->nav-menu#closeOnOutside keydown.esc@window->nav-menu#close">
+          <button type="button" id="nav-menu-search-trigger"
+                  class="nav-menu__trigger <%= "is-current" if search_menu_paths.include?(request.path) %>"
+                  aria-expanded="false" aria-haspopup="true" aria-controls="nav-menu-search"
+                  data-nav-menu-target="trigger" data-action="nav-menu#toggle">
+            <%= t("layouts.nav.search") %><%= icon "caret_down", "nav-menu__caret" %>
+          </button>
+          <div class="nav-menu__panel" id="nav-menu-search" hidden
+               data-nav-menu-target="panel" aria-labelledby="nav-menu-search-trigger">
+            <%= link_to t("layouts.nav.genres"), genres_path, class: ("is-current" if request.path == genres_path) %>
+            <%= link_to t("layouts.nav.browse"), browse_path, class: ("is-current" if request.path == browse_path) %>
+            <%= link_to t("layouts.nav.advanced_search"), search_path, class: ("is-current" if request.path == search_path) %>
+          </div>
+        </div>
+
         <% if authenticated? %>
           <%= link_to t("layouts.nav.admin"), admin_root_path, class: ("is-current" if request.path.start_with?("/admin")) %>
           <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>

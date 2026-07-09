@@ -75,6 +75,7 @@ ja:
       genres: "ジャンル"
       browse: "索引"
       search: "検索"
+      advanced_search: "詳細検索"
       about: "サイトについて"
       admin: "管理"
       logout: "ログアウト"
