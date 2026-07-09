@@ -1,6 +1,12 @@
-<%# 1つの語義の入力欄。local: form(語義のフォームビルダ)。マスタは @word_origins 等を参照。 %>
+<%# 1つの語義の入力欄。local: form(語義のフォームビルダ)。マスタは @word_origins 等を参照。
+    最低限の項目が揃うと枠が緑になる(sense-completeness)。ジャンルとマスタのその場追加は
+    DOM を直接書き換えるので、素の input/change ではなく専用イベントで拾う。 %>
 <% sense = form.object %>
-<div class="ann-sense js-sense" data-index="<%= form.index %>">
+<div class="ann-sense js-sense" data-index="<%= form.index %>"
+     data-controller="sense-completeness"
+     data-action="input->sense-completeness#check change->sense-completeness#check
+                  genre-picker:changed->sense-completeness#check
+                  inline-add:added->sense-completeness#check">
   <div class="ann-sense__head">
     <span class="ann-sense__stamp"><%= t("admin.words.senses_legend") %> <%= format("%02d", form.index + 1) %></span>
     <%= form.hidden_field :_destroy, data: { sense_destroy: "" } %>
@@ -12,7 +18,8 @@
     <div class="ann-row__label"><%= t("admin.annotations.reading") %></div>
     <div>
       <%# 長い読み(例: 70字超)も全文が見えるよう、折り返して縦に伸びる textarea にする。改行はモデル側で除去 %>
-      <%= form.text_area :reading, rows: 1, class: "ann-reading js-reading", placeholder: t("admin.annotations.reading_placeholder") %>
+      <%= form.text_area :reading, rows: 1, class: "ann-reading js-reading", placeholder: t("admin.annotations.reading_placeholder"),
+            data: { sense_completeness_target: "reading" } %>
       <div class="ann-derived">
         韻 <b><%= sense.rhythm_pattern.presence || "—" %></b>　母音 <b><%= sense.vowel_pattern.presence || "—" %></b>　モーラ <b><%= sense.mora_count || "—" %></b>　<span><%= t("admin.annotations.derived_note") %></span>
       </div>
@@ -28,7 +35,7 @@
   <%# 語種(多対多・複数選択) %>
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.origins") %></div>
-    <div class="ann-chips">
+    <div class="ann-chips" data-sense-completeness-target="origins">
       <%= hidden_field_tag "#{form.field_name(:word_origin_ids)}[]", "", id: nil %>
       <% @word_origins.each do |origin| %>
         <label class="ann-chip">
@@ -59,7 +66,8 @@
     <div class="ann-genre" data-controller="genre-picker"
          data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
          data-genre-picker-create-url-value="<%= admin_genres_path %>">
-      <%= form.hidden_field :genre_id, class: "js-genre-value", data: { genre_picker_target: "value" } %>
+      <%= form.hidden_field :genre_id, class: "js-genre-value",
+            data: { genre_picker_target: "value", sense_completeness_target: "genre" } %>
       <% if sense.genre %>
         <div class="ann-genre__current js-genre-current" data-genre-picker-target="current">
           <% sense.genre.self_and_ancestors.reverse.each_with_index do |g, i| %>
@@ -90,7 +98,7 @@
   <%# 品詞(単一選択) %>
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.pos") %></div>
-    <div class="ann-chips">
+    <div class="ann-chips" data-sense-completeness-target="partOfSpeech">
       <label class="ann-chip">
         <%= form.radio_button :part_of_speech_id, "", checked: sense.part_of_speech_id.blank?, class: "ann-chip__input" %>
         <%= t("admin.annotations.none") %>
@@ -120,7 +128,7 @@
   <%# エンティティ(単一選択) %>
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.entity") %></div>
-    <div class="ann-chips">
+    <div class="ann-chips" data-sense-completeness-target="entityType">
       <label class="ann-chip">
         <%= form.radio_button :entity_type_id, "", checked: sense.entity_type_id.blank?, class: "ann-chip__input js-entity-none" %>
         <%= t("admin.annotations.none") %>
