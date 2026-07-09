@@ -93,9 +93,13 @@ CREATE TABLE words (
 -- ---------------------------------------------------------------------
 -- 語義 : 読み単位の情報。homonym 対応で word に対し 1:多
 --   genre_id は末端(小分類)を指す
---   reading_length / first_char / last_char は読みからの派生 = 生成カラム(STORED)
+--   reading_length / first_char は読みからの派生 = 生成カラム(STORED)
 --     ※ CHAR_LENGTH なので「きゃ」= 2 文字としてカウントされる
 --   rhythm_pattern (ローマ字) は SQL で生成不可のため Ruby 側で設定
+--   last_char も読みからの派生だが、末尾の長音符「ー」を飛ばして直前の文字を
+--   取る必要があり、生成式にマルチバイト文字を含めると ActiveRecord の
+--   SchemaDumper(MySQL2 アダプタ)が schema.rb をダンプする際に文字化けする
+--   既知の制限があるため、生成カラムにはせず Ruby 側(LastChar)で設定する
 -- ---------------------------------------------------------------------
 CREATE TABLE word_senses (
   id                BIGINT        NOT NULL AUTO_INCREMENT,
@@ -110,7 +114,7 @@ CREATE TABLE word_senses (
   meaning           TEXT          NULL COMMENT '意味',
   reading_length    INT           AS (CHAR_LENGTH(reading)) STORED COMMENT '読みの文字数',
   first_char        VARCHAR(8)    AS (LEFT(reading, 1))     STORED COMMENT '先頭文字',
-  last_char         VARCHAR(8)    AS (RIGHT(reading, 1))    STORED COMMENT '末尾文字',
+  last_char         VARCHAR(8)    NULL COMMENT '末尾文字(末尾の長音「ー」は除く。Ruby 側で生成)',
   created_at        DATETIME(6)   NOT NULL,
   updated_at        DATETIME(6)   NOT NULL,
   PRIMARY KEY (id),

@@ -1,6 +1,6 @@
 # 語義(WordSense)の検索・絞り込みを組み立てるクエリオブジェクト(Issue 9)。
-# 生成カラム(reading_length / first_char / last_char)やインデックスを活かした
-# 条件を、指定されたものだけ AND で積み重ねて Relation を返す。
+# 生成カラム(reading_length / first_char)や last_char(Ruby 側で計算)のインデックスを
+# 活かした条件を、指定されたものだけ AND で積み重ねて Relation を返す。
 class WordSenseSearch
   def initialize(params)
     @params = params || {}

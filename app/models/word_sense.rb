@@ -38,7 +38,7 @@ class WordSense < ApplicationRecord
   scope :reading_length_is, ->(n) { where(reading_length: n) }
   # モーラ数の完全一致。
   scope :mora_count_is, ->(n) { where(mora_count: n) }
-  # 先頭/末尾文字(生成カラム first_char/last_char)。
+  # 先頭文字(生成カラム first_char)/末尾文字(Ruby 側で計算する last_char)。
   scope :first_char_is, ->(char) { where(first_char: char) }
   scope :last_char_is, ->(char) { where(last_char: char) }
   # 指定した語種を持つ語義(語種は多対多)。
@@ -88,6 +88,8 @@ class WordSense < ApplicationRecord
     self.rhythm_pattern = RhythmPattern.call(reading)
     self.vowel_pattern = VowelPattern.call(rhythm_pattern)
     self.mora_count = MoraCount.call(reading)
+    # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
+    self.last_char = LastChar.call(reading)
   end
 
   # genre は必ず小分類(末端)を指す運用。大・中分類は登録できない。

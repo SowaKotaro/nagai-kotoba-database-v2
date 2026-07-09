@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_165619) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -113,7 +113,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_100000) do
     t.bigint "entity_type_id"
     t.virtual "first_char", type: :string, limit: 8, comment: "先頭文字", as: "left(`reading`,1)", stored: true
     t.bigint "genre_id", comment: "小分類(末端)を指す"
-    t.virtual "last_char", type: :string, limit: 8, comment: "末尾文字", as: "right(`reading`,1)", stored: true
+    t.string "last_char", limit: 8, comment: "末尾文字(末尾の長音「ー」は除く。reading から Ruby 側で計算)"
     t.text "meaning", comment: "意味"
     t.integer "mora_count", comment: "モーラ数(拗音は1拍)"
     t.bigint "part_of_speech_id"
