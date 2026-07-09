@@ -42,6 +42,12 @@
     <span class="admin-card__desc"><%= t("admin.dashboard.manage_desc") %></span>
     <span class="admin-card__tag"><%= t("admin.dashboard.manage_tag") %></span>
   <% end %>
+
+  <%= link_to admin_tags_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= t("admin.dashboard.tags_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.tags_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.tags_tag") %></span>
+  <% end %>
 </div>
 
 <p class="search-switch">

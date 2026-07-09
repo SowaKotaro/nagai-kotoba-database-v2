@@ -32,4 +32,30 @@ class WordOriginTest < ActiveSupport::TestCase
     origin = WordOrigin.create!(name: "タミル語")
     assert origin.destroy
   end
+
+  # --- タグ統括管理 ---
+  test "usage_count は付与している語義数を返す" do
+    assert_equal 1, word_origins(:kango).usage_count
+    assert_equal 0, word_origins(:wago).usage_count
+  end
+
+  test "未使用は削除でき、使用中は削除できない" do
+    assert word_origins(:wago).deletable?
+    assert_not word_origins(:kango).deletable?
+  end
+
+  test "merge_into! は中間表を付け替える" do
+    word_origins(:eigo).merge_into!(word_origins(:wago))
+    assert_not WordOrigin.exists?(word_origins(:eigo).id)
+    assert_includes word_senses(:curry).reload.word_origins, word_origins(:wago)
+  end
+
+  test "merge_into! は付け替え先に既に同じ語義があれば重複を作らない" do
+    # murder は kango を持つ。murder に wago も付けてから kango→wago 統合すると、
+    # 既に wago があるため重複を作らず1つにまとまる。
+    WordSenseOrigin.create!(word_sense: word_senses(:murder), word_origin: word_origins(:wago))
+    word_origins(:kango).merge_into!(word_origins(:wago))
+    assert_not WordOrigin.exists?(word_origins(:kango).id)
+    assert_equal 1, WordSenseOrigin.where(word_sense: word_senses(:murder), word_origin: word_origins(:wago)).count
+  end
 end

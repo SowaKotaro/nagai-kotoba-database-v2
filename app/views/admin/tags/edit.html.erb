@@ -1,0 +1,29 @@
+<% content_for :title, t("admin.tags.edit_title", kind: @kind.label) %>
+
+<div class="page-eyebrow"><span><%= link_to @kind.label, admin_tag_kind_path(@kind.key) %></span></div>
+<h1 class="page-title"><%= t("admin.tags.edit_title", kind: @kind.label) %></h1>
+
+<% if @kind.hierarchical? %>
+  <p class="section-label"><%= genre_path_label(@record) %>（<%= t("admin.tags.levels.#{@record.level}") %>）</p>
+<% end %>
+
+<p class="field-hint"><%= t("admin.tags.rename_hint") %></p>
+
+<% if @record.errors.any? %>
+  <ul class="form-errors">
+    <% @record.errors.full_messages.each do |message| %>
+      <li><%= message %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= form_with url: admin_tag_path(@kind.key, @record), method: :patch, scope: :tag do |form| %>
+  <div class="field">
+    <%= form.label :name, t("admin.tags.name_label") %>
+    <%= form.text_field :name, value: @record.name %>
+  </div>
+  <div class="actions">
+    <%= form.submit t("admin.tags.save"), class: "btn btn--primary" %>
+    <%= link_to t("admin.tags.cancel"), admin_tag_kind_path(@kind.key), class: "btn btn--sm" %>
+  </div>
+<% end %>

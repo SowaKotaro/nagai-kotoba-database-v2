@@ -81,4 +81,48 @@ class GenreTest < ActiveSupport::TestCase
     assert_not large.destroy
     assert Genre.exists?(large.id)
   end
+
+  # --- タグ統括管理(usage_count / deletable? / merge_into!) ---
+  test "usage_count は配下の語義数を階層で積み上げる" do
+    assert_equal 1, genres(:small_novel).usage_count
+    assert_equal 1, genres(:medium_japanese).usage_count
+    assert_equal 1, genres(:large_literature).usage_count
+  end
+
+  test "子も語義も持たないジャンルだけ削除できる" do
+    assert_not genres(:large_literature).deletable?
+    assert_not genres(:small_novel).deletable?
+    leaf = Genre.create!(name: "詩", level: :small, parent: genres(:medium_japanese))
+    assert leaf.deletable?
+  end
+
+  test "同じ階層の小分類を統合すると語義が付け替わる" do
+    other = Genre.create!(name: "随筆", level: :small, parent: genres(:medium_japanese))
+    genres(:small_novel).merge_into!(other)
+    assert_not Genre.exists?(genres(:small_novel).id)
+    assert_equal other, word_senses(:murder).reload.genre
+  end
+
+  test "中分類を統合すると子ジャンルが統合先へ移る" do
+    target_medium = Genre.create!(name: "英米文学", level: :medium, parent: genres(:large_literature))
+    genres(:medium_japanese).merge_into!(target_medium)
+    assert_not Genre.exists?(genres(:medium_japanese).id)
+    assert_equal target_medium, genres(:small_novel).reload.parent
+  end
+
+  test "統合先に同名の子があれば子同士を統合する" do
+    # 統合で消えるジャンルの id は、fixture アクセサが DB を引く前に控えておく。
+    medium_japanese_id = genres(:medium_japanese).id
+    small_novel_id = genres(:small_novel).id
+    medium2 = Genre.create!(name: "近代文学", level: :medium, parent: genres(:large_literature))
+    novel2 = Genre.create!(name: "小説", level: :small, parent: medium2)
+    Genre.find(medium_japanese_id).merge_into!(medium2)
+    assert_not Genre.exists?(medium_japanese_id)
+    assert_not Genre.exists?(small_novel_id)
+    assert_equal novel2, word_senses(:murder).reload.genre
+  end
+
+  test "階層の違うジャンル同士は統合できない" do
+    assert_raises(ArgumentError) { genres(:small_novel).merge_into!(genres(:medium_japanese)) }
+  end
 end

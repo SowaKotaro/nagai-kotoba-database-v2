@@ -2277,3 +2277,93 @@ textarea {
   align-items: baseline;
   gap: var(--space-2);
 }
+
+/* --- タグ統括管理(Admin::Tags) ------------------------------------------ */
+/* 一覧のエラー列挙(編集フォームのバリデーションエラー)。朱テキスト・背景は塗らない */
+.form-errors {
+  border: 1px solid var(--shu);
+  color: var(--shu);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  list-style: none;
+  font-size: 13px;
+}
+.form-errors li + li {
+  margin-top: var(--space-1);
+}
+
+/* 統合パネル(details)。一括適用パネルと同じ墨枠のトーンに揃える */
+.tag-merge {
+  border: 1px solid var(--ink);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.tag-merge__summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+}
+.tag-merge[open] .tag-merge__summary {
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  display: block;
+  padding-bottom: var(--space-2);
+}
+.tag-merge__hint {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: var(--space-2) 0 var(--space-3);
+  max-width: 46em;
+}
+.tag-merge__pair {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.tag-merge__arrow {
+  font-size: 18px;
+  line-height: 2.2;
+  color: var(--shu);
+}
+
+/* タグ一覧テーブル */
+.tag-table__num {
+  text-align: right;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+/* ジャンルの階層インデント(中分類・小分類を段付けして木構造を示す)。
+   段差を大きめに取り、朱のツリーコネクタ「└」でぶら下がりを明示する。
+   等幅ラベルの階層列(大/中/小)と併せて読み取れるようにする。
+   ※パディングは .data-table td より詳細度を上げないと効かない(セルの既定パディングに負ける)。 */
+.data-table td.tag-table__name--medium {
+  padding-left: 2.8em;
+}
+.data-table td.tag-table__name--small {
+  padding-left: 5.6em;
+}
+.tag-table__name--medium > a::before,
+.tag-table__name--small > a::before {
+  content: "└";
+  display: inline-block;
+  width: 1.4em;
+  margin-left: -1.9em;
+  font-family: var(--font-mono);
+  color: var(--shu);
+}
+.tag-table__level {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.tag-table__inuse {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
