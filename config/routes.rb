@@ -42,6 +42,16 @@ Rails.application.routes.draw do
     end
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。
     resources :annotations, only: %i[index show update]
+    # タグ統括管理: マスタ(ジャンル/エンティティ/品詞/語種/特徴)の一覧・リネーム・削除・統合。
+    # :kind は TagKind のホワイトリストで解決する(任意モデルを掴ませない)。
+    resources :tags, only: :index
+    get    "tags/:kind",          to: "tags#show",    as: :tag_kind
+    get    "tags/:kind/:id/edit", to: "tags#edit",    as: :edit_tag
+    patch  "tags/:kind/:id",      to: "tags#update",  as: :tag
+    # 削除は更新と同じパス(admin_tag_path)を DELETE で叩くため、ヘルパは作らない。
+    delete "tags/:kind/:id",      to: "tags#destroy", as: nil
+    # 統合は種別トップの1パネルで source→target を選ぶため :id を取らない。
+    post   "tags/:kind/merge",    to: "tags#merge",   as: :merge_tags
     # ジャンルの大→中→小 依存選択用に、子ジャンルの取得と、その場での新規追加。
     resources :genres, only: :create do
       get :children, on: :collection

@@ -1,0 +1,15 @@
+<% content_for :title, t("admin.tags.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.tags.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.tags.title") %></h1>
+<p class="section-label"><%= t("admin.tags.lead") %></p>
+
+<div class="admin-dash-grid">
+  <% @kinds.each do |kind| %>
+    <%= link_to admin_tag_kind_path(kind.key), class: "admin-card" do %>
+      <span class="admin-card__title"><%= kind.label %></span>
+      <span class="admin-card__desc"><%= t("admin.tags.kind_desc.#{kind.key}") %></span>
+      <span class="admin-card__tag"><%= t("admin.tags.count", count: number_with_delimiter(kind.total_count)) %></span>
+    <% end %>
+  <% end %>
+</div>

@@ -14,6 +14,7 @@ module AdminHelper
     case controller_name
     when "dashboard" then :dashboard
     when "annotations" then :annotations
+    when "tags" then :tags
     when "words"
       ADMIN_REGISTER_ACTIONS.include?(action_name) ? :register : :words
     end

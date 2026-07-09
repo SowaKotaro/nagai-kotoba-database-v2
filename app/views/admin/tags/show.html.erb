@@ -1,0 +1,75 @@
+<% content_for :title, @kind.label %>
+
+<div class="page-eyebrow"><span><%= link_to t("admin.tags.title"), admin_tags_path %></span></div>
+<h1 class="page-title"><%= @kind.label %></h1>
+<p class="section-label"><%= t("admin.tags.show_lead") %></p>
+
+<% if @records.any? %>
+  <%# 統合: source を付けている全データを target に付け替えて source を削除する。
+      ジャンルは同じ階層同士でのみ統合できる。 %>
+  <details class="tag-merge">
+    <summary class="tag-merge__summary"><%= t("admin.tags.merge.summary") %></summary>
+    <p class="tag-merge__hint"><%= t("admin.tags.merge.hint#{'_genre' if @kind.hierarchical?}") %></p>
+
+    <%= form_with url: admin_merge_tags_path(@kind.key), method: :post, class: "tag-merge__form",
+          data: { turbo_confirm: t("admin.tags.merge.confirm") } do %>
+      <div class="tag-merge__pair">
+        <label class="field">
+          <span><%= t("admin.tags.merge.source") %></span>
+          <%= select_tag :source_id,
+                options_for_select(@records.map { |r| [ tag_display_label(@kind, r, @genre_index), r.id ] }),
+                include_blank: t("admin.tags.merge.choose") %>
+        </label>
+        <span class="tag-merge__arrow" aria-hidden="true">→</span>
+        <label class="field">
+          <span><%= t("admin.tags.merge.target") %></span>
+          <%= select_tag :target_id,
+                options_for_select(@records.map { |r| [ tag_display_label(@kind, r, @genre_index), r.id ] }),
+                include_blank: t("admin.tags.merge.choose") %>
+        </label>
+      </div>
+      <%= submit_tag t("admin.tags.merge.submit"), class: "btn" %>
+    <% end %>
+  </details>
+
+  <table class="data-table tag-table">
+    <thead>
+      <tr>
+        <th><%= t("admin.tags.col_name") %></th>
+        <% if @kind.hierarchical? %><th><%= t("admin.tags.col_level") %></th><% end %>
+        <th class="tag-table__num"><%= t("admin.tags.col_usage") %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @records.each do |record| %>
+        <tr>
+          <%# ジャンルは木を深さ優先で並べ、中・小分類は階層ぶんインデントする %>
+          <% name_class = @kind.hierarchical? ? "tag-table__name tag-table__name--#{record.level}" : nil %>
+          <td class="<%= name_class %>">
+            <%= link_to record.name, admin_edit_tag_path(@kind.key, record) %>
+          </td>
+          <% if @kind.hierarchical? %>
+            <td><span class="tag-table__level"><%= t("admin.tags.levels.#{record.level}") %></span></td>
+          <% end %>
+          <td class="tag-table__num"><%= number_with_delimiter(@usage_counts[record.id].to_i) %></td>
+          <td>
+            <div class="actions">
+              <%= link_to t("admin.tags.edit"), admin_edit_tag_path(@kind.key, record), class: "btn btn--sm" %>
+              <% if @deletable_ids.include?(record.id) %>
+                <%= button_to t("admin.tags.destroy"), admin_tag_path(@kind.key, record), method: :delete,
+                      class: "btn btn--sm", data: { turbo_confirm: t("admin.tags.confirm_destroy", name: record.name) } %>
+              <% else %>
+                <span class="tag-table__inuse"><%= t("admin.tags.in_use") %></span>
+              <% end %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="empty-note"><%= t("admin.tags.empty") %></p>
+<% end %>
+
+<p><%= link_to t("admin.tags.back_to_hub"), admin_tags_path %></p>
