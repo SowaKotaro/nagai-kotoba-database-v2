@@ -6,10 +6,7 @@
 PARTS_OF_SPEECH = [
   "普通名詞",
   "固有名詞",
-  "動詞",
-  "形容詞",
-  "形容動詞",
-  "副詞"
+  "連語"
 ].freeze
 
 PARTS_OF_SPEECH.each do |name|
