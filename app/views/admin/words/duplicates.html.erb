@@ -8,7 +8,7 @@
 
 <%= form_with url: admin_words_path, method: :post, scope: :bulk_word_registration, data: { turbo: false } do %>
   <div class="bulk-review">
-    <table class="bulk-review__table">
+    <table class="bulk-review__table bulk-review__table--duplicates">
       <thead>
         <tr>
           <th class="bulk-review__no"><%= t("admin.words.bulk.duplicates.col_no") %></th>

@@ -86,8 +86,14 @@
 /* 語義パネル(墨1px枠・番号刻印) */
 .ann-sense { border: 1px solid var(--ink); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
 /* 最低限の項目(読み・語種・ジャンル・品詞・エンティティ)が揃った語義。
-   保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。 */
-.ann-sense.is-complete { border-color: var(--midori); }
+   保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
+   枠の色替えだけでは気付きにくいので、枠を二重にし、番号の刻印も緑のベタ面にする。
+   inset の box-shadow は枠を太らせるだけでレイアウトを動かさない(影は落とさない)。 */
+.ann-sense.is-complete {
+  border-color: var(--midori);
+  box-shadow: inset 0 0 0 1px var(--midori);
+}
+.ann-sense.is-complete .ann-sense__stamp { background: var(--midori); }
 .ann-sense__head { display: flex; align-items: center; justify-content: space-between; margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5)) var(--space-3); }
 .ann-sense__stamp { background: var(--ink); color: var(--on-ink); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; padding: 5px 12px; }
 .ann-sense__del { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; padding: 6px 12px; }
