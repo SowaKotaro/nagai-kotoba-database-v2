@@ -46,8 +46,8 @@
         <th><%= Word.human_attribute_name(:surface) %></th>
         <th><%= t("admin.words.index.col_reading") %></th>
         <th class="admin-words-table__num"><%= t("admin.words.senses_count") %></th>
-        <th><%= t("admin.words.index.col_status") %></th>
-        <th></th>
+        <th class="admin-words-table__status"><%= t("admin.words.index.col_status") %></th>
+        <th class="admin-words-table__actions"></th>
       </tr>
     </thead>
     <tbody>
@@ -62,19 +62,25 @@
           <td><%= link_to word.surface, admin_annotation_path(word), data: { turbo_frame: "_top" } %></td>
           <td class="admin-words-table__reading"><%= word.word_senses.map(&:reading).uniq.join("、") %></td>
           <td class="admin-words-table__num"><%= word.word_senses.size %></td>
-          <td>
+          <td class="admin-words-table__status">
             <% if word.annotated_at %>
               <span class="admin-words-table__annotated"><%= word.annotated_at.strftime("%Y-%m-%d") %></span>
             <% else %>
               <span class="admin-words-table__unannotated"><%= t("admin.words.index.status_unannotated") %></span>
             <% end %>
           </td>
-          <td>
-            <div class="actions">
-              <%= link_to t("admin.words.index.annotate"), admin_annotation_path(word), class: "btn btn--sm" %>
-              <%= button_to t("admin.words.destroy"), admin_word_path(word), method: :delete,
-                    class: "btn btn--sm",
-                    data: { turbo_confirm: t("admin.words.confirm_destroy") } %>
+          <td class="admin-words-table__actions">
+            <div class="actions actions--tight">
+              <%= link_to admin_annotation_path(word), class: "btn btn--sm btn--icon",
+                    title: t("admin.words.index.annotate_title") do %>
+                <%= icon "pencil_simple" %><span><%= t("admin.words.index.annotate") %></span>
+              <% end %>
+              <%= button_to admin_word_path(word), method: :delete,
+                    class: "btn btn--sm btn--icon",
+                    title: t("admin.words.destroy_title"),
+                    data: { turbo_confirm: t("admin.words.confirm_destroy") } do %>
+                <%= icon "trash" %><span><%= t("admin.words.destroy") %></span>
+              <% end %>
             </div>
           </td>
         </tr>

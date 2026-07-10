@@ -1646,6 +1646,16 @@ a.tag:hover .genre-hub__count {
   font-size: 14px;
 }
 
+/* 見出しは字送りが広く、狭い列だと折り返して行高が暴れる。折り返さず列幅で受ける。 */
+.admin-words-table thead th {
+  white-space: nowrap;
+}
+
+/* 行アクションの背が一番高いので、それに合わせて全セルを中央に揃える */
+.admin-words-table td {
+  vertical-align: middle;
+}
+
 .admin-words-table__check {
   width: 28px;
   text-align: center;
@@ -1658,8 +1668,25 @@ a.tag:hover .genre-hub__count {
   color: var(--ink-2);
 }
 
-.admin-words-table__num {
+/* 語義数・注釈状態・操作は内容ぶんだけ。余りは表層形と読みに配る */
+/* 見出しは `.data-table thead th` の左揃えが勝つため、th も含めて指定して数値と頭を揃える */
+.admin-words-table__num,
+.admin-words-table thead th.admin-words-table__num {
+  width: 1%;
   text-align: right;
+}
+
+.admin-words-table__status,
+.admin-words-table__actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* 右揃えの語義数と隣り合うので、頭を離して読み違いを防ぐ。
+   `.data-table` の padding 一括指定が勝つため、th/td を明示して上書きする */
+.admin-words-table th.admin-words-table__status,
+.admin-words-table td.admin-words-table__status {
+  padding-left: var(--space-5);
 }
 
 .admin-words-table__annotated {
@@ -1796,6 +1823,20 @@ a.tag:hover .genre-hub__count {
 .btn--sm {
   font-size: 15px;
   padding: 3px 12px;
+}
+
+/* アイコン+極小の等幅ラベルを持つ行アクション用ボタン(annot. / del.)。
+   高さと文字送りを揃え、隣接しても行がガタつかないようにする。 */
+.btn--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  padding: 5px 10px;
+  white-space: nowrap;
 }
 
 /* --- フォーム --- */
@@ -2230,20 +2271,30 @@ textarea {
   color: var(--ink-3);
 }
 
+/* step3(重複チェック)は No./表層形/読み/重複・類似/除外 の5列。
+   step2 の 2列レイアウト(50% ずつ)のままだと除外列が潰れて文言が切れるため、幅を組み直す。 */
+.bulk-review__table--duplicates .bulk-review__surface,
+.bulk-review__table--duplicates .bulk-review__reading {
+  width: 22%;
+}
+
+.bulk-review__table--duplicates .bulk-review__exclude-col {
+  width: 9rem;
+}
+
 /* 除外チェック列 */
 .bulk-review__exclude-col {
-  width: 5rem;
   text-align: center;
-  white-space: nowrap;
 }
 
 .bulk-review__exclude-label {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   font-family: var(--font-mono);
   font-size: 12px;
+  line-height: 1.4;
   color: var(--ink-3);
   cursor: pointer;
 }
@@ -2298,6 +2349,17 @@ textarea {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
+}
+
+/* button_to は form でボタンを包むため、素の link_to と並べると基準線がずれる。
+   行アクションでは中央揃えにし、form を高さ 0 の入れ物として扱う。 */
+.actions--tight {
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.actions--tight .button_to {
+  display: inline-flex;
 }
 
 /* --- タグ統括管理(Admin::Tags) ------------------------------------------ */

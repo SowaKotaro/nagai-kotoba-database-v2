@@ -121,6 +121,8 @@ bin/rails server              # 起動
   **オフライン調査スキル** `.claude/skills/word-reading-research/` を用意（アプリの実行時には LLM/API を呼ばない方針）。
 - 使い方: 別セッションの Claude Code に単語（表層形のみ）を渡すと、Web検索で裏取りして「最も一般的な表記＋読み（カタカナ）」を
   `schema.json` の形式で JSON 出力する。**MeCab の読みは入力に含めない**（追認バイアス回避）。
+- 調査系スキル（`/notation`・`/reading`・`/annotation`）の入出力ファイルは `research/inputs`・`research/outputs`
+  に置く（中身は gitignore 済み）。3つの流れは [`research/README.md`](../research/README.md) を参照。
 - step2 の「調査結果（JSON）を反映」欄にその JSON を貼ると、MeCab の暫定読みと突き合わせて行ごとに
   一致／不一致／調査のみを表示し、候補チップ（Stimulus `reading-choice`）で読みを確定できる。
 - 管理者は seed が credentials / 環境変数から作成する。ローカルで任意の値にするには:

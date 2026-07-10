@@ -18,7 +18,7 @@ class Admin::WordsController < Admin::BaseController
     @total_count = scope.count
     @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @words = scope.includes(:word_senses)
-                  .order(:surface)
+                  .order(:id)
                   .limit(PER_PAGE)
                   .offset((@page - 1) * PER_PAGE)
     load_masters_for_bulk
