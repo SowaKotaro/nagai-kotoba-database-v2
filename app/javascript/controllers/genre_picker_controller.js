@@ -10,7 +10,7 @@ export default class extends Controller {
     "value", "current", "largeLevel", "largeChips",
     "mediumLevel", "mediumChips", "smallLevel", "smallChips"
   ]
-  static values = { childrenUrl: String, createUrl: String }
+  static values = { childrenUrl: String, createUrl: String, preselect: Array }
 
   connect() {
     this.largeId = null
@@ -19,8 +19,35 @@ export default class extends Controller {
     if (!this.largeChipsTarget.querySelector(".ann-add")) {
       this.largeChipsTarget.appendChild(this.addControl(this.largeChipsTarget, null, "pickLarge"))
     }
-    // 未選択なら大分類から。設定済みなら現在パス表示のまま(largeLevel は隠す)。
-    if (!this.valueTarget.value) this.reset()
+    // 小分類が確定済み(genre_id あり)なら現在パス表示のまま。未確定でも、提案の反映で
+    // 大・中まで一致していれば(preselect)そこまで自動で開く。何も無ければ大分類から。
+    if (this.valueTarget.value) return
+    if (this.preselectValue.length) this.openTo(this.preselectValue)
+    else this.reset()
+  }
+
+  // 提案反映時に、既存の木で一致した祖先(大 / 大・中)までピッカーを開いておく。
+  // ids: [大id] なら中分類の選択肢まで、[大id, 中id] なら小分類の選択肢まで出す。
+  async openTo(ids) {
+    const [largeId, mediumId] = ids.map(String)
+    const largeChip = this.largeChipsTarget.querySelector(`.ann-chip[data-id="${largeId}"]`)
+    if (!largeChip) return this.reset()
+
+    this.largeId = largeId
+    this.activate(this.largeChipsTarget, largeChip)
+    await this.fill(this.mediumChipsTarget, largeId, "pickMedium", largeId)
+    this.mediumLevelTarget.hidden = false
+
+    if (mediumId) {
+      const mediumChip = this.mediumChipsTarget.querySelector(`.ann-chip[data-id="${mediumId}"]`)
+      if (mediumChip) {
+        this.mediumId = mediumId
+        this.activate(this.mediumChipsTarget, mediumChip)
+        await this.fill(this.smallChipsTarget, mediumId, "pickSmall", mediumId)
+        this.smallLevelTarget.hidden = false
+      }
+    }
+    this.notifyChanged()
   }
 
   // 「変更」: 現在パスを消して選び直しに入る。

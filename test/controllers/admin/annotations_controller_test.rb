@@ -123,6 +123,22 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_empty @sense.word_origin_ids
   end
 
+  test "反映時に小分類が未登録でも大・中まで一致すればピッカーをそこまで開く" do
+    sign_in_as(Admin.take)
+    # 小分類だけ既存の木に無い提案(大「文学」・中「日本文学」は在る)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "genre_path" => %w[文学 日本文学 私小説]
+    })
+    get admin_annotation_path(@word, apply_proposal: 1)
+    assert_response :success
+
+    # genre_id は未確定のまま(小分類が無いので入れない)
+    assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s, count: 0
+    # 大・中の id を preselect としてピッカーへ渡す(JS が connect でそこまで潜る)
+    expected = [ genres(:large_literature).id, genres(:medium_japanese).id ].to_json
+    assert_select ".ann-genre[data-genre-picker-preselect-value=?]", expected
+  end
+
   test "保存(承認)すると提案が applied になる" do
     sign_in_as(Admin.take)
     proposal = annotation_proposals(:haruhi_proposal)

@@ -43,6 +43,28 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "語ID範囲を指定すると、下書き提案がある語も再調査用に書き出す" do
+    sign_in_as(Admin.take)
+    haruhi = words(:pending_haruhi) # 提案済み(既定の書き出しには入らない)
+
+    get export_admin_annotation_proposals_path(from_id: haruhi.id, to_id: haruhi.id)
+    assert_response :success
+
+    ids = JSON.parse(css_select("textarea#export_json").first.text)["words"].map { |w| w["word_id"] }
+    assert_includes ids, haruhi.id
+  end
+
+  test "語ID範囲を指定しても注釈済みの語は書き出さない" do
+    sign_in_as(Admin.take)
+    annotated = words(:abc_murder) # 注釈済み
+
+    get export_admin_annotation_proposals_path(from_id: annotated.id, to_id: annotated.id)
+    assert_response :success
+
+    # 注釈済みしか居ない範囲なので書き出し対象は 0 語(textarea は出ない)
+    assert_select "textarea#export_json", false
+  end
+
   # --- 取り込み ---
   test "提案 JSON を下書きとして保存できる" do
     sign_in_as(Admin.take)

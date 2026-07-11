@@ -37,16 +37,26 @@ class AnnotationProposal < ApplicationRecord
       Array(@data["variants"]).select { |v| v.is_a?(Hash) && v["surface"].present? }
     end
 
-    # ジャンルパスを既存の木から辿り、末端の小分類まで解決できたときだけ Genre を返す。
-    # 途中までしか無い・小分類でない場合は nil(コンソールのその場追加で作ってから反映する)。
-    def resolved_genre
-      genre = genre_path.inject(nil) do |parent, name|
+    # ジャンルパス(大→中→小)を既存の木から辿れるところまでの Genre 鎖を返す。
+    # 末端まで一致すれば [大, 中, 小]、途中までなら [大] や [大, 中]、1つも無ければ []。
+    def resolved_genre_chain
+      chain = []
+      parent = nil
+      genre_path.each do |name|
         found = Genre.find_by(name: name, parent_id: parent&.id)
-        break nil unless found
+        break unless found
 
-        found
+        chain << found
+        parent = found
       end
-      genre if genre&.small?
+      chain
+    end
+
+    # 末端の小分類まで解決できたときだけ Genre を返す(genre_id に入れてよい確定値)。
+    # 途中までしか無い場合は nil(大・中は resolved_genre_chain でピッカーを開くのに使う)。
+    def resolved_genre
+      last = resolved_genre_chain.last
+      last if last&.small?
     end
 
     def resolved_entity_type = EntityType.find_by(name: entity_type_name)

@@ -83,13 +83,24 @@ class Admin::AnnotationsController < Admin::BaseController
   def apply_sense_proposal(sense, sense_proposal)
     sense.reading = sense_proposal.reading if sense_proposal.reading.present? && sense.reading.blank?
     sense.meaning = sense_proposal.meaning if sense_proposal.meaning
-    genre = sense_proposal.resolved_genre
-    sense.genre_id = genre.id if genre
+    apply_proposed_genre(sense, sense_proposal)
     sense.entity_type_id = sense_proposal.resolved_entity_type&.id if sense_proposal.entity_type_name
     sense.part_of_speech_id = sense_proposal.resolved_part_of_speech&.id if sense_proposal.part_of_speech_name
     origins = sense_proposal.resolved_word_origins.to_a
     sense.association(:word_origins).target = origins.dup if origins.any?
     build_proposed_variants(sense, sense_proposal)
+  end
+
+  # 提案ジャンルを既存の木で解決する。小分類まで在れば genre_id を確定させ、
+  # 大・中までしか無ければ preselect にその祖先 id を積み、ピッカーをそこまで開かせる
+  # (末端の小分類はその場追加で作って選ぶ運用)。
+  def apply_proposed_genre(sense, sense_proposal)
+    chain = sense_proposal.resolved_genre_chain
+    if chain.last&.small?
+      sense.genre_id = chain.last.id
+    elsif chain.any?
+      sense.genre_preselect_ids = chain.map(&:id)
+    end
   end
 
   # 提案の別表記を、まだ無いものだけフォームに足す(重複追加しない)。

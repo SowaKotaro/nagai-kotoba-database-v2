@@ -20,6 +20,10 @@ class WordSense < ApplicationRecord
   accepts_nested_attributes_for :word_sense_origins, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :word_sense_variants, allow_destroy: true, reject_if: :all_blank
 
+  # 提案の反映(GET)専用の一時値。小分類まで既存の木に無いとき、
+  # ジャンルピッカーを大・中まで開いておくための祖先 id 配列(永続化しない)。
+  attr_accessor :genre_preselect_ids
+
   validates :reading, presence: true
   validate :genre_must_be_small
 

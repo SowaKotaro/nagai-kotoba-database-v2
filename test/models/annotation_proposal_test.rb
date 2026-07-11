@@ -28,6 +28,22 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     assert_nil @proposal.resolved_genre
   end
 
+  test "resolved_genre_chain は既存の木を辿れるところまでの鎖を返す" do
+    # 末端まで一致 → [大, 中, 小]
+    assert_equal [ genres(:large_literature), genres(:medium_japanese), genres(:small_novel) ],
+                 @proposal.senses.first.resolved_genre_chain
+
+    # 小分類だけ未登録 → 大・中まで([大, 中])。resolved_genre は nil のまま
+    @proposal.payload["genre_path"] = %w[文学 日本文学 私小説]
+    assert_equal [ genres(:large_literature), genres(:medium_japanese) ],
+                 @proposal.senses.first.resolved_genre_chain
+    assert_nil @proposal.senses.first.resolved_genre
+
+    # 大分類から一致しない → 空配列
+    @proposal.payload["genre_path"] = %w[無い大分類 中 小]
+    assert_empty @proposal.senses.first.resolved_genre_chain
+  end
+
   test "エンティティ・品詞・語種を名前で解決できる" do
     assert_equal entity_types(:book_title), @proposal.resolved_entity_type
     assert_equal parts_of_speech(:noun), @proposal.resolved_part_of_speech

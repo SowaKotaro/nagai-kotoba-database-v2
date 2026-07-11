@@ -371,7 +371,11 @@ ja:
       parse_error: "JSON を読み取れませんでした。word-annotation-research スキルの出力形式（{\"version\":\"1\",\"proposals\":[…]}）を確認してください。"
       export:
         title: "調査用データの書き出し"
-        lead: "未注釈で提案がまだ無い語と、マスタ一覧（ジャンル木・エンティティ・品詞・語種・特徴）をまとめた JSON です。Claude Code の word-annotation-research スキルに渡すと、語ごとの提案 JSON が返ります。"
+        lead: "未注釈で提案がまだ無い語と、マスタ一覧（ジャンル木・エンティティ・品詞・語種・特徴）をまとめた JSON です。Claude Code の word-annotation-research スキルに渡すと、語ごとの提案 JSON が返ります。語ID範囲を指定すると、その範囲を書き出します（下書き提案がある語も含むので、一度取り込んだ語だけを絞って再調査できます）。"
+        range_label: "語ID範囲"
+        range_sep: "〜"
+        from_placeholder: "開始"
+        to_placeholder: "終了"
         limit_label: "書き出す語数"
         reload: "再読込"
         count: "%{count} 語"

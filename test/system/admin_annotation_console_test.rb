@@ -104,6 +104,23 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_nil word_senses(:pending).reload.genre_id
   end
 
+  test "提案の小分類が未登録でも、大・中まで一致すればピッカーがそこまで開く" do
+    # 小分類「私小説」は木に無い。大「文学」・中「日本文学」までは既存
+    annotation_proposals(:haruhi_proposal).update!(payload: { "genre_path" => %w[文学 日本文学 私小説] })
+
+    visit admin_annotation_path(@word, apply_proposal: 1)
+    wait_for_stimulus "genre-picker"
+
+    within ".ann-genre" do
+      # 大・中が選択状態(is-on)になり、小分類の選択肢(小説)まで開いている
+      assert_selector ".ann-chip.is-on", text: "文学"
+      assert_selector ".ann-chip.is-on", text: "日本文学"
+      assert_selector "[data-genre-picker-target='smallLevel'] .ann-chip", text: "小説"
+    end
+    # 小分類は未確定なので genre_id は空(その場追加 or 既存選択で確定させる運用)
+    assert_equal "", find(".js-genre-value", visible: false).value
+  end
+
   # 同じ文字列が繰り返す語で、該当部分の「出現位置」が保存されること(target_start)。
   # 繰り返しの2つ目を選び、その位置(先頭からのオフセット)が記録されるのを担保する。
   test "特徴の該当部分に繰り返しの2つ目の出現位置が保存される" do

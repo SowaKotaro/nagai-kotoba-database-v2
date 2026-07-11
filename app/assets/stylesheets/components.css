@@ -1584,8 +1584,15 @@ a.tag:hover .genre-hub__count {
 .proposal-limit {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+
+.proposal-limit__range-sep {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ink-3);
 }
 
 .proposal-limit__label {
