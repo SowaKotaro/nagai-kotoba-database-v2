@@ -1,26 +1,40 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "word-annotation-research output",
-  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins)は書き出し JSON の masters と一字一句同じ表記にする。ジャンルとエンティティは軸が違う: ジャンルはその語が「どこに属するか」(所属)、エンティティはその語が「一体何であるか」(正体)。取り違えない。両方とも品詞に関わらず全語に付ける。1つの表層形に複数の異なる語義(同名の作品・人物・団体など同音異義語)がある場合は senses 配列で複数の語義を返す。単一語義なら meaning などをトップレベルに置く従来形式でよい(取り込み側で1件の語義として扱う)。",
+  "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins/linguistic_features[].name)は書き出し JSON の masters と一字一句同じ表記にする。ジャンルとエンティティは軸が違う: ジャンルはその語が「どこに属するか」(所属)、エンティティはその語が「一体何であるか」(正体)。取り違えない。両方とも品詞に関わらず全語に付ける。語義の中身は単一語義でも必ず senses 配列(要素1つ)に入れる。meaning 等をトップレベルに置く旧形式は後方互換で読めるが、取り込み側がトップレベルの linguistic_features を保持しないため使わない。",
   "type": "object",
   "required": ["version", "proposals"],
   "$defs": {
     "sense": {
       "type": "object",
-      "description": "1つの語義。意味・ジャンル・エンティティ・品詞・語種・別表記・(必要なら)読み。",
+      "description": "1つの語義。意味・ジャンル・エンティティ・品詞・語種・言語的特徴・別表記・(必要なら)読み。",
       "properties": {
-        "meaning": { "type": "string", "description": "意味の下書き。公開リード文のトーンで1〜2文・常体" },
+        "meaning": { "type": "string", "description": "意味の下書き。公開リード文のトーンで1〜2文・常体。1文目で正体を言い切り、2文目で同定に効く補足(年代・作者・国など)" },
         "reading": { "type": "string", "description": "この語義の読みが語の読みと異なる場合のみ(通常は省略し語の読みを共有する)" },
         "genre_path": {
           "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 3,
-          "description": "ジャンル=その語の「所属」。名前パス(大→中→小)で必ず長さ3。masters.genres の小分類パス(長さ3)があればそれを使う。無ければ masters.genres の中分類パス(長さ2)を選びその下に新しい小分類名を1つ足す。大分類・中分類は新設しない。新設する小分類は親の中分類の分割軸に揃える(親が地域軸なら地域軸)"
+          "description": "ジャンル=その語の「所属」。名前パス(大→中→小)で必ず長さ3。masters.genres の小分類パス(長さ3)があればそれを使う。無ければ masters.genres の中分類パス(長さ2)を選びその下に新しい小分類名を1つ足す。大分類・中分類は新設しない。小分類は親の中分類の範囲を細分する分野名なら軸は問わない(地域軸の下に時代・テーマ軸も可)が、同じ小分類名を複数の親の下に作らない"
         },
         "genre_new": { "type": "boolean", "description": "genre_path の末端(小分類)が新設候補のとき true" },
-        "entity_type": { "type": "string", "description": "エンティティ=その語が「一体何であるか」(人名/書籍名/出来事/疾患名など)。品詞に関わらず全語に付ける(普通名詞も省略しない)。masters.entity_types から選び、無ければ新しい名前を書いてよい。分野名(歴史・心理学など)は所属なのでここに書かずジャンルへ。ジャンル末端と同名になったらどちらかが誤り" },
+        "entity_type": { "type": "string", "description": "エンティティ=その語が「一体何であるか」(作品名/キャラクター名/出来事/物質名など)。品詞に関わらず全語に付ける(普通名詞も省略しない)。masters.entity_types から選び、無ければ新しい名前を書いてよい。分野名(歴史・心理学など)は所属なのでここに書かずジャンルへ。ジャンル末端と同名になったらどちらかが誤り" },
         "part_of_speech": { "type": "string", "description": "品詞名。masters.parts_of_speech から一字一句同じ表記で。多くは普通名詞/固有名詞(「名詞」というマスタは無い)" },
         "word_origins": {
           "type": "array", "items": { "type": "string" },
-          "description": "語種名(複数可)。masters.word_origins から。「外来語」ではなく言語名(日本語/中国語/英語…)で持つ。漢語=中国語、和語=日本語。混種語は複数並べる。由来言語がマスタに無ければ新しい言語名を書く"
+          "description": "語種名(複数可)。masters.word_origins から。「外来語」ではなく言語名(日本語/英語…)で持つ。漢字語(漢語)・和語=日本語(中国語は現代中国語からの外来語のみ)。カタカナ語は由来言語(人名・地名由来はその言語まで遡る)。混種語は構成要素ごとに複数並べる。由来言語がマスタに無ければ新しい言語名を書く"
+        },
+        "linguistic_features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "target", "target_reading"],
+            "properties": {
+              "name": { "type": "string", "description": "特徴名。masters.linguistic_features から一字一句同じ表記で(連濁/半濁音化/促音化/熟字訓/古式読み など。定義は config/linguistic_features_glossary.yml)" },
+              "target": { "type": "string", "description": "該当部分。表層形(surface)の連続した部分文字列をそのまま書く(一致しないと保存できない)" },
+              "target_reading": { "type": "string", "description": "該当部分の読み。この語義の読み(カタカナ)の連続した部分文字列(一致しないと保存できない)" },
+              "target_start": { "type": "integer", "minimum": 0, "description": "該当部分の出現位置(表層形先頭からの文字オフセット・0始まり)。同じ target が複数回現れ複数箇所に同じ特徴を付けるときだけ指定(省略時は最初の出現)" }
+            }
+          },
+          "description": "読み・表記に関わる言語的特徴を該当部分ごとに。複合語の読みの変化(連濁・半濁音化・促音化・連声・転音・音韻添加/脱落)、漢字の読みの当て方(熟字訓・重箱読み・湯桶読み・当て字・古式読み・特殊読み)、語形成(畳語・オノマトペ)を毎語点検する。同じ該当部分に複数の現象が重なれば特徴ごとに別要素(例: 活版=促音化+半濁音化)。無い語がほとんどなので無理に付けない"
         },
         "variants": {
           "type": "array",
@@ -28,8 +42,8 @@
             "type": "object",
             "required": ["surface"],
             "properties": {
-              "surface": { "type": "string", "description": "別表記の表層形(最も一般的な表記を surface に採り、それ以外の流通表記をここに)" },
-              "reading": { "type": "string", "description": "読みが変わる場合のみ" }
+              "surface": { "type": "string", "description": "別表記の表層形(最も一般的な表記を surface に採り、それ以外の流通表記をここに)。略称・漢字/カタカナ表記・通称/和訳・冠称付き正式名・表記ゆれを拾う" },
+              "reading": { "type": "string", "description": "別表記の読み(カタカナ)。表記が変われば読みも大抵変わるので原則付ける(明らかに不要なときだけ省略可)" }
             }
           }
         }
@@ -51,19 +65,19 @@
           "senses": {
             "type": "array",
             "items": { "$ref": "#/$defs/sense" },
-            "description": "同一表記に複数の異なる語義(同音異義語)があるとき、語義ごとに1要素。1つでも複数でも使える。これを使う場合はトップレベルの meaning 等は置かない"
+            "description": "語義ごとに1要素。単一語義でも必ずこの配列を使う(要素1つ)。同一表記に複数の異なる語義(同音異義語)があれば慣用度の高い順に並べる"
           },
-          "meaning": { "type": "string", "description": "【単一語義の従来形式】意味の下書き。senses を使うなら不要" },
+          "meaning": { "type": "string", "description": "【旧形式・使わない】意味の下書き。senses に入れる(後方互換で読めるだけ)" },
           "genre_path": {
             "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 3,
-            "description": "【単一語義の従来形式】ジャンル(所属)の名前パス(大→中→小)。規則は $defs/sense の genre_path と同じ。senses を使うなら不要"
+            "description": "【旧形式・使わない】ジャンル(所属)の名前パス。senses に入れる"
           },
-          "genre_new": { "type": "boolean", "description": "【単一語義の従来形式】genre_path の末端(小分類)が新設候補のとき true" },
-          "entity_type": { "type": "string", "description": "【単一語義の従来形式】エンティティ(その語が何であるか)。senses を使うなら不要" },
-          "part_of_speech": { "type": "string", "description": "【単一語義の従来形式】品詞名。senses を使うなら不要" },
+          "genre_new": { "type": "boolean", "description": "【旧形式・使わない】senses に入れる" },
+          "entity_type": { "type": "string", "description": "【旧形式・使わない】senses に入れる" },
+          "part_of_speech": { "type": "string", "description": "【旧形式・使わない】senses に入れる" },
           "word_origins": {
             "type": "array", "items": { "type": "string" },
-            "description": "【単一語義の従来形式】語種名(言語名)。senses を使うなら不要"
+            "description": "【旧形式・使わない】senses に入れる"
           },
           "variants": {
             "type": "array",
@@ -71,11 +85,11 @@
               "type": "object",
               "required": ["surface"],
               "properties": {
-                "surface": { "type": "string", "description": "別表記の表層形" },
-                "reading": { "type": "string", "description": "読みが変わる場合のみ" }
+                "surface": { "type": "string" },
+                "reading": { "type": "string" }
               }
             },
-            "description": "【単一語義の従来形式】別表記。senses を使うなら各 sense の variants に置く"
+            "description": "【旧形式・使わない】senses の variants に入れる"
           },
           "confidence": { "enum": ["high", "medium", "low"], "description": "low のときは notes 必須。語全体のメタ" },
           "notes": { "type": "string", "description": "判断に迷った点・確認してほしい点。語全体のメタ" }
