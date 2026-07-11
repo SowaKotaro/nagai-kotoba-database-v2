@@ -6,35 +6,38 @@ class AnnotationResearchExportTest < ActiveSupport::TestCase
     words = Word.unannotated.includes(:word_senses).order(:id)
     data = AnnotationResearchExport.new(words).as_json
 
-    assert_equal "1", data["version"]
+    assert_equal "2", data["version"]
 
     haruhi = data["words"].find { |w| w["word_id"] == words(:pending_haruhi).id }
     assert_equal "涼宮ハルヒの憂鬱", haruhi["surface"]
     assert_equal "すずみやはるひのゆううつ", haruhi["reading"]
 
-    # ジャンルは中分類(大→中)と小分類(大→中→小)の両方のパスを渡す。
-    # 中分類が無いとスキルが「寄せ先」を知らず、中分類ごと創作してしまう。
-    assert_includes data["masters"]["genres"], %w[文学 日本文学 小説]
-    assert_includes data["masters"]["genres"], %w[文学 日本文学]
+    # ジャンルは {大分類 => {中分類 => [小分類, ...]}} の木で渡す(省トークン)。
+    assert_includes data["masters"]["genres"].fetch("文学").fetch("日本文学"), "小説"
     assert_includes data["masters"]["entity_types"], "書籍名"
     assert_includes data["masters"]["parts_of_speech"], "名詞"
     assert_includes data["masters"]["word_origins"], "和語"
     assert data["masters"].key?("linguistic_features")
   end
 
-  test "大分類は単独のパスとしては渡さない(中分類パスの先頭に必ず現れるため)" do
+  test "木は3階層で、大分類の値は中分類のハッシュ・中分類の値は小分類名の配列になる" do
     data = AnnotationResearchExport.new(Word.unannotated.includes(:word_senses)).as_json
 
-    assert_not_includes data["masters"]["genres"], %w[文学]
-    assert_equal [ 2, 3 ], data["masters"]["genres"].map(&:size).uniq.sort
+    data["masters"]["genres"].each do |large_name, mediums|
+      assert_kind_of String, large_name
+      assert_kind_of Hash, mediums
+      mediums.each_value do |smalls|
+        assert_kind_of Array, smalls
+        smalls.each { |name| assert_kind_of String, name }
+      end
+    end
   end
 
-  test "小分類がまだ1件も無くても中分類までのパスを渡す" do
+  test "小分類がまだ1件も無い中分類も空配列で含める(寄せ先として渡す)" do
     WordSense.update_all(genre_id: nil) # 参照されていると小分類を消せない(restrict_with_error)
     Genre.small.destroy_all
     data = AnnotationResearchExport.new(Word.unannotated.includes(:word_senses)).as_json
 
-    assert_includes data["masters"]["genres"], %w[文学 日本文学]
-    assert_equal [ 2 ], data["masters"]["genres"].map(&:size).uniq
+    assert_equal [], data["masters"]["genres"].fetch("文学").fetch("日本文学")
   end
 end

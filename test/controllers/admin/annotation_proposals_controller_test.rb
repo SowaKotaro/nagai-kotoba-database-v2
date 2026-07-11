@@ -29,7 +29,7 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     assert_includes ids, words(:pending_bermuda).id
     assert_not_includes ids, words(:pending_haruhi).id
     assert_not_includes ids, words(:abc_murder).id
-    assert_includes data["masters"]["genres"], %w[文学 日本文学 小説]
+    assert_includes data["masters"]["genres"].fetch("文学").fetch("日本文学"), "小説"
   end
 
   test "書き出し件数を指定できる(上限あり)" do
