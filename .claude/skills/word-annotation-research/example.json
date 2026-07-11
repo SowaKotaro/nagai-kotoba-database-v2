@@ -2,68 +2,97 @@
   "version": "1",
   "proposals": [
     {
-      "word_id": 123,
-      "surface": "モンキー・D・ルフィ",
-      "entry_score": 5,
-      "meaning": "漫画『ONE PIECE』の主人公。麦わらの一味の船長で、ゴムの能力を持つ海賊。",
-      "genre_path": ["文書・出版物", "漫画・コミック", "少年漫画"],
-      "genre_new": true,
-      "entity_type": "キャラクター名",
-      "part_of_speech": "固有名詞",
-      "word_origins": ["英語"],
-      "variants": [{ "surface": "ルフィ" }],
-      "confidence": "high",
-      "notes": "所属(ジャンル)は既存中分類「漫画・コミック」の下。作品名『ONE PIECE』は所属ではなく個体なので小分類にしない。正体(エンティティ)が「キャラクター名」。"
-    },
-    {
-      "word_id": 124,
-      "surface": "天上天下唯我独尊",
-      "entry_score": 5,
-      "meaning": "釈迦が誕生時に唱えたと伝えられる言葉。この世で自分ほど尊いものはない、の意。",
-      "genre_path": ["哲学・宗教・心理", "宗派・教義", "原始仏教"],
-      "genre_new": false,
-      "entity_type": "発言",
-      "part_of_speech": "固有名詞",
-      "word_origins": ["中国語"],
-      "confidence": "high",
-      "notes": "masters に既存の小分類「原始仏教」があるためそのまま採用し genre_new は false。"
-    },
-    {
-      "word_id": 125,
-      "surface": "たかしんちの白いポメラニアン",
-      "entry_score": 1,
-      "entry_notes": "公然性・同定可能性を欠く。第三者が確認できる公開媒体に存在せず、指す対象も当事者にしか特定できない(内輪の呼称)。削除候補。",
-      "confidence": "high",
-      "notes": "Web 検索でも該当する語・作品名は確認できなかった。"
-    },
-    {
-      "word_id": 126,
+      "word_id": 5,
       "surface": "メソポタミア文明",
       "entry_score": 5,
-      "meaning": "ティグリス川・ユーフラテス川流域に興った世界最古級の文明。楔形文字や都市国家を生んだ。",
-      "genre_path": ["歴史・地理", "アジア史・東洋史", "西アジア史・中東史"],
-      "genre_new": true,
-      "entity_type": "文明名",
-      "part_of_speech": "固有名詞",
-      "word_origins": ["ギリシャ語", "中国語"],
+      "senses": [
+        {
+          "meaning": "ティグリス川・ユーフラテス川流域に紀元前3000年頃から栄えた古代文明。世界最古の都市文明の一つ。",
+          "genre_path": ["歴史・地理", "アジア史・東洋史", "古代文明"],
+          "genre_new": false,
+          "entity_type": "文明名",
+          "part_of_speech": "固有名詞",
+          "word_origins": ["日本語", "ギリシャ語"]
+        }
+      ],
       "confidence": "high",
-      "notes": "中分類は既存の「アジア史・東洋史」に寄せた(masters に「世界史」は無い)。親が地域軸なので小分類も地域軸で「西アジア史・中東史」を新設提案。時代軸の「古代文明」だとエジプト文明が別の親(アフリカ史)に付き同名小分類が分裂するため採らない。"
+      "notes": "中分類は既存の「アジア史・東洋史」(masters に「世界史」は無い)。混種語なので語種は「メソポタミア」の由来のギリシャ語と、「文明」の日本語を並べた。"
     },
     {
-      "word_id": 127,
+      "word_id": 16,
+      "surface": "傘連判状",
+      "entry_score": 5,
+      "senses": [
+        {
+          "meaning": "一揆などで、首謀者を特定されないよう署名を傘の骨のように放射状に並べた連判状。室町〜江戸時代に用いられた。",
+          "genre_path": ["歴史・地理", "日本史", "民衆史"],
+          "genre_new": false,
+          "entity_type": "文書名",
+          "part_of_speech": "普通名詞",
+          "word_origins": ["日本語"],
+          "linguistic_features": [
+            { "name": "古式読み", "target": "傘", "target_reading": "カラカサ" },
+            { "name": "半濁音化", "target": "連判", "target_reading": "レンパン" }
+          ]
+        }
+      ],
+      "confidence": "high",
+      "notes": "「傘」を単字でカラカサと読むのは古式読み。「連判」は判(ハン)の半濁音化。"
+    },
+    {
+      "word_id": 10,
+      "surface": "好きこそ物の上手なれ",
+      "entry_score": 5,
+      "senses": [
+        {
+          "meaning": "好きなことは熱心に取り組むので自然と上達するものだ、という意味のことわざ。",
+          "genre_path": ["言語", "成句論・句構造分析", "成句"],
+          "genre_new": false,
+          "entity_type": "ことわざ",
+          "part_of_speech": "普通名詞",
+          "word_origins": ["日本語"],
+          "linguistic_features": [
+            { "name": "熟字訓", "target": "上手", "target_reading": "ジョウズ" }
+          ]
+        }
+      ],
+      "confidence": "high",
+      "notes": "諺・慣用句は分野の区分そのものが語の正体と一致する語類なので、エンティティは「ことわざ」でよい。"
+    },
+    {
+      "word_id": 8,
+      "surface": "Dead by Daylight",
+      "entry_score": 5,
+      "senses": [
+        {
+          "meaning": "Behaviour Interactive開発の非対称対戦ホラーゲーム。1人の殺人鬼と4人の生存者が対決する。",
+          "genre_path": ["芸術・音楽・演劇・スポーツ・娯楽", "デジタルゲーム", "ホラーゲーム"],
+          "genre_new": false,
+          "entity_type": "作品名",
+          "part_of_speech": "固有名詞",
+          "word_origins": ["英語"],
+          "variants": [{ "surface": "DbD", "reading": "ディービーディー" }]
+        }
+      ],
+      "confidence": "high",
+      "notes": "略称 DbD が広く流通しているので variants に入れた。ゲーム作品の正体は既存の「作品名」(ゲーム名と細分しない)。"
+    },
+    {
+      "word_id": 2,
       "surface": "ピーターパンシンドローム",
       "entry_score": 4,
       "senses": [
         {
-          "meaning": "大人になることを拒む男性の心理傾向を指す通俗心理学の用語。1983年にダン・カイリーが提唱した。",
+          "meaning": "大人になることを拒み、精神的に成熟しない男性の心理傾向を指す通俗心理学の用語。",
           "genre_path": ["哲学・宗教・心理", "心理学・行動科学", "通俗心理学"],
           "genre_new": false,
           "entity_type": "俗称症候群",
           "part_of_speech": "普通名詞",
-          "word_origins": ["英語"]
+          "word_origins": ["英語"],
+          "variants": [{ "surface": "ピーターパン症候群", "reading": "ピーターパンショウコウグン" }]
         },
         {
-          "meaning": "同名の男性アイドルグループ。",
+          "meaning": "2019年に結成された日本の男性アイドルグループ。",
           "genre_path": ["芸術・音楽・演劇・スポーツ・娯楽", "芸能・エンタメ", "アイドル"],
           "genre_new": false,
           "entity_type": "グループ名",
@@ -73,6 +102,14 @@
       ],
       "confidence": "medium",
       "notes": "同一表記で2語義(通俗心理学の用語 / アイドルグループ)。慣用度の高い前者を先頭に。前者は普通名詞だが正体は「俗称症候群」なので entity_type を付ける。"
+    },
+    {
+      "word_id": 125,
+      "surface": "たかしんちの白いポメラニアン",
+      "entry_score": 1,
+      "entry_notes": "公然性・同定可能性を欠く。第三者が確認できる公開媒体に存在せず、指す対象も当事者にしか特定できない(内輪の呼称)。削除候補。",
+      "confidence": "high",
+      "notes": "Web 検索でも該当する語・作品名は確認できなかった。"
     }
   ]
 }

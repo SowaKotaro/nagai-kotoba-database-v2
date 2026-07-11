@@ -5,8 +5,16 @@
 
 <p class="proposal-lead"><%= t("admin.annotation_proposals.export.lead") %></p>
 
-<%# 件数指定(未注釈で提案がまだ無い語の先頭から) %>
+<%# 件数指定(既定は未注釈で提案がまだ無い語の先頭から)。
+    from_id/to_id を指定するとその word_id 範囲を書き出す(下書き提案がある語も含む → 再調査用) %>
 <%= form_with url: export_admin_annotation_proposals_path, method: :get, class: "proposal-limit" do %>
+  <label for="export_from_id" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.range_label") %></label>
+  <%= number_field_tag :from_id, @from_id, id: "export_from_id", min: 1,
+        placeholder: t("admin.annotation_proposals.export.from_placeholder"), class: "proposal-limit__input" %>
+  <span class="proposal-limit__range-sep"><%= t("admin.annotation_proposals.export.range_sep") %></span>
+  <%= number_field_tag :to_id, @to_id, id: "export_to_id", min: 1,
+        placeholder: t("admin.annotation_proposals.export.to_placeholder"), class: "proposal-limit__input" %>
+
   <label for="export_limit" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.limit_label") %></label>
   <%= number_field_tag :limit, @limit, id: "export_limit", min: 1, max: 200, class: "proposal-limit__input" %>
   <%= submit_tag t("admin.annotation_proposals.export.reload"), class: "btn btn--sm" %>

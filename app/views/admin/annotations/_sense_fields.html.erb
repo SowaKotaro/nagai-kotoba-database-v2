@@ -63,14 +63,18 @@
   <%# ジャンル(段階表示) %>
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.genre") %></div>
+    <%# 提案の反映で小分類まで既存の木に無くても、大・中まで一致すればそこまで開いておく
+        (picker が connect 時に preselect の祖先へ自動で潜る)。小分類まで解決済みなら genre_id が入る %>
     <div class="ann-genre" data-controller="genre-picker"
          data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
-         data-genre-picker-create-url-value="<%= admin_genres_path %>">
+         data-genre-picker-create-url-value="<%= admin_genres_path %>"
+         <% if sense.genre_id.blank? && sense.genre_preselect_ids.present? %>data-genre-picker-preselect-value="<%= sense.genre_preselect_ids.to_json %>"<% end %>>
       <%= form.hidden_field :genre_id, class: "js-genre-value",
             data: { genre_picker_target: "value", sense_completeness_target: "genre" } %>
       <% if sense.genre %>
         <div class="ann-genre__current js-genre-current" data-genre-picker-target="current">
-          <% sense.genre.self_and_ancestors.reverse.each_with_index do |g, i| %>
+          <%# 大 › 中 › 小 の順に見せる(self_and_ancestors は [大, 中, 小]) %>
+          <% sense.genre.self_and_ancestors.each_with_index do |g, i| %>
             <% if i.positive? %><span class="sep">›</span><% end %><span><%= g.name %></span>
           <% end %>
           <button type="button" class="ann-genre__change" data-action="genre-picker#reset"><%= t("admin.annotations.genre_change") %></button>
