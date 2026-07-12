@@ -26,7 +26,18 @@ module Authentication
     end
 
     def find_session_by_cookie
-      Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
+      return unless (session_id = cookies.signed[:session_id])
+      return unless (session = Session.find_by(id: session_id))
+
+      if session.expired?
+        session.destroy
+        cookies.delete(:session_id)
+        nil
+      else
+        # 利用があれば有効期限を延長する(DB 書き込みと Set-Cookie は間引き間隔ごと)。
+        set_session_cookie(session) if session.refresh_activity
+        session
+      end
     end
 
     def request_authentication
@@ -39,10 +50,19 @@ module Authentication
     end
 
     def start_new_session_for(admin)
+      # ログインを契機に、放置された期限切れセッションを掃除する(Session にコールバックは無い)。
+      Session.expired.delete_all
+
       admin.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
         Current.session = session
-        cookies.signed.permanent[:session_id] = { value: session.id, httponly: true, same_site: :lax }
+        set_session_cookie(session)
       end
+    end
+
+    def set_session_cookie(session)
+      cookies.signed[:session_id] = {
+        value: session.id, httponly: true, same_site: :lax, expires: Session::LIFETIME.from_now
+      }
     end
 
     def terminate_session
