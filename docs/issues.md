@@ -1,590 +1,355 @@
-# 実装 Issue リスト（単語収集・解析アプリ）
+# 実装 Issue リスト(単語収集・解析アプリ)
 
-`docs/schema.sql` を基にした段階的な実装計画。上から実装順。各 Issue = 1 ブランチ = 1 PR を原則とする。
+段階的な実装計画と改善バックログ。**1 Issue = 1 ブランチ = 1 PR** を原則とする。
 
-## データモデル概要
-- `word` : `word_sense` = 1 : 多（同音異義語に対応）。
-- `genres` は隣接リスト（`parent_id`）で 大(level1)→中(level2)→小(level3) の3階層を表現。小分類が決まれば中・大も一意に辿れる。
-- `word_senses.genre_id` は末端（小分類=level3）を指す。**登録時は必ず大→中→小まで選択する**（中・大は `parent_id` を辿って一意に復元）。
-- ジャンルは日本十進分類法(NDC)を基にした柔軟な階層。各階層の子は10種に収まらないため、**数値の分類コード列は持たない**（名前＋階層のみ）。
-- `linguistic_features` は `word_sense_features` 経由で語義と多対多。特徴は単語の**該当部分ごと**に付与する（`target`＝表層の一部 / `target_reading`＝その読み）。
-- 生成カラム（STORED）: `reading_length` / `first_char` / `last_char`（SQL 側）。`char_type_pattern`・`rhythm_pattern` は Ruby 側で生成。
-- 想定規模: 1万レコード程度。
+- アプリ全体像・実装状況・ローカル環境: [`docs/overview.md`](overview.md)
+- データモデル・横断方針(照合順序・公開方針など): [`CLAUDE.md`](../CLAUDE.md) / [`docs/schema.sql`](schema.sql)
+- グロース戦略と現状評価: [`docs/growth-strategy.md`](growth-strategy.md)
+- 収録基準の正: [`docs/annotation-guidelines.md`](annotation-guidelines.md)
 
-## 横断方針
-- **照合順序(collation)**: 日本語検索が中心のため、全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。既存の `admins` / `sessions`（`utf8mb4_general_ci`）も変更マイグレーションで揃える（Issue 1 で対応 or 別途）。
-- 閲覧は全世界に公開、登録・編集・削除は管理者のみ（[[CLAUDE.md]] 参照）。
-- インデックスのキー長対策で、`utf8mb4` の長い文字列カラムは先頭191文字の prefix index を使う（`surface(191)` など）。
+## 記述フォーマット(統一)
 
----
+各 Issue は次の形式で記述する。完了した Issue は詳細を落として「完了アーカイブ」節へ要約して移す(経緯の詳細は git 履歴で参照できる)。
 
-## Issue 1: 設計ドキュメント整備とスキーマ方針確定 ★最初のブランチ
-- [x] `docs/schema.sql` を取り込む
-- [x] 本 Issue リスト（`docs/issues.md`）を作成
-- [x] `CLAUDE.md` を作成（ドメイン／公開方針／スキーマ方針を反映）
-- 照合順序の方針確定・既存テーブルの扱いは **Issue 2** へ、`char_type_pattern` の変換仕様メモは **Issue 4** へ、`rhythm_pattern` の変換仕様メモは **Issue 5** へ移動。
+```
+## Issue N: タイトル
+- 種別: feature / improvement / bug / ops
+- 状態: 未着手 / 対応中 / 保留(理由) / 完了(PR #n)
+- 優先度: P0〜P2 ／ Impact: High/Med/Low ／ Effort: High/Med/Low
+- 依存: Issue n / なし
+- 背景・現状: (1〜3行)
+- 内容: (チェックリスト)
+- 期待効果: (1〜2行)
+```
 
-## Issue 2: ジャンル(genres)マスタ ― 3階層・自己参照
-- [x] migration: `parent_id`(自己参照FK), `level`, `name`, `UNIQUE(parent_id, name)`, `index(level)`
-- [x] model `Genre`: `belongs_to :parent`(optional) / `has_many :children`、`name` presence・`(parent_id, name)` 一意
-- [x] level と parent の整合性バリデーション、末端(level3)から祖先(中・大)を辿るメソッド（`self_and_ancestors` / `root_genre`）
-- [x] 分類コード列は設けない（名前＋階層のみ）
-- [x] 照合順序の方針確定（`utf8mb4_0900_ai_ci` 統一）と、既存テーブル（`admins` / `sessions`）の扱いを決定 ※Issue 1 から移動
-  - ローカルは MariaDB で `utf8mb4_0900_ai_ci` 非対応のため、CI/本番と同じ MySQL 8.4 を `docker compose`（ホスト3307）で用意し接続先を切替。
-  - 既存 `admins` / `sessions` は本 Issue のマイグレーションで `utf8mb4_0900_ai_ci` に変換し統一。
-- 依存: なし
-
-## Issue 3: 単純マスタ3種（entity_types / parts_of_speech / linguistic_features）
-- [x] 各 migration: `name`, `UNIQUE(name)`
-- [x] 各 model: `name` presence・uniqueness
-- [x] `parts_of_speech` は不規則複数形のため `config/initializers/inflections.rb` に屈折ルールを追加（`PartOfSpeech` → `parts_of_speech`）
-- 依存: なし（Issue 2 と並行可）
-
-## Issue 4: words テーブル ― 表層形と char_type_pattern 生成
-- [x] migration: `surface`, `char_type_pattern`, `UNIQUE(surface(191))`, `index(char_type_pattern(191))`
-- [x] model `Word`: `has_many :word_senses`、`surface` presence・uniqueness
-- [x] `char_type_pattern` 生成ロジック（漢字→漢 / ひらがな→あ / カタカナ→ア / 英字→A / その他→@）を surface から生成（値オブジェクト `CharTypePattern`、`before_validation` で自動セット）
-- [x] 生成ロジックのユニットテスト（記号・数字・全角半角の境界）
-- [x] `char_type_pattern`（漢/あ/ア/A/@）の変換仕様メモを残す（[`docs/char_type_pattern.md`](char_type_pattern.md)）※Issue 1 から移動
-  - 長音符 `ー`/`ｰ` はカタカナ(`ア`)扱い、`々` は漢字(`漢`)扱いと決定。
-- 依存: なし
-
-## Issue 5: word_senses テーブル ― 語義・生成カラム・rhythm_pattern
-- [x] migration: FK `word_id`/`genre_id`/`entity_type_id`/`part_of_speech_id`、`reading`, `rhythm_pattern`, `meaning`
-- [x] STORED 生成カラム（`t.virtual ... stored: true`）: `reading_length` / `first_char` / `last_char` と対応 index
-- [x] model `WordSense`: 各 `belongs_to`（entity_type/part_of_speech は optional）、`reading` presence
-- [x] `genre_id` は **level3(小分類) のみ許可**するバリデーション（必ず小分類まで選ぶ運用）
-- [x] `rhythm_pattern` 生成（読み→ローマ字、Ruby 側）。かな→ローマ字変換の方針決定
-  - **ヘボン式**を採用。**長音は母音をそのまま展開**（`とうきょう→toukyou`、`カレー→karee`）。値オブジェクト `RhythmPattern` + `before_validation` で自動セット。
-- [x] `rhythm_pattern`（ローマ字）の変換仕様メモを残す（[`docs/rhythm_pattern.md`](rhythm_pattern.md)）※Issue 1 から移動
-- 依存: Issue 2・3・4
-
-## Issue 6: word_sense_features ― 語義 × 言語学的特徴（多対多）
-- [x] migration: 中間テーブル、両 FK、`target`（該当部分・表層）/ `target_reading`（該当部分の読み）
-- [x] 特徴は単語の**該当部分ごと**に付与する（例:「硫黄島からの手紙」に 連濁:硫黄島 / 熟字訓:硫黄 / 連濁:手紙）。
-  このため `UNIQUE(word_sense_id, linguistic_feature_id, target)` とし、同じ語義×特徴でも該当部分が違えば複数登録可
-- [x] `WordSense has_many :linguistic_features, through:`、三つ組の重複防止（中間モデルの uniqueness ＋ DB 複合ユニーク）
-- [x] `target` は親 `word.surface`、`target_reading` は `word_senses.reading` の部分文字列であることを検証
-- [x] `LinguisticFeature` からも `word_senses, through:` で辿れる。参照中のマスタは削除不可（`restrict_with_error`）
-- 依存: Issue 3・5
-
-## Issue 7: 管理者用 CRUD（登録・編集・削除）
-- [x] 認証必須の管理コントローラ（`Admin::` 名前空間 = `/admin/words`。`Admin::BaseController` は `ApplicationController` を継承し既定で認証必須）
-- [x] words / word_senses / word_sense_features のフォーム（**1画面フル入れ子**。`accepts_nested_attributes_for` ＋ Stimulus `nested-form` で語義・特徴の行を動的に追加/削除）
-- [x] 言語学的特徴は**該当部分つき**（`target` / `target_reading`）で複数登録（Issue 6 の再設計に対応）
-- [x] ジャンルは **大→中→小の依存ドロップダウン**（Stimulus `genre-cascade` ＋ `Admin::GenresController#children` の JSON）。送信は小分類(`genre_id`)のみ
-- 依存: Issue 4・5・6
-- 補足: Stimulus の DOM 操作（行の追加/削除・カスケード）はシステムテスト（Capybara/Selenium）で確認する想定。サーバ側（認可・ネスト保存・バリデーション）は結合テストでカバー済み。
-
-## Issue 8: 公開閲覧（一覧・詳細）
-- [x] 未認証で閲覧可（`allow_unauthenticated_access`）の一覧・詳細（トップレベル `WordsController#index/#show`。書き込みは admin 側に限定）
-- [x] word とその語義群、ジャンル階層（大 > 中 > 小）・品詞・エンティティタイプ・言語学的特徴（該当部分つき）の表示
-- [x] 一覧は gem を足さず軽量ページネーション（`limit`/`offset` ＋ `page` パラメータ、前へ/次へ）。1万件想定に配慮
-- 依存: Issue 4・5（6 があれば特徴も）
-
-## Issue 9: 検索・絞り込み機能
-- [x] `reading_length`（下限/上限）・先頭/末尾文字・`char_type_pattern`（完全一致）・ジャンル階層・品詞・エンティティタイプ・言語学的特徴・`rhythm_pattern`（部分一致）での絞り込み
-- [x] 生成カラム／インデックスを活用（`WordSense` のスコープ群。`char_type_pattern` は `words` と join）
-- [x] 公開の検索ページ `GET /search`（`SearchesController#index`、未認証可）。ロジックはクエリオブジェクト `WordSenseSearch` に集約
-- [x] キーワード検索 `q`（表層形・読みの部分一致。ヘッダー常設検索・ホームの検索窓の入口）※デザイン改修時に追加
-- [x] ジャンルは階層セレクト（大/中/小のどれを選んでも配下の小分類で絞り込み）。結果は語義単位で一覧＋軽量ページネーション
-- 依存: Issue 5（必要に応じ 6・8）
-
-## Issue 10: マスタのインライン追加（単語登録画面から完結）
-- [ ] 単語の登録・編集画面（Issue 7）から**別ページに遷移せず**、セレクトの選択肢を新規追加できるようにする。
-  - 対象マスタ: 中分類/小分類（ジャンル）・品詞・エンティティタイプ・言語学的特徴。
-- [ ] 各マスタ用の軽量な create アクション（`Admin::` 名前空間）＋ **Turbo Stream** で対象 `<select>` に新しい `<option>` を追加し、その場で選択状態にする。
-- [ ] ジャンルの中分類/小分類は**現在選択中の親（大/中）配下**に作成する（親 `id` を送る。カスケードと整合）。
-- [ ] 追加 UI は `<dialog>` もしくは Turbo Frame をその場で開く方式（小さな Stimulus）。フルページ遷移させない。
-- 依存: Issue 7
-- 目的: 「別ページで追加 → 戻って選択」という手間を無くし、単語登録フロー内で完結させる。
-
-## Issue 11: 拡張データ（読み指標・語種・別表記）
-言葉に紐づく解析データを増やす。今回はデータ層（マイグレーション・モデル・値オブジェクト・seed・バックフィル・テスト）まで。検索/表示など画面機能は含めない（別 Issue）。
-- [x] `word_senses` に **モーラ数 `mora_count`**（拗音「きゃ」は1拍。`reading_length` とは別軸）を追加。値オブジェクト `MoraCount` ＋ `before_validation` で reading から生成（Ruby 側・NULL 許容）。
-- [x] `word_senses` に **母音パターン `vowel_pattern`**（`rhythm_pattern` から母音 aiueo のみ抽出）を追加。値オブジェクト `VowelPattern`（`rhythm_pattern` 生成の後に生成）。
-- [x] **語種マスタ `word_origins`**（和語/漢語/英語/フランス語…）。「外来語」で束ねず言語ごとに切り分ける開いた集合。単純マスタ（`name` + `UNIQUE`）。seed 投入。
-- [x] **語義 × 語種の多対多 `word_sense_origins`**（中間）。混種語（例: 歯ブラシ = 和語 + 英語）に対応し 1 語義に複数付与可。`UNIQUE(word_sense_id, word_origin_id)`。参照中の語種は `restrict_with_error`。
-- [x] **別表記 `word_sense_variants`**（語義に 1:多）。その語義にだけ付く別の表記。読みも変わりうるため `reading` を保持（任意）。`UNIQUE(word_sense_id, surface)`。
-- [x] `WordSense` に多対多（`word_origins, through:`）・`has_many :word_sense_variants` と `accepts_nested_attributes_for` を追加。
-- [x] 既存行向けバックフィルタスク `backfill:reading_metrics`（rhythm/vowel/mora を reading から再生成、冪等）。
-- [x] 値オブジェクト（境界値）・各モデルのユニット/バリデーションテスト、フィクスチャ整備。
-- マイグレーション: `AddReadingMetricsToWordSenses` / `CreateWordOrigins` / `CreateWordSenseOrigins` / `CreateWordSenseVariants` の4本。
-- 依存: Issue 5（語義）・Issue 3（マスタの作法）
-
-## Issue 12: 高速アノテーション・コンソール
-1語集中キュー型の管理 UI。既存 `/admin/words`（フル入れ子フォーム）とは**併存**。モックで UX 確定後に実装（`docs/design.md` 準拠）。
-- [x] `words.annotated_at` を追加（`AddAnnotatedAtToWords`）。**未注釈キュー** = `Word.unannotated`（`annotated_at` が NULL）。保存で現在時刻をセット。
-- [x] `Admin::AnnotationsController`（index=最初の未注釈へ誘導 / show=コンソール / update=保存して次の未注釈へ）。**Turbo Frame** でキュー送り（フルリロードなし・`turbo_action: advance` で履歴追従）。
-- [x] **ドロップダウン全廃**。語種＝複数チップ（`word_origin_ids`）、品詞・エンティティ＝単一チップ（ラジオ）、ジャンル＝**段階表示**（大→中→小、選ぶと下位が出現）。チップは隠し input＋CSS `:has()` で極力 JS レス。
-- [x] **言語学的特徴の該当部分をキーボードなしで指定**: 単語／読みの文字を「始点→終点タップ」（宿泊予約のチェックイン/アウト式）で範囲選択（`feature-range` Stimulus）。スマホ/タブレット対応。
-- [x] **マスタのその場追加**（Issue 10 相当）: 語種・品詞・エンティティ・ジャンル（各階層）を画面遷移せず JSON POST で追加し即選択（`inline-add` / `genre-picker` Stimulus、`Admin::WordOrigins/PartsOfSpeech/EntityTypes/Genres#create`）。
-- [x] **語義を追加**: 語種・品詞・特徴を引き継ぎ、読み・意味・ジャンル・エンティティ・別表記を空にした語義を複製（`sense-cloner` Stimulus）。
-- [x] 別表記は語義ごとにネストで登録。CSS は `annotate.css`（manifest に追加）。i18n・スモークテスト（描画＋ネスト保存＋その場追加）。
-- 依存: Issue 11（語種・別表記）・Issue 5/6/7（語義・特徴・admin CRUD の作法）
-- 補足: チップ操作・範囲タップ・段階ジャンルなどの DOM 挙動はシステムテスト（未整備）で確認する想定。サーバ側は結合テストでカバー済み。
+- 種別 `ops` = コード変更を伴わない(または僅かな)運用・インフラ作業。
+- 優先度の目安: P0 = 公開(インデックス解禁)の前提条件、P1 = 解禁前後に済ませたい土台、P2 = データ量・トラフィックの成長に合わせて。
 
 ---
 
-# SEO・LLMO 改善イシュー（2026-07-06 分析）
+# 未完了イシュー(優先度順)
 
-検索エンジン・LLM（AI 検索）経由の流入最大化の観点でリポジトリ全体を分析した結果のバックログ。
-既存 Issue 1〜12 の続きとして採番。着手時は従来どおり **1 Issue = 1 ブランチ = 1 PR**。
-
-## 現状サマリー
-
-### 技術構成（クローラビリティの前提）
-- 全ページ ERB による **SSR**（+ Turbo Drive）。JS 無効でも全コンテンツが HTML に含まれ、クローラビリティ自体は良好。CSR 依存なし。追加の SSG は不要。
-- 公開面は 4 種のみ: ホーム（`/`）・単語一覧（`/words`。クエリパラメータでファセット絞り込み）・単語詳細（`/words/:id`）・詳細検索フォーム（`/search`）。
-- 未注釈語は 404（`WordsController#show` が `Word.annotated` で絞る）で、公開品質のゲートは既にある。
-
-### 観点別評価
-
-**A. 技術SEO** — 基礎がほぼ未整備（未公開の今が入れどき）。
-- 良い点: SSR、`lang="ja"`、パンくず UI、`font-display: swap`、`force_ssl`、軽量ページネーション（prev/next が実リンク）。
-- 問題点: meta description / OGP / canonical が一切ない（`app/views/layouts/application.html.erb` は title のみ）。`public/robots.txt` は雛形コメントのみで sitemap.xml も無い。ファセット URL（`/words?genre_id=…` 等）が全組み合わせで title「単語一覧」固定のまま無限に増殖し重複コンテンツ化する。構造化データなし。`public/favicon.ico`・`apple-touch-icon.png`・`apple-touch-icon-precomposed.png` が **0 バイトの空ファイル**。
-- URL 設計の判断: `/words/:id`（数値 ID）は安定していて可。日本語スラッグは URL エンコードで可読性・共有性が落ちるため、**ID 維持 + title/メタ/構造化データで補う**方針を推奨（イシュー化しない）。
-
-**B. LLM検索最適化** — ページ単体の構造は良いが「自己完結性」と機械可読出力が不足。
-- 良い点: `<ruby>` による読み表示、`<dl>` による属性表示、1 語 1 URL、title にサイト名が入る。
-- 問題点: llms.txt なし。`meaning`（意味）が任意入力のため**散文ゼロのページ**が生まれうる（LLM が引用できる定義文がない）。JSON-LD・公開 API なし（jbuilder は Gemfile にあるが未使用）。サイト概要を語る恒久ページ（About）が無くフッター文言のみ。
-
-**C. HTML構造・セマンティクス** — 概ね良好。
-- 良い点: 見出し階層（h1→h2）、`<dl>`/`<ruby>`、`aria-label`・`aria-current`・`aria-expanded`、インライン SVG に `aria-hidden`。
-- 軽微な問題: 一覧行（`words/_entry_row`）が div/span 構成（ul/li が自然）。読み（reading）が `<ruby>` の `rt` にしか存在せず、dt/dd としての明示がない（Issue 16・18 で吸収）。
-
-**D. 情報設計・内部リンク** — 詳細ページ発のファセットリンクは充実。**入口（ハブ）と単語間リンクが不足**。
-- 良い点: 詳細ページからジャンル各階層・品詞・エンティティ・語種・文字数・モーラ・先頭/末尾文字への実リンク。
-- 問題点: ジャンル階層・エンティティ等の一覧ページ（ハブ）が存在せず、ファセット面へのクロール導線が単語詳細経由のみ。検索フォームのチップは checkbox でありリンクではないためクローラが辿れない。単語→単語の「関連語」リンクがゼロでトピッククラスターが形成されない。
-
-**E. コンテンツ・データ品質** — スキーマは正規化・拡張性とも良好。ページの「散文量」が弱点。
-- 良い点: word/word_sense 分離、別表記（word_sense_variants）で表記ゆれ対応、語種の多対多、生成カラム、管理者精査型の運営（E-E-A-T 的に明記する価値あり）。
-- 問題点: `meaning` 任意のため薄いページになりうる。用例・出典のフィールドがない。ユーザー投稿は方針として持たない（公開側にアカウント機能を作らない方針と整合。イシュー化しない）。
-
-**F. グロース・エンゲージメント** — 検索・絞り込みと「今日の一語」（`HomeController#featured_word`、日替わり決定的）は実装済み。OGP 画像・シェア導線・フィード・埋め込みは無い。
-
-**G. 運用・技術基盤** — CI・テスト・セキュリティスキャン（rubocop/brakeman/bundler-audit/importmap audit）は整備済み。**計測と HTTP キャッシュがゼロ**。
-- 問題点: アナリティクス / Search Console 検証タグなし。`fresh_when`/ETag・fragment cache なし（ホームは毎リクエスト COUNT 3 本）。production の `config.hosts` 未設定。`public/404.html` 等が Rails 既定の英語ページ。CSP 初期化子がコメントアウトのまま（セキュリティ強化として別途検討。Google Fonts 利用中は directive 調整が必要）。
-
-**H. その他の気づき**
-- `Word.keyword` スコープ（`app/models/word.rb`）は未使用（検索は `WordSense.keyword` に集約済み）。掃除候補（PR ついでの削除で可、イシュー化しない）。
-- 詳細ページの「No. %{id}」は DB 連番の露出だが実害なし。
-
-## イシュー一覧
-
-### 実装ステータス（2026-07-06 実装。チェック済み = main マージ済み）
-
-- [x] Issue 13: favicon / apple-touch-icon 差し替え（PR #34）
-- [x] Issue 14: メタ情報の動的生成（description・OGP・canonical）（PR #36）
-- [x] Issue 15: sitemap.xml + robots.txt（PR #37）
-- [x] Issue 16: 構造化データ JSON-LD（PR #40）
-- [x] Issue 17: ファセットのインデックス方針（PR #38）
-- [x] Issue 18: 単語詳細の自動リード文（PR #35）
-- [x] Issue 19: GA4 + Search Console（PR #39。本番で `GA4_MEASUREMENT_ID` 設定・所有権確認は公開時に手動）
-- [x] Issue 20: About ページ（PR #41）
-- [x] Issue 21: /genres ハブページ（PR #43）
-- [x] Issue 22: 50音・文字数の索引ページ /browse（PR #45）
-- [x] Issue 23: 関連語セクション（PR #44）
-- [x] Issue 24: llms.txt（PR #42）
-- [x] Issue 25: 公開 JSON API（PR #46）
-- [x] Issue 26: HTTP/fragment キャッシュ（PR #47）
-- [ ] Issue 27: config.hosts + canonical 301 ／ **保留**（com→jp 移行タイミングに合わせて実施。インフラ変更）
-- [x] Issue 28: 新着単語 Atom フィード（PR #48）
-- [ ] Issue 29: OGP 画像の動的生成 ／ 未着手（ロードマップ通り、収録が数百語を超えてから）
-- [x] Issue 30: シェア導線（X 共有・URL コピー）（PR #49）
-- [ ] Issue 31: Web フォントのセルフホスト化 ／ 未着手（woff2 サブセット取得が必要）
-- [x] Issue 32: エラーページの日本語化・ブランド化（PR #50）
-- [ ] Issue 33: 用例フィールドの追加 ／ 未着手（**着手前に運用方針を相談**）
-- [ ] Issue 34: 統計ページ ／ 未着手（**着手前に相談**。Phase1 から）
-
-## [bug] Issue 13: favicon.ico / apple-touch-icon が 0 バイトの空ファイル
-- 種別: bug
-- 観点: A / H
-- 背景・現状: `public/favicon.ico`・`apple-touch-icon.png`・`apple-touch-icon-precomposed.png` が 0 バイト。ブラウザ・iOS・クローラが空ファイルを受け取る。Google は検索結果にファビコンを表示するため、欠けると SERP 上の見た目とクリック率に響く。`public/icon.svg`（朱の印章）は正常でレイアウトから参照済み。
-- 提案内容: `icon.svg` から 32/48px の `favicon.ico` と 180px の `apple-touch-icon.png` を生成（rsvg-convert か ImageMagick）して差し替え。`apple-touch-icon-precomposed.png` は削除で可。
-- 期待効果: SERP・ブラウザタブ・共有時のブランド表示が正常化。
-- Impact: Low
-- Effort: Low
-- 優先度: P1（数十分で終わる quick win。公開前に）
-
-## [improvement] Issue 14: メタ情報の動的生成（description・OGP・canonical）
-- 種別: improvement
-- 観点: A / B
-- 背景・現状: `app/views/layouts/application.html.erb` は `<title>` のみで、meta description・OGP（og:title/description/type/url/site_name/image）・twitter:card・canonical が一切ない。SERP のスニペットが本文冒頭の機械的抜粋になり、SNS/チャット共有時のプレビューも出ない。
-- 提案内容: gem を足さずヘルパー + `content_for` で実装。(1) `ApplicationHelper` に `page_description` / `canonical_url` を用意しレイアウトで出力（既定値はサイト説明 = `ja.yml` の `home.index.description` を流用）。(2) `words#show` は Issue 18 のリード文を description に流用。(3) og:site_name=ブランド名、og:locale=ja_JP、既定の og:image として静的画像 1 枚（icon.svg ベースの 1200×630 PNG）を `public/` に用意。(4) canonical は `https://nagai-kotoba-database.jp` を正とする（確定事項 1）。
-- 期待効果: SERP スニペット・CTR 改善、SNS/LLM チャットでの共有プレビュー成立、重複 URL の正規化。
-- Impact: High
-- Effort: Medium
-- 優先度: P0
-
-## [feature] Issue 15: sitemap.xml の動的生成と robots.txt の整備
+## Issue 42: プライバシーポリシー・外部送信情報の公表ページ(/privacy)
 - 種別: feature
-- 観点: A
-- 背景・現状: sitemap が無く、`public/robots.txt` はコメント 1 行のみ。単語詳細への導線は一覧ページネーション経由のみで、公開直後のインデックス速度が出ない。`/admin` などのクロール制御も未指定。
-- 提案内容: (1) `SitemapsController`（`allow_unauthenticated_access`）で `/sitemap.xml` を動的生成: 静的ページ（`/`・`/words`・About 等）+ `Word.annotated.find_each`（lastmod=`updated_at`）。1 万語想定なら 1 ファイル（上限 5 万 URL）で足り、gem 不要。`expires_in` で 1 日キャッシュ。(2) `robots.txt` に `Sitemap:` 行と `Disallow: /admin` `Disallow: /session` `Disallow: /search` を追記（`/search` の扱いは Issue 17 の方針と揃える）。
-- 期待効果: 公開直後から全単語ページを確実・高速にインデックスさせる。クロールバジェットの浪費防止。
-- Impact: High
-- Effort: Low
-- 優先度: P0
+- 状態: 未着手
+- 優先度: P0 ／ Impact: High ／ Effort: Low〜Med
+- 依存: なし
+- 背景・現状: GA4(gtag.js)で利用者情報を Google へ外部送信しているのに、公表ページが無い。改正電気通信事業法の外部送信規律の観点で公開前に必須。E-E-A-T(サイトの信頼性)の面でも欠けている。
+- 内容:
+  - [ ] `PagesController#privacy`(`GET /privacy`、`allow_unauthenticated_access`)を追加(About と同じ作法)
+  - [ ] 記載事項: 外部送信の内容(GA4 — 送信先事業者・送信される情報・利用目的)/Cookie の利用/アクセスログの取り扱い/お問い合わせ先(About と共有)
+  - [ ] フッターに恒久リンク。About・llms.txt からも参照
+  - [ ] GA4 無効環境(`GA4_MEASUREMENT_ID` 未設定)でも矛盾しない文言にする
+- 期待効果: 法的リスクの回避。公開(インデックス解禁)の前提条件を満たす。
 
-## [feature] Issue 16: 構造化データ（JSON-LD: DefinedTerm・BreadcrumbList・WebSite）
-- 種別: feature
-- 観点: A / B
-- 背景・現状: schema.org マークアップが一切ない。辞書サイトは `DefinedTerm`/`DefinedTermSet` が素直に当てはまるドメインで、パンくず UI（`shared/_breadcrumbs`）も既にあるのに `BreadcrumbList` が無い。
-- 提案内容: ヘルパー（例 `StructuredDataHelper`）で `<script type="application/ld+json">` を出力。(1) `words#show`: `DefinedTerm`（`name`=surface、`description`=リード文/meaning、読みは `alternateName` か `phoneticText`、`inDefinedTermSet`=サイト全体の `DefinedTermSet`）を語義ごとに。(2) 全ページ: `BreadcrumbList`（`_breadcrumbs` に渡す items 配列を流用できる形にする）。(3) レイアウト: `WebSite` + `SearchAction`（`/words?q={search_term_string}`）。
-- 期待効果: リッチリザルト・サイトリンク検索ボックスの獲得可能性、LLM/AI 検索がページ構造を誤りなく解釈して引用する確度の向上。
-- Impact: High
-- Effort: Medium
-- 優先度: P0
-
-## [improvement] Issue 17: ファセット付き一覧・検索ページのインデックス方針（noindex / 動的 title）
+## Issue 43: インデックス解禁スイッチ(全ページ noindex の環境変数切替)
 - 種別: improvement
-- 観点: A
-- 背景・現状: `/words` はクエリパラメータの全組み合わせ（`genre_id`×`first_char`×`page`×…）でページが無限に増殖するのに、title は「単語一覧」固定（`app/views/words/index.html.erb`）。重複 title の大量発生とクロールバジェット浪費で、サイト全体の評価を下げるリスクがある。`/search`（フォームページ）にも指定がない。
-- 提案内容: (1) **単一条件**のファセット（ジャンル/品詞/エンティティ/語種/先頭文字のいずれか 1 つ）はインデックス許可し、`applied_search_conditions`（`SearchesHelper`）を流用して title・h1・description を「◯◯の長い言葉一覧」等に動的化。(2) 複数条件・`q`・`page` 2 以降は `<meta name="robots" content="noindex,follow">`。(3) `/search` は noindex。(4) canonical はパラメータをソート正規化した自身。判定ロジックは `WordSenseSearch` に載せる。
-- 期待効果: 重複コンテンツの抑止と、価値あるファセット面（≒カテゴリページ）の検索流入獲得の両立。
-- Impact: High
-- Effort: Medium
-- 優先度: P0
+- 状態: 未着手
+- 優先度: P0 ／ Impact: High ／ Effort: Low
+- 依存: なし
+- 背景・現状: 確定事項「注釈済み 300〜500 語まで全ページ noindex、解禁時に外す」の実装が無い。現状の noindex はファセット絞り込みページと `/search` のみで、解禁前に jp ドメインで公開するとインデックスを制御できない。
+- 内容:
+  - [ ] レイアウトの meta robots を環境変数(例 `INDEXING_ENABLED`)で切替。**未設定 = 全ページ `noindex`** とし、解禁時に本番へ設定する
+  - [ ] ファセットの noindex 判定(Issue 17)との共存(全体 noindex が優先)
+  - [ ] 環境変数の有無それぞれでメタタグ出力を検証する結合テスト
+  - [ ] 解禁チェックリストを docs 化: 環境変数設定 → Search Console 所有権確認 → sitemap 送信 → インデックス状況の観測開始(Issue 44 と連動)
+- 期待効果: 解禁タイミングを運用で確実に制御できる。準備中のページが中途半端にインデックスされる事故を防ぐ。
 
-## [improvement] Issue 18: 単語詳細に自己完結のリード文（定義文）を自動生成
-- 種別: improvement
-- 観点: B / E
-- 背景・現状: `words/show.html.erb` は `meaning` が空だと散文が 1 文も無いページになる（読み・タグ・数値のみ）。LLM が「◯◯とは」に答えるときに引用できる文が存在せず、SEO 的にも薄いページと判定されやすい。
-- 提案内容: 構造化データから決定的に組み立てるリード文ヘルパー（例 `word_lead_sentence(word)`）を追加し、h1 直下に表示。例: 「「天上天下唯我独尊」は、読み「テンジョウテンゲユイガドクソン」（14文字・12モーラ）の日本語の長い言葉。ジャンルは 哲学・宗教 > 仏教。」`meaning` があれば続けて表示。同じ文を Issue 14 の meta description・Issue 16 の `description` に流用する。
-- 期待効果: 全単語ページが「単体で定義を完結」し、AI 検索・強調スニペットに引用可能になる。薄いページの根絶。
-- Impact: High
-- Effort: Low
-- 優先度: P0
-
-## [feature] Issue 19: アナリティクスと Search Console の導入
+## Issue 34: 統計ページ(収録データの分布・集計)
 - 種別: feature
-- 観点: G
-- 背景・現状: レイアウトに計測タグが無く、Search Console の所有権確認も未実施。公開後にどのクエリ・どのファセットで流入しているか観測できず、以降の全施策の効果検証が不能。
-- 提案内容: (1) **GA4 を導入（確定事項 2）**。gtag.js は `send_page_view: false` で読み込み、Turbo Drive 対応として `turbo:load` で `page_view` イベントを送る（Turbo 遷移はフルロードでないため、既定のままだと 2 ページ目以降が計測されない）。(2) Search Console の所有権確認（DNS レコード推奨）+ sitemap（Issue 15）送信。(3) Bing Webmaster Tools も登録(Copilot/ChatGPT 検索の情報源)。
+- 状態: 未着手(着手前に相談。Phase 1 から)
+- 優先度: P1 ／ Impact: Med ／ Effort: Med(Phase 1 のみ。Phase 2 は別 PR)
+- 依存: Issue 26(キャッシュ基盤。実装済み)
+- 背景・現状: 収録データの統計(ジャンル別語数・読み文字数の分布・語種別・品詞別・先頭文字別など)を見せるページが無い。「全体像が見える」ページは回遊・被リンク獲得(「◯◯のデータによると〜」と引用される)に効く。毎回全レコードを走査する実装はスケールしないため、集計テーブルの要否が論点だった。
+- 内容: **2 段階で実装する。統計テーブルは先行して作らない**(統計は元データから常に再計算できる導出データのため)。
+  - [ ] **Phase 1(初版・当面はこれで十分)**: `StatsController#index`(`/stats`、`allow_unauthenticated_access`)でオンライン集計(`WordSense.published` を `group(...).count` 群。インデックス済みカラムのみ使用)+ `Rails.cache.fetch`(TTL 数時間、またはアノテーション保存時にキー削除)。1 万語規模なら GROUP BY は数十 ms 以下
+  - [ ] **収録数の推移**(月別の登録数・累計)も Phase 1 に含める(「生きているサイト」の可視化。[`growth-strategy.md`](growth-strategy.md) §1)
+  - [ ] グラフ表現は `docs/design.md` 準拠(墨・朱のみ。チャートライブラリは入れず CSS/インライン SVG の棒グラフ程度)
+  - [ ] **Phase 2(数十万レコード級になったら)**: 集計テーブル(例 `stats_snapshots`)+ 冪等な再集計タスク `stats:rebuild`(`backfill:reading_metrics` と同じ作法)。「正 = フル再計算タスク、登録時フックはキャッシュ削除に留める」構成
+- 期待効果: 回遊・再訪の増加、統計データとしての被リンク・引用の獲得、収録規模の可視化による信頼性提示。
+- 補足: データが数百語を超えてから公開する。
+
+## Issue 44: 計測運用の立ち上げ(KPI 定義・Search Console 登録)
+- 種別: ops
+- 状態: 未着手
+- 優先度: P1 ／ Impact: High ／ Effort: Low
+- 依存: Issue 43(解禁チェックリストと連動)
+- 背景・現状: GA4 の実装・検証タグの ENV 対応(Issue 19)は済んでいるが、本番の測定 ID 設定・所有権確認・sitemap 送信・KPI 定義が未実施。計測は「増え始めてから」では過去データが取れないため、解禁前に完了させる。
+- 内容:
+  - [ ] 本番に `GA4_MEASUREMENT_ID` を設定し計測開始(解禁前からベースラインを取る)
+  - [ ] Search Console・Bing Webmaster Tools の所有権確認(検証タグの ENV は実装済み)と sitemap 送信(解禁時)
+  - [ ] KPI ツリーを [`growth-strategy.md`](growth-strategy.md) §3 に追記(PV・AU に加え、新規/再訪比率・流入チャネル別・検索/ファセット利用率・1訪問あたり閲覧語数)
+  - [ ] GA4 カスタムイベント(検索実行・ファセットクリック・シェアクリック)の要否を検討(必要なら小さな別 PR)
 - 期待効果: 流入クエリ・インデックス状況の観測に基づく改善サイクルの確立。
-- Impact: High
-- Effort: Low
-- 優先度: P0
 
-## [feature] Issue 20: About ページ（サイト概要・収録基準・運営方針・ライセンス）
-- 種別: feature
-- 観点: B / E
-- 背景・現状: サイトの目的・収録基準・データの精査方針を語る恒久ページが無く、フッターの 2 文（`layouts.footer.about`）のみ。検索エンジンの E-E-A-T 評価にも、AI 検索が「このサイトは何か」を要約・出典明示する際にも参照先が無い。
-- 提案内容: `PagesController#about`（`/about`、`allow_unauthenticated_access`）を追加。内容: サイトの目的／収録基準（**読み 10 文字以上**。確定事項 3）／全件を運営者が精査して登録している旨（フッター文言の昇格）／データの利用条件（確定事項 4）／連絡先。ヘッダーまたはフッターから恒久リンク。
-- 期待効果: E-E-A-T シグナルの明示、AI 検索での出典説明の安定化、llms.txt（Issue 24）や API 案内の置き場所確保。
-- Impact: Medium
-- Effort: Low
-- 優先度: P1
+## Issue 45: 監視・エラー通知(外形監視 + Rails 例外通知)
+- 種別: ops
+- 状態: 未着手
+- 優先度: P1 ／ Impact: Med ／ Effort: Low〜Med
+- 依存: なし
+- 背景・現状: 死活監視・エラー通知が無く、本番障害・エラー多発に気づく手段がゼロ。人気が出る(=見てくれる人が増える)前に整備する。2026-07-12 の技術監査でも High(全障害の検知が利用者の指摘待ち)と再確認。
+- 内容:
+  - [ ] 外形監視: 無料の監視サービス(UptimeRobot 等)で `/` と `/up`(ヘルスチェック)を監視し、ダウン時にメール通知
+  - [ ] エラー通知: Rails の error reporter(`Rails.error.subscribe`)でメール通知、または gem 導入を比較検討(**gem 追加は相談の上**)
+  - [ ] nginx / Puma のログローテーション設定の確認
+- 期待効果: 障害・エラーの検知が「ユーザーに言われて気づく」から「先に気づいて直す」になる。
 
-## [feature] Issue 21: ジャンル階層のハブページ（/genres）
-- 種別: feature
-- 観点: D / A
-- 背景・現状: ジャンルの一覧ページが公開側に存在しない。ファセットリンクは単語詳細ページ内にしかなく、検索フォームのジャンルはチェックボックス（`searches/_genre_filter`）でクローラが辿れない。全ジャンル面へ到達する静的なクロール経路が無い。
-- 提案内容: 公開 `GenresController#index`（`/genres`）を追加。大→中→小のツリーを `Genre.order(:name).group_by(&:parent_id)`（`SearchesController#load_filter_masters` と同じ形）で描画し、各分類に公開語義数（`WordSense.published` を genre_id 群で group count）を添えて `words_path(genre_id:)` へリンク。ヘッダー/フッターのナビに追加。デザインは `docs/design.md` §5.5 のパンくず/タグ規約に従う。
-- 期待効果: 全ファセット面への安定したクロール導線、「ジャンル名+長い言葉」系クエリの受け皿、回遊性向上。
-- Impact: High
-- Effort: Medium
-- 優先度: P1
+## Issue 46: DB バックアップの自動化(日次 mysqldump + 世代管理)
+- 種別: ops
+- 状態: 未着手
+- 優先度: P1 ／ Impact: High ／ Effort: Low
+- 依存: なし
+- 背景・現状: 本番 DB のバックアップが手動(`~/db_backups` に随時取得)。アノテーション済みデータは復元不能な労働の成果であり、消失リスクが最大の単一障害点。2026-07-12 の技術監査でも **Critical(最重要)** と再確認。
+- 内容:
+  - [ ] 本番サーバの cron で日次 `mysqldump`(deploy ユーザー、gzip 圧縮、`~/db_backups`)
+  - [ ] 世代管理(例: 日次 30 世代 + 月次数世代を保持、古いものは削除)
+  - [ ] リストア手順を docs 化(既存のバックアップ・リセット運用の知見を反映)
+  - [ ] 可能ならサーバ外への退避(別ホスト・オブジェクトストレージ等)を検討
+- 期待効果: データ消失リスクの解消。**インフラ変更のため実施前に内容を説明する**(CLAUDE.md 方針)。
 
-## [feature] Issue 22: 50音・文字数の索引ページ（ブラウズ導線）
-- 種別: feature
-- 観点: D
-- 背景・現状: 「先頭文字」「読みの文字数」での探索は検索フォーム経由のみで、リンクとして辿れる索引が無い。辞書サイトの定番導線（あかさたな索引）が欠けている。
-- 提案内容: 索引ページ（例 `/words/browse` か `/index` 相当の 1 ページ）を追加。`SearchesHelper::KANA_COLUMNS` を流用した五十音表（各文字 → `words_path(first_char:)`、件数つき）と、読み文字数別リンク（10〜30 文字、件数つき）を並べる。件数は `WordSense.published.group(:first_char).count` 等で 1 クエリ + キャッシュ。
-- 期待効果: クロール経路の多様化、「◯文字の言葉」「◯から始まる長い言葉」系クエリの受け皿。
-- Impact: Medium
-- Effort: Low
-- 優先度: P1
+## Issue 49: deploy:seed × マスタリネームの重複再発防止
+- 種別: bug
+- 状態: 未着手(**対策方式は着手前に相談**)
+- 優先度: P1 ／ Impact: High ／ Effort: Med
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(High)。マスタ seed は `find_or_create_by!(name:)` で名前照合するため、`/admin/tags` で seed 由来のマスタをリネーム/統合すると、`deploy:seed` 自動実行(`config/deploy.rb`)により**次回デプロイで旧名のマスタが復活**し重複が生じる。2026-07-10 の db:reset で一掃済みだが、再発を防ぐコード上の手当てが無く構造的に再発する。
+- 内容:
+  - [ ] 対策方式の決定: (a) seed に旧名→新名のリネーム追従マップを持たせる / (b) seed 由来マスタの一覧を管理画面に表示しリネームを禁止・警告する / (c) deploy:seed の投入対象を admins のみに絞る — のいずれか(組み合わせ可)
+  - [ ] seed コメントの「冪等なので安全」の記述を、名前変更時の挙動を踏まえた正確な内容に修正
+  - [ ] リネーム→デプロイ相当(seed 再実行)で重複が生じないことのテスト
+- 期待効果: マスタ重複の再発防止。タグ統括管理(/admin/tags)と seed 運用の安全な共存。
 
-## [feature] Issue 23: 単語詳細に「関連語」セクション（単語間の内部リンク）
-- 種別: feature
-- 観点: D / B
-- 背景・現状: `words#show` からのリンクはファセット一覧行きのみで、**単語→単語の直接リンクがゼロ**。トピッククラスターが形成されず、クローラ・LLM・ユーザーのいずれにとっても回遊が 1 ホップで途切れる。
-- 提案内容: `words#show` 下部に「関連語」を追加: 同じ小分類ジャンルの語 / 同じ読み文字数の語 / 同じ先頭文字の語 を各数件（自身を除外、`order(:id)` 等の決定的順序、インデックス済みカラムのみ使用）。各ブロック末尾に「もっと見る → ファセット一覧」。表示は `docs/design.md` の墨枠タグ/一覧行コンポーネントに従う。
-- 期待効果: 内部リンクグラフの形成による全ページのクロール頻度・評価向上、直帰率低下、LLM の関連語収集への対応。
-- Impact: High
-- Effort: Medium
-- 優先度: P1
-
-## [feature] Issue 24: llms.txt の提供
-- 種別: feature
-- 観点: B
-- 背景・現状: `/llms.txt`（LLM 向けサイト案内の事実上の標準）が無い。AI クローラがサイト構造・利用条件を把握する足がかりが無い。
-- 提案内容: `/llms.txt` を配信(内容が About・収録基準に依存するためコントローラ経由を推奨、静的でも可)。内容: サイト概要(1段落)／収録基準／主要 URL(`/words`・`/search`・`/genres`・`/about`・sitemap・JSON API)／引用時のサイト名表記・ライセンス。Issue 20 と文言を共有。
-- 期待効果: AI 検索・エージェントからの発見性と正確な引用（サイト名の露出）の向上。
-- Impact: Medium
-- Effort: Low
-- 優先度: P1
-
-## [feature] Issue 25: 公開 JSON API（単語詳細・一覧の .json）
-- 種別: feature
-- 観点: B / F
-- 背景・現状: データの機械可読出力が無い。Gemfile に jbuilder があるが未使用。LLM・研究者・開発者がデータを参照する経路が HTML スクレイピングしかない。
-- 提案内容: `words#show`/`#index` に `format.json` を追加し、jbuilder テンプレート（`app/views/words/show.json.jbuilder` 等）で 表層形・語義（読み・意味・ジャンル階層・品詞・エンティティ・語種・特徴・別表記・各種指標）を返す。読み取り専用のため認可不要（`annotated` スコープは HTML と共通）。一覧はページネーションをそのまま反映。About / llms.txt から案内し、レスポンスにライセンス表記（確定事項 4）を含める。
-- 期待効果: LLM・外部サービスからの参照可能性向上、被リンク獲得の種。
-- Impact: Medium
-- Effort: Medium
-- 優先度: P1
-
-## [improvement] Issue 26: 公開ページの HTTP キャッシュ・fragment cache
+## Issue 50: 管理者セッションの有効期限(永続 Cookie の廃止 + セッション失効)
 - 種別: improvement
-- 観点: G / A
-- 背景・現状: `fresh_when`/ETag が無く、全公開ページを毎回フル生成。ホームは毎リクエスト COUNT を 3 本発行（`HomeController#index`）、`words#index` も毎回 `scope.count`。1 万語 + クローラ流量なら現構成でも耐えるが、CWV（TTFB）と省リソースの改善余地が大きい。
-- 提案内容: (1) `words#show` に `fresh_when(@word)`（関連の更新で `updated_at` が動くよう `word_senses` 等に `touch: true` を追加）。(2) ホームの統計 3 カウントを `Rails.cache.fetch`（短 TTL）に。(3) `config.cache_store` を明示（まずは `:memory_store` で十分。恒常化なら Solid Cache を検討・相談）。(4) sitemap（Issue 15）にも `expires_in`。
-- 期待効果: TTFB 短縮（CWV 改善）、クローラ大量アクセス時のサーバ負荷低減、304 応答によるクロール効率化。
-- Impact: Medium
-- Effort: Medium
-- 優先度: P1
+- 状態: 未着手
+- 優先度: P1 ／ Impact: Med ／ Effort: Low
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(High)。セッション Cookie が `cookies.signed.permanent`(約20年)で、`sessions` レコードにも TTL・棚卸しが無い。Cookie 窃取や共有 PC でのログイン放置時、盗まれたセッションはログアウト操作をしない限り永久に有効。書き込み権限が管理者に集中しているため影響が大きい。
+- 内容:
+  - [ ] Cookie の有効期限を短縮(例: 2週間の `expires`)
+  - [ ] サーバ側でも失効判定: 一定期間更新の無い `Session` レコードを無効化・削除(利用時に `updated_at` を更新するスライディング方式)
+  - [ ] 期限切れセッションでのアクセスがログイン画面へ誘導されることのテスト
+- 期待効果: セッション窃取時の被害期間を限定。管理者アカウント保護の強化。
 
-## [improvement] Issue 27: config.hosts 設定と canonical ホストへの 301 統一
-- 種別: improvement
-- 観点: G / A
-- 背景・現状: `config/environments/production.rb` の `config.hosts` がコメントアウトのままで Host ヘッダ保護が無効。また www あり/なし・IP 直アクセスの正規化が無く、同一コンテンツが複数ホストで応答すると重複コンテンツになる。本番ドメインは `nagai-kotoba-database.jp` で確定（確定事項 1）。現在は旧システムが `nagai-kotoba-database.com` で稼働中で、データ移行完了後に nginx で com → jp のリダイレクトを設定予定。
-- 提案内容: (1) `config.hosts` に `nagai-kotoba-database.jp` を設定（`/up` は `host_authorization` の exclude で除外）。(2) nginx 側で www・IP 直アクセスを canonical ホストへ 301。(3) `config.assume_ssl = true` の有効化も確認。(4) **com → jp の移行**: 旧 .com サイトが検索エンジンにインデックス済みの場合、ドメイン単位の一括リダイレクトではなく可能な範囲で **URL 単位の 301 マッピング**（旧単語ページ → 対応する新 `/words/:id`）にし、Search Console の「アドレス変更」ツールで移行を通知する（旧サイトの評価・被リンクを引き継ぐため）。旧サイトが未インデックスならドメイン単位 301 のみで可。インフラ設定変更なので影響範囲を説明の上で実施。
-- 期待効果: 重複ホストの排除（canonical と併せて評価の集約）、旧ドメインからの評価引き継ぎ、セキュリティ強化。
-- Impact: Medium
-- Effort: Low（URL 単位マッピングが必要な場合は Medium）
-- 優先度: P1（移行タイミングに合わせて）
+## Issue 51: backfill タスクが last_char を再計算しない
+- 種別: bug
+- 状態: 未着手
+- 優先度: P1 ／ Impact: Med ／ Effort: Low
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(Medium)。派生カラム(`char_type_pattern`/`rhythm_pattern`/`mora_count`/`vowel_pattern`/`last_char`)は `before_validation` 依存のため、`update_all` や直接 SQL で reading/surface を直すと古くなる。修復用の `backfill:reading_metrics` タスク(`lib/tasks/backfill.rake`)が **`last_char` だけ再計算していない**ため、修復してもなお不整合が残る。
+- 内容:
+  - [ ] `backfill:reading_metrics` に `last_char`(`LastChar`)の再計算を追加
+  - [ ] 派生値の全件検証タスク(現在値と再計算値の diff を報告する読み取り専用タスク)を追加
+  - [ ] backfill 後に last_char が正しく埋まることのテスト
+- 期待効果: 派生カラム修復手段の完全化。検索結果への古い値の静かな混入を検出可能に。
 
-## [feature] Issue 28: 新着単語の Atom フィード
+## Issue 29: OGP 画像の動的生成(単語ごと)
 - 種別: feature
-- 観点: F / B
-- 背景・現状: RSS/Atom フィードが無い。再訪導線がブックマークのみで、フィードリーダー・各種クローラの更新検知手段が無い。
-- 提案内容: `words#index` に `format.atom`（`index.atom.builder`）を追加し、注釈済みの新着（`annotated_at` 降順）20 件を配信。エントリ本文は Issue 18 のリード文を流用。レイアウトに `<link rel="alternate" type="application/atom+xml">`（autodiscovery）を追加。
-- 期待効果: 再訪・購読の獲得、更新の外部通知、LLM クローラの更新検知。
-- Impact: Low
-- Effort: Low
-- 優先度: P2
-
-## [feature] Issue 29: OGP 画像の動的生成（単語ごと）
-- 種別: feature
-- 観点: F / A
-- 背景・現状: og:image が無い（Issue 14 で静的 1 枚は入るが、単語ごとの画像ではない）。「言葉そのものが主役」のデザインは OGP 画像との相性が良く、共有時の CTR を大きく左右する。
-- 提案内容: 単語詳細ごとに 1200×630 の画像を生成。実装案: 紙×墨×朱デザインの SVG テンプレート（巨大明朝で表層形 + 読み + サイト名）を ERB で組み、libvips（`image_processing` gem 追加）か rsvg-convert で PNG 化。生成タイミングはアノテーション保存時 or 初回リクエスト時 + ファイルキャッシュ。フォント埋め込みの検証が必要。
+- 状態: 未着手(収録が数百語を超え、共有が発生し始めてから)
+- 優先度: P2 ／ Impact: Med ／ Effort: High
+- 依存: なし(静的 og:image は Issue 14 で導入済み)
+- 背景・現状: og:image は全ページ共通の静的 1 枚のみで、単語ごとの画像ではない。「言葉そのものが主役」のデザインは OGP 画像との相性が良く、共有時の CTR を大きく左右する。
+- 内容:
+  - [ ] 単語詳細ごとに 1200×630 の画像を生成: 紙×墨×朱デザインの SVG テンプレート(巨大明朝で表層形 + 読み + サイト名)を ERB で組み、libvips(`image_processing` gem 追加)か rsvg-convert で PNG 化
+  - [ ] 生成タイミングはアノテーション保存時 or 初回リクエスト時 + ファイルキャッシュ
+  - [ ] フォント埋め込みの検証
 - 期待効果: X・Slack・チャット AI での共有時の視認性・CTR 向上。
-- Impact: Medium
-- Effort: High
-- 優先度: P2
 
-## [feature] Issue 30: シェア導線（X 共有リンク・URL コピー）
-- 種別: feature
-- 観点: F
-- 背景・現状: 詳細ページに共有機能が無い。長い言葉は「見せたくなる」コンテンツで、共有の摩擦は少ないほど良い。
-- 提案内容: `words#show` に X 共有リンク（`https://x.com/intent/post?text=…&url=…`、テキストはリード文）と URL コピー（小さな Stimulus コントローラ + `navigator.clipboard`）を追加。アイコンは `shared/icons` 流儀のインライン SVG（絵文字・アイコンフォント禁止の規約に従う）。
-- 期待効果: SNS 経由の被リンク・言及の獲得（SEO の間接シグナル + 直接流入）。
-- Impact: Low
-- Effort: Low
-- 優先度: P2
-
-## [improvement] Issue 31: Web フォントのセルフホスト化
+## Issue 31: Web フォントのセルフホスト化
 - 種別: improvement
-- 観点: A / G
-- 背景・現状: Shippori Mincho を Google Fonts から読んでいる（レイアウトで 2 オリジンへ preconnect）。外部 DNS/TLS 往復が LCP に乗り、可用性も外部依存。
-- 提案内容: Google Fonts の CSS と同じ unicode-range 分割の woff2 サブセット（weights 500/600）を取得して `app/assets` に置き、`@font-face` を自前 CSS 化（`font-display: swap` 維持）。preconnect 2 行を削除。「web フォントは明朝 1 本」の方針は維持される。
-- 期待効果: LCP 改善（外部往復の排除）、CSP を将来有効化する際の単純化。
-- Impact: Medium
-- Effort: Medium
-- 優先度: P2
+- 状態: 未着手(woff2 サブセット取得が必要)
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: なし
+- 背景・現状: Shippori Mincho を Google Fonts から読んでいる(レイアウトで 2 オリジンへ preconnect)。外部 DNS/TLS 往復が LCP に乗り、可用性も外部依存。
+- 内容:
+  - [ ] Google Fonts の CSS と同じ unicode-range 分割の woff2 サブセット(weights 500/600)を取得して `app/assets` に配置
+  - [ ] `@font-face` を自前 CSS 化(`font-display: swap` 維持)、preconnect 2 行を削除
+  - [ ] 「web フォントは明朝 1 本」の方針は維持
+- 期待効果: LCP 改善(外部往復の排除)、CSP を将来有効化する際の単純化。
 
-## [improvement] Issue 32: エラーページ（404/422/500）の日本語化・ブランド化
+## Issue 33: 用例(usage example)フィールドの追加
+- 種別: feature
+- 状態: 未着手(**着手前に運用方針を相談**)
+- 優先度: P2 ／ Impact: Med ／ Effort: High
+- 依存: なし
+- 背景・現状: 語義に用例・出典を持つ場所が無い。定義 + 用例が揃うと辞書ページとしての情報量・独自性が大きく上がるが、現スキーマでは表現できない。データ入力の運用コストが掛かるのが論点。
+- 内容:
+  - [ ] `word_sense_examples` テーブル(`word_sense_id`, `text`, `source`(任意))を追加
+  - [ ] アノテーション・コンソール(`admin/annotations`)に入力欄、`words#show` に表示
+  - [ ] JSON-LD(構造化データ)にも反映
+- 期待効果: ページの独自性・情報量の向上(他辞書との差別化)、LLM が用例ごと引用できる構造。
+
+## Issue 47: 「今日の一語」X 自動投稿
+- 種別: feature
+- 状態: 未着手(**着手前に相談**。X API の制約調査から)
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: なし(「今日の一語」の選定ロジックは実装済み)
+- 背景・現状: 公開側にアカウント機能を作らない方針のため、再訪のきっかけが少ない。日替わりの「今日の一語」はトップに実装済みだが、サイト外へ届ける手段が無い。
+- 内容:
+  - [ ] X API の無料枠・投稿制限・審査要件を調査(制約次第で方式・頻度を決める)
+  - [ ] 投稿文フォーマット設計(表層形 + リード文 + 単語詳細 URL。動的 OGP 画像(Issue 29)があれば効果増)
+  - [ ] 実装方式の選定: サーバ cron + rake タスク(冪等・失敗時は翌日に自然回復)を第一候補に
+  - [ ] 認証情報は credentials / 環境変数で管理
+- 期待効果: SNS 経由の定常的な流入と再訪のきっかけ。フォローによる実質的な「購読」導線。
+
+## Issue 48: fragment cache の残り(browse・genres)
 - 種別: improvement
-- 観点: H / C
-- 背景・現状: `public/404.html` 等が Rails 既定の英語ページ。未注釈語や削除済み語への流入・リンク切れ時に、日本語サイトとして体験が断絶し、回遊も切れる。
-- 提案内容: 3 ページを日本語・自前デザインで書き換え（静的 HTML のためトークン値はリテラルで埋め込み。`icon.svg` の作法と同じ）。404 にはホーム・単語一覧・検索への導線を置く。
-- 期待効果: エラー時の離脱抑制、ブランド一貫性。
-- Impact: Low
-- Effort: Low
-- 優先度: P2
+- 状態: 未着手
+- 優先度: P2 ／ Impact: Low ／ Effort: Low
+- 依存: Issue 26(実装済み)
+- 背景・現状: Issue 26 で HTTP キャッシュ・`Rails.cache`(ホーム統計)は導入済みだが、fragment cache は未導入。`/browse`(五十音表・文字数リンクの件数集計)と `/genres`(ツリー + 語義数)は毎回 GROUP BY を発行している(`browse_controller.rb` に「Issue 26 で導入予定」コメントが残る)。
+- 内容:
+  - [ ] `/browse` の件数集計と `/genres` のツリー描画を fragment cache または `Rails.cache.fetch` 化
+  - [ ] キー設計: TTL(数時間)またはアノテーション保存時の無効化(ホーム統計 `home/stats` と方針を揃える)
+  - [ ] コード内の古い「Issue 26 で導入予定」コメントを整理
+- 期待効果: TTFB 短縮とクローラ流量への耐性。1 万語規模でも集計ページが軽いまま保てる。
 
-## [feature] Issue 33: 用例（usage example）フィールドの追加
-- 種別: feature
-- 観点: E / B
-- 背景・現状: 語義に用例・出典を持つ場所が無い。定義 + 用例が揃うと辞書ページとしての情報量・独自性が大きく上がるが、現スキーマでは表現できない。
-- 提案内容: `word_sense_examples` テーブル（`word_sense_id`, `text`, `source`(任意)）を追加し、アノテーション・コンソール（`admin/annotations`）に入力欄、`words#show` に表示、JSON-LD（Issue 16）にも反映。データ入力の運用コストが掛かるため、着手前に運用方針を相談。
-- 期待効果: ページの独自性・情報量の向上（他辞書との差別化）、LLM が用例ごと引用できる構造。
-- Impact: Medium
-- Effort: High
-- 優先度: P2
+## Issue 52: 一括登録の類似チェック(Levenshtein 総当たり)の負荷軽減
+- 種別: improvement
+- 状態: 未着手(データ量の成長に合わせて)
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(Medium)。一括登録 step3 の重複チェック(`bulk_word_registration.rb`)が DB の全 (reading, surface) を pluck し、貼り付けた各行と純 Ruby の Levenshtein 距離を同期計算する。長さ差の枝刈りはあるが、100行×1万語規模では単一 Puma worker(スレッド5)を数秒占有し、公開側レスポンスも巻き添えになる。
+- 内容:
+  - [ ] `reading_length`(インデックス済み)による長さ帯での DB 側事前絞り込み
+  - [ ] 効果が不足する場合は先頭文字での絞り込み・trigram 等の前段フィルタを検討
+  - [ ] 1万語規模の擬似データでの処理時間計測(before/after)
+- 期待効果: 一括登録時の公開側への影響排除。データ量が増えても登録フローが快適なまま保てる。
 
-## [feature] Issue 34: 統計ページ（収録データの分布・集計）
-- 種別: feature
-- 観点: F / G
-- 背景・現状: 収録データの統計（ジャンル別語数・読み文字数の分布・語種別・品詞別・先頭文字別など）を見せるページが無い。データベースサイトの「全体像が見える」ページは回遊・被リンク獲得（「◯◇のデータによると〜」と引用される）に効く。一方で、毎回全レコードを走査する実装はスケールしないため、集計テーブルの要否とその書き込みタイミングが論点だった。
-- 提案内容: **2 段階で実装する。統計テーブルは先行して作らない**（統計は元データから常に再計算できる導出データであり、後からの移行が可能なため）。
-  - **Phase 1（初版・当面はこれで十分）**: `StatsController#index`（`/stats`、`allow_unauthenticated_access`）でオンライン集計（`WordSense.published` を対象に `group(...).count` 群。インデックス済みカラムのみ使用）+ `Rails.cache.fetch`（TTL 数時間、またはアノテーション保存時にキー削除）。想定規模（1 万語）では GROUP BY は数十 ms 以下で、キャッシュと併せて十分持つ。グラフ表現は `docs/design.md` 準拠（墨・朱のみ。重いチャートライブラリは入れず、CSS/インライン SVG の棒グラフ程度に留める）。
-  - **Phase 2（数十万レコード級になったら）**: 集計テーブル（例 `stats_snapshots`）+ **冪等な再集計タスク `stats:rebuild`**（`backfill:reading_metrics` と同じ作法）を導入。「正 = フル再計算タスク、登録・アノテーション時のフックはキャッシュ削除 or 非同期の再集計トリガーに留める」構成とする（増分更新のみに依存すると削除・編集・手動修正でズレたとき自己修復できないため）。
-- 期待効果: 回遊・再訪の増加、統計データとしての被リンク・引用の獲得、サイトの信頼性提示（収録規模の可視化）。
-- Impact: Medium
-- Effort: Medium（Phase 1 のみ。Phase 2 は別 PR）
-- 優先度: P2（Issue 26 のキャッシュ基盤と同時期以降が効率的。データが数百語を超えてから公開する）
+## Issue 53: 公開検索の負荷対策(レートリミット・COUNT/LIKE)
+- 種別: improvement
+- 状態: 未着手(トラフィックの成長に合わせて)
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(Medium)。キーワード検索・韻/母音検索は中間一致 LIKE でインデックスが効かず、1ページ表示ごとに COUNT + 本体の2クエリが走る。レートリミットはログイン(`sessions#create`)のみで、公開の検索/JSON をクローラに叩かれ続けると単一 DB サーバに負荷が直撃する。
+- 内容:
+  - [ ] 検索・JSON エンドポイントへのレートリミット(Rails 8 標準 `rate_limit` か rack-attack。**gem 追加は相談の上**)
+  - [ ] 検索結果 COUNT のキャッシュ検討
+  - [ ] 規模拡大時: FULLTEXT インデックス(ngram parser)への移行検討
+- 期待効果: クローラ・悪意あるアクセスへの耐性。単一サーバ構成の延命。
 
-## 最初の2週間のロードマップ
+## Issue 54: Atom フィードのジャンル祖先 N+1 解消
+- 種別: bug
+- 状態: 未着手
+- 優先度: P2 ／ Impact: Low ／ Effort: Low
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(Medium)。`words#feed` は `includes(word_senses: :genre)` だが、リード文生成(`words_helper.rb` の `self_and_ancestors`)で genre の parent→parent を遅延ロードするため、最大 20語×2階層 ≒ 40 クエリの N+1。`words#show` は `genre: { parent: :parent }` を preload しており対照的。
+- 内容:
+  - [ ] feed の preload を `words#show` と同じ深さ(`genre: { parent: :parent }`)に揃える
+  - [ ] フィードへの HTTP キャッシュ(`fresh_when` / `expires_in`)の追加検討
+- 期待効果: フィード取得のクエリ数削減(約40→数クエリ)。クローラ・リーダーの定期アクセスに強くなる。
 
-前提はすべて確定済み（下記「前提の確定事項」参照）: ドメイン = `nagai-kotoba-database.jp`、計測 = GA4、収録基準 = 読み 10 文字以上。
+## Issue 55: config.load_defaults を 8.1 へ引き上げ
+- 種別: improvement
+- 状態: 未着手
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査より(Medium)。`config/application.rb` が `config.load_defaults 7.1` のまま Rails 8.1 を運用しており、7.2/8.0/8.1 の新既定(セキュリティ・パフォーマンス関連)が適用されていない。
+- 内容:
+  - [ ] `new_framework_defaults` の手順で差分となる既定値を洗い出し、段階的に有効化
+  - [ ] 各既定値の影響(特に Cookie・キャッシュフォーマット・SQL 生成まわり)をテストで確認
+  - [ ] 最終的に `config.load_defaults 8.1` へ引き上げ
+- 期待効果: フレームワーク推奨状態への追従。将来の Rails アップグレードコストの低減。
 
-**Week 1 — 公開前の土台（P0 一式 + 即効 bug）**
-1. Issue 13（favicon 差し替え。即日）
-2. Issue 18 → Issue 14（リード文を先に作り、meta description に流用。セットで 1〜2 PR）
-3. Issue 15（sitemap + robots.txt）
-4. Issue 17（ファセットのインデックス方針）
-5. Issue 19（計測 + Search Console。データ投入と並行して開始し、インデックス状況を観測開始）
+## Issue 56: 技術監査 Low 指摘の小粒対応まとめ
+- 種別: improvement
+- 状態: 未着手(個別に着手する際は項目ごとに分割してよい)
+- 優先度: P2 ／ Impact: Low ／ Effort: Low〜Med
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査の Low 指摘のうち、未 Issue 化のものをまとめて記録する(実施は任意・随時)。
+- 内容:
+  - [ ] `genre_must_be_small`(小分類のみ許可)の DB 側担保が無い — 将来の直接更新で中・大分類が混入し得る(現状の経路は安全)
+  - [ ] `words.surface` の UNIQUE が prefix(191) — 先頭191文字が同一の長文語は DB エラーになる(現実的に稀。長文語を扱うならハッシュカラム + UNIQUE)
+  - [ ] キャッシュ・`rate_limit` が `:memory_store`(プロセス内) — `WEB_CONCURRENCY` を上げると worker 間で分裂する。Solid Cache 移行時に要注意
+  - [ ] `rails/all` ロード — ActionCable/ActionMailbox/ActiveStorage/ActionMailer は未使用。個別 require 化でメモリ・攻撃面を削減
+  - [ ] mecab 依存テストが CI で skip — 読み自動取得の回帰が CI で検出されない(フォールバック設計自体は堅牢)
+  - [ ] CSP 未設定 — GA(インライン script)・Google Fonts があるため、フォント自前化(Issue 31)後に導入検討
+- 期待効果: 技術的負債の可視化。将来の構成変更(worker 増設・キャッシュ移行)時の事故防止。
 
-**Week 2 — 発見性の「面」を増やす（P0 残り + P1 前半）**
-6. Issue 16（JSON-LD 3 種）
-7. Issue 20（About）→ Issue 24（llms.txt。文言を共有）
-8. Issue 21（/genres ハブ）
-9. Issue 23（関連語セクション）
-10. Issue 27（hosts 設定 + canonical ホスト 301。com → jp 移行のタイミングと合わせる）
-
-**Week 3 以降（データ量の成長に合わせて）**: Issue 22 → 25 → 26 → 28〜34（Issue 34 の統計ページは Issue 26 のキャッシュ基盤の後が効率的）。
-Issue 29（OGP 画像）はデータが数百語を超えて共有が発生し始めた段階で着手が費用対効果的に良い。
-
-## 前提の確定事項（2026-07-06 オーナー回答）
-
-1. **本番ドメイン**: `nagai-kotoba-database.jp` で確定。現在は旧システムが `nagai-kotoba-database.com` で稼働中。データ移行完了後に nginx で com → jp へリダイレクト予定（詳細は Issue 27。旧サイトがインデックス済みの場合は URL 単位の 301 と Search Console「アドレス変更」を行う）。
-2. **アナリティクス**: GA4 で確定（Issue 19 に反映済み。Turbo 対応の計測イベント送信が必須）。
-3. **収録基準**: **読み 10 文字以上**で確定。About（Issue 20）・llms.txt（Issue 24）・リード文（Issue 18）・メタ文言（Issue 14）の記述に使う。
-4. **ライセンス**: 記載する方針。ただし **MIT はソフトウェア（コード）向けライセンス**のため、単語データ＝コンテンツの利用条件としては不適合。データには **CC BY 4.0（クレジット表記 = サイト名 + URL）を推奨**。リポジトリのコードを OSS 公開する場合はそちらに MIT が適合。最終確定は Issue 20（About）着手時に行う。
-5. **インデックス解禁**: 未定。手元データ約 6,000 語で、アノテーションに時間を要する見込み。未注釈語は 404 のため公開面は注釈済みの語だけで構成される。**注釈済み 300〜500 語を目安に解禁**し、それまでは全ページ `noindex`（レイアウトの meta robots を環境変数等で切替）としておく運用を推奨。解禁時に noindex を外し、sitemap（Issue 15）を Search Console へ送信する。
+## Issue 27: config.hosts 設定と canonical ホストへの 301 統一
+- 種別: improvement
+- 状態: 保留(**com → jp 移行タイミングに合わせて実施**。インフラ変更)
+- 優先度: P1(移行時) ／ Impact: Med ／ Effort: Low(URL 単位マッピングが必要な場合は Med)
+- 依存: なし
+- 背景・現状: 2026-07-12 の技術監査でも High と再確認(Host ヘッダ攻撃への保護欠如 + `assume_ssl` が nginx 設定への暗黙依存)。`config/environments/production.rb` の `config.hosts` がコメントアウトのままで Host ヘッダ保護が無効。www あり/なし・IP 直アクセスの正規化も無い。本番ドメインは `nagai-kotoba-database.jp` で確定。現在は旧システムが `nagai-kotoba-database.com` で稼働中で、データ移行完了後に nginx で com → jp のリダイレクトを設定予定。
+- 内容:
+  - [ ] `config.hosts` に `nagai-kotoba-database.jp` を設定(`/up` は `host_authorization` の exclude で除外)
+  - [ ] nginx 側で www・IP 直アクセスを canonical ホストへ 301
+  - [ ] `config.assume_ssl = true` の有効化も確認
+  - [ ] **com → jp の移行**: 旧 .com がインデックス済みなら、ドメイン単位の一括リダイレクトではなく可能な範囲で URL 単位の 301 マッピング(旧単語ページ → 対応する新 `/words/:id`)+ Search Console「アドレス変更」ツールで通知(評価・被リンクの引き継ぎ)。未インデックスならドメイン単位 301 のみで可
+- 期待効果: 重複ホストの排除(canonical と併せて評価の集約)、旧ドメインからの評価引き継ぎ、セキュリティ強化。**インフラ設定変更なので影響範囲を説明の上で実施**。
 
 ---
 
-# 管理者機能の改善（2026-07-07 オーナーフィードバック）
+# 完了アーカイブ
 
-管理者ページの CRUD フロー実地確認（登録3ステップ → アノテーション → 編集・削除）と、オーナーの不満点ヒアリングに基づく改善イシュー群。
+## 基盤実装(Issue 1〜12、`docs/schema.sql` ベースの段階実装)
 
-## ボトルネック分析
+- **Issue 1: 設計ドキュメント整備とスキーマ方針確定** [improvement] — 完了。`docs/schema.sql` 取り込み・本 Issue リスト・CLAUDE.md 作成。
+- **Issue 2: ジャンル(genres)マスタ** [feature] — 完了。3階層・自己参照(`parent_id`)、`utf8mb4_0900_ai_ci` 統一(既存 `admins`/`sessions` も変換)、ローカルは docker compose の MySQL 8.4(ホスト3307)。
+- **Issue 3: 単純マスタ3種** [feature] — 完了。entity_types / parts_of_speech / linguistic_features。`PartOfSpeech` の inflection 追加。
+- **Issue 4: words テーブルと char_type_pattern** [feature] — 完了。値オブジェクト `CharTypePattern` + `before_validation`。変換仕様は [`docs/char_type_pattern.md`](char_type_pattern.md)(`ー`はカタカナ扱い・`々`は漢字扱い)。
+- **Issue 5: word_senses テーブル** [feature] — 完了。STORED 生成カラム(`reading_length`/`first_char`/`last_char`)、`genre_id` は level3 のみ許可、`rhythm_pattern` はヘボン式・長音は母音展開([`docs/rhythm_pattern.md`](rhythm_pattern.md))。
+- **Issue 6: word_sense_features(語義×特徴の多対多)** [feature] — 完了。特徴は該当部分ごと(`target`/`target_reading`。後に `target_start` 追加で同一文字列の複数出現に対応)。
+- **Issue 7: 管理者用 CRUD** [feature] — 完了。`Admin::` 名前空間・1画面フル入れ子フォーム・ジャンルの依存ドロップダウン。
+- **Issue 8: 公開閲覧(一覧・詳細)** [feature] — 完了。`allow_unauthenticated_access`、gem なしの軽量ページネーション。
+- **Issue 9: 検索・絞り込み** [feature] — 完了。クエリオブジェクト `WordSenseSearch`、公開 `/search`、キーワード検索 `q`。
+- **Issue 10: マスタのインライン追加** [feature] — クローズ。Issue 12 のアノテーション・コンソールで実質実装(その場追加)。対象だった `/admin/words` フォームは現運用(一括登録 + コンソール)の主動線でないため対応しない。
+- **Issue 11: 拡張データ(読み指標・語種・別表記)** [feature] — 完了。`mora_count`/`vowel_pattern`、語種マスタ `word_origins`(多対多)、別表記 `word_sense_variants`、バックフィル `backfill:reading_metrics`。
+- **Issue 12: 高速アノテーション・コンソール** [feature] — 完了。1語集中キュー型(`annotated_at`)、チップ UI・段階ジャンル・範囲タップ・マスタその場追加・語義複製。
 
-一括登録（3ステップ）は「まとめて処理」「機械の下書き（MeCab）」「Claude Code の調査 JSON を貼り付けて突き合わせ」の3要素が揃っており高評価（現状維持）。**アノテーション以降にはこの3要素がどれも無い**のが根本原因。手元の未注釈データは約 6,000 語で、インデックス解禁目安（注釈済み 300〜500 語）に向けてアノテーションのスループットが最大の制約。
+## SEO・LLMO 改善(Issue 13〜34、2026-07-06 のリポジトリ全体分析より)
 
-| # | ボトルネック | 現状の原因 |
-|---|---|---|
-| B1 | 同質な語群（例: 漫画のキャラクター名）でもジャンル・エンティティを1語ずつ選び直す | コンソールが完全に「1語＝1画面」で、属性の一括適用も引き継ぎも無い |
-| B2 | Claude Code に手伝わせる入口が無い（量の消化・知識不足の補完・判断に迷う語への助言） | 未注釈語＋マスタ一覧をまとめて渡す書き出しも、提案を受け取る取り込みも無い |
-| B3 | ピンポイントでアノテーションできない | キューが id 順の一本道（戻る/進むのみ）。一覧に状態表示・検索・コンソールへのリンクが無い |
-| B4 | 編集画面の存在意義が不明 | 表層形と読みしか直せず期待とズレる。コンソール側は表層形を直せず機能が中途半端に分裂 |
-| B5 | ダッシュボードに戻れない | 管理画面に共通ナビが無い |
+検索エンジン・AI 検索経由の流入最大化の観点で分析したバックログ。未公開のうちに技術 SEO の土台を整備した。
 
-## 実装ステータス
+- **Issue 13: favicon / apple-touch-icon 差し替え** [bug] — 完了(PR #34)。0 バイトの空ファイルを `icon.svg` から生成した実体に差し替え。
+- **Issue 14: メタ情報の動的生成** [improvement] — 完了(PR #36)。description・OGP(静的 og:image 含む)・twitter:card・canonical をヘルパー + `content_for` で。
+- **Issue 15: sitemap.xml + robots.txt** [feature] — 完了(PR #37)。動的 sitemap(注釈済み全語 + 静的ページ、1日キャッシュ)、robots に Sitemap 行と `/admin` 等の Disallow。
+- **Issue 16: 構造化データ JSON-LD** [feature] — 完了(PR #40)。`DefinedTerm`/`DefinedTermSet`・`BreadcrumbList`・`WebSite`+`SearchAction`。
+- **Issue 17: ファセットのインデックス方針** [improvement] — 完了(PR #38)。単一条件は動的 title でインデックス許可、複数条件・`q`・page 2 以降は noindex、`/search` は noindex。
+- **Issue 18: 単語詳細の自動リード文** [improvement] — 完了(PR #35)。構造化データから決定的に組み立てる定義文。meta description・JSON-LD・Atom に流用。
+- **Issue 19: GA4 + Search Console** [feature] — 完了(PR #39)。Turbo 対応の page_view 送信、検証タグは ENV 対応。本番の測定 ID 設定・所有権確認は **Issue 44 に引き継ぎ**。
+- **Issue 20: About ページ** [feature] — 完了(PR #41)。目的・収録基準(読み10文字以上)・精査方針・ライセンス(CC BY 4.0)・連絡先。
+- **Issue 21: /genres ハブページ** [feature] — 完了(PR #43)。ジャンル木 + 語義数 + ファセットへのリンク。
+- **Issue 22: 50音・文字数の索引ページ /browse** [feature] — 完了(PR #45)。五十音表(朱ヒート)+ 読み文字数別リンク。
+- **Issue 23: 関連語セクション** [feature] — 完了(PR #44)。同ジャンル・同文字数・同先頭文字の単語間内部リンク。
+- **Issue 24: llms.txt** [feature] — 完了(PR #42)。サイト概要・主要 URL・API 案内・ライセンス(About と文言共有)。
+- **Issue 25: 公開 JSON API** [feature] — 完了(PR #46)。`words#index/#show` の `.json`(jbuilder、CC BY 表記つき)。
+- **Issue 26: HTTP/fragment キャッシュ** [improvement] — 完了(PR #47)。`fresh_when`/ETag・ホーム統計の `Rails.cache`・`touch` 連鎖。fragment cache の残タスクは **Issue 48 に引き継ぎ**。
+- **Issue 28: 新着単語 Atom フィード** [feature] — 完了(PR #48)。注釈済み新着 20 件 + autodiscovery。
+- **Issue 30: シェア導線** [feature] — 完了(PR #49)。X 共有リンク + URL コピー(インライン SVG)。
+- **Issue 32: エラーページの日本語化・ブランド化** [improvement] — 完了(PR #50)。404/422/500 を自前デザインで。
 
-- [x] Issue 35: 管理画面の共通ナビゲーション
-- [x] Issue 36: 単語管理一覧の刷新と編集画面のコンソール統合
-- [x] Issue 37: 共通属性の一括アノテーション
-- [x] Issue 38: Claude Code 連携アノテーション（調査スキル + 提案の承認フロー）★本命
-- [x] Issue 39: アノテーションヘルパー（収録基準4原則・特徴用語解説・立項スコア）
-- [ ] Issue 40: 管理UIシステムテストの flake 解消（ローカル WSL のクリック取りこぼし）※テスト自体は導入済み
-- [x] Issue 41: AnnotationProposal の複数語義対応（同一表記の同音異義語。payload に `senses` 配列 / コンソールで語義ごとに反映）
-- [x] アノテーションFB修正: 特徴の同一文字列を出現位置で複数付与（`word_sense_features.target_start`）／注釈済みの語でも Claude 提案を表示／保存して次へで見出しまでスクロール／調査スキルを「最も一般的な表記＋別表記」「2周調査（収集→ファクトチェック）」に更新
+(Issue 27・29・31・33・34 は未完了節を参照)
 
-推奨実装順: 35 → 36 → 37 → 38（35 は即日規模。36 が 37・38 の土台。37 は 36 の選択 UI を使う小さめの即効改善、38 が本命で最大工数）。
+## 管理者機能の改善(Issue 35〜41、2026-07-07 のオーナーフィードバックより)
 
-## [improvement] Issue 35: 管理画面の共通ナビゲーション
-- 種別: improvement
-- 観点: G（運用）
-- 背景・現状: 管理各画面（一覧・登録3ステップ・コンソール）からダッシュボード（`/admin`）へ戻る導線が無く、URL 直打ちか公開側経由でしか戻れない。
-- 提案内容: 管理ページ共通のサブナビ（shared partial）を追加し、ダッシュボード / 単語を登録 / アノテーション / 単語の管理 / 公開サイトへ の導線を常設する。現在地は `aria-current` で明示。デザインは `docs/design.md` 準拠（墨罫・角丸/影/ピル禁止・アイコンはインライン SVG）。
-- 期待効果: 管理画面内の回遊コスト削減。全 Issue の前提となる骨格。
-- Impact: Low
-- Effort: Low
-- 優先度: P0（即日規模）
+一括登録は高評価で現状維持。アノテーション以降に「まとめて処理」「機械の下書き」「Claude Code 連携」が無いのがボトルネック(未注釈約 6,000 語)という分析に基づく改善群。全体は PR #54〜#57 ほかで実装。
 
-## [improvement] Issue 36: 単語管理一覧の刷新と編集画面のコンソール統合
-- 種別: improvement
-- 観点: G / E
-- 背景・現状: 一覧（`admin/words#index`）が表層形＋語義数のみを全件表示（6,000 語規模で破綻）。注釈状態が見えず、特定の語をアノテーションするにはコンソール URL の直打ちしかない（キューは id 順一本道）。編集画面は表層形・読みの訂正のみで存在意義が薄い（**確定事項 2: コンソールに吸収して廃止**）。
-- 提案内容:
-  - [x] 一覧に列を追加: 読み・注釈状態（`annotated_at` の有無と日時）・語義数。`includes` で N+1 回避
-  - [x] 検索（表層形・読みの部分一致）と絞り込み（未注釈のみ / 注釈済みのみ）。公開側 `words#index` と同じ自前ページネーションを流用
-  - [x] 各行から `/admin/annotations/:id` へ直接リンク（ピンポイント・アノテーション）
-  - [x] アノテーション・コンソールに表層形の編集欄を追加（`annotation_params` に `surface` を許可。変更時に `char_type_pattern` が再生成されることをテストで担保）
-  - [x] `admin/words` の `edit`/`update` アクションと専用ビューを削除（`destroy` は一覧に残す）
-- 期待効果: B3・B4 の解消。6,000 語運用に耐える管理一覧。入口の一本化（登録 → コンソール → 一覧の3画面構成が明確になる）。
-- Impact: High
-- Effort: Medium
-- 優先度: P0
-- 依存: Issue 35
+- **Issue 35: 管理画面の共通ナビゲーション** [improvement] — 完了。ダッシュボード/登録/アノテーション/一覧/公開サイトへの常設サブナビ。
+- **Issue 36: 単語管理一覧の刷新と編集画面のコンソール統合** [improvement] — 完了。一覧に読み・注釈状態・検索・絞り込み・コンソール直リンク。編集画面は廃止しコンソールに表層形編集を追加。
+- **Issue 37: 共通属性の一括アノテーション** [feature] — 完了。一覧からジャンル・品詞・エンティティ・語種・意味テンプレを選択語へ一括適用(複数語義の語はスキップ)。コンソールに引き継ぎトグル。
+- **Issue 38: Claude Code 連携アノテーション** [feature] — 完了(本命)。調査用データ書き出し → `word-annotation-research` スキル → `annotation_proposals` へ取り込み → コンソールで承認(`annotated_at` を立てるのは人間のみ)。
+- **Issue 39: アノテーションヘルパー** [feature] — 完了。[`docs/annotation-guidelines.md`](annotation-guidelines.md)(収録4原則・立項スコア)、特徴の用語解説(glossary YAML)、提案パネルの立項スコア表示。
+- **Issue 40: 管理UIシステムテストの flake 解消** [improvement] — 完了。原因は WSL/Chrome 150 のネイティブクリック不達 + confirm 自動クローズ。`click_accepting_confirm` ヘルパー(confirm スタブ + JS クリック)で安定化。CI で再発したら再起票。ローカル実行手順は `LD_LIBRARY_PATH` + `CHROME_BIN` 方式(詳細は git 履歴)。
+- **Issue 41: AnnotationProposal の複数語義対応** [feature] — 完了。payload に `senses` 配列を持ち、同一表記の同音異義語(例: ピーターパンシンドローム)をコンソールで語義ごとに反映可能に。
+- **アノテーション FB 修正(番号なし)** — 完了。`target_start`(特徴の出現位置)/注釈済みの語でも提案表示/保存後スクロール/調査スキルの2周調査化。
 
-## [feature] Issue 37: 共通属性の一括アノテーション
-- 種別: feature
-- 観点: E / G
-- 背景・現状: 同質な語群（例: 『ONE PIECE』のキャラクター名を大量登録した場合）はジャンル・エンティティ・品詞・語種が同一なのに、コンソールで1語ずつ選び直すしかない（B1）。
-- 提案内容:
-  - [x] 一覧（Issue 36）にチェックボックスと一括操作フォームを追加: ジャンル（コンソールの大→中→小ピッカーを流用）・エンティティ・品詞・語種・意味のテンプレ文（任意。例「漫画『ONE PIECE』の登場人物。」）を選択して、選択した語へまとめて適用
-  - [x] **「注釈済みにする」チェックボックス（既定 OFF）**（確定事項 4）。意味まで揃うテンプレ適用なら即完了、属性だけならコンソールで仕上げ、と使い分ける
-  - [x] 適用対象は単一語義の語のみ。複数語義の語はスキップして通知（同音異義語への誤爆防止）
-  - [x] 全体を `transaction` でまとめ、適用件数・スキップ件数をフラッシュで通知
-  - [x] コンソール側にも「直前に保存した語の値を引き継ぐ」スティッキートグル（ジャンル・エンティティ・品詞・語種を次の語の初期値にする）
-- 期待効果: B1 の解消。同質バッチが「N 回の全項目入力」から「1 回の一括適用（＋必要なら個別仕上げ）」になる。
-- Impact: High
-- Effort: Medium
-- 優先度: P1
-- 依存: Issue 36
+---
 
-## [feature] Issue 38: Claude Code 連携アノテーション（調査スキル + 提案の承認フロー）★本命
-- 種別: feature
-- 観点: E / G
-- 背景・現状: 未注釈約 6,000 語の消化には人力だけでは限界があり、オーナー自身の知識不足・認識の偏り・判断に迷う語への助言も欲しい（B2）。登録フローでは `word-reading-research` スキル（オフライン調査 → 構造化 JSON 貼り付け → MeCab と突き合わせ）が成功しており、同じパターンをアノテーションに移植する。**確定事項 3: 提案は DB に下書き保存し、コンソールで人間が承認する方式**（承認前の提案が公開面の元データに混ざらない。`annotated_at` を立てるのは人間の保存操作のみ）。
-- 提案内容:
-  - [x] **書き出し**: 管理画面に「調査用データの書き出し」を追加（一覧のツールバーから。件数指定可）。対象語（表層形・読み・word_id）＋マスタ一覧（ジャンル木・エンティティ・品詞・語種・言語学的特徴）をコピー用 JSON で表示
-  - [x] **調査スキル**: `.claude/skills/word-annotation-research` を新設。各語について、意味の下書き（公開側リード文のトーン）・ジャンル（提供された木から選択。適切な小分類が無ければ新設提案としてマーク）・エンティティ・品詞・語種・別表記を調査し、語ごとの confidence（high/medium/low）と「判断に迷う点」のメモを含む構造化 JSON を出力。Web 検索可
-  - [x] **取り込み**: 貼り付け画面から `annotation_proposals` テーブルへ保存（`word_id`(UNIQUE FK)・`payload`(JSON)・`status`(enum: pending/applied/dismissed)）。再貼り付けで上書き（冪等）。未知のマスタ名は新設候補として payload 内に保持
-  - [x] **コンソール表示**: 提案がある語は「Claude の提案」パネル（提案値・confidence・判断メモ）を表示し、「提案を反映」ワンタップでフォームへプレフィル → 人間が確認・修正して「保存して次へ」。保存時に `status: applied` へ
-  - [x] 新設マスタ候補は既存のインライン追加エンドポイント（`admin/genres` 等）で作成してから反映（提案パネルに「新設候補」を朱で明示）
-  - [x] キューの絞り込み: 「提案あり」優先で辿れるフィルタ（`?proposed=1`。index・スキップ・保存後の遷移で維持）
-- 期待効果: B2 の解消。アノテーションが「調査しながら全項目入力」から「Claude の下書きを確認・修正して承認」になり、スループットが大幅に向上。判断に迷う語には根拠メモが付く。インデックス解禁目安（注釈済み 300〜500 語）への最短路。
-- Impact: High（本命）
-- Effort: High
-- 優先度: P1（Issue 36 の後、37 と並行可）
-- 依存: Issue 36 が望ましい（選択書き出し）。単独着手も可
+# 確定事項(オーナー回答の記録)
 
-## [feature] Issue 39: アノテーションヘルパー（収録基準4原則・特徴用語解説・立項スコア）
-- 種別: feature
-- 観点: G / E
-- 背景・現状: 収録可否・表記・読みの判断基準が明文化されておらず、オーナー個人の感覚に依存して DB がバイアスに汚染されるリスクがあった。Claude Code（調査スキル）にも「何を収録すべきか」の基準点が無い。オーナー自身も言語学用語（音韻添加など）の定義を作業中に忘れる。
-- 実装内容（オーナー起草の4原則をブラッシュアップ）:
-  - [x] **`docs/annotation-guidelines.md`**（基準文書の正）: 前提（読み10文字以上）／収録の4原則（公然性・妥当性・慣用性・同定可能性。判定質問と本 DB 向けの例）／立項スコア5段階の定義／表記の選定基準／読みの基準／知名度の判定目安
-  - [x] **特徴の用語解説**: `config/linguistic_features_glossary.yml`（seed の19特徴と1対1。説明+例3〜5件、テストで担保）+ `LinguisticFeatureGlossary`（PORO）+ コンソール特徴欄の控えめな `<details>` パネル（チップの title 属性でも補助表示）
-  - [x] **立項スコア**: word-annotation-research スキルが全語に `entry_score`（1〜5）を付け、3以下には `entry_notes`（どの原則を・なぜ欠くか）を必須で出力。提案パネルに「立項 n/5」を表示し、3以下は朱バッジ+理由（登録済み語への低スコア=削除候補の指摘。最終判断はオーナー）
-  - [x] 両スキル（word-annotation-research / word-reading-research）から guidelines を参照
-- 確定事項（2026-07-07 オーナー回答）: 特徴ヘルプは popover 的な控えめな設置／立項判定は構造化フィールド+朱バッジ・5段階／公開側 About への反映は今回はしない
-- Impact: High（全アノテーションの品質の土台）
-- Effort: Medium
-- 優先度: P1
+## 2026-07-06(SEO・LLMO)
 
-## [improvement] Issue 40: 管理UIシステムテストの flake 解消（ローカル WSL のクリック取りこぼし）
-- 種別: improvement
-- 観点: G（テスト基盤）
-- 背景・現状: Issue 35〜39 の管理 UI（Stimulus: genre-picker / check-all / 提案反映 / 用語解説）を実機担保するシステムテスト5本を導入した。ローカルの WSL + headless Chrome for Testing では **Selenium のネイティブクリックがまれに要素へ届かない**環境問題があり、`wait_for_stimulus`（コントローラ接続待ち）・`click_expecting`（期待状態が出なければ JS クリックで押し直し）・一括適用の DB ポーリング判定で 15回中13回まで安定化したが、一括適用テストがまれに落ちる。
-- 提案内容:
-  - [x] CI（Ubuntu + google-chrome-stable）での flake 発生率を観察する（環境問題なら CI では出ない可能性が高い）
-    - → **CI でも発生を確認**（2026-07-09〜10、`AdminWordsBulkTest` が runner の Chrome パッチ差で通ったり落ちたり）。
-  - [x] ローカルで再発するステップを特定し、原因調査（CDP ログ・スクリーンショット）または操作の JS 化を検討
-    - → 2026-07-10 調査結果: (1) Chrome 150.0.7871.115 では管理単語一覧ページで **ネイティブクリックのイベントが一切ページに届かない**（`elementFromPoint` は正しい要素を返すのに pointerdown すら発火しない）。(2) さらに **WebDriver コマンド実行中に開いた confirm は `unhandled_prompt_behavior: :ignore` を渡していても false で自動クローズされる**（PR #62 の対策を上回る挙動変化。`window.confirm` の計装で「called → returned: false」を確認）。
-    - → 対策: 実ダイアログに依存しない `click_accepting_confirm` ヘルパーを導入（`window.confirm` をスタブして呼び出しとメッセージを検証し true を返す。クリックは JS click）。一括適用テストはローカル 3/3 で安定化。
-- ローカル実行メモ: sudo 不可環境では Chrome の共有ライブラリを `apt-get download libnspr4 libnss3` → `dpkg -x` で `~/.local/chrome-deps` に展開し、`LD_LIBRARY_PATH=~/.local/chrome-deps/usr/lib/x86_64-linux-gnu CHROME_BIN=~/.cache/selenium/chrome/linux64/<ver>/chrome bin/rails test:system` で実行する。
-- Impact: Low（テストの信頼性）
-- Effort: Low〜Medium
-- 優先度: P2
+1. **本番ドメイン**: `nagai-kotoba-database.jp` で確定。旧システムが `nagai-kotoba-database.com` で稼働中。データ移行完了後に com → jp リダイレクト(詳細は Issue 27)。
+2. **アナリティクス**: GA4 で確定(Turbo 対応の page_view 送信が必須。実装済み)。
+3. **収録基準**: **読み 10 文字以上**で確定(正: [`docs/annotation-guidelines.md`](annotation-guidelines.md))。
+4. **ライセンス**: 単語データは **CC BY 4.0(クレジット表記 = サイト名 + URL)**。MIT はコード向けのためデータには不適合(コードを OSS 公開する場合はそちらに MIT)。About・llms.txt・JSON API に明示済み。
+5. **インデックス解禁**: **注釈済み 300〜500 語を目安に解禁**。それまで全ページ noindex(環境変数切替。実装は Issue 43)。解禁時に sitemap を Search Console へ送信。
 
-## [feature] Issue 41: AnnotationProposal の複数語義対応（word 1:多、同一表記の同音異義語）
-- 種別: feature
-- 観点: E（データ品質） / G
-- 背景・現状: `AnnotationProposal` は `belongs_to :word`（word と **1:1**）の下書きのため、同じ表層形に複数の異なる語義（同名の作品・人物・団体等。DB 上は複数の `word_sense` に対応）が存在する場合、1件の提案では表現できない。`word-annotation-research` スキル運用中に実例が見つかった: 「ピーターパンシンドローム」は通俗心理学の用語（ダン・カイリー提唱）と、同名の男性アイドルグループ（2019年結成、通称 PPSR）の双方が実在し、Wikipedia にも曖昧さ回避ページがある。現状はスキルが `notes` に他の語義の存在を書き添えるに留まり、オーナーがコンソールで手動で2つ目の `word_sense` を追加登録する必要がある。
-- 提案内容:
-  - `annotation_proposals` を `word_id` 単独のユニーク FK から、1つの `word_id` に複数件ぶら下げられる形（例: `word_id` + 語義インデックス、または既存 `word_sense_id` への紐付けを任意で持てる形）に拡張する。
-  - 取り込みスキーマ（`.claude/skills/word-annotation-research/schema.json`）を、1つの `word_id` に対して複数の語義候補（各要素が `meaning`/`genre_path`/`entity_type`/`part_of_speech`/`word_origins`/`reading` 等を持つ配列）を許容する形に拡張検討する。
-  - コンソールの提案パネルで、複数語義がある場合は語義ごとに反映/見送りを選べる UI にする。
-  - `word-annotation-research` スキルの調査手順（同一表記の複数語義を毎語 WebSearch で確認し `notes` に記載する運用。本 Issue 起票時に追加済み）と整合させ、複数語義が見つかった際はこの新しいスキーマへ流し込めるようにする。
-- 期待効果: 同音異義語（ホモニム）を1回の調査・取り込みフローで正しく複数 `word_sense` として登録できるようになり、Issue 38（Claude Code 連携アノテーション）の恩恵が「同定可能性」の観点でグレーな同名語のケースにも及ぶ。
-- Impact: Medium
-- Effort: Medium〜High（データモデル・取り込みスキーマ・コンソール UI の3面変更）
-- 優先度: P2
-- 依存: Issue 38
+## 2026-07-07(管理者機能)
 
-## 前提の確定事項（2026-07-07 オーナー回答）
-
-1. **一括登録（3ステップ）は現状維持**。量と質を両立できており不満なし。
-2. **編集画面はコンソールへ吸収して廃止**（Issue 36）。表層形の編集はコンソールで行い、削除ボタンは一覧に残す。
-3. **Claude Code の提案の受け渡しは「DB に下書き保存 → コンソールで承認」方式**（Issue 38）。数百語を数日かけて消化する運用に耐えるため。直接 DB 書き込み（承認レス）は採らない。
-4. **一括適用の「注釈済み」フラグはチェックボックスで選択式**（既定 OFF、Issue 37）。
+6. **一括登録(3ステップ)は現状維持**。量と質を両立できており不満なし。
+7. **編集画面はコンソールへ吸収して廃止**(Issue 36)。表層形の編集はコンソール、削除ボタンは一覧に残す。
+8. **Claude Code の提案は「DB に下書き保存 → コンソールで承認」方式**(Issue 38)。直接 DB 書き込み(承認レス)は採らない。
+9. **一括適用の「注釈済み」フラグはチェックボックスで選択式**(既定 OFF、Issue 37)。

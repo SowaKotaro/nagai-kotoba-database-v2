@@ -43,3 +43,6 @@
 /research/outputs/*
 !/research/inputs/.keep
 !/research/outputs/.keep
+
+# 過去サイトからcurlで取得した単語データ
+/docs/words.csv
