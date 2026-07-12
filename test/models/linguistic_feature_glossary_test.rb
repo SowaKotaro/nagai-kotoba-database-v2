@@ -2,11 +2,8 @@ require "test_helper"
 
 # 言語学的特徴の用語解説(Issue 39)。config/linguistic_features_glossary.yml が単一ソース。
 class LinguisticFeatureGlossaryTest < ActiveSupport::TestCase
-  test "seed のマスタ名と1対1で対応する" do
-    seed_names = File.read(Rails.root.join("db/seeds/linguistic_features.rb"))
-                     .scan(/^\s*"([^"]+)"/).flatten
-    assert seed_names.any?, "seed から特徴名を読み取れませんでした"
-    assert_equal seed_names.sort, LinguisticFeatureGlossary.all.map(&:name).sort
+  test "seed のマスタ名(SeedCatalog)と1対1で対応する" do
+    assert_equal SeedCatalog::LINGUISTIC_FEATURES.sort, LinguisticFeatureGlossary.all.map(&:name).sort
   end
 
   test "全項目に説明と3〜5件の具体例がある" do

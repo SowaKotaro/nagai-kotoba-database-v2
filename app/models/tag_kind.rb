@@ -37,6 +37,17 @@ class TagKind
     key == "genres"
   end
 
+  # レコードが seed 管理(SeedCatalog 収載)か。「seed」印とリネーム時の警告表示に使う。
+  # genre_index は id => Genre の索引(一覧での親参照の N+1 回避用)。
+  def seeded?(record, genre_index: nil)
+    SeedCatalog.seeded?(key, record, genre_index: genre_index)
+  end
+
+  # この種別に seed 管理のレコードが含まれうるか(一覧の注記表示に使う)。
+  def seed_managed_kind?
+    SeedCatalog.kind_seeded?(key)
+  end
+
   def label
     I18n.t("admin.tags.kinds.#{key}")
   end

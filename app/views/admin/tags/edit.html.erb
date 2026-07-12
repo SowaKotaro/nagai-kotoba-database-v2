@@ -9,6 +9,13 @@
 
 <p class="field-hint"><%= t("admin.tags.rename_hint") %></p>
 
+<% if @kind.seeded?(@record) %>
+  <div class="seed-warning">
+    <p class="seed-warning__title"><%= t("admin.tags.seed_warning_title") %></p>
+    <p><%= t("admin.tags.seed_warning") %></p>
+  </div>
+<% end %>
+
 <% if @record.errors.any? %>
   <ul class="form-errors">
     <% @record.errors.full_messages.each do |message| %>

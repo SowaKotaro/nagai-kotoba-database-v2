@@ -3,6 +3,9 @@
 <div class="page-eyebrow"><span><%= link_to t("admin.tags.title"), admin_tags_path %></span></div>
 <h1 class="page-title"><%= @kind.label %></h1>
 <p class="section-label"><%= t("admin.tags.show_lead") %></p>
+<% if @kind.seed_managed_kind? %>
+  <p class="field-hint"><%= t("admin.tags.seed_note") %></p>
+<% end %>
 
 <% if @records.any? %>
   <%# 統合: source を付けている全データを target に付け替えて source を削除する。
@@ -48,6 +51,9 @@
           <% name_class = @kind.hierarchical? ? "tag-table__name tag-table__name--#{record.level}" : nil %>
           <td class="<%= name_class %>">
             <%= link_to record.name, admin_edit_tag_path(@kind.key, record) %>
+            <% if @kind.seeded?(record, genre_index: @genre_index) %>
+              <span class="tag-table__seed" title="<%= t("admin.tags.seed_badge_title") %>"><%= t("admin.tags.seed_badge") %></span>
+            <% end %>
           </td>
           <% if @kind.hierarchical? %>
             <td><span class="tag-table__level"><%= t("admin.tags.levels.#{record.level}") %></span></td>

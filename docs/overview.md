@@ -41,7 +41,7 @@
 - ✅ Issue 1: 設計ドキュメント整備・スキーマ方針確定
 - ✅ Issue 2: **ジャンル(genres)マスタ**（3階層・自己参照）… 本 branch `feature/add-genre` で実装
   - `app/models/genre.rb`（enum `level`、`self_and_ancestors` / `root_genre`、整合性バリデーション）
-  - 大分類10件・中分類150件を seed 投入済み（`db/seeds/genres.rb`）
+  - 大分類10件・中分類150件を seed 投入済み（カタログは `app/models/seed_catalog.rb`）
   - 既存 admins/sessions も `utf8mb4_0900_ai_ci` に統一済み
 - ✅ Issue 3: **単純マスタ3種**（entity_types / parts_of_speech / linguistic_features）… `name` + `UNIQUE(name)` のみ
   - `parts_of_speech` は不規則複数形のため inflections に屈折ルールを追加
@@ -91,7 +91,8 @@
   アノテーション用: `queue_nav`（キーボード送り）/ `inline_add`（マスタその場追加）/ `feature_range`（特徴の範囲タップ）/
   `genre_picker`（ジャンル段階表示＋その場追加）/ `sense_cloner`（語義の複製追加）
 - `db/schema.rb` … スキーマの正（直接編集せずマイグレーション経由で更新）
-- `db/seeds.rb` → `db/seeds/genres.rb` … 管理者とジャンルマスタを冪等に投入
+- `db/seeds.rb` … 管理者とマスタを冪等に投入。マスタの名前リストとリネーム追従マップは
+  `app/models/seed_catalog.rb` が単一の正（タグ統括管理の「seed」印と共有。運用ルールも同ファイル参照）
 - `config/locales/ja.yml` … 既定ロケール `:ja`。表示文言はここに集約（ハードコードしない）
 - `docs/` … `overview.md`(本書) / `schema.sql` / `issues.md` / `genres.md`
 

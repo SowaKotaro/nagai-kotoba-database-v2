@@ -2458,3 +2458,31 @@ textarea {
   letter-spacing: 0.08em;
   color: var(--ink-3);
 }
+/* seed(SeedCatalog)管理タグの印。墨1px枠+極小等幅(Issue 49) */
+.tag-table__seed {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  vertical-align: 1px;
+}
+/* seed管理タグのリネーム時警告。墨1px枠パネル+朱の左罫(Issue 49) */
+.seed-warning {
+  margin: 12px 0 20px;
+  padding: 10px 14px;
+  border: 1px solid var(--ink);
+  border-left: 3px solid var(--shu);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.seed-warning__title {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--shu);
+}
