@@ -15,7 +15,7 @@ curry:
 # アノテーション・コンソールの「保存して次の未注釈へ」を試すため2語用意する。
 pending_haruhi:
   surface: 涼宮ハルヒの憂鬱
-  char_type_pattern: 漢漢アアアの漢漢
+  char_type_pattern: 漢漢アアアあ漢漢
 
 pending_bermuda:
   surface: バミューダトライアングル
