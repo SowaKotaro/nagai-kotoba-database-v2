@@ -1,7 +1,7 @@
 <%# 一覧から複数選択するチップ(ドロップダウンの代替)。
-    locals: name(パラメータ名), collection(name を持つマスタ), selected(選択中idの配列), legend %>
+    locals: name(パラメータ名), collection(name を持つマスタ), selected(選択中idの配列), legend, legend_icon(任意) %>
 <fieldset class="chips-field">
-  <legend class="field-legend"><%= legend %></legend>
+  <legend class="field-legend"><%= icon(legend_icon) if local_assigns[:legend_icon] %><%= legend %></legend>
   <div class="check-chips">
     <% selected_ids = selected.map(&:to_s) %>
     <% collection.each do |item| %>

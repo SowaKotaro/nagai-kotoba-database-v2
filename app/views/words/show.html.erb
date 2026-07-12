@@ -26,7 +26,7 @@
   <%# 動的に組み立てる解説文。図鑑の説明欄のように、墨1px枠のパネルへ収める %>
   <% if lead.present? %>
     <figure class="word-flavor">
-      <figcaption class="word-flavor__label mono"><%= t("words.show.flavor_label") %></figcaption>
+      <figcaption class="word-flavor__label mono"><%= icon "quotes" %><%= t("words.show.flavor_label") %></figcaption>
       <p class="word-flavor__text"><%= lead %></p>
     </figure>
   <% end %>
@@ -47,7 +47,7 @@
 </header>
 
 <% if @word.word_senses.empty? %>
-  <p class="empty-note"><%= t("words.show.no_senses") %></p>
+  <p class="empty-note"><%= icon "binoculars" %><%= t("words.show.no_senses") %></p>
 <% else %>
   <div class="sense-list">
     <% @word.word_senses.each.with_index(1) do |sense, number| %>
@@ -71,7 +71,7 @@
           <p class="sense-meaning"><%= sense.meaning %></p>
         <% end %>
 
-        <p class="section-label"><%= t("words.show.features") %></p>
+        <p class="section-label"><%= icon "pen_nib" %><%= t("words.show.features") %></p>
         <% if sense.word_sense_features.any? %>
           <ul class="annotations">
             <% sense.word_sense_features.each do |feature| %>
@@ -91,7 +91,7 @@
           <%# 表示順: (言語学的特徴は上の注釈ブロック) → ジャンル → エンティティ → 品詞 →
               語種 → 文字数 → モーラ数 → 先頭文字 → 末尾文字 → 別表記。未登録は「未定義」を明示 %>
           <div class="sense-attrs__item sense-attrs__item--wide">
-            <dt><%= WordSense.human_attribute_name(:genre) %></dt>
+            <dt><%= icon "tag" %><%= WordSense.human_attribute_name(:genre) %></dt>
             <dd>
               <% if sense.genre %>
                 <%# 各階層から単語一覧の絞り込みへ飛べるパンくず。末端は少し強調 %>
@@ -111,7 +111,7 @@
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= WordSense.human_attribute_name(:entity_type) %></dt>
+            <dt><%= icon "cube" %><%= WordSense.human_attribute_name(:entity_type) %></dt>
             <dd>
               <% if sense.entity_type %>
                 <%= link_to sense.entity_type.name,
@@ -123,7 +123,7 @@
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
+            <dt><%= icon "article" %><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
             <dd>
               <% if sense.part_of_speech %>
                 <%= link_to sense.part_of_speech.name,
@@ -135,7 +135,7 @@
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= t("words.show.origins") %></dt>
+            <dt><%= icon "translate" %><%= t("words.show.origins") %></dt>
             <dd>
               <% if sense.word_origins.any? %>
                 <span class="tag-row">
@@ -150,31 +150,31 @@
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= t("words.show.reading_length") %></dt>
+            <dt><%= icon "ruler" %><%= t("words.show.reading_length") %></dt>
             <dd><%= link_to t("words.show.chars", count: sense.reading_length),
                       words_path(reading_length: sense.reading_length), class: "tag" %></dd>
           </div>
 
           <% if sense.mora_count %>
             <div class="sense-attrs__item">
-              <dt><%= t("words.show.mora_count") %></dt>
+              <dt><%= icon "metronome" %><%= t("words.show.mora_count") %></dt>
               <dd><%= link_to t("words.show.mora", count: sense.mora_count),
                         words_path(mora_count: sense.mora_count), class: "tag" %></dd>
             </div>
           <% end %>
 
           <div class="sense-attrs__item">
-            <dt><%= t("words.show.first_char") %></dt>
+            <dt><%= icon "skip_back" %><%= t("words.show.first_char") %></dt>
             <dd><%= link_to sense.first_char, words_path(first_char: sense.first_char), class: "tag" %></dd>
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= t("words.show.last_char") %></dt>
+            <dt><%= icon "skip_forward" %><%= t("words.show.last_char") %></dt>
             <dd><%= link_to sense.last_char, words_path(last_char: sense.last_char), class: "tag" %></dd>
           </div>
 
           <div class="sense-attrs__item sense-attrs__item--wide">
-            <dt><%= t("words.show.variants") %></dt>
+            <dt><%= icon "swap" %><%= t("words.show.variants") %></dt>
             <dd>
               <% if sense.word_sense_variants.any? %>
                 <ul class="variant-list">
@@ -195,7 +195,7 @@
 
 <% if @related_word_groups.any? %>
   <section class="related">
-    <h2 class="related__title"><%= t("words.show.related.title") %></h2>
+    <h2 class="related__title"><%= icon "link" %><%= t("words.show.related.title") %></h2>
     <% @related_word_groups.each do |group| %>
       <div class="related__group">
         <p class="section-label"><%= t("words.show.related.#{group.key}") %></p>

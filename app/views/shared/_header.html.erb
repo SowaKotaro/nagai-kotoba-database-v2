@@ -38,9 +38,16 @@
           </button>
           <div class="nav-menu__panel" id="nav-menu-search" hidden
                data-nav-menu-target="panel" aria-labelledby="nav-menu-search-trigger">
-            <%= link_to t("layouts.nav.genres"), genres_path, class: ("is-current" if request.path == genres_path) %>
-            <%= link_to t("layouts.nav.browse"), browse_path, class: ("is-current" if request.path == browse_path) %>
-            <%= link_to t("layouts.nav.advanced_search"), search_path, class: ("is-current" if request.path == search_path) %>
+            <%# 各項目に小さなアイコンを添える(ジャンル=タグ / 索引=50音表 / 詳細検索=絞り込み) %>
+            <%= link_to genres_path, class: ("is-current" if request.path == genres_path) do %>
+              <%= icon "tag" %><span><%= t("layouts.nav.genres") %></span>
+            <% end %>
+            <%= link_to browse_path, class: ("is-current" if request.path == browse_path) do %>
+              <%= icon "grid_nine" %><span><%= t("layouts.nav.browse") %></span>
+            <% end %>
+            <%= link_to search_path, class: ("is-current" if request.path == search_path) do %>
+              <%= icon "funnel" %><span><%= t("layouts.nav.advanced_search") %></span>
+            <% end %>
           </div>
         </div>
 

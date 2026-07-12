@@ -4,7 +4,7 @@
 
   <% if @featured_word %>
     <div class="hero-featured">
-      <p class="hero-featured__label"><%= t("home.index.featured") %></p>
+      <p class="hero-featured__label"><%= icon "sparkle" %><%= t("home.index.featured") %></p>
       <%= link_to @featured_word.surface, word_path(@featured_word), class: "hero-featured__word" %>
       <p class="hero-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
     </div>
@@ -19,27 +19,29 @@
 
 <dl class="stats-grid">
   <div class="stats-grid__item">
-    <dt><%= t("home.index.stats.words") %></dt>
+    <dt><%= icon "books" %><%= t("home.index.stats.words") %></dt>
     <dd><%= number_with_delimiter(@word_count) %><span class="stats-grid__unit"><%= t("home.index.stats.words_unit") %></span></dd>
   </div>
   <div class="stats-grid__item">
-    <dt><%= t("home.index.stats.senses") %></dt>
+    <dt><%= icon "book_open" %><%= t("home.index.stats.senses") %></dt>
     <dd><%= number_with_delimiter(@sense_count) %><span class="stats-grid__unit"><%= t("home.index.stats.senses_unit") %></span></dd>
   </div>
   <div class="stats-grid__item">
-    <dt><%= t("home.index.stats.genres") %></dt>
+    <dt><%= icon "tag" %><%= t("home.index.stats.genres") %></dt>
     <dd><%= number_with_delimiter(@genre_count) %><span class="stats-grid__unit"><%= t("home.index.stats.genres_unit") %></span></dd>
   </div>
 </dl>
 
 <section>
   <div class="section-header">
-    <h2 class="section-heading"><%= t("home.index.recent") %></h2>
-    <%= link_to t("home.index.see_all"), words_path, class: "section-header__more" %>
+    <h2 class="section-heading"><%= icon "clock_counter_clockwise" %><%= t("home.index.recent") %></h2>
+    <%= link_to words_path, class: "section-header__more icon-label" do %>
+      <%= t("home.index.see_all") %><%= icon "arrow_right" %>
+    <% end %>
   </div>
 
   <% if @recent_words.empty? %>
-    <p class="empty-note"><%= t("words.index.empty") %></p>
+    <p class="empty-note"><%= icon "binoculars" %><%= t("words.index.empty") %></p>
   <% else %>
     <div class="entry-list">
       <%= render partial: "words/entry_row", collection: @recent_words, as: :word %>

@@ -11,7 +11,7 @@
 </header>
 
 <section class="browse-section">
-  <h2 class="section-heading"><%= t("browse.index.by_first_char") %></h2>
+  <h2 class="section-heading"><%= icon "grid_nine" %><%= t("browse.index.by_first_char") %></h2>
   <div class="kana-grid">
     <% SearchesHelper::KANA_COLUMNS.each do |column| %>
       <div class="kana-col">
@@ -41,10 +41,10 @@
 </section>
 
 <section class="browse-section">
-  <h2 class="section-heading"><%= t("browse.index.by_reading_length") %></h2>
+  <h2 class="section-heading"><%= icon "ruler" %><%= t("browse.index.by_reading_length") %></h2>
   <% lengths = @reading_length_counts.keys.compact.sort %>
   <% if lengths.empty? %>
-    <p class="empty-note"><%= t("browse.index.empty") %></p>
+    <p class="empty-note"><%= icon "binoculars" %><%= t("browse.index.empty") %></p>
   <% else %>
     <ul class="browse-lengths">
       <% lengths.each do |length| %>

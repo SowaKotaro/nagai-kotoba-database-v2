@@ -50,7 +50,7 @@
           <%= hidden_field_tag(value.is_a?(Array) ? "#{key}[]" : key, item, id: nil) %>
         <% end %>
       <% end %>
-      <label class="sort-form__label" for="sort"><%= t("words.index.sort.label") %></label>
+      <label class="sort-form__label" for="sort"><%= icon "arrows_down_up" %><%= t("words.index.sort.label") %></label>
       <%= select_tag :sort,
             options_for_select(WordSort::KEYS.map { |key| [ t("words.index.sort.options.#{key}"), key ] }, @sort.key),
             class: "sort-form__select",
@@ -61,7 +61,7 @@
 </div>
 
 <% if @words.empty? %>
-  <p class="empty-note"><%= t("words.index.empty") %></p>
+  <p class="empty-note"><%= icon "binoculars" %><%= t("words.index.empty") %></p>
 <% else %>
   <div class="entry-list">
     <%= render partial: "words/entry_row", collection: @words, as: :word %>

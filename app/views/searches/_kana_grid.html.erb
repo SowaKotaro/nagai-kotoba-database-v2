@@ -1,8 +1,8 @@
 <%# 50音表(カタカナ・濁音/半濁音含む)。伝統的な縦書きの並び:
     上から下に「アイウエオ」、右から左に「ア→カ→サ…」。複数選択可のチェックボックス。
-    locals: name(パラメータ名), selected(選択中の配列), legend(見出し) %>
+    locals: name(パラメータ名), selected(選択中の配列), legend(見出し), legend_icon(任意) %>
 <fieldset class="kana-field">
-  <legend class="field-legend"><%= legend %></legend>
+  <legend class="field-legend"><%= icon(legend_icon) if local_assigns[:legend_icon] %><%= legend %></legend>
   <div class="kana-grid">
     <% SearchesHelper::KANA_COLUMNS.each do |column| %>
       <div class="kana-col">
