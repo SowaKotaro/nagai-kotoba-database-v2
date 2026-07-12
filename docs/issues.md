@@ -119,18 +119,6 @@
   - [ ] リネーム→デプロイ相当(seed 再実行)で重複が生じないことのテスト
 - 期待効果: マスタ重複の再発防止。タグ統括管理(/admin/tags)と seed 運用の安全な共存。
 
-## Issue 51: backfill タスクが last_char を再計算しない
-- 種別: bug
-- 状態: 未着手
-- 優先度: P1 ／ Impact: Med ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-07-12 の技術監査より(Medium)。派生カラム(`char_type_pattern`/`rhythm_pattern`/`mora_count`/`vowel_pattern`/`last_char`)は `before_validation` 依存のため、`update_all` や直接 SQL で reading/surface を直すと古くなる。修復用の `backfill:reading_metrics` タスク(`lib/tasks/backfill.rake`)が **`last_char` だけ再計算していない**ため、修復してもなお不整合が残る。
-- 内容:
-  - [ ] `backfill:reading_metrics` に `last_char`(`LastChar`)の再計算を追加
-  - [ ] 派生値の全件検証タスク(現在値と再計算値の diff を報告する読み取り専用タスク)を追加
-  - [ ] backfill 後に last_char が正しく埋まることのテスト
-- 期待効果: 派生カラム修復手段の完全化。検索結果への古い値の静かな混入を検出可能に。
-
 ## Issue 29: OGP 画像の動的生成(単語ごと)
 - 種別: feature
 - 状態: 未着手(収録が数百語を超え、共有が発生し始めてから)
@@ -326,6 +314,7 @@
 ## 技術監査対応(Issue 49〜56、2026-07-12 の監査より)
 
 - **Issue 50: 管理者セッションの有効期限** [improvement] — 完了(PR #71)。永続 Cookie(約20年)を2週間の `expires` に変更。サーバ側も `updated_at` ベースのスライディング失効(`Session::LIFETIME`)を導入し、期限切れはアクセス時に破棄・ログイン時に掃除。DB 書き込みと Set-Cookie は1時間間隔に間引き。
+- **Issue 51: backfill タスクの last_char 再計算漏れ** [bug] — 完了(PR #72)。`backfill:reading_metrics` に `last_char` の再計算を追加。全派生カラム(words.char_type_pattern 含む)の現在値と再計算値の差分を報告する読み取り専用タスク `backfill:verify` を新設。verify がフィクスチャの実バグ(涼宮ハルヒの憂鬱の char_type_pattern で「の」が文字クラス化されていない)を検出したため同時修正。
 
 ---
 
