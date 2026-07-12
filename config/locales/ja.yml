@@ -139,6 +139,18 @@ ja:
       char_count: "%{count} 字"
       clear_filter: "絞り込みを解除"
       edit_conditions: "条件を変更"
+      sort:
+        label: "並び順"
+        apply: "並べ替え"
+        options:
+          kana_asc: "五十音順"
+          kana_desc: "五十音の逆順"
+          length_asc: "読みが短い順"
+          length_desc: "読みが長い順"
+          created_asc: "登録が古い順"
+          created_desc: "登録が新しい順"
+          reverse_kana: "逆引き（末尾の五十音順）"
+          shuffle: "日替わりシャッフル"
       facet_heading:
         default: "%{name}の長い言葉"
         first_char: "「%{char}」から始まる長い言葉"

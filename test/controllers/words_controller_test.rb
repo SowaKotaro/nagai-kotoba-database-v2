@@ -278,6 +278,89 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".active-facet", count: 0
   end
 
+  # --- 並び替え(sort) ---
+  # フィクスチャの読みは カレー(3字) と さつじんじけん(7字)。五十音では カ < さ。
+  test "一覧の既定は読みの五十音順" do
+    get words_path
+    assert_response :success
+    assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
+  end
+
+  test "sort=kana_desc で五十音の逆順になる" do
+    get words_path(sort: "kana_desc")
+    assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
+  end
+
+  test "sort=length_asc で読みが短い順になる" do
+    get words_path(sort: "length_asc")
+    assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
+  end
+
+  test "sort=length_desc で読みが長い順になる" do
+    get words_path(sort: "length_desc")
+    assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
+  end
+
+  test "sort=created_asc / created_desc で登録日時順になる" do
+    words(:abc_murder).update_column(:created_at, 2.days.ago)
+    words(:curry).update_column(:created_at, 1.day.ago)
+
+    get words_path(sort: "created_asc")
+    assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
+
+    get words_path(sort: "created_desc")
+    assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
+  end
+
+  test "sort=reverse_kana で読みを末尾から見た五十音順になる" do
+    # 反転読みは チカ→カチ、アシ→シア。カ < シ なので チカ の語が先に来る。
+    early = Word.create!(surface: "逆引きで先", annotated_at: Time.current)
+    early.word_senses.create!(reading: "チカ")
+    late = Word.create!(surface: "逆引きで後", annotated_at: Time.current)
+    late.word_senses.create!(reading: "アシ")
+
+    get words_path(sort: "reverse_kana")
+    assert_operator body_position(early), :<, body_position(late)
+  end
+
+  test "sort=shuffle は同じ日のうちは順序が安定している" do
+    get words_path(sort: "shuffle")
+    assert_response :success
+    first_order = body_position(words(:curry)) < body_position(words(:abc_murder))
+
+    get words_path(sort: "shuffle")
+    assert_equal first_order, body_position(words(:curry)) < body_position(words(:abc_murder))
+  end
+
+  test "未知の sort は既定(五十音順)に畳む" do
+    get words_path(sort: "evil'); DROP TABLE words; --")
+    assert_response :success
+    assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
+  end
+
+  test "既定以外の sort は noindex になり、既定の sort 指定は indexable のまま" do
+    get words_path(sort: "length_desc")
+    assert_select "meta[name=robots][content=?]", "noindex,follow"
+
+    get words_path(sort: "kana_asc")
+    assert_select "meta[name=robots]", count: 0
+  end
+
+  test "並び順フォームは絞り込み条件を hidden で引き継ぎ、現在の並びを選択済みにする" do
+    get words_path(part_of_speech_id: parts_of_speech(:noun).id, sort: "length_desc")
+    assert_select ".sort-form input[type=hidden][name=?][value=?]",
+                  "part_of_speech_id", parts_of_speech(:noun).id.to_s
+    assert_select ".sort-form select#sort option[selected][value=?]", "length_desc"
+  end
+
+  test "並び順フォームは配列の絞り込み条件も hidden で引き継ぐ" do
+    get words_path(first_char: [ word_senses(:curry).first_char, word_senses(:murder).first_char ])
+    assert_select ".sort-form input[type=hidden][name=?][value=?]",
+                  "first_char[]", word_senses(:curry).first_char
+    assert_select ".sort-form input[type=hidden][name=?][value=?]",
+                  "first_char[]", word_senses(:murder).first_char
+  end
+
   # --- ページネーション ---
   test "page パラメータで一覧を切り替えられる" do
     get words_path(page: 2)
@@ -297,5 +380,15 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_raises(ActionController::RoutingError) do
       Rails.application.routes.recognize_path("/words", method: :post)
     end
+  end
+
+  private
+
+  # 一覧本文中で語の詳細リンクが現れる位置。行ごとに1回しか出ないため、
+  # 位置の大小比較で並び順を検証できる。
+  def body_position(word)
+    position = response.body.index(%(href="#{word_path(word)}"))
+    assert position, "#{word.surface} が一覧に見当たりません"
+    position
   end
 end
