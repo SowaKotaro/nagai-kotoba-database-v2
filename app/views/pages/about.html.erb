@@ -12,17 +12,17 @@
 
 <div class="prose">
   <section>
-    <h2><%= t("pages.about.criteria_title") %></h2>
+    <h2><%= icon "list_checks" %><%= t("pages.about.criteria_title") %></h2>
     <p><%= t("pages.about.criteria_body") %></p>
   </section>
 
   <section>
-    <h2><%= t("pages.about.curation_title") %></h2>
+    <h2><%= icon "seal_check" %><%= t("pages.about.curation_title") %></h2>
     <p><%= t("pages.about.curation_body") %></p>
   </section>
 
   <section>
-    <h2><%= t("pages.about.license_title") %></h2>
+    <h2><%= icon "scales" %><%= t("pages.about.license_title") %></h2>
     <p><%= t("pages.about.license_intro") %></p>
     <p>
       <%= link_to t("pages.about.license_name"),
@@ -35,12 +35,12 @@
   </section>
 
   <section>
-    <h2><%= t("pages.about.api_title") %></h2>
+    <h2><%= icon "code" %><%= t("pages.about.api_title") %></h2>
     <p><%= t("pages.about.api_body") %></p>
   </section>
 
   <section>
-    <h2><%= t("pages.about.contact_title") %></h2>
+    <h2><%= icon "envelope_simple" %><%= t("pages.about.contact_title") %></h2>
     <p><%= t("pages.about.contact_body") %></p>
     <p><%= mail_to t("pages.about.contact_email") %></p>
   </section>

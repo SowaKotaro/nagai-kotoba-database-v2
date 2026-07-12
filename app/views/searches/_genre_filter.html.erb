@@ -3,7 +3,7 @@
     上位と下位を同時に選んだ場合はサーバ側(WordSenseSearch)が下位を優先する。
     どの親のグループかは朱区切りのラベルで示す。 %>
 <fieldset class="chips-field">
-  <legend class="field-legend"><%= WordSense.human_attribute_name(:genre) %></legend>
+  <legend class="field-legend"><%= icon "tag" %><%= WordSense.human_attribute_name(:genre) %></legend>
 
   <% selected = @search.genre_id %>
   <% roots = @genres_by_parent[nil] || [] %>

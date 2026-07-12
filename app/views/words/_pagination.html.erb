@@ -2,12 +2,16 @@
   <%# 絞り込み条件(ファセット)を保持したままページ送りする %>
   <% base = request.query_parameters.except("page") %>
   <% if @page > 1 %>
-    <%= link_to t("words.pagination.prev"), words_path(base.merge(page: @page - 1)) %>
+    <%= link_to words_path(base.merge(page: @page - 1)) do %>
+      <%= icon "arrow_left" %><span><%= t("words.pagination.prev") %></span>
+    <% end %>
   <% end %>
 
   <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
 
   <% if @page < @total_pages %>
-    <%= link_to t("words.pagination.next"), words_path(base.merge(page: @page + 1)) %>
+    <%= link_to words_path(base.merge(page: @page + 1)) do %>
+      <span><%= t("words.pagination.next") %></span><%= icon "arrow_right" %>
+    <% end %>
   <% end %>
 </nav>

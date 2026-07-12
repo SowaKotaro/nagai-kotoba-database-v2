@@ -14,6 +14,23 @@
 
 .icon--lg { width: 1.35em; height: 1.35em; }
 
+/* ラベル・小見出しの先頭に添える装飾アイコン。色はラベルの文字色をそのまま継承する
+   (等幅の極小ラベルに、同じ細さの線画をひとつだけ置く「欄外の印」の文法) */
+.field-legend .icon,
+.section-label .icon,
+.section-heading .icon,
+.sense-attrs dt .icon,
+.stats-grid__item dt .icon,
+.page-eyebrow .icon,
+.related__title .icon,
+.prose h2 .icon,
+.sort-form__label .icon,
+.hero-featured__label .icon,
+.word-flavor__label .icon,
+.empty-note .icon {
+  margin-right: 6px;
+}
+
 /* テキストに添えるアイコン(戻る・切替リンクなど) */
 .icon-label {
   display: inline-flex;
@@ -328,14 +345,15 @@ a.chip:hover {
   display: grid;
   /* 値側は minmax(0,1fr) にして、長いジャンルパス等でも列が伸びず内側で折り返す
      (これが 1fr だと min-content で押し広げられ、main/section が横にはみ出す) */
-  grid-template-columns: 130px minmax(0, 1fr);
+  /* ラベル列は先頭のアイコン(1em + 6px)込みで「エンティティ」等が折り返さない幅 */
+  grid-template-columns: 150px minmax(0, 1fr);
   gap: var(--space-4);
   align-items: baseline;
   padding: var(--space-2) 0;
   border-top: 1px solid var(--rule);
 }
 
-/* モバイルではラベルと値を縦に積む(固定 130px 列が画面幅を圧迫しないように)。
+/* モバイルではラベルと値を縦に積む(固定ラベル列が画面幅を圧迫しないように)。
    語義パネルの左右余白も詰めて本文の実効幅を確保する */
 @media (max-width: 560px) {
   .sense-attrs__item {
@@ -1803,6 +1821,9 @@ a.tag:hover .genre-hub__count {
 }
 
 .pagination a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--ink);
   padding: 5px 18px;
   font-size: 15px;

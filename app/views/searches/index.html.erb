@@ -8,13 +8,13 @@
 
 <%= form_with url: search_path, method: :get, data: { turbo_action: "advance" }, class: "search-form" do %>
   <div class="field">
-    <%= label_tag :q, t("searches.q_label"), class: "field-legend" %>
+    <%= label_tag :q, class: "field-legend" do %><%= icon "magnifying_glass" %><%= t("searches.q_label") %><% end %>
     <%= text_field_tag :q, @search.q %>
   </div>
 
   <%# 読みの文字数: 二つまみスライダー(10〜30)。上限30は「以上」。 %>
   <fieldset class="slider-field">
-    <legend class="field-legend"><%= t("searches.reading_length") %></legend>
+    <legend class="field-legend"><%= icon "ruler" %><%= t("searches.reading_length") %></legend>
     <div class="length-slider" data-controller="range-slider"
          data-range-slider-min-value="10" data-range-slider-max-value="30">
       <p class="length-slider__message" data-range-slider-target="message"></p>
@@ -31,39 +31,45 @@
     </div>
   </fieldset>
 
-  <%= render "kana_grid", name: "first_char", selected: @search.first_char, legend: t("searches.first_char") %>
-  <%= render "kana_grid", name: "last_char", selected: @search.last_char, legend: t("searches.last_char") %>
+  <%= render "kana_grid", name: "first_char", selected: @search.first_char,
+        legend: t("searches.first_char"), legend_icon: "skip_back" %>
+  <%= render "kana_grid", name: "last_char", selected: @search.last_char,
+        legend: t("searches.last_char"), legend_icon: "skip_forward" %>
 
   <%= render "genre_filter" %>
 
   <%= render "check_chips", name: "part_of_speech_id", collection: @parts_of_speech,
-        selected: @search.part_of_speech_id, legend: WordSense.human_attribute_name(:part_of_speech) %>
+        selected: @search.part_of_speech_id, legend: WordSense.human_attribute_name(:part_of_speech),
+        legend_icon: "article" %>
   <%= render "check_chips", name: "entity_type_id", collection: @entity_types,
-        selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type) %>
+        selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type),
+        legend_icon: "cube" %>
 
   <%= render "check_chips", name: "word_origin_id", collection: @word_origins,
-        selected: @search.word_origin_id, legend: t("searches.word_origin") %>
+        selected: @search.word_origin_id, legend: t("searches.word_origin"),
+        legend_icon: "translate" %>
 
   <%= render "check_chips", name: "linguistic_feature_id", collection: @linguistic_features,
-        selected: @search.linguistic_feature_id, legend: t("searches.linguistic_feature") %>
+        selected: @search.linguistic_feature_id, legend: t("searches.linguistic_feature"),
+        legend_icon: "pen_nib" %>
 
   <%# 母音パターン検索: 読みをカナで入れると母音の並び(例 ououaa)で押韻検索する %>
   <div class="field">
-    <%= label_tag :vowel_reading, t("searches.vowel_pattern"), class: "field-legend" %>
+    <%= label_tag :vowel_reading, class: "field-legend" do %><%= icon "music_notes" %><%= t("searches.vowel_pattern") %><% end %>
     <%= text_field_tag :vowel_reading, @search.vowel_reading,
           placeholder: "トウキョウタワー", autocomplete: "off" %>
     <p class="field-hint"><%= t("searches.vowel_pattern_hint") %></p>
   </div>
 
   <div class="field">
-    <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "field-legend" %>
+    <%= label_tag :rhythm_pattern, class: "field-legend" do %><%= icon "text_aa" %><%= t("searches.rhythm_pattern") %><% end %>
     <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off" %>
   </div>
 
   <div class="field char-type-field" data-controller="char-type"
        data-char-type-lower-value="<%= CharTypePattern::LOWER %>"
        data-char-type-upper-value="<%= CharTypePattern::UPPER %>">
-    <%= label_tag :char_type_pattern, t("searches.char_type_pattern"), class: "field-legend" %>
+    <%= label_tag :char_type_pattern, class: "field-legend" do %><%= icon "keyboard" %><%= t("searches.char_type_pattern") %><% end %>
 
     <%# 入力はキーボード風のキー(あ/ア/漢/1/A/a/@)と削除キー(⌫)だけ。手入力は受け付けず、
         押したキーの文字種が下の表示欄に並ぶ(組み立て中のパターンを見せる読み取り専用の欄)。

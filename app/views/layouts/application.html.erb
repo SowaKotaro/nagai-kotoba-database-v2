@@ -53,8 +53,12 @@
 
     <main class="container">
       <%# フラッシュはここで一元表示する(各ビューでは表示しない) %>
-      <%= tag.p(flash[:notice], class: "flash flash--notice") if flash[:notice] %>
-      <%= tag.p(flash[:alert], class: "flash flash--alert") if flash[:alert] %>
+      <% if flash[:notice] %>
+        <p class="flash flash--notice"><%= icon "check_circle" %><%= flash[:notice] %></p>
+      <% end %>
+      <% if flash[:alert] %>
+        <p class="flash flash--alert"><%= icon "warning_circle" %><%= flash[:alert] %></p>
+      <% end %>
 
       <%= yield %>
     </main>
