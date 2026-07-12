@@ -109,4 +109,31 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert PartOfSpeech.exists?(parts_of_speech(:noun).id)
     assert Genre.exists?(genres(:small_novel).id)
   end
+
+  # --- seed 管理タグの印と警告(Issue 49) ---
+  test "seed 管理タグには一覧で seed 印、編集画面で警告が出る" do
+    sign_in_as(Admin.take)
+
+    get admin_tag_kind_path("word_origins")
+    assert_response :success
+    assert_select "span.tag-table__seed", minimum: 1 # 英語(カタログ収載)に印が付く
+
+    get admin_edit_tag_path("word_origins", word_origins(:eigo))
+    assert_response :success
+    assert_select ".seed-warning", 1
+  end
+
+  test "カタログ外のタグには seed 印・警告が出ない" do
+    sign_in_as(Admin.take)
+
+    # 和語はカタログ外(UI 追加扱い)なので警告なし
+    get admin_edit_tag_path("word_origins", word_origins(:wago))
+    assert_response :success
+    assert_select ".seed-warning", count: 0
+
+    # エンティティタイプは種別ごと seed 管理外。印も注記も出ない
+    get admin_tag_kind_path("entity_types")
+    assert_response :success
+    assert_select "span.tag-table__seed", count: 0
+  end
 end

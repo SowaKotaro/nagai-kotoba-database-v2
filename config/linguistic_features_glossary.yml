@@ -1,5 +1,5 @@
 # 言語学的特徴の用語解説(単一ソース)。docs/annotation-guidelines.md §6 から参照される。
-# name は db/seeds/linguistic_features.rb のマスタ名と1対1で対応させる(テストで担保)。
+# name は seed カタログ(app/models/seed_catalog.rb の LINGUISTIC_FEATURES)と1対1で対応させる(テストで担保)。
 # description は言語学的な説明、examples は「もと → 実際の形(変化の説明)」形式の具体例3〜5件。
 # アノテーション・コンソールの「用語解説」パネル(LinguisticFeatureGlossary)がこれを表示する。
 features:

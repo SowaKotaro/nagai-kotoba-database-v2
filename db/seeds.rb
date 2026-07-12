@@ -25,14 +25,7 @@ else
        "ADMIN_USERNAME / ADMIN_PASSWORD か credentials の admin: を設定してください。"
 end
 
-# ジャンル(大分類・中分類)のマスタを投入する。
-load Rails.root.join("db/seeds/genres.rb")
-
-# 語種(和語・漢語・各言語)のマスタを投入する。
-load Rails.root.join("db/seeds/word_origins.rb")
-
-# 品詞のマスタを投入する。
-load Rails.root.join("db/seeds/parts_of_speech.rb")
-
-# 言語学的特徴のマスタを投入する。
-load Rails.root.join("db/seeds/linguistic_features.rb")
+# マスタ(ジャンル・語種・品詞・言語学的特徴)を投入する。
+# 名前リストとリネーム追従マップは app/models/seed_catalog.rb が単一の正
+# (管理画面のタグ統括管理と共有。運用ルールも同ファイルのコメント参照)。
+SeedCatalog.seed_all!
