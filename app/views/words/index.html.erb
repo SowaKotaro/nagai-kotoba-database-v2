@@ -7,7 +7,8 @@
 %>
 <% heading = facet_heading(@search) %>
 <% page_heading = heading || t("words.index.title") %>
-<% indexable = @page == 1 && (@search.indexable_facet.present? || !@search.conditions?) %>
+<%# 並び替え(sort)はコンテンツが同じ順列違いなので、既定順のときだけインデックスを許可する %>
+<% indexable = @page == 1 && @sort.default? && (@search.indexable_facet.present? || !@search.conditions?) %>
 <% content_for :robots, "noindex,follow" unless indexable %>
 <% content_for :canonical_path, canonical_index_path(@search, @page) %>
 <% content_for :title, page_heading %>
@@ -38,7 +39,26 @@
   </div>
 <% end %>
 
-<p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>
+<div class="entry-toolbar">
+  <p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>
+
+  <% if @words.any? %>
+    <%# 並び順。絞り込み条件は hidden で引き継ぎ、select 変更で即送信(JS 無効時は noscript のボタン) %>
+    <%= form_with url: words_path, method: :get, class: "sort-form", data: { controller: "auto-submit" } do %>
+      <% request.query_parameters.except("page", "sort").each do |key, value| %>
+        <% Array(value).each do |item| %>
+          <%= hidden_field_tag(value.is_a?(Array) ? "#{key}[]" : key, item, id: nil) %>
+        <% end %>
+      <% end %>
+      <label class="sort-form__label" for="sort"><%= t("words.index.sort.label") %></label>
+      <%= select_tag :sort,
+            options_for_select(WordSort::KEYS.map { |key| [ t("words.index.sort.options.#{key}"), key ] }, @sort.key),
+            class: "sort-form__select",
+            data: { action: "change->auto-submit#submit" } %>
+      <noscript><%= submit_tag t("words.index.sort.apply"), class: "btn btn--sm", name: nil %></noscript>
+    <% end %>
+  <% end %>
+</div>
 
 <% if @words.empty? %>
   <p class="empty-note"><%= t("words.index.empty") %></p>

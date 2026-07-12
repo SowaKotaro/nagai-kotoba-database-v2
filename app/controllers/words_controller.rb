@@ -11,6 +11,7 @@ class WordsController < ApplicationController
   def index
     @page = [ params[:page].to_i, 1 ].max
     @search = WordSenseSearch.new(search_filter_params)
+    @sort = WordSort.new(params[:sort])
 
     respond_to do |format|
       format.html { load_paginated_words }
@@ -48,7 +49,7 @@ class WordsController < ApplicationController
     @total_count = scope.count
     @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @words = scope.includes(word_senses: [ :entity_type, :part_of_speech ])
-                  .order(:surface)
+                  .order(@sort.order_clause)
                   .limit(PER_PAGE)
                   .offset((@page - 1) * PER_PAGE)
   end
