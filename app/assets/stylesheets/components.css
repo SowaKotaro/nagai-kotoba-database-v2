@@ -335,11 +335,16 @@ a.chip:hover {
   border-top: 1px solid var(--rule);
 }
 
-/* モバイルではラベルと値を縦に積む(固定 130px 列が画面幅を圧迫しないように) */
+/* モバイルではラベルと値を縦に積む(固定 130px 列が画面幅を圧迫しないように)。
+   語義パネルの左右余白も詰めて本文の実効幅を確保する */
 @media (max-width: 560px) {
   .sense-attrs__item {
     grid-template-columns: 1fr;
     gap: var(--space-1);
+  }
+
+  .sense-card {
+    padding: var(--space-4);
   }
 }
 
@@ -841,6 +846,14 @@ a.tag:hover .genre-hub__count {
 .search-form > fieldset,
 .search-form > .field {
   margin-bottom: var(--space-3);
+}
+
+/* 狭幅ではカードの余白を詰めて、50音表・チップ群の実効幅を確保する */
+@media (max-width: 560px) {
+  .search-form {
+    margin: var(--space-5) auto var(--space-6);
+    padding: var(--space-5) var(--space-4);
+  }
 }
 
 /* 罫線と見分けが付くよう、検索フォームのテキスト入力は下線でなく墨1pxの箱にする */
@@ -1690,6 +1703,11 @@ a.tag:hover .genre-hub__count {
   white-space: nowrap;
 }
 
+/* 狭幅でも列を潰さない(.table-scroll の中で横スクロールさせる) */
+.admin-words-table {
+  min-width: 640px;
+}
+
 /* 行アクションの背が一番高いので、それに合わせて全セルを中央に揃える */
 .admin-words-table td {
   vertical-align: middle;
@@ -1797,6 +1815,12 @@ a.tag:hover .genre-hub__count {
 }
 
 /* --- テーブル(検索結果・管理一覧): 墨の太罫で頭を締める --- */
+/* 狭幅では列を潰さず、この入れ物の中だけ横スクロールで逃がす(main は overflow-x: clip)。
+   中のテーブルに min-width を与えてはじめて効く(無いと width:100% のまま列が潰れる) */
+.table-scroll {
+  overflow-x: auto;
+}
+
 .data-table thead th {
   font-family: var(--font-mono);
   font-weight: 400;
@@ -2099,6 +2123,8 @@ textarea {
 
 .bulk-review__table {
   width: 100%;
+  /* 狭幅では列が1文字ずつ縦に潰れるため、下限を確保して .bulk-review 側の横スクロールに逃がす */
+  min-width: 560px;
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 15px;
@@ -2312,6 +2338,10 @@ textarea {
 
 /* step3(重複チェック)は No./表層形/読み/重複・類似/除外 の5列。
    step2 の 2列レイアウト(50% ずつ)のままだと除外列が潰れて文言が切れるため、幅を組み直す。 */
+.bulk-review__table--duplicates {
+  min-width: 720px; /* 5列ぶんの下限。狭幅は横スクロールで読む */
+}
+
 .bulk-review__table--duplicates .bulk-review__surface,
 .bulk-review__table--duplicates .bulk-review__reading {
   width: 22%;
@@ -2454,6 +2484,10 @@ textarea {
 }
 
 /* タグ一覧テーブル */
+/* 狭幅でも列を潰さない(.table-scroll の中で横スクロールさせる) */
+.tag-table {
+  min-width: 560px;
+}
 .tag-table__num {
   text-align: right;
   font-family: var(--font-mono);
@@ -2517,4 +2551,26 @@ textarea {
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--shu);
+}
+
+/* --- モバイルのフォーム部品は 16px を下限にする ---
+   iOS Safari はフォーム部品の文字が 16px 未満だとフォーカス時にページ全体を自動ズームし、
+   戻らないまま横スクロールが発生する。狭幅に限り文字を一段上げて防ぐ。
+   クラスで小さく上書きしている部品(ヘッダー検索・並び順・一括登録系)も同じ理由で列挙する。 */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea,
+  .header-search__input,
+  .admin-words-search__input,
+  .sort-form__select,
+  .bulk-annotation__meaning,
+  .proposal-limit__input,
+  .proposal-json__area,
+  .bulk-input,
+  .bulk-review__reading-input {
+    font-size: 16px;
+  }
 }

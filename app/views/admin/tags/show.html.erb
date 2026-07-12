@@ -35,6 +35,8 @@
     <% end %>
   </details>
 
+  <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
+  <div class="table-scroll">
   <table class="data-table tag-table">
     <thead>
       <tr>
@@ -74,6 +76,7 @@
       <% end %>
     </tbody>
   </table>
+  </div>
 <% else %>
   <p class="empty-note"><%= t("admin.tags.empty") %></p>
 <% end %>

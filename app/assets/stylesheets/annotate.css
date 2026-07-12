@@ -192,3 +192,9 @@
   .ann-row__label { padding-top: 0; }
   .ann-bar__legend { display: none; }
 }
+
+/* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。
+   このファイルは components より後に読まれるため、ここの小さめ入力は個別に上げる */
+@media (max-width: 767px) {
+  .ann-add__input { font-size: 16px; }
+}

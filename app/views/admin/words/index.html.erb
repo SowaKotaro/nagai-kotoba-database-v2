@@ -35,7 +35,8 @@
 <% if @words.any? %>
   <%= render "bulk_annotation" %>
 
-  <div data-controller="check-all">
+  <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
+  <div class="table-scroll" data-controller="check-all">
   <table class="data-table admin-words-table">
     <thead>
       <tr>
