@@ -174,7 +174,7 @@
           </div>
 
           <div class="sense-attrs__item sense-attrs__item--wide">
-            <dt><%= icon "swap" %><%= t("words.show.variants") %></dt>
+            <dt><%= icon "variant" %><%= t("words.show.variants") %></dt>
             <dd>
               <% if sense.word_sense_variants.any? %>
                 <ul class="variant-list">
@@ -195,7 +195,7 @@
 
 <% if @related_word_groups.any? %>
   <section class="related">
-    <h2 class="related__title"><%= icon "link" %><%= t("words.show.related.title") %></h2>
+    <h2 class="related__title"><%= icon "graph" %><%= t("words.show.related.title") %></h2>
     <% @related_word_groups.each do |group| %>
       <div class="related__group">
         <p class="section-label"><%= t("words.show.related.#{group.key}") %></p>
