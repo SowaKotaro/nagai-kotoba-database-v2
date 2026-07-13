@@ -31,5 +31,11 @@ module NagaiKotobaDatabaseV2
     # canonical / OGP の絶対URLの基点(本番ドメイン。docs/issues.md 確定事項1)。
     # 末尾スラッシュ無し。ENV で上書き可(検証環境・ステージング用)。
     config.x.canonical_host = ENV.fetch("CANONICAL_HOST", "https://nagai-kotoba-database.jp")
+
+    # stylesheet_link_tag / javascript_include_tag が自動付与する
+    # `Link: rel=preload` レスポンスヘッダー(HTTP/2 Server Push 向け)を無効化する。
+    # 本番は HTTP/2 Push を使っておらず、ブラウザには preload ヒントとしてのみ解釈されるため、
+    # 「preload されたが使われていない」という警告(コンソール)の原因になっていた。
+    config.action_view.preload_links_header = false
   end
 end
