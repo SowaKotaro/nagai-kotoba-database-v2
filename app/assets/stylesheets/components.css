@@ -2177,8 +2177,9 @@ textarea {
   color: var(--ink-3);
 }
 
-/* 類似・重複がある行は左端に朱の帯を出して目立たせる */
-.bulk-review__row--warn td:first-child {
+/* 類似・重複がある行、収録基準を満たさない行は左端に朱の帯を出して目立たせる */
+.bulk-review__row--warn td:first-child,
+.bulk-review__row--error td:first-child {
   box-shadow: inset 3px 0 0 var(--shu);
 }
 
@@ -2197,6 +2198,33 @@ textarea {
   min-width: 12rem;
   font-family: var(--font-mono);
   font-size: 15px;
+}
+
+/* 検証エラーの入力欄は朱の枠で示す(警告=朱文字、エラー=朱ベタのラベルと合わせる) */
+.bulk-review__reading-input.is-error {
+  border-color: var(--shu);
+  outline: 1px solid var(--shu);
+}
+
+/* エラー(登録できない/収録基準を満たさない)は朱ベタで、類似警告(朱文字)より強く出す */
+.bulk-review__error-label {
+  display: inline-block;
+  margin: 0 0 var(--space-1);
+  padding: 1px 8px;
+  background: var(--shu);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.bulk-review__reading-error {
+  margin-top: var(--space-2);
+}
+
+/* display 指定はブラウザ既定の [hidden] { display: none } より強いので、明示的に隠す */
+.bulk-review__error-label[hidden] {
+  display: none;
 }
 
 /* --- step2: 調査 JSON の反映パネル --- */

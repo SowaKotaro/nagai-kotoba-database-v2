@@ -24,6 +24,9 @@ class BulkWordRegistration
   # 読みの正規化類似度がこの値以上なら「似ている」とみなして警告する。
   SIMILARITY_THRESHOLD = 0.8
 
+  # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
+  MIN_READING_LENGTH = 10
+
   # 行頭の bullet: 「1.」「2)」「-」「*」「・」など。
   BULLET = /\A\s*(?:\d+[.)．、:：]|[-*・‣▪●○])\s*/
 
@@ -33,6 +36,11 @@ class BulkWordRegistration
   AnalyzedEntry = Struct.new(:index, :surface, :reading, :batch_matches, :db_matches, keyword_init: true) do
     def warnings?
       batch_matches.any? || db_matches.any?
+    end
+
+    # 収録基準(読み MIN_READING_LENGTH 文字以上)を満たさない語。確認画面ではエラー扱いで既定除外にする。
+    def too_short?
+      reading.present? && reading.length < MIN_READING_LENGTH
     end
   end
   # 似ている相手の情報(表示用)。

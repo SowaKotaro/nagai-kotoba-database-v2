@@ -142,6 +142,20 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr.bulk-review__row--warn", false
   end
 
+  test "読み欄にカタカナ検証(reading-format)が仕込まれている" do
+    sign_in_as(Admin.take)
+    stub_readings("天上天下唯我独尊" => "テンジョウテンゲユイガドクソン") do
+      post readings_admin_words_path, params: { bulk_word_registration: { text: "天上天下唯我独尊" } }
+    end
+
+    assert_response :success
+    # 送信時に全行を検証するフォーム + 入力のたびに検証する読み欄 + 既定で隠れたエラー文言
+    assert_select "form[data-controller=?][data-action=?]", "reading-format", "submit->reading-format#validateAll"
+    assert_select "input.bulk-review__reading-input[data-reading-format-target=input]" \
+                  "[data-action='input->reading-format#validateField']"
+    assert_select "p.bulk-review__reading-error[hidden]"
+  end
+
   test "テキストが空だと読み取得は 422 を返す" do
     sign_in_as(Admin.take)
     post readings_admin_words_path, params: { bulk_word_registration: { text: "" } }
@@ -238,13 +252,31 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".bulk-review__match-reading", text: "さつじんじけん"
   end
 
-  test "重複チェック画面に除外チェックボックスが表示される" do
+  test "重複チェック画面に除外チェックボックスが表示される(収録基準を満たす語は未チェック)" do
     sign_in_as(Admin.take)
     post duplicates_admin_words_path, params: {
-      bulk_word_registration: { entries: [ { surface: "資本主義", reading: "シホンシュギ" } ] }
+      bulk_word_registration: { entries: [ { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" } ] }
     }
     assert_response :success
     assert_select "input.bulk-review__exclude[type=checkbox]"
+    assert_select "input.bulk-review__exclude[checked]", count: 0
+    assert_select ".bulk-review__error-label", count: 0
+  end
+
+  test "読みが10文字未満の語はエラー表示され、除外に既定でチェックが入る" do
+    sign_in_as(Admin.take)
+    post duplicates_admin_words_path, params: {
+      bulk_word_registration: { entries: [
+        { surface: "資本主義", reading: "シホンシュギ" },                   # 6文字: 収録基準未満
+        { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" }        # 10文字: 収録できる
+      ] }
+    }
+
+    assert_response :success
+    assert_select "tr.bulk-review__row--error", count: 1
+    assert_select ".bulk-review__error-label", text: /読み 6 文字/
+    # 基準未満の行だけ既定で除外される
+    assert_select "input.bulk-review__exclude[checked]", count: 1
   end
 
   # --- 登録(create) ---

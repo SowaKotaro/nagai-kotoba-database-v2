@@ -178,6 +178,24 @@ class BulkWordRegistrationTest < ActiveSupport::TestCase
     assert fixed.analyze_duplicates.first.db_matches.any?
   end
 
+  # --- step3: 収録基準(読みの文字数) ---
+  test "読みが収録基準(10文字)未満なら too_short?" do
+    reg = BulkWordRegistration.new(entries: [
+      { surface: "資本主義", reading: "シホンシュギ" },              # 6文字
+      { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨ" },     # 9文字(境界のすぐ下)
+      { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" }    # 10文字(境界。収録できる)
+    ])
+    analyzed = reg.analyze_duplicates
+    assert analyzed[0].too_short?
+    assert analyzed[1].too_short?
+    assert_not analyzed[2].too_short?
+  end
+
+  test "読みが空の語は too_short? にしない(読み未取得として扱う)" do
+    reg = BulkWordRegistration.new(entries: [ { surface: "未知語", reading: "" } ])
+    assert_not reg.analyze_duplicates.first.too_short?
+  end
+
   # --- 登録 ---
   test "確認後のエントリを登録できる" do
     reg = BulkWordRegistration.new(entries: [

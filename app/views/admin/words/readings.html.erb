@@ -14,8 +14,10 @@
 <%# 次画面は成功時に描画するため Turbo を無効化する。 %>
 <%# 1つのフォームを2つの action(duplicates / apply_research)へ formaction で送るため、 %>
 <%# action に紐づく per-form CSRF トークンではなくグローバルトークンを使う(両方で検証が通る)。 %>
+<%# 読みはカタカナのみ許す。JS(reading-format)で送信前に弾く。 %>
 <%= form_with url: duplicates_admin_words_path, method: :post, scope: :bulk_word_registration,
-      authenticity_token: form_authenticity_token, data: { turbo: false } do %>
+      authenticity_token: form_authenticity_token,
+      data: { turbo: false, controller: "reading-format", action: "submit->reading-format#validateAll" } do %>
   <details class="bulk-research" <%= "open" if @registration.research_json.present? %>>
     <summary class="bulk-research__summary"><%= t("admin.words.bulk.readings.research_legend") %></summary>
     <p class="field-hint"><%= t("admin.words.bulk.readings.research_hint") %></p>
@@ -48,10 +50,15 @@
               <div class="bulk-review__reading-head">
                 <%= text_field_tag "bulk_word_registration[entries][][reading]", row.chosen,
                       class: "bulk-review__reading-input", autocomplete: "off",
-                      data: { reading_choice_target: "input" },
+                      data: { reading_choice_target: "input", reading_format_target: "input",
+                              action: "input->reading-format#validateField" },
                       placeholder: t("admin.words.bulk.readings.reading_missing") %>
                 <%= render "reading_status", row: row %>
               </div>
+
+              <p class="bulk-review__error-label bulk-review__reading-error" hidden>
+                <%= t("admin.words.bulk.readings.error_katakana") %>
+              </p>
 
               <% if row.candidates.size > 1 %>
                 <div class="reading-choices">
