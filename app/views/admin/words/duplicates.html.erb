@@ -20,7 +20,7 @@
       </thead>
       <tbody>
         <% @analyzed.each do |entry| %>
-          <tr class="<%= "bulk-review__row--warn" if entry.warnings? %>">
+          <tr class="<%= "bulk-review__row--warn" if entry.warnings? %> <%= "bulk-review__row--error" if entry.too_short? %>">
             <td class="bulk-review__no"><%= entry.index + 1 %></td>
             <td class="bulk-review__surface">
               <%= entry.surface %>
@@ -31,6 +31,13 @@
               <%= hidden_field_tag "bulk_word_registration[entries][][reading]", entry.reading %>
             </td>
             <td class="bulk-review__warnings">
+              <%# 収録基準(読みの文字数)を満たさない行はエラー。既定で除外にチェックを入れておく。 %>
+              <% if entry.too_short? %>
+                <p class="bulk-review__error-label">
+                  <%= t("admin.words.bulk.duplicates.error_too_short",
+                        min: BulkWordRegistration::MIN_READING_LENGTH, length: entry.reading.length) %>
+                </p>
+              <% end %>
               <% if entry.warnings? %>
                 <% if entry.batch_matches.any? %>
                   <p class="bulk-review__warn-label"><%= t("admin.words.bulk.duplicates.warn_batch") %></p>
@@ -48,13 +55,13 @@
                     <% end %>
                   </ul>
                 <% end %>
-              <% else %>
+              <% elsif !entry.too_short? %>
                 <span class="bulk-review__ok"><%= t("admin.words.bulk.duplicates.no_warning") %></span>
               <% end %>
             </td>
             <td class="bulk-review__exclude-col">
               <label class="bulk-review__exclude-label">
-                <%= check_box_tag "bulk_word_registration[entries][][_exclude]", "1", false,
+                <%= check_box_tag "bulk_word_registration[entries][][_exclude]", "1", entry.too_short?,
                       class: "bulk-review__exclude", id: nil %>
                 <span><%= t("admin.words.bulk.duplicates.exclude") %></span>
               </label>
