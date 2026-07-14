@@ -77,10 +77,12 @@ CREATE TABLE word_origins (
 -- ---------------------------------------------------------------------
 -- 単語 (表層形) : surface に紐づく属性のみを保持
 --   char_type_pattern は surface から Ruby 側で生成 (漢/あ/ア/A/@ へ変換)
+--   surface は清音・濁音・半濁音を検索で区別するため utf8mb4_0900_as_ci
+--   (アクセント区別・大文字小文字非区別。ひらがな⇔カタカナ、A⇔a は同一視のまま)
 -- ---------------------------------------------------------------------
 CREATE TABLE words (
   id                BIGINT       NOT NULL AUTO_INCREMENT,
-  surface           VARCHAR(768) NOT NULL COMMENT '表層形 例: ABC殺人事件',
+  surface           VARCHAR(768) NOT NULL COLLATE utf8mb4_0900_as_ci COMMENT '表層形 例: ABC殺人事件',
   char_type_pattern VARCHAR(768) NOT NULL COMMENT '文字タイプ列 例: AAA漢漢漢漢',
   created_at        DATETIME(6)  NOT NULL,
   updated_at        DATETIME(6)  NOT NULL,
@@ -100,6 +102,8 @@ CREATE TABLE words (
 --   取る必要があり、生成式にマルチバイト文字を含めると ActiveRecord の
 --   SchemaDumper(MySQL2 アダプタ)が schema.rb をダンプする際に文字化けする
 --   既知の制限があるため、生成カラムにはせず Ruby 側(LastChar)で設定する
+--   reading / first_char / last_char は清音・濁音・半濁音を検索で区別するため
+--   utf8mb4_0900_as_ci(生成カラムの照合順序は表の既定に従うため明示する)
 -- ---------------------------------------------------------------------
 CREATE TABLE word_senses (
   id                BIGINT        NOT NULL AUTO_INCREMENT,
@@ -107,14 +111,14 @@ CREATE TABLE word_senses (
   genre_id          BIGINT        NULL COMMENT '小分類(末端)を指す',
   entity_type_id    BIGINT        NULL,
   part_of_speech_id BIGINT        NULL,
-  reading           VARCHAR(768)  NOT NULL COMMENT '読み',
+  reading           VARCHAR(768)  NOT NULL COLLATE utf8mb4_0900_as_ci COMMENT '読み',
   rhythm_pattern    VARCHAR(2048) NULL COMMENT '韻パターン(読みのローマ字表記)',
   mora_count        INT           NULL COMMENT 'モーラ数(拗音は1拍。Ruby 側で生成)',
   vowel_pattern     VARCHAR(1024) NULL COMMENT '母音パターン(rhythm_pattern から母音抽出。Ruby 側で生成)',
   meaning           TEXT          NULL COMMENT '意味',
   reading_length    INT           AS (CHAR_LENGTH(reading)) STORED COMMENT '読みの文字数',
-  first_char        VARCHAR(8)    AS (LEFT(reading, 1))     STORED COMMENT '先頭文字',
-  last_char         VARCHAR(8)    NULL COMMENT '末尾文字(末尾の長音「ー」は除く。Ruby 側で生成)',
+  first_char        VARCHAR(8)    COLLATE utf8mb4_0900_as_ci AS (LEFT(reading, 1)) STORED COMMENT '先頭文字',
+  last_char         VARCHAR(8)    NULL COLLATE utf8mb4_0900_as_ci COMMENT '末尾文字(末尾の長音「ー」は除く。Ruby 側で生成)',
   created_at        DATETIME(6)   NOT NULL,
   updated_at        DATETIME(6)   NOT NULL,
   PRIMARY KEY (id),

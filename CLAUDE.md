@@ -20,7 +20,7 @@
 - `genres` は **隣接リスト**（`parent_id`）で 大→中→小 の3階層。`word_senses.genre_id` は末端（小分類）を指す。
 - `linguistic_features` は `word_sense_features` 経由で語義と**多対多**。
 - **生成カラム**: `reading_length`/`first_char` は SQL の STORED 生成カラム。`char_type_pattern`（漢/あ/ア/A/@）・`rhythm_pattern`（ローマ字）・`last_char`（末尾文字。末尾の長音符「ー」はスキップし直前の文字を採る）は **Ruby 側で生成**する。`last_char` は本来生成カラムにしたいが、生成式にマルチバイト文字を含めると ActiveRecord の SchemaDumper（MySQL2 アダプタ）が `schema.rb` をダンプする際に文字化けする既知の制限があるため例外的に Ruby 側で計算する（`app/models/last_char.rb`）。
-- **照合順序**: 日本語検索が中心のため全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。長い文字列カラムは prefix index（例 `surface(191)`）を使う。
+- **照合順序**: 日本語検索が中心のため全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。長い文字列カラムは prefix index（例 `surface(191)`）を使う。ただし **読み・表層形まわり（`words.surface` / `word_senses.reading` / `first_char` / `last_char`）は例外的に `utf8mb4_0900_as_ci`**（ai は濁点・半濁点を同一視して「ハ=バ=パ」になるため。as_ci なら清濁を区別しつつ、ひらがな⇔カタカナ・A⇔a の同一視は保てる）。
 
 ---
 

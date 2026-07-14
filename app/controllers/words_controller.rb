@@ -2,7 +2,7 @@
 class WordsController < ApplicationController
   allow_unauthenticated_access only: %i[index show]
 
-  PER_PAGE = 50
+  PER_PAGE = 100
   FEED_LIMIT = 20
 
   # 一覧の絞り込み。詳細検索(searches#index)からのリダイレクトと、

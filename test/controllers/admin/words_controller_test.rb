@@ -101,13 +101,13 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td a", text: words(:pending_haruhi).surface, count: 0
   end
 
-  test "一覧は50語ごとにページ送りする" do
+  test "一覧は100語ごとにページ送りする" do
     sign_in_as(Admin.take)
     # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)
-    Word.insert_all((1..60).map { |i| { surface: "ページ送り検証語#{format('%02d', i)}", char_type_pattern: "漢" } })
+    Word.insert_all((1..110).map { |i| { surface: "ページ送り検証語#{format('%03d', i)}", char_type_pattern: "漢" } })
 
     get admin_words_path
-    assert_select "tbody tr", count: 50
+    assert_select "tbody tr", count: 100
     assert_select ".pagination a", text: "次へ"
 
     get admin_words_path(page: 2)

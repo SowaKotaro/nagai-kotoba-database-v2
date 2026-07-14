@@ -1,49 +1,60 @@
-<%# ジャンル階層フィルタ。初期状態は大分類のみを表示し、親を選ぶと直下の分類が
-    フェードインで現れる(複数の親を同時に展開できる)。チェックは genre_id[] で送信し、
+<%# ジャンル階層フィルタ。大分類→中分類の折り畳み(details)で辿る(開閉はブラウザ標準に任せる)。
+    ジャンルが増えても初期表示は大分類の一覧だけに収まり、目的の小分類へ最短で到達できる。
+    チップは genre_id[] のチェックボックスで、任意の階層の節点を複数選べる。
     上位と下位を同時に選んだ場合はサーバ側(WordSenseSearch)が下位を優先する。
-    どの親のグループかは朱区切りのラベルで示す。 %>
+    選択済みの節点を含む折り畳みは open で開き、summary に配下の選択数(朱)を出す。 %>
 <fieldset class="chips-field">
   <legend class="field-legend"><%= icon "tag" %><%= WordSense.human_attribute_name(:genre) %></legend>
 
   <% selected = @search.genre_id %>
   <% roots = @genres_by_parent[nil] || [] %>
-  <div class="genre-filter" data-controller="genre-filter">
-    <div class="genre-filter__level">
-      <% roots.each do |large| %>
-        <%= render "genre_chip", genre: large, parent: nil, selected: selected %>
-      <% end %>
-    </div>
-
-    <%# 中分類のグループ(大分類ごと)。親が選択済みのときだけ表示する %>
+  <div class="genre-filter" data-controller="genre-filter" data-action="change->genre-filter#sync">
     <% roots.each do |large| %>
       <% mediums = @genres_by_parent[large.id] || [] %>
-      <% next if mediums.empty? %>
-      <div class="genre-filter__group" data-genre-filter-target="group"
-           data-parent="<%= large.id %>" <%= "hidden" unless selected.include?(large.id.to_s) %>>
-        <p class="genre-filter__group-label"><%= large.name %></p>
-        <div class="genre-filter__level">
-          <% mediums.each do |medium| %>
-            <%= render "genre_chip", genre: medium, parent: large, selected: selected %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-
-    <%# 小分類のグループ(中分類ごと)。ラベルは 大分類 › 中分類 %>
-    <% roots.each do |large| %>
-      <% (@genres_by_parent[large.id] || []).each do |medium| %>
-        <% smalls = @genres_by_parent[medium.id] || [] %>
-        <% next if smalls.empty? %>
-        <div class="genre-filter__group" data-genre-filter-target="group"
-             data-parent="<%= medium.id %>" <%= "hidden" unless selected.include?(medium.id.to_s) %>>
-          <p class="genre-filter__group-label"><%= large.name %><span class="genre-filter__sep">›</span><%= medium.name %></p>
+      <% smalls_by_medium = mediums.to_h { |medium| [ medium, @genres_by_parent[medium.id] || [] ] } %>
+      <% large_count = (([ large ] + mediums + smalls_by_medium.values.flatten).map { |genre| genre.id.to_s } & selected).size %>
+      <details class="genre-fold" data-genre-filter-target="fold" <%= "open" if large_count.positive? %>>
+        <summary class="genre-fold__summary">
+          <%= icon "caret_down", "genre-fold__caret" %>
+          <span class="genre-fold__name"><%= large.name %></span>
+          <span class="genre-fold__count" data-genre-filter-target="count"
+                <%= "hidden" if large_count.zero? %>><%= large_count if large_count.positive? %></span>
+        </summary>
+        <div class="genre-fold__body">
           <div class="genre-filter__level">
-            <% smalls.each do |small| %>
-              <%= render "genre_chip", genre: small, parent: medium, selected: selected %>
+            <%# 大分類そのものを条件にするチップ(配下すべてで絞り込む) %>
+            <%= render "genre_chip", genre: large, selected: selected,
+                  label: t("searches.whole_genre", name: large.name) %>
+            <%# 小分類を持たない中分類は折り畳みにせず、ここへチップで並べる %>
+            <% smalls_by_medium.each do |medium, smalls| %>
+              <%= render "genre_chip", genre: medium, selected: selected if smalls.empty? %>
             <% end %>
           </div>
+
+          <% smalls_by_medium.each do |medium, smalls| %>
+            <% next if smalls.empty? %>
+            <% medium_count = (([ medium ] + smalls).map { |genre| genre.id.to_s } & selected).size %>
+            <details class="genre-fold genre-fold--medium" data-genre-filter-target="fold"
+                     <%= "open" if medium_count.positive? %>>
+              <summary class="genre-fold__summary">
+                <%= icon "caret_down", "genre-fold__caret" %>
+                <span class="genre-fold__name"><%= medium.name %></span>
+                <span class="genre-fold__count" data-genre-filter-target="count"
+                      <%= "hidden" if medium_count.zero? %>><%= medium_count if medium_count.positive? %></span>
+              </summary>
+              <div class="genre-fold__body">
+                <div class="genre-filter__level">
+                  <%= render "genre_chip", genre: medium, selected: selected,
+                        label: t("searches.whole_genre", name: medium.name) %>
+                  <% smalls.each do |small| %>
+                    <%= render "genre_chip", genre: small, selected: selected %>
+                  <% end %>
+                </div>
+              </div>
+            </details>
+          <% end %>
         </div>
-      <% end %>
+      </details>
     <% end %>
   </div>
 </fieldset>

@@ -91,7 +91,7 @@
 
         <dl class="sense-attrs">
           <%# 表示順: (言語学的特徴は上の注釈ブロック) → ジャンル → エンティティ → 品詞 →
-              語種 → 文字数 → モーラ数 → 先頭文字 → 末尾文字 → 別表記。未登録は「未定義」を明示 %>
+              語種 → 文字数 → モーラ数 → 先頭文字 → 末尾文字 → 別表記。未登録は「—」で示す %>
           <div class="sense-attrs__item sense-attrs__item--wide">
             <dt><%= icon "tag" %><%= WordSense.human_attribute_name(:genre) %></dt>
             <dd>
@@ -200,13 +200,16 @@
     <h2 class="related__title"><%= icon "graph" %><%= t("words.show.related.title") %></h2>
     <% @related_word_groups.each do |group| %>
       <div class="related__group">
-        <p class="section-label"><%= t("words.show.related.#{group.key}") %></p>
+        <%# 見出しと「もっと見る」を同じ行に置く(ホームの「新着の単語 / すべて見る」と同じ文法) %>
+        <div class="related__group-header">
+          <p class="section-label"><%= t("words.show.related.#{group.key}") %></p>
+          <%= link_to words_path(group.facet_params), class: "related__more icon-label" do %>
+            <%= t("words.show.related.more") %><%= icon "arrow_right" %>
+          <% end %>
+        </div>
         <div class="entry-list">
           <%= render partial: "words/entry_row", collection: group.words, as: :word %>
         </div>
-        <%= link_to words_path(group.facet_params), class: "related__more icon-label" do %>
-          <%= t("words.show.related.more") %><%= icon "arrow_right" %>
-        <% end %>
       </div>
     <% end %>
   </section>

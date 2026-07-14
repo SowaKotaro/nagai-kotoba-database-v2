@@ -56,6 +56,23 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [ word_senses(:murder).id ], ids(rhythm_pattern: "tsuji")
   end
 
+  # --- 清音・濁音・半濁音の区別(utf8mb4_0900_as_ci) ---
+  test "先頭文字は清音と濁音・半濁音を区別する" do
+    word = Word.create!(surface: "バナナジュース", annotated_at: Time.current)
+    sense = word.word_senses.create!(reading: "バナナジュース")
+
+    assert_includes ids(first_char: "バ"), sense.id
+    assert_not_includes ids(first_char: "ハ"), sense.id
+    assert_not_includes ids(first_char: "パ"), sense.id
+  end
+
+  test "キーワードは清音と濁音を区別しつつ、ひらがなとカタカナは同一視する" do
+    # murder の読みはひらがな「さつじんじけん」。カタカナで引いても一致する
+    assert_equal [ word_senses(:murder).id ], ids(q: "サツジン")
+    # 濁音違い(ザツジン)は別物として一致しない
+    assert_equal [], ids(q: "ザツジン")
+  end
+
   # --- 文字種(words.char_type_pattern)。abc_murder は "AAA漢漢漢漢" ---
   test "文字種はパターン全体で絞れる(words と join)" do
     pattern = words(:abc_murder).char_type_pattern

@@ -136,15 +136,15 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
             "ジャンルは 文学 › 日本文学 › 小説。人を殺す事件"
   end
 
-  test "詳細は未登録の属性を「未定義」として表示する" do
+  test "詳細は未登録の属性を「—」として表示する" do
     # curry は ジャンル・エンティティ・言語学的特徴・別表記が未登録(語種 英語 はあり)。
     curry = word_senses(:curry)
     get word_path(curry.word)
 
     assert_response :success
-    # 未登録の属性は「未定義」を明示する
+    # 未登録の属性は「—」(データ無し)を示す
     assert_select ".sense-undefined", text: I18n.t("words.show.undefined"), minimum: 1
-    # 登録済みの語種(英語)は「未定義」にならず、値が出る
+    # 登録済みの語種(英語)は「—」にならず、値が出る
     assert_select ".sense-attrs__item", text: /語種.*英語/m
   end
 
@@ -295,14 +295,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 並び替え(sort) ---
-  # フィクスチャの読みは カレー(3字) と さつじんじけん(7字)。五十音では カ < さ。
-  test "一覧の既定は読みの五十音順" do
+  # フィクスチャの読みは カレー(3字) と さつじんじけん(7字)。辞書順では カ < さ。
+  test "一覧の既定は登録が新しい順" do
+    words(:abc_murder).update_column(:created_at, 2.days.ago)
+    words(:curry).update_column(:created_at, 1.day.ago)
+
     get words_path
     assert_response :success
     assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
   end
 
-  test "sort=kana_desc で五十音の逆順になる" do
+  test "sort=kana_asc で読みの辞書順になる" do
+    get words_path(sort: "kana_asc")
+    assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
+  end
+
+  test "sort=kana_desc で辞書の逆順になる" do
     get words_path(sort: "kana_desc")
     assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
   end
@@ -328,7 +336,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
   end
 
-  test "sort=reverse_kana で読みを末尾から見た五十音順になる" do
+  test "sort=reverse_kana で読みを末尾から見た辞書順になる" do
     # 反転読みは チカ→カチ、アシ→シア。カ < シ なので チカ の語が先に来る。
     early = Word.create!(surface: "逆引きで先", annotated_at: Time.current)
     early.word_senses.create!(reading: "チカ")
@@ -348,7 +356,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal first_order, body_position(words(:curry)) < body_position(words(:abc_murder))
   end
 
-  test "未知の sort は既定(五十音順)に畳む" do
+  test "未知の sort は既定(登録が新しい順)に畳む" do
+    words(:abc_murder).update_column(:created_at, 2.days.ago)
+    words(:curry).update_column(:created_at, 1.day.ago)
+
     get words_path(sort: "evil'); DROP TABLE words; --")
     assert_response :success
     assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
@@ -358,7 +369,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get words_path(sort: "length_desc")
     assert_select "meta[name=robots][content=?]", "noindex,follow"
 
-    get words_path(sort: "kana_asc")
+    get words_path(sort: "created_desc")
     assert_select "meta[name=robots]", count: 0
   end
 

@@ -1,7 +1,7 @@
 # 単語の登録(表層形+読みの一括登録)と、一覧・削除。
 # 表層形の訂正やジャンル・品詞などの付与はアノテーション・コンソール(Admin::AnnotationsController)が担う。
 class Admin::WordsController < Admin::BaseController
-  PER_PAGE = 50
+  PER_PAGE = 100
   # 注釈状態の絞り込み(Word の同名スコープをそのまま使う)。
   STATUS_FILTERS = %w[unannotated annotated].freeze
 

@@ -10,8 +10,10 @@ class GenresControllerTest < ActionDispatch::IntegrationTest
 
   test "各分類が公開件数つきで単語一覧の絞り込みへリンクする" do
     get genres_path
-    # 大分類 文学(公開1件・murder 経由)へのリンク
-    assert_select "a[href=?]", words_path(genre_id: genres(:large_literature).id), text: "文学"
+    # 大分類 文学(公開1件・murder 経由)は折り畳み(summary)。絞り込みは「全体を見る」リンク
+    assert_select "details.genre-hub__fold summary .genre-hub__large-name", text: "文学"
+    assert_select "a.genre-hub__whole[href=?]", words_path(genre_id: genres(:large_literature).id),
+                  text: Regexp.new(I18n.t("genres.index.whole", name: "文学"))
     # 中分類 日本文学
     assert_select "a[href=?]", words_path(genre_id: genres(:medium_japanese).id), text: "日本文学"
     # 小分類 小説(墨枠タグ)
