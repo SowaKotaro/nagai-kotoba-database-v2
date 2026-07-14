@@ -1,7 +1,8 @@
 <%# 一覧の1行。行全体は詳細へのリンク(surface をストレッチ)。タグは各ファセットの
     単語一覧(絞り込み)への実リンク。文字数は読みの文字数。local: word %>
 <% primary = word.word_senses.first %>
-<div class="entry-row">
+<%# 1行 = 自己完結した見出し語エントリなので article(SEO/LLMO のセマンティクス) %>
+<article class="entry-row">
   <span class="entry-row__main">
     <span class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></span>
     <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
@@ -20,4 +21,4 @@
     <% end %>
     <span class="entry-row__meta"><%= t("words.index.senses_count", count: word.word_senses.size) %></span>
   </span>
-</div>
+</article>
