@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_165619) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -111,13 +111,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_165619) do
   create_table "word_senses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "entity_type_id"
-    t.virtual "first_char", type: :string, limit: 8, comment: "先頭文字", as: "left(`reading`,1)", stored: true
+    t.virtual "first_char", type: :string, limit: 8, collation: "utf8mb4_0900_as_ci", comment: "先頭文字", as: "left(`reading`,1)", stored: true
     t.bigint "genre_id", comment: "小分類(末端)を指す"
-    t.string "last_char", limit: 8, comment: "末尾文字(末尾の長音「ー」は除く。reading から Ruby 側で計算)"
+    t.string "last_char", limit: 8, collation: "utf8mb4_0900_as_ci", comment: "末尾文字(末尾の長音「ー」は除く。reading から Ruby 側で計算)"
     t.text "meaning", comment: "意味"
     t.integer "mora_count", comment: "モーラ数(拗音は1拍)"
     t.bigint "part_of_speech_id"
-    t.string "reading", limit: 768, null: false, comment: "読み"
+    t.string "reading", limit: 768, null: false, collation: "utf8mb4_0900_as_ci", comment: "読み"
     t.virtual "reading_length", type: :integer, comment: "読みの文字数", as: "char_length(`reading`)", stored: true
     t.string "rhythm_pattern", limit: 2048, comment: "韻パターン(読みのローマ字表記)"
     t.datetime "updated_at", null: false
@@ -139,7 +139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_165619) do
     t.datetime "annotated_at", comment: "アノテーション完了時刻(未注釈は NULL)"
     t.string "char_type_pattern", limit: 768, null: false, comment: "文字タイプ列 例: AAA漢漢漢漢"
     t.datetime "created_at", null: false
-    t.string "surface", limit: 768, null: false, comment: "表層形 例: ABC殺人事件"
+    t.string "surface", limit: 768, null: false, collation: "utf8mb4_0900_as_ci", comment: "表層形 例: ABC殺人事件"
     t.datetime "updated_at", null: false
     t.index ["annotated_at"], name: "idx_words_annotated_at"
     t.index ["char_type_pattern"], name: "idx_words_char_type_pattern", length: 191

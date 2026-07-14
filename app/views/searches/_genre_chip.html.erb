@@ -1,8 +1,6 @@
 <%# ジャンル1件分のチップ(チェックボックス)。
-    locals: genre(対象), parent(親ジャンル。大分類は nil), selected(選択中idの文字列配列) %>
+    locals: genre(対象), selected(選択中idの文字列配列), label(表示名。省略時は genre.name) %>
 <label class="check-chip">
-  <%= check_box_tag "genre_id[]", genre.id, selected.include?(genre.id.to_s), id: nil, class: "visually-hidden",
-        data: { genre_filter_target: "box", parent: parent&.id,
-                action: "change->genre-filter#toggle" } %>
-  <span class="check-chip__face"><%= genre.name %></span>
+  <%= check_box_tag "genre_id[]", genre.id, selected.include?(genre.id.to_s), id: nil, class: "visually-hidden" %>
+  <span class="check-chip__face"><%= local_assigns[:label] || genre.name %></span>
 </label>

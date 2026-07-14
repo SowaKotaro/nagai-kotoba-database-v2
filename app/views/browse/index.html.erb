@@ -46,10 +46,14 @@
   <% if lengths.empty? %>
     <p class="empty-note"><%= icon "binoculars" %><%= t("browse.index.empty") %></p>
   <% else %>
+    <%# 50音表と同じ朱ヒート(単色の濃淡)で件数の分布を塗る。索引全体で文法を揃える %>
+    <% length_max = @reading_length_counts.values.max %>
     <ul class="browse-lengths">
       <% lengths.each do |length| %>
+        <% fill = length_max.positive? ? (@reading_length_counts[length].to_f / length_max).round(3) : 0 %>
         <li>
-          <%= link_to words_path(reading_length: length), class: "tag browse-length" do %>
+          <%= link_to words_path(reading_length: length), class: "tag browse-length browse-length--heat",
+                style: "--fill: #{fill}" do %>
             <span class="browse-length__label"><%= t("words.show.chars", count: length) %></span>
             <span class="browse-length__count mono"><%= t("browse.index.count_unit", count: @reading_length_counts[length]) %></span>
           <% end %>

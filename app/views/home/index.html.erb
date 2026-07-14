@@ -1,4 +1,5 @@
-<%# ホーム: 型見本の表紙。ステートメント → 今日の一語(巨大) → 検索 → 収録統計 → 新着 %>
+<%# ホーム: 型見本の表紙。ステートメント → 今日の一語(巨大) → 探し方の導線 → 収録統計 → 新着
+    (キーワード検索はヘッダーに常設しているため、ここには置かない) %>
 <section class="hero">
   <h1 class="hero__lead"><%= t("home.index.description") %></h1>
 
@@ -10,11 +11,18 @@
     </div>
   <% end %>
 
-  <%= form_with url: words_path, method: :get, class: "hero-search" do %>
-    <%= text_field_tag :q, nil, placeholder: t("home.index.search_placeholder"),
-          class: "hero-search__input", aria: { label: t("searches.q_label") } %>
-    <%= submit_tag t("home.index.search_submit"), class: "btn btn--primary" %>
-  <% end %>
+  <%# 探し方の導線。墨1px枠のパネルを並べ、各検索ページへ誘う %>
+  <nav class="hero-entries" aria-label="<%= t("home.index.entries.label") %>">
+    <%= link_to genres_path, class: "hero-entry" do %>
+      <%= icon "tag" %><span><%= t("home.index.entries.genres") %></span><%= icon "arrow_right", "hero-entry__arrow" %>
+    <% end %>
+    <%= link_to browse_path, class: "hero-entry" do %>
+      <%= icon "grid_nine" %><span><%= t("home.index.entries.browse") %></span><%= icon "arrow_right", "hero-entry__arrow" %>
+    <% end %>
+    <%= link_to search_path, class: "hero-entry" do %>
+      <%= icon "funnel" %><span><%= t("home.index.entries.search") %></span><%= icon "arrow_right", "hero-entry__arrow" %>
+    <% end %>
+  </nav>
 </section>
 
 <dl class="stats-grid">

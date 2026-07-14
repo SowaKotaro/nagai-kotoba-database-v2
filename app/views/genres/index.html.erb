@@ -14,34 +14,43 @@
 <% if larges.empty? %>
   <p class="empty-note"><%= icon "binoculars" %><%= t("genres.index.empty") %></p>
 <% else %>
+  <%# 大分類ごとの折り畳み(details)。初期表示は大分類の一覧だけに畳み、ジャンルが
+      増えても目的の中・小分類へ迷わず到達できる(検索のジャンル絞り込みと同じ文法)。
+      大分類名のクリックは開閉に充てるため、一覧への絞り込みは「全体を見る」リンクに分ける %>
   <div class="genre-hub">
     <% larges.each do |large| %>
-      <section class="genre-hub__large">
-        <h2 class="genre-hub__large-title">
-          <%= link_to large.name, words_path(genre_id: large.id) %>
+      <details class="genre-fold genre-hub__fold">
+        <summary class="genre-fold__summary genre-hub__summary">
+          <%= icon "caret_down", "genre-fold__caret" %>
+          <span class="genre-hub__large-name"><%= large.name %></span>
           <span class="genre-hub__count mono"><%= genre_published_count(large, @genres_by_parent, @published_counts) %></span>
-        </h2>
+        </summary>
+        <div class="genre-fold__body">
+          <%= link_to words_path(genre_id: large.id), class: "genre-hub__whole icon-label" do %>
+            <%= t("genres.index.whole", name: large.name) %><%= icon "arrow_right" %>
+          <% end %>
 
-        <% genres_with_published(large.id, @genres_by_parent, @published_counts).each do |medium| %>
-          <div class="genre-hub__medium">
-            <h3 class="genre-hub__medium-title">
-              <%= link_to medium.name, words_path(genre_id: medium.id) %>
-              <span class="genre-hub__count mono"><%= genre_published_count(medium, @genres_by_parent, @published_counts) %></span>
-            </h3>
+          <% genres_with_published(large.id, @genres_by_parent, @published_counts).each do |medium| %>
+            <div class="genre-hub__medium">
+              <h3 class="genre-hub__medium-title">
+                <%= link_to medium.name, words_path(genre_id: medium.id) %>
+                <span class="genre-hub__count mono"><%= genre_published_count(medium, @genres_by_parent, @published_counts) %></span>
+              </h3>
 
-            <ul class="genre-hub__smalls">
-              <% genres_with_published(medium.id, @genres_by_parent, @published_counts).each do |small| %>
-                <li>
-                  <%= link_to words_path(genre_id: small.id), class: "tag genre-hub__small" do %>
-                    <span><%= small.name %></span>
-                    <span class="genre-hub__count mono"><%= genre_published_count(small, @genres_by_parent, @published_counts) %></span>
-                  <% end %>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-      </section>
+              <ul class="genre-hub__smalls">
+                <% genres_with_published(medium.id, @genres_by_parent, @published_counts).each do |small| %>
+                  <li>
+                    <%= link_to words_path(genre_id: small.id), class: "tag genre-hub__small" do %>
+                      <span><%= small.name %></span>
+                      <span class="genre-hub__count mono"><%= genre_published_count(small, @genres_by_parent, @published_counts) %></span>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+      </details>
     <% end %>
   </div>
 <% end %>

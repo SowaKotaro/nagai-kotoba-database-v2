@@ -93,10 +93,19 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to words_path(word_origin_id: [ word_origins(:kango).id ])
   end
 
-  test "選択したジャンルの直下グループだけが展開されて描画される" do
-    get search_path, params: { genre_id: [ genres(:large_literature).id ] }
-    # 大「文学」を選択 → 中分類グループが表示、中「日本文学」未選択なので小分類グループは hidden。
-    assert_select ".genre-filter__group[data-parent=?]:not([hidden])", genres(:large_literature).id.to_s
-    assert_select ".genre-filter__group[data-parent=?][hidden]", genres(:medium_japanese).id.to_s
+  test "ジャンルの折り畳みは選択なしではすべて畳まれている" do
+    get search_path
+    assert_select "details.genre-fold", minimum: 1
+    assert_select "details.genre-fold[open]", count: 0
+    # 大分類チップは「◯◯ 全体」のラベルで出る
+    assert_select ".check-chip__face", text: I18n.t("searches.whole_genre", name: genres(:large_literature).name)
+  end
+
+  test "選択したジャンルを含む折り畳みは開いた状態で描画され、選択数が summary に出る" do
+    get search_path, params: { genre_id: [ genres(:small_novel).id ] }
+    # 小「小説」を選択 → その枝(大「文学」・中「日本文学」)の折り畳みが両方 open
+    assert_select "details.genre-fold[open]", count: 2
+    assert_select "details.genre-fold[open] .genre-fold__count", text: "1", count: 2
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "genre_id[]", genres(:small_novel).id.to_s
   end
 end

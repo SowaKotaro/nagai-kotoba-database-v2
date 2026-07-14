@@ -194,9 +194,8 @@
   line-height: 1.85;
 }
 
-/* 恒久ページ(About 等)の本文。読みやすい幅と見出しの間(Issue 20) */
+/* 恒久ページ(About 等)の本文。幅は他の要素と同じだけ取る(Issue 20) */
 .prose {
-  max-width: 46em;
   font-size: 15px;
 }
 
@@ -275,7 +274,6 @@
   margin: var(--space-4) 0 0;
   font-size: 15px;
   line-height: 2.1;
-  max-width: 46em;
 }
 
 /* 小さなセクションラベル */
@@ -379,7 +377,7 @@ a.chip:hover {
   overflow-wrap: anywhere;
 }
 
-/* 属性が未登録のときの「未定義」表示。データが無いことを控えめに示す */
+/* 属性が未登録のときの「—」表示。データが無いことを控えめに示す */
 .sense-undefined {
   font-family: var(--font-mono);
   font-size: 13px;
@@ -495,6 +493,13 @@ a.tag:hover {
   gap: var(--space-2);
 }
 
+/* 文字数チップも 50音表と同じ朱ヒート(--fill 0〜1 の単色濃淡)で塗る。
+   ラベル文字より弱めの塗りに抑え、索引全体でくどくならないようにする */
+.browse-length--heat {
+  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 55%), transparent);
+  border-color: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 45% + 12%), var(--rule-mid));
+}
+
 /* 「11文字」(条件)と「2件」(該当数)が別物と一目で分かるよう、細罫で仕切る */
 .browse-length__count {
   padding-left: var(--space-2);
@@ -553,28 +558,67 @@ a.browse-length:hover .browse-length__count {
   margin-top: var(--space-5);
 }
 
+/* 見出し行: 左にラベル、右端に「もっと見る」(ホームの section-header と同じ配置) */
+.related__group-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.related__group-header .section-label {
+  margin: 0;
+}
+
 .related__more {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  font-family: var(--font-mono);
   font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
 }
 
 /* --- ジャンル・ハブページ(Issue 21) --- */
+/* 大分類は折り畳み(details)。初期表示は大分類の一覧だけに畳む(genre-fold の文法を流用) */
 .genre-hub {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-3);
 }
 
-.genre-hub__large + .genre-hub__large {
-  border-top: 2px solid var(--ink);
-  padding-top: var(--space-6);
+/* ハブの summary は見出しを兼ねるので、検索フィルタの折り畳みより大きく組む */
+.genre-hub__summary {
+  padding: var(--space-3) var(--space-4);
 }
 
-.genre-hub__large-title {
-  font-size: clamp(20px, 3vw, 28px);
-  margin: 0 0 var(--space-4);
+.genre-hub__large-name {
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  font-size: clamp(18px, 2.6vw, 24px);
+  color: var(--ink);
+}
+
+.genre-hub__summary .genre-hub__count {
+  margin-left: auto;
+}
+
+.genre-hub__fold > .genre-fold__body {
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+/* 大分類そのもので絞り込む導線(名前クリックは開閉に充てるため別リンク) */
+.genre-hub__whole {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  align-self: flex-start;
+}
+
+.genre-hub__whole:hover {
+  color: var(--shu);
 }
 
 .genre-hub__medium {
@@ -872,6 +916,24 @@ a.tag:hover .genre-hub__count {
     margin: var(--space-5) auto var(--space-6);
     padding: var(--space-5) var(--space-4);
   }
+}
+
+/* 送信ボタンと「条件をクリア」を同じ行に。クリアは控えめなテキストリンク */
+.search-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.search-clear {
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+.search-clear:hover {
+  color: var(--shu);
 }
 
 /* 罫線と見分けが付くよう、検索フォームのテキスト入力は下線でなく墨1pxの箱にする */
@@ -1254,45 +1316,86 @@ a.tag:hover .genre-hub__count {
   outline-offset: 1px;
 }
 
-/* ジャンル階層フィルタ: 初期は大分類のみ。選ぶと直下のグループがフェードインで現れる */
+/* ジャンル階層フィルタ: 大分類→中分類を折り畳み(details)で辿る。
+   初期表示は大分類の一覧だけに畳み、ジャンルが増えても見通しを保つ */
 .genre-filter {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
-.genre-filter__group {
-  border-left: 2px solid var(--rule-mid);
-  padding-left: var(--space-3);
+.genre-fold {
+  border: 1px solid var(--rule-mid);
 }
 
-.genre-filter__group:not([hidden]) {
-  animation: genre-group-fade-in 0.25s ease;
+.genre-fold[open] {
+  border-color: var(--ink);
 }
 
-@keyframes genre-group-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .genre-filter__group:not([hidden]) {
-    animation: none;
-  }
-}
-
-/* どの親のグループかを示すラベル(朱区切りのパンくず) */
-.genre-filter__group-label {
-  font-family: var(--font-mono);
+.genre-fold__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  cursor: pointer;
   font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
-  margin: 0 0 var(--space-2);
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  /* 既定の三角マーカーは消し、朱のキャレットで示す */
+  list-style: none;
 }
 
-.genre-filter__sep {
+.genre-fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.genre-fold__summary:hover {
+  color: var(--ink);
+}
+
+.genre-fold__caret {
   color: var(--shu);
-  margin: 0 0.4em;
+  transform: rotate(-90deg);
+  transition: transform 0.15s;
+}
+
+.genre-fold[open] > .genre-fold__summary .genre-fold__caret {
+  transform: rotate(0deg);
+}
+
+/* 畳んだままでも配下の選択数が分かる朱のバッジ */
+.genre-fold__count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--shu);
+}
+
+.genre-fold__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 12px;
+  border-top: 1px solid var(--rule);
+}
+
+/* 中分類の折り畳みは左罫のみで、ひとつ下の階層と分かるように */
+.genre-fold--medium {
+  border: none;
+  border-left: 2px solid var(--rule-mid);
+}
+
+.genre-fold--medium[open] {
+  border-left-color: var(--ink);
+}
+
+.genre-fold--medium > .genre-fold__summary {
+  padding: 4px 10px;
+}
+
+.genre-fold--medium > .genre-fold__body {
+  border-top: none;
+  padding: var(--space-1) 10px var(--space-2);
 }
 
 /* 適用中の検索条件チップ(単語一覧の絞り込みヘッダで使う) */
@@ -1345,31 +1448,40 @@ a.tag:hover .genre-hub__count {
   border-color: var(--shu);
 }
 
-/* ホームの検索窓: 下線1本を太く */
-.hero-search {
+/* ホームの探し方導線: 墨1px枠のパネルを横に並べる(hover で墨反転) */
+.hero-entries {
   display: flex;
-  align-items: flex-end;
+  flex-wrap: wrap;
   gap: var(--space-3);
-  max-width: 560px;
 }
 
-.hero-search__input {
-  flex: 1;
-  border: none;
-  border-bottom: 2px solid var(--ink);
-  background: transparent;
-  padding: 8px 4px;
-  font-size: 15px;
+.hero-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--ink);
+  padding: 8px 14px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
   color: var(--ink);
+  text-decoration: none;
 }
 
-.hero-search__input:focus {
-  border-bottom-color: var(--shu);
+.hero-entry .icon {
+  color: var(--shu);
 }
 
-.hero-search__input::placeholder {
-  color: var(--ink-3);
-  font-size: 15px;
+.hero-entry__arrow {
+  margin-left: var(--space-2);
+}
+
+.hero-entry:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.hero-entry:hover .icon {
+  color: var(--bg);
 }
 
 /* --- 収録統計: 罫線で仕切る数字の行(箱にしない) --- */
