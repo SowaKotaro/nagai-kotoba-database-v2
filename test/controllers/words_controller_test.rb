@@ -14,6 +14,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "詳細は Accept: */* (curl・クローラ)でも HTML を返せる" do
+    # request.format.html? が */* で false になり関連語が nil のまま
+    # テンプレートが描画されて 500 になる退行を防ぐ(LLM クローラ対策)
+    get word_path(words(:abc_murder)), headers: { "Accept" => "*/*" }
+    assert_response :success
+    assert_select "article.sense-card"
+  end
+
+  test "一覧の行と詳細の語義カードは article でマークアップされる(SEO/LLMO)" do
+    get words_path
+    assert_select "article.entry-row"
+
+    get word_path(words(:abc_murder))
+    assert_select "article.sense-card"
+  end
+
   test "一覧の各行に読みの文字数と品詞タグが表示される" do
     get words_path
     assert_response :success

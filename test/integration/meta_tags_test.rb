@@ -15,7 +15,12 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='og:locale'][content=?]", "ja_JP"
     assert_select "meta[property='og:url'][content=?]", "#{HOST}/"
     assert_select "meta[property='og:image'][content=?]", "#{HOST}/og-default.png"
+    assert_select "meta[property='og:image:width'][content=?]", "1200"
+    assert_select "meta[property='og:image:height'][content=?]", "630"
+    assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
     assert_select "meta[name='twitter:card'][content=?]", "summary_large_image"
+    assert_select "meta[name='twitter:title'][content=?]", I18n.t("layouts.brand")
+    assert_select "meta[name='twitter:description'][content=?]", I18n.t("home.index.description")
   end
 
   test "単語詳細の description はリード文、og:type は article、canonical は本番ホスト" do

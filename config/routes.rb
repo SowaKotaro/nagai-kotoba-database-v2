@@ -21,6 +21,9 @@ Rails.application.routes.draw do
   # LLM(AI 検索・エージェント)向けのサイト案内。Issue 24。
   get "llms.txt", to: "llms#show", defaults: { format: "text" }, as: :llms
 
+  # robots.txt(動的)。Sitemap 行のホストを canonical_host と連動させる。
+  get "robots.txt", to: "robots#show", defaults: { format: "text" }, as: :robots
+
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。

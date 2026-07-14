@@ -51,7 +51,8 @@
 <% else %>
   <div class="sense-list">
     <% @word.word_senses.each.with_index(1) do |sense, number| %>
-      <section class="sense-card">
+      <%# 語義カードは見出し+意味+属性で自己完結する辞書項目なので article %>
+      <article class="sense-card">
         <span class="sense-card__number"><%= t("words.show.sense_number", number: format("%02d", number)) %></span>
 
         <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.2) %>
@@ -188,7 +189,7 @@
             </dd>
           </div>
         </dl>
-      </section>
+      </article>
     <% end %>
   </div>
 <% end %>

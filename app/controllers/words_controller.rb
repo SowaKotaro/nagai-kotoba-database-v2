@@ -37,8 +37,10 @@ class WordsController < ApplicationController
     return unless stale?(etag: records, last_modified: records.map(&:updated_at).max, public: true)
 
     # 単語間の内部リンク(関連語)。同ジャンル/同文字数/同先頭文字を各数件(Issue 23)。
-    # JSON(Issue 25)では不要なので HTML のときだけ組み立てる。
-    @related_word_groups = RelatedWords.new(@word).groups if request.format.html?
+    # JSON(Issue 25)では不要なのでそれ以外(HTML)のときだけ組み立てる。
+    # format.html? での判定は Accept: */*(curl・クローラ)が false になり、
+    # HTML テンプレートだけ描画されて 500 になるため使わない。
+    @related_word_groups = RelatedWords.new(@word).groups unless request.format.json?
   end
 
   private
