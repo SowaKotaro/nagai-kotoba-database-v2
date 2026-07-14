@@ -29,32 +29,6 @@
 
 # 未完了イシュー(優先度順)
 
-## Issue 42: プライバシーポリシー・外部送信情報の公表ページ(/privacy)
-- 種別: feature
-- 状態: 未着手
-- 優先度: P0 ／ Impact: High ／ Effort: Low〜Med
-- 依存: なし
-- 背景・現状: GA4(gtag.js)で利用者情報を Google へ外部送信しているのに、公表ページが無い。改正電気通信事業法の外部送信規律の観点で公開前に必須。E-E-A-T(サイトの信頼性)の面でも欠けている。
-- 内容:
-  - [ ] `PagesController#privacy`(`GET /privacy`、`allow_unauthenticated_access`)を追加(About と同じ作法)
-  - [ ] 記載事項: 外部送信の内容(GA4 — 送信先事業者・送信される情報・利用目的)/Cookie の利用/アクセスログの取り扱い/お問い合わせ先(About と共有)
-  - [ ] フッターに恒久リンク。About・llms.txt からも参照
-  - [ ] GA4 無効環境(`GA4_MEASUREMENT_ID` 未設定)でも矛盾しない文言にする
-- 期待効果: 法的リスクの回避。公開(インデックス解禁)の前提条件を満たす。
-
-## Issue 43: インデックス解禁スイッチ(全ページ noindex の環境変数切替)
-- 種別: improvement
-- 状態: 未着手
-- 優先度: P0 ／ Impact: High ／ Effort: Low
-- 依存: なし
-- 背景・現状: 確定事項「注釈済み 300〜500 語まで全ページ noindex、解禁時に外す」の実装が無い。現状の noindex はファセット絞り込みページと `/search` のみで、解禁前に jp ドメインで公開するとインデックスを制御できない。
-- 内容:
-  - [ ] レイアウトの meta robots を環境変数(例 `INDEXING_ENABLED`)で切替。**未設定 = 全ページ `noindex`** とし、解禁時に本番へ設定する
-  - [ ] ファセットの noindex 判定(Issue 17)との共存(全体 noindex が優先)
-  - [ ] 環境変数の有無それぞれでメタタグ出力を検証する結合テスト
-  - [ ] 解禁チェックリストを docs 化: 環境変数設定 → Search Console 所有権確認 → sitemap 送信 → インデックス状況の観測開始(Issue 44 と連動)
-- 期待効果: 解禁タイミングを運用で確実に制御できる。準備中のページが中途半端にインデックスされる事故を防ぐ。
-
 ## Issue 34: 統計ページ(収録データの分布・集計)
 - 種別: feature
 - 状態: 未着手(着手前に相談。Phase 1 から)
@@ -71,15 +45,15 @@
 
 ## Issue 44: 計測運用の立ち上げ(KPI 定義・Search Console 登録)
 - 種別: ops
-- 状態: 未着手
+- 状態: 一部完了(KPI 定義・手順の文書化は済み。残りは本番での運用作業)
 - 優先度: P1 ／ Impact: High ／ Effort: Low
-- 依存: Issue 43(解禁チェックリストと連動)
-- 背景・現状: GA4 の実装・検証タグの ENV 対応(Issue 19)は済んでいるが、本番の測定 ID 設定・所有権確認・sitemap 送信・KPI 定義が未実施。計測は「増え始めてから」では過去データが取れないため、解禁前に完了させる。
+- 依存: Issue 43(解禁チェックリストと連動。実装済み)
+- 背景・現状: GA4 の実装・検証タグの ENV 対応(Issue 19)は済んでいるが、本番の測定 ID 設定・所有権確認・sitemap 送信が未実施。計測は「増え始めてから」では過去データが取れないため、解禁前に完了させる。
 - 内容:
-  - [ ] 本番に `GA4_MEASUREMENT_ID` を設定し計測開始(解禁前からベースラインを取る)
-  - [ ] Search Console・Bing Webmaster Tools の所有権確認(検証タグの ENV は実装済み)と sitemap 送信(解禁時)
-  - [ ] KPI ツリーを [`growth-strategy.md`](growth-strategy.md) §3 に追記(PV・AU に加え、新規/再訪比率・流入チャネル別・検索/ファセット利用率・1訪問あたり閲覧語数)
-  - [ ] GA4 カスタムイベント(検索実行・ファセットクリック・シェアクリック)の要否を検討(必要なら小さな別 PR)
+  - [ ] 本番に `GA4_MEASUREMENT_ID` を設定し計測開始(解禁前からベースラインを取る。手順は [`launch-checklist.md`](launch-checklist.md) §1)
+  - [ ] Search Console・Bing Webmaster Tools の所有権確認(検証タグの ENV は実装済み)と sitemap 送信(解禁時。同 §1・§3)
+  - [x] KPI ツリーを [`growth-strategy.md`](growth-strategy.md) §3 に追記(北極星 = 週あたりの「語を見た訪問」数。量・質・資産の3系統)
+  - [x] GA4 カスタムイベントの要否を検討 → **当面入れない**(page_view の URL パラメータで代替できる。解禁後に不足が明確になったら小さな別 PR。growth-strategy.md §3 に記録)
 - 期待効果: 流入クエリ・インデックス状況の観測に基づく改善サイクルの確立。
 
 ## Issue 45: 監視・エラー通知(外形監視 + Rails 例外通知)
@@ -298,6 +272,13 @@
 - **Issue 40: 管理UIシステムテストの flake 解消** [improvement] — 完了。原因は WSL/Chrome 150 のネイティブクリック不達 + confirm 自動クローズ。`click_accepting_confirm` ヘルパー(confirm スタブ + JS クリック)で安定化。CI で再発したら再起票。ローカル実行手順は `LD_LIBRARY_PATH` + `CHROME_BIN` 方式(詳細は git 履歴)。
 - **Issue 41: AnnotationProposal の複数語義対応** [feature] — 完了。payload に `senses` 配列を持ち、同一表記の同音異義語(例: ピーターパンシンドローム)をコンソールで語義ごとに反映可能に。
 - **アノテーション FB 修正(番号なし)** — 完了。`target_start`(特徴の出現位置)/注釈済みの語でも提案表示/保存後スクロール/調査スキルの2周調査化。
+
+## グロース戦略対応(Issue 42〜48、2026-07-12 の [`growth-strategy.md`](growth-strategy.md) より)
+
+- **Issue 42: プライバシーポリシー /privacy** [feature] — 完了(PR #82)。外部送信規律の公表事項(GA4 の送信先・送信される情報・利用目的)・Cookie・アクセスログ・連絡先。フッター・About・llms.txt・sitemap から参照。
+- **Issue 43: インデックス解禁スイッチ** [improvement] — 完了(PR #82)。`INDEXING_ENABLED` 未設定 = 全ページ noindex(ページ個別指定より優先)。解禁手順は [`launch-checklist.md`](launch-checklist.md)。テスト環境の既定は「解禁後」(test.rb)。
+
+(Issue 44〜48 は未完了節を参照)
 
 ## 技術監査対応(Issue 49〜56、2026-07-12 の監査より)
 

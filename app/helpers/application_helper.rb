@@ -30,6 +30,13 @@ module ApplicationHelper
     content_for?(:og_type) ? content_for(:og_type).to_s : "website"
   end
 
+  # meta robots の値(Issue 43)。インデックス解禁前(INDEXING_ENABLED 未設定)は
+  # ページ個別の指定より優先して全ページ noindex にする。解禁後はページ個別の
+  # content_for(:robots)(ファセット・/search 等。Issue 17)に従う。
+  def page_robots
+    Rails.application.config.x.indexing_enabled ? content_for(:robots) : "noindex"
+  end
+
   # GA4 の測定ID(G-XXXXXXX)。本番の環境変数から読む。未設定なら計測タグを出さない(Issue 19)。
   def ga_measurement_id
     ENV["GA4_MEASUREMENT_ID"].presence

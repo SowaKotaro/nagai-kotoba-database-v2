@@ -32,6 +32,11 @@ module NagaiKotobaDatabaseV2
     # 末尾スラッシュ無し。ENV で上書き可(検証環境・ステージング用)。
     config.x.canonical_host = ENV.fetch("CANONICAL_HOST", "https://nagai-kotoba-database.jp")
 
+    # インデックス解禁スイッチ(Issue 43)。未設定 = 全ページ noindex(公開準備中)。
+    # 注釈済み 300〜500 語に達したら本番に INDEXING_ENABLED を設定して解禁する
+    # (手順は docs/launch-checklist.md)。テスト環境は解禁後の挙動を既定にする(test.rb)。
+    config.x.indexing_enabled = ENV["INDEXING_ENABLED"].present?
+
     # stylesheet_link_tag / javascript_include_tag が自動付与する
     # `Link: rel=preload` レスポンスヘッダー(HTTP/2 Server Push 向け)を無効化する。
     # 本番は HTTP/2 Push を使っておらず、ブラウザには preload ヒントとしてのみ解釈されるため、

@@ -1,0 +1,59 @@
+<% content_for :title, t("pages.privacy.title") %>
+<% content_for :description, t("pages.privacy.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("pages.privacy.title"), nil ] ] %>
+
+<header class="page-header">
+  <p class="page-eyebrow"><span><%= t("pages.privacy.title") %></span></p>
+  <h1 class="page-title"><%= t("pages.privacy.title") %></h1>
+  <p class="page-lead"><%= t("pages.privacy.lead") %></p>
+</header>
+
+<div class="prose">
+  <%# 外部送信規律(改正電気通信事業法)の公表事項: 送信先事業者・送信される情報・利用目的 %>
+  <section>
+    <h2><%= icon "graph" %><%= t("pages.privacy.analytics_title") %></h2>
+    <p><%= t("pages.privacy.analytics_body") %></p>
+    <ul>
+      <li><strong><%= t("pages.privacy.analytics_destination_label") %>：</strong><%= t("pages.privacy.analytics_destination") %></li>
+      <li><strong><%= t("pages.privacy.analytics_data_label") %>：</strong><%= t("pages.privacy.analytics_data") %></li>
+      <li><strong><%= t("pages.privacy.analytics_purpose_label") %>：</strong><%= t("pages.privacy.analytics_purpose") %></li>
+    </ul>
+    <p><%= t("pages.privacy.analytics_links_intro") %></p>
+    <ul>
+      <li><%= link_to t("pages.privacy.analytics_google_policy"),
+                "https://policies.google.com/privacy",
+                rel: "noopener external", target: "_blank" %></li>
+      <li><%= link_to t("pages.privacy.analytics_partner_policy"),
+                "https://policies.google.com/technologies/partner-sites",
+                rel: "noopener external", target: "_blank" %></li>
+    </ul>
+    <p>
+      <%= link_to t("pages.privacy.analytics_optout"),
+            "https://tools.google.com/dlpage/gaoptout",
+            rel: "noopener external", target: "_blank" %>
+    </p>
+  </section>
+
+  <section>
+    <h2><%= icon "cube" %><%= t("pages.privacy.cookie_title") %></h2>
+    <p><%= t("pages.privacy.cookie_body") %></p>
+  </section>
+
+  <section>
+    <h2><%= icon "list_checks" %><%= t("pages.privacy.log_title") %></h2>
+    <p><%= t("pages.privacy.log_body") %></p>
+  </section>
+
+  <section>
+    <h2><%= icon "pencil_simple" %><%= t("pages.privacy.changes_title") %></h2>
+    <p><%= t("pages.privacy.changes_body") %></p>
+  </section>
+
+  <section>
+    <h2><%= icon "envelope_simple" %><%= t("pages.privacy.contact_title") %></h2>
+    <p><%= t("pages.privacy.contact_body") %></p>
+    <p><%= mail_to t("pages.about.contact_email") %></p>
+  </section>
+</div>

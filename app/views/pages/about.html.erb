@@ -40,6 +40,12 @@
   </section>
 
   <section>
+    <h2><%= icon "seal_check" %><%= t("pages.about.privacy_title") %></h2>
+    <p><%= t("pages.about.privacy_body") %></p>
+    <p><%= link_to t("pages.about.privacy_link"), privacy_path %></p>
+  </section>
+
+  <section>
     <h2><%= icon "envelope_simple" %><%= t("pages.about.contact_title") %></h2>
     <p><%= t("pages.about.contact_body") %></p>
     <p><%= mail_to t("pages.about.contact_email") %></p>

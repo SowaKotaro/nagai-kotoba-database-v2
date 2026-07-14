@@ -25,6 +25,24 @@ class WordsHelperTest < ActionView::TestCase
     assert_equal "", word_lead_sentence(Word.new(surface: "無語義"))
   end
 
+  # --- X 共有の本文(投稿上限 280 単位 = 全角 128 文字に収める) ---
+  test "X共有本文: 短いリード文はそのまま使う" do
+    word = words(:curry)
+    lead = word_lead_sentence(word)
+    assert_equal lead, x_share_text(word, lead)
+  end
+
+  test "X共有本文: 長いリード文は上限で切り詰めて省略記号を付ける" do
+    text = x_share_text(words(:abc_murder), "あ" * 200)
+    assert_equal WordsHelper::X_SHARE_TEXT_LIMIT, text.length
+    assert text.end_with?("…")
+  end
+
+  test "X共有本文: リード文が無ければ見出し語を使う" do
+    word = words(:abc_murder)
+    assert_equal word.surface, x_share_text(word, "")
+  end
+
   # --- 複数語義(同音異義語)。先頭語義だけを見ず、意味を①②…で並べる ---
   test "リード文: 複数語義は語義数と各語義の意味を番号付きで並べる" do
     word = multi_sense_word(

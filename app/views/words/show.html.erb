@@ -33,7 +33,8 @@
 
   <%# シェア導線(Issue 30)。X共有 + URLコピー。アイコンはインラインSVG %>
   <% share_url = canonical_url %>
-  <% x_href = "https://x.com/intent/post?" + { text: (lead.presence || @word.surface), url: share_url }.to_query %>
+  <%# 本文はXの文字数上限(全角128文字相当)に収まるよう切り詰める %>
+  <% x_href = "https://x.com/intent/post?" + { text: x_share_text(@word, lead), url: share_url }.to_query %>
   <div class="share" data-controller="clipboard"
        data-clipboard-text-value="<%= share_url %>"
        data-clipboard-copied-label-value="<%= t('words.show.share.copied') %>">
