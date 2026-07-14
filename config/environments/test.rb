@@ -61,4 +61,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # インデックス解禁スイッチ(Issue 43)はテストでは「解禁後」を既定にする。
+  # ページ個別の noindex 判定(ファセット等。Issue 17)のテストをそのまま生かすため。
+  # 解禁前(全ページ noindex)の挙動は indexing_switch_test が明示的に切り替えて検証する。
+  config.x.indexing_enabled = true
 end

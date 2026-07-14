@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   # サイト概要・収録基準・利用条件などの恒久ページ。Issue 20。
   get "about", to: "pages#about", as: :about
 
+  # プライバシーポリシー(外部送信情報の公表。Issue 42)
+  get "privacy", to: "pages#privacy", as: :privacy
+
   # LLM(AI 検索・エージェント)向けのサイト案内。Issue 24。
   get "llms.txt", to: "llms#show", defaults: { format: "text" }, as: :llms
 

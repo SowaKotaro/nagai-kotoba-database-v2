@@ -6,6 +6,15 @@ module WordsHelper
     "#{WEB_SEARCH_BASE_URL}?#{{ q: query }.to_query}"
   end
 
+  # X 共有の本文。X の投稿は 280 単位が上限で、全角(CJK)は 1 文字 = 2 単位、
+  # URL は実際の長さに関わらず 23 単位(t.co 短縮)を消費する。本文と URL の区切り
+  # 1 単位も引くと本文に使えるのは 256 単位 = 全角 128 文字。余裕を見て 125 文字で丸める。
+  X_SHARE_TEXT_LIMIT = 125
+
+  def x_share_text(word, lead)
+    (lead.presence || word.surface).squish.truncate(X_SHARE_TEXT_LIMIT, omission: "…")
+  end
+
   # 単語詳細の自己完結リード文(定義文)を決定的に組み立てる(Issue 18)。
   # 読み・文字数・モーラ・ジャンルという構造データを散文に起こし、
   # meta description(Issue 14)や JSON-LD の description(Issue 16)にも流用する。
