@@ -1,16 +1,18 @@
 # research/ — Claude Code のオフライン調査の作業ディレクトリ
 
-`/expand`・`/notation`・`/reading`・`/annotation` の4つのカスタムコマンド（それぞれ
+`/harvest`・`/expand`・`/notation`・`/reading`・`/annotation` の5つのカスタムコマンド（それぞれ
 `.claude/skills/word-*-research` スキルを起動する）が、**入力ファイルを読んで出力ファイルを書き出す**
 という形で動く。その入出力を置く場所。
 
 `inputs/` と `outputs/` の中身は実行のたびに上書きされる作業ファイルなので、`.gitignore`
-で除外している（ディレクトリだけ `.keep` で残す）。
+で除外している（ディレクトリだけ `.keep` で残す）。`harvest-seen.txt`（/harvest が過去に
+提案した語の累積リスト）もローカルの状態ファイルとして gitignore している。
 
 ## ファイルの対応
 
 | コマンド | 入力 | 出力 |
 | --- | --- | --- |
+| `/harvest` | （外部サイトを巡回。入力ファイルなし） | `outputs/harvest/<実行日>.txt` |
 | `/expand` | `inputs/expansion.txt` | `outputs/expansion.txt` |
 | `/notation` | `inputs/notation.txt` | `outputs/notation.txt` |
 | `/reading` | `inputs/reading.txt` | `outputs/reading.json` |
@@ -20,6 +22,11 @@
 
 ## 使う順番（候補収集 → 登録 → アノテーション）
 
+-1. **収穫（任意・定期実行向け）**: ニュースサイトなど更新頻度の高いサイトを巡回して、
+   新しい候補語を外から拾う。`/harvest`（系統を絞るなら `/harvest エンタメ` 等）。
+   `outputs/harvest/<実行日>.txt` の上部に候補語リストが並ぶので、目視で確認してから次の 1 の入力にする。
+   出力は日付ごとに残る（確認前に翌朝の実行が走っても流れない。取り込み済みの古い日付は適宜消してよい）。
+   過去に提案済みの語は `harvest-seen.txt` で自動的に除外されるので、毎朝など定期的に回せる。
 0. **補完（任意）**: 登録済みの語を種として、同系統の語をまとめて集めたいときに使う。
    種語を1行1語で `inputs/expansion.txt` に貼り、`/expand`。上位概念（作品・アーティスト等）を
    突き止め、**種語と同じエンティティ軸**の語を集める（泥門デビルバッツ → アイシールド21 の他のチーム名）。
