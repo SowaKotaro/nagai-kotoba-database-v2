@@ -868,6 +868,10 @@ a.tag:hover .genre-hub__count {
   letter-spacing: 0.12em;
   color: var(--ink-3);
 }
+/* 「ランダムに1語」ボタン。枠・ホバーは .hero-entry を流用し、余白だけ足す */
+.hero-featured__shuffle {
+  margin-top: var(--space-4);
+}
 
 /* --- 詳細検索フォーム(ドロップダウンをやめ、一覧/階層/スライダーで選ばせる) --- */
 .visually-hidden {

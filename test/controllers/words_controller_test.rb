@@ -264,7 +264,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get words_path(q: "涼宮ハルヒ")
     assert_response :success
     assert_select ".entry-row__surface", text: words(:pending_haruhi).surface, count: 0
-    assert_select "p", text: I18n.t("words.index.empty")
+    # 絞り込み(q)の結果が 0 件 → 絞り込み用の空メッセージ
+    assert_select "p", text: I18n.t("words.index.empty_filtered")
   end
 
   test "検索フォーム由来の配列条件(先頭文字・複数OR)でも絞り込める" do
@@ -274,10 +275,17 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
   end
 
-  test "一致が無いときは空メッセージを表示する" do
+  test "絞り込みで一致が無いときは絞り込み用の空メッセージを表示する" do
     get words_path(first_char: "ヲ")
     assert_response :success
-    assert_select "p", text: I18n.t("words.index.empty")
+    assert_select "p.empty-note", text: I18n.t("words.index.empty_filtered")
+  end
+
+  test "絞り込みが無く0件のときは通常の空メッセージ(DBが空)を表示する" do
+    Word.update_all(annotated_at: nil) # 公開(注釈済み)を無くす
+    get words_path
+    assert_response :success
+    assert_select "p.empty-note", text: I18n.t("words.index.empty")
   end
 
   test "絞り込み中は条件チップと変更・解除リンクを表示する" do
@@ -399,10 +407,32 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  # --- ルーティング(公開は index/show のみ) ---
-  test "公開は index/show のみで登録経路は無い" do
+  # --- ランダムに1語 ---
+  test "random は公開(注釈済み)の語の詳細へリダイレクトする" do
+    get random_words_path
+    assert_response :redirect
+    assert_match %r{/words/\d+\z}, response.location
+    id = response.location[%r{/words/(\d+)\z}, 1].to_i
+    assert Word.annotated.exists?(id), "リダイレクト先は公開(注釈済み)の語であること"
+  end
+
+  test "公開語が無いとき random は一覧へフォールバックする" do
+    Word.update_all(annotated_at: nil)
+    get random_words_path
+    assert_redirected_to words_path
+  end
+
+  test "random は未認証でも使える" do
+    get random_words_path
+    assert_response :redirect # 302(ログイン画面ではない)
+    assert_no_match(/session/, response.location)
+  end
+
+  # --- ルーティング(公開は index/show/random のみ) ---
+  test "公開は index/show/random のみで登録経路は無い" do
     assert_routing "/words", controller: "words", action: "index"
     assert_routing "/words/1", controller: "words", action: "show", id: "1"
+    assert_routing "/words/random", controller: "words", action: "random"
 
     assert_raises(ActionController::RoutingError) do
       Rails.application.routes.recognize_path("/words", method: :post)

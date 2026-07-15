@@ -73,6 +73,7 @@ ja:
     og_image_alt: "長い言葉のデータベースのシェア用カード"
     nav:
       words: "一覧"
+      ranking: "ランキング"
       genres: "ジャンル"
       browse: "索引"
       search: "検索"
@@ -97,7 +98,9 @@ ja:
         browse: "索引から探す"
         search: "詳細検索で絞り込む"
       featured: "今日の一語"
+      random: "ランダムに1語"
       recent: "新着の単語"
+      ranking: "最長ランキング"
       see_all: "すべて見る"
       stats:
         words: "収録語数"
@@ -141,6 +144,7 @@ ja:
     index:
       title: "単語一覧"
       empty: "まだ単語が登録されていません。"
+      empty_filtered: "条件に一致する言葉が見つかりませんでした。条件を変えるか、絞り込みを解除してください。"
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
       char_count: "%{count} 字"

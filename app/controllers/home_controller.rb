@@ -3,6 +3,7 @@ class HomeController < ApplicationController
   allow_unauthenticated_access only: :index
 
   RECENT_WORDS_LIMIT = 5
+  RANKING_LIMIT = 10
 
   def index
     # 公開統計は毎リクエスト COUNT を3本発行していた。短TTLでキャッシュする(Issue 26)。
@@ -20,6 +21,11 @@ class HomeController < ApplicationController
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
                         .order(created_at: :desc, id: :desc)
                         .limit(RECENT_WORDS_LIMIT)
+    # 最長ランキング(読みが長い順)。サイト最大のフックなので新着より上に置く。
+    @longest_words = Word.annotated
+                         .includes(word_senses: [ :part_of_speech, :entity_type ])
+                         .order(WordSort.new("length_desc").order_clause)
+                         .limit(RANKING_LIMIT)
     @featured_word = featured_word
   end
 

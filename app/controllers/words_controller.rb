@@ -1,6 +1,6 @@
 # 単語の公開閲覧(一覧・詳細)。誰でも閲覧できる。書き込みは Admin::WordsController 側。
 class WordsController < ApplicationController
-  allow_unauthenticated_access only: %i[index show]
+  allow_unauthenticated_access only: %i[index show random]
 
   PER_PAGE = 100
   FEED_LIMIT = 20
@@ -41,6 +41,13 @@ class WordsController < ApplicationController
     # format.html? での判定は Accept: */*(curl・クローラ)が false になり、
     # HTML テンプレートだけ描画されて 500 になるため使わない。
     @related_word_groups = RelatedWords.new(@word).groups unless request.format.json?
+  end
+
+  # 「ランダムに1語」導線。公開(注釈済み)から等確率で1語選び、その詳細へ 302 で飛ばす。
+  # 語が無ければ一覧へフォールバックする。件数規模(〜1万)では RAND() ソートで十分。
+  def random
+    word = Word.annotated.order(Arel.sql("RAND()")).first
+    redirect_to(word ? word_path(word) : words_path)
   end
 
   private
