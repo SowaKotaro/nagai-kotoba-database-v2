@@ -161,6 +161,12 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.share__btn[data-action=?]", "clipboard#copy"
   end
 
+  test "詳細ページにランダムに別の言葉へ跳ぶボタンがある" do
+    get word_path(words(:abc_murder))
+    assert_response :success
+    assert_select "nav.word-footer-nav a.word-random[href=?]", random_words_path
+  end
+
   test "詳細に関連語セクションが表示され単語間リンクになる" do
     # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
     sibling = Word.create!(surface: "同ジャンルの別語", annotated_at: Time.current)

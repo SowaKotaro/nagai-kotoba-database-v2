@@ -98,7 +98,6 @@ ja:
         browse: "索引から探す"
         search: "詳細検索で絞り込む"
       featured: "今日の一語"
-      random: "ランダムに1語"
       recent: "新着の単語"
       ranking: "最長ランキング"
       see_all: "すべて見る"
@@ -186,6 +185,7 @@ ja:
       features: "言語学的特徴"
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
+      random: "ランダムな言葉へ"
       share:
         x: "Xでシェア"
         copy: "URLをコピー"
