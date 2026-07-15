@@ -56,7 +56,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # 読み・注釈状態(注釈済みは日付、未注釈は朱ラベル)
     assert_select "td.admin-words-table__reading", text: /さつじんじけん/
     assert_select ".admin-words-table__annotated", text: @word.annotated_at.strftime("%Y-%m-%d")
-    assert_select ".admin-words-table__unannotated", text: "未注釈", minimum: 1
+    assert_select ".admin-words-table__unannotated", text: "未対応", minimum: 1
     # 件数表示とページネーション
     assert_select ".admin-words-count", text: /#{Word.count}\s*語/
     assert_select ".pagination span", text: "1 / 1 ページ"
@@ -89,14 +89,23 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td a", text: @word.surface
   end
 
-  test "一覧を注釈状態で絞り込める" do
+  test "一覧を注釈状態(未対応/保留/完了)で絞り込める" do
     sign_in_as(Admin.take)
-    get admin_words_path(status: "unannotated")
+    # 未対応: 保留・完了の語は出さない
+    get admin_words_path(status: "annotation_pending")
     assert_select "td a", text: words(:pending_haruhi).surface
     assert_select "td a", text: @word.surface, count: 0
-    assert_select ".admin-status-tabs__tab[aria-current=page]", text: "未注釈"
+    assert_select "td a", text: words(:on_hold_word).surface, count: 0
+    assert_select ".admin-status-tabs__tab[aria-current=page]", text: "未対応"
 
-    get admin_words_path(status: "annotated")
+    # 保留: 保留の語だけ出す
+    get admin_words_path(status: "annotation_on_hold")
+    assert_select "td a", text: words(:on_hold_word).surface
+    assert_select "td a", text: words(:pending_haruhi).surface, count: 0
+    assert_select "td a", text: @word.surface, count: 0
+
+    # 完了: 注釈済みの語だけ出す
+    get admin_words_path(status: "annotation_done")
     assert_select "td a", text: @word.surface
     assert_select "td a", text: words(:pending_haruhi).surface, count: 0
   end

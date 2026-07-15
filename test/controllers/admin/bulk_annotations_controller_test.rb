@@ -18,11 +18,11 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
   test "選択した語に一括適用し、検索・絞り込みを保って一覧へ戻る" do
     sign_in_as(Admin.take)
     post admin_bulk_annotation_path, params: {
-      q: "ハルヒ", status: "unannotated",
+      q: "ハルヒ", status: "annotation_pending",
       bulk_annotation: { word_ids: [ @haruhi.id ], genre_id: genres(:small_novel).id }
     }
 
-    assert_redirected_to admin_words_path(q: "ハルヒ", status: "unannotated")
+    assert_redirected_to admin_words_path(q: "ハルヒ", status: "annotation_pending")
     assert_equal "1 語に適用しました。", flash[:notice]
     assert_equal genres(:small_novel).id, word_senses(:pending).reload.genre_id
     # 既定では注釈済みにしない

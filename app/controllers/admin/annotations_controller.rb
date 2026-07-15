@@ -1,9 +1,10 @@
 # 高速アノテーション・コンソール。1語を大きく表示し、語義・語種・ジャンル・品詞・
 # エンティティ・言語学的特徴・別表記を素早く付与して「保存して次へ」で流す。
-# キューは words.annotated_at が未セット(未注釈)の語を id 順に辿る。
+# キューは未対応(annotation_status: pending)の語を id 順に辿る。保留(on_hold)にした語は
+# キューから外れ、あとで単語一覧の「保留」フィルタから見直せる。
 # ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
-  before_action :set_word, only: %i[show update]
+  before_action :set_word, only: %i[show update hold]
 
   # キューの最初の語へ誘導。無ければ完了画面(index ビュー)を出す。
   def index
@@ -32,10 +33,7 @@ class Admin::AnnotationsController < Admin::BaseController
     if @word.save
       remember_sticky_values
       mark_proposal_applied
-      next_word = queue_scope.where.not(id: @word.id).order(:id).first
-      redirect_to(next_word ? admin_annotation_path(next_word, proposed: proposed_param)
-                            : admin_annotations_path(proposed: proposed_param),
-                  notice: t("admin.annotations.saved"))
+      redirect_to_next_word(t("admin.annotations.saved"))
     else
       @proposal = AnnotationProposal.find_by(word_id: @word.id)
       load_masters
@@ -44,7 +42,24 @@ class Admin::AnnotationsController < Admin::BaseController
     end
   end
 
+  # 現在の語を保留にしてキューから外し、次の未対応へ進む。フォームの入力内容は保存しない
+  # (まだ確定できないから保留する運用のため、途中入力の妥当性を問わない)。
+  def hold
+    @word.mark_on_hold
+    @word.save!
+    redirect_to_next_word(t("admin.annotations.held"))
+  end
+
   private
+
+  # 保存/保留のあと、キューに残る次の語(無ければ完了画面)へ誘導する。
+  # ?proposed=1 のフィルタは保ったまま辿る。
+  def redirect_to_next_word(notice)
+    next_word = queue_scope.where.not(id: @word.id).order(:id).first
+    redirect_to(next_word ? admin_annotation_path(next_word, proposed: proposed_param)
+                          : admin_annotations_path(proposed: proposed_param),
+                notice: notice)
+  end
 
   def set_word
     @word = Word.includes(word_senses: %i[word_origins word_sense_features word_sense_variants])
@@ -123,9 +138,10 @@ class Admin::AnnotationsController < Admin::BaseController
     params[:proposed].presence
   end
 
-  # コンソールのキュー。既定は未注釈すべて、?proposed=1 なら未承認の提案が付いた語だけ。
+  # コンソールのキュー。既定は未対応(pending)の語、?proposed=1 なら未承認の提案が付いた語だけ。
+  # 保留(on_hold)にした語はキューに出ない。
   def queue_scope
-    scope = Word.unannotated
+    scope = Word.annotation_pending
     scope = scope.with_pending_proposal if proposed_param
     scope
   end

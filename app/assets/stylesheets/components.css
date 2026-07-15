@@ -1882,12 +1882,20 @@ a.tag:hover .genre-hub__count {
   color: var(--ink-2);
 }
 
-/* 未注釈は朱(注意を引く現在の作業対象) */
+/* 未対応は朱(注意を引く現在の作業対象) */
 .admin-words-table__unannotated {
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.1em;
   color: var(--shu);
+}
+
+/* 保留は墨の淡色(対応待ちで脇に置いた語) */
+.admin-words-table__on-hold {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
 }
 
 /* --- セクション見出し --- */

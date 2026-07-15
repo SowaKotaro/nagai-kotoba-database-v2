@@ -75,6 +75,11 @@
                     (@skip_word ? admin_annotation_path(@skip_word, proposed: params[:proposed].presence)
                                 : admin_annotations_path(proposed: params[:proposed].presence)),
                     class: "btn", data: { queue_nav_target: "skip" } %>
+        <%# 保留: 同じフォームを hold へ送る。formnovalidate で必須チェックを外し、途中入力でも保留できる。
+            hold アクションはフォーム内容を保存せず、状態だけ保留にしてキューから外す %>
+        <%= form.submit t("admin.annotations.hold"), name: nil,
+                    formaction: hold_admin_annotation_path(@word), formnovalidate: true,
+                    class: "btn" %>
         <%= form.submit t("admin.annotations.save_next"), class: "btn btn--primary" %>
       </div>
     <% end %>

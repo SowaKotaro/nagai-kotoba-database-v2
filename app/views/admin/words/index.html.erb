@@ -13,8 +13,9 @@
 
   <nav class="admin-status-tabs" aria-label="<%= t("admin.words.index.status_label") %>">
     <% { nil => t("admin.words.index.status_all"),
-         "unannotated" => t("admin.words.index.status_unannotated"),
-         "annotated" => t("admin.words.index.status_annotated") }.each do |status, label| %>
+         "annotation_pending" => t("admin.words.index.status_pending"),
+         "annotation_on_hold" => t("admin.words.index.status_on_hold"),
+         "annotation_done" => t("admin.words.index.status_done") }.each do |status, label| %>
       <%= link_to label, admin_words_path({ q: @query.presence, status: status }.compact),
             class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
     <% end %>
@@ -64,10 +65,12 @@
           <td class="admin-words-table__reading"><%= word.word_senses.map(&:reading).uniq.join("、") %></td>
           <td class="admin-words-table__num"><%= word.word_senses.size %></td>
           <td class="admin-words-table__status">
-            <% if word.annotated_at %>
+            <% if word.annotation_done? %>
               <span class="admin-words-table__annotated"><%= word.annotated_at.strftime("%Y-%m-%d") %></span>
+            <% elsif word.annotation_on_hold? %>
+              <span class="admin-words-table__on-hold"><%= t("admin.words.index.status_on_hold") %></span>
             <% else %>
-              <span class="admin-words-table__unannotated"><%= t("admin.words.index.status_unannotated") %></span>
+              <span class="admin-words-table__unannotated"><%= t("admin.words.index.status_pending") %></span>
             <% end %>
           </td>
           <td class="admin-words-table__actions">

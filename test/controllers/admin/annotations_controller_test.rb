@@ -56,10 +56,32 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     }
     @word.reload
     assert_not_nil @word.annotated_at
+    assert @word.annotation_done?
     assert_equal "更新後の意味", @sense.reload.meaning
     assert_equal [ word_origins(:kango).id, word_origins(:wago).id ].sort, @sense.word_origin_ids.sort
-    # 残る未注釈(pending_bermuda)へ誘導する。
+    # 残る未対応(pending_bermuda)へ誘導する。
     assert_redirected_to admin_annotation_path(words(:pending_bermuda))
+  end
+
+  # --- hold: 保留にしてキューから外し、次の未対応へ進む ---
+  test "保留にすると状態が保留になりキューから外れ、次の未対応へ進む" do
+    sign_in_as(Admin.take)
+    patch hold_admin_annotation_path(@word)
+
+    @word.reload
+    assert @word.annotation_on_hold?
+    assert_nil @word.annotated_at
+    # 保留した語はキュー(未対応)から外れる
+    assert_not_includes Word.annotation_pending, @word
+    # 残る未対応(pending_bermuda)へ誘導する
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda))
+    assert_equal "保留にしました。あとで単語一覧の「保留」から見直せます。", flash[:notice]
+  end
+
+  test "未認証だと保留できない" do
+    patch hold_admin_annotation_path(@word)
+    assert_redirected_to new_session_path
+    assert words(:pending_haruhi).reload.annotation_pending?
   end
 
   # --- 用語解説パネル(Issue 39) ---
