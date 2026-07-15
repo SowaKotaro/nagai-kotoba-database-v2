@@ -43,6 +43,9 @@
 /research/outputs/*
 !/research/inputs/.keep
 !/research/outputs/.keep
+# /harvest が過去に提案した語の累積リスト(ローカル状態)と定期実行のログ。コミットしない。
+/research/harvest-seen.txt
+/research/harvest-cron.log
 
 # 過去サイトからcurlで取得した単語データ
 /docs/words.csv
