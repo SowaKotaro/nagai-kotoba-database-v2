@@ -8,10 +8,6 @@
       <p class="hero-featured__label"><%= icon "sparkle" %><%= t("home.index.featured") %></p>
       <%= link_to @featured_word.surface, word_path(@featured_word), class: "hero-featured__word" %>
       <p class="hero-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
-      <%# 受け身の「今日の一語」に対して、自分で引ける「ランダムに1語」を添える %>
-      <%= link_to random_words_path, class: "hero-entry hero-featured__shuffle" do %>
-        <%= icon "shuffle" %><span><%= t("home.index.random") %></span>
-      <% end %>
     </div>
   <% end %>
 

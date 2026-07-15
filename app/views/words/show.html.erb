@@ -215,8 +215,12 @@
   </section>
 <% end %>
 
-<p>
+<nav class="word-footer-nav">
   <%= link_to words_path, class: "back-link icon-label" do %>
     <%= icon "arrow_left" %><%= t("words.show.back") %>
   <% end %>
-</p>
+  <%# 読み終えたら別の言葉へ跳べる。公開語からランダムに1語ジャンプ(発見の回遊) %>
+  <%= link_to random_words_path, class: "word-random btn" do %>
+    <%= icon "shuffle" %><span><%= t("words.show.random") %></span>
+  <% end %>
+</nav>
