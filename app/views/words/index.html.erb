@@ -61,7 +61,10 @@
 </div>
 
 <% if @words.empty? %>
-  <p class="empty-note"><%= icon "binoculars" %><%= t("words.index.empty") %></p>
+  <%# 絞り込み結果が 0 件のときは「DB が空」ではなく「条件に一致なし」と伝える(誤解防止)。
+      条件を外す導線は上の active-facet(絞り込みを解除)が担う。
+      text: の完全一致検証に余分な空白が入らないよう、あえて1行で組む。 %>
+  <p class="empty-note"><%= icon "binoculars" %><%= @search.conditions? ? t("words.index.empty_filtered") : t("words.index.empty") %></p>
 <% else %>
   <div class="entry-list">
     <%= render partial: "words/entry_row", collection: @words, as: :word %>

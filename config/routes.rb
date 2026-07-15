@@ -2,7 +2,10 @@ Rails.application.routes.draw do
   resource :session
 
   # 公開閲覧(誰でも閲覧可)。一覧・詳細のみ。書き込みは admin 名前空間に閉じる。
-  resources :words, only: %i[index show]
+  # random は「ランダムに1語」導線。:id より前に来るよう collection で定義する。
+  resources :words, only: %i[index show] do
+    get :random, on: :collection
+  end
   # 公開の詳細検索フォーム。キーワードだけの検索はヘッダー等から words#index の q で行う。
   get "search", to: "searches#index", as: :search
 
