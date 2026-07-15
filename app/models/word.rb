@@ -8,9 +8,15 @@ class Word < ApplicationRecord
 
   validates :surface, presence: true, uniqueness: true
 
-  # アノテーション・コンソールの未注釈キュー(annotated_at が未セットの語)。
+  # アノテーション状態。未対応(既定)→ 保留(あとで見直す。キューから外れる)→ 完了(公開)。
+  # 完了は annotated_at ありと一致する(mark_annotated が両方を立てる)。公開判定は従来どおり
+  # annotated_at で行うため、annotated / published スコープはこの enum に依存しない。
+  # enum が Word.annotation_pending / annotation_on_hold / annotation_done スコープを生やす。
+  enum :annotation_status, { pending: 0, on_hold: 1, done: 2 }, prefix: :annotation
+
+  # 「注釈済み(公開されない未完了)」の集合 = 未対応 + 保留(annotated_at が未セット)。
   scope :unannotated, -> { where(annotated_at: nil) }
-  # 公開対象。注釈済み(annotated_at あり)の語だけを全世界に見せる。
+  # 公開対象。注釈済み(annotated_at あり = 完了)の語だけを全世界に見せる。
   scope :annotated, -> { where.not(annotated_at: nil) }
   # 未承認の提案(Claude の下書き)が付いている語。コンソールの「提案あり」フィルタ用(Issue 38)。
   scope :with_pending_proposal, -> { joins(:annotation_proposal).merge(AnnotationProposal.pending) }
@@ -23,9 +29,16 @@ class Word < ApplicationRecord
       .distinct
   }
 
-  # 注釈完了とみなす時刻をセットする(保存は呼び出し側で行う)。
+  # 注釈完了とみなす時刻と状態(完了)をセットする(保存は呼び出し側で行う)。
   def mark_annotated
     self.annotated_at = Time.current
+    self.annotation_status = :done
+  end
+
+  # 保留にする(コンソールのキューから外れ、あとで見直せる)。公開はしない(保存は呼び出し側)。
+  def mark_on_hold
+    self.annotation_status = :on_hold
+    self.annotated_at = nil
   end
 
   # 詳細ページの鮮度判定(条件付きGET)に関わるレコード一式。

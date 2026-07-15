@@ -1,18 +1,20 @@
 # 単語フィクスチャ。char_type_pattern はフィクスチャ読込では
 # コールバックが走らないため、surface に対応する値を明示しておく。
-# annotated_at ありは公開対象(注釈済み)、無しは未注釈(公開されない)。
+# annotation_status: done(annotated_at あり)は公開対象、pending/on_hold は公開されない。
 abc_murder:
   surface: ABC殺人事件
   char_type_pattern: AAA漢漢漢漢
   annotated_at: 2026-06-01 10:00:00
+  annotation_status: done
 
 curry:
   surface: カレーライス
   char_type_pattern: アアアアアア
   annotated_at: 2026-06-02 10:00:00
+  annotation_status: done
 
-# 未注釈(annotated_at なし)。公開一覧・詳細・検索には出ない。
-# アノテーション・コンソールの「保存して次の未注釈へ」を試すため2語用意する。
+# 未対応(annotation_status は既定の pending、annotated_at なし)。公開されない。
+# アノテーション・コンソールの「保存して次の未対応へ」を試すため2語用意する。
 pending_haruhi:
   surface: 涼宮ハルヒの憂鬱
   char_type_pattern: 漢漢アアアあ漢漢
@@ -20,3 +22,9 @@ pending_haruhi:
 pending_bermuda:
   surface: バミューダトライアングル
   char_type_pattern: アアアアアアアアアアアア
+
+# 保留(on_hold)。コンソールのキューには出ないが、単語一覧の「保留」から見直せる。
+on_hold_word:
+  surface: ペンディングされた言葉
+  char_type_pattern: アアアアアアあああ漢漢
+  annotation_status: on_hold

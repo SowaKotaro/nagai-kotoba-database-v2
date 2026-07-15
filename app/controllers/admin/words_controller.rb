@@ -2,8 +2,9 @@
 # 表層形の訂正やジャンル・品詞などの付与はアノテーション・コンソール(Admin::AnnotationsController)が担う。
 class Admin::WordsController < Admin::BaseController
   PER_PAGE = 100
-  # 注釈状態の絞り込み(Word の同名スコープをそのまま使う)。
-  STATUS_FILTERS = %w[unannotated annotated].freeze
+  # 注釈状態の絞り込み(enum が生やす Word の同名スコープをそのまま使う)。
+  # 未対応 / 保留 / 完了 の3状態。
+  STATUS_FILTERS = %w[annotation_pending annotation_on_hold annotation_done].freeze
 
   before_action :set_word, only: :destroy
 

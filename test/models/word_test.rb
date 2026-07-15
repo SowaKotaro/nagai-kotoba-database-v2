@@ -41,5 +41,34 @@ class WordTest < ActiveSupport::TestCase
     assert_not_includes Word.annotated, words(:pending_haruhi)
     assert_includes Word.unannotated, words(:pending_haruhi)
     assert_not_includes Word.unannotated, words(:abc_murder)
+    # 保留も annotated_at なしなので unannotated(未公開)に含まれる
+    assert_includes Word.unannotated, words(:on_hold_word)
+  end
+
+  test "annotation_status は未対応/保留/完了の3状態" do
+    assert words(:pending_haruhi).annotation_pending?
+    assert words(:on_hold_word).annotation_on_hold?
+    assert words(:abc_murder).annotation_done?
+
+    assert_includes Word.annotation_pending, words(:pending_haruhi)
+    assert_includes Word.annotation_on_hold, words(:on_hold_word)
+    assert_includes Word.annotation_done, words(:abc_murder)
+    # コンソールのキュー(未対応)には保留・完了は出ない
+    assert_not_includes Word.annotation_pending, words(:on_hold_word)
+    assert_not_includes Word.annotation_pending, words(:abc_murder)
+  end
+
+  test "mark_annotated は annotated_at と状態(完了)を立てる" do
+    word = words(:pending_haruhi)
+    word.mark_annotated
+    assert_not_nil word.annotated_at
+    assert word.annotation_done?
+  end
+
+  test "mark_on_hold は状態を保留にし annotated_at を落とす" do
+    word = words(:pending_haruhi)
+    word.mark_on_hold
+    assert word.annotation_on_hold?
+    assert_nil word.annotated_at
   end
 end

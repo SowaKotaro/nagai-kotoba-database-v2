@@ -46,8 +46,11 @@ Rails.application.routes.draw do
     resources :annotation_proposals, only: %i[new create] do
       get :export, on: :collection
     end
-    # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未注釈へ誘導。
-    resources :annotations, only: %i[index show update]
+    # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未対応へ誘導。
+    # hold は現在の語を保留にしてキューから外し、次の未対応へ進む。
+    resources :annotations, only: %i[index show update] do
+      patch :hold, on: :member
+    end
     # タグ統括管理: マスタ(ジャンル/エンティティ/品詞/語種/特徴)の一覧・リネーム・削除・統合。
     # :kind は TagKind のホワイトリストで解決する(任意モデルを掴ませない)。
     resources :tags, only: :index

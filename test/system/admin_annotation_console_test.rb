@@ -30,6 +30,20 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_equal genres(:small_novel).id, word_senses(:pending).reload.genre_id
   end
 
+  test "保留にすると状態が保留になり、キューから外れて次の未対応へ進む" do
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "genre-picker"
+
+    # 「保留にして次へ」は同じフォームを hold へ送る(formaction)。次の未対応(bermuda)へ進む
+    click_expecting(expect_css: "h1.ann-word", text: words(:pending_bermuda).surface, wait: 10) do
+      find("input[type=submit][value='#{I18n.t("admin.annotations.hold")}']")
+    end
+
+    # 保留になり、公開時刻は付かない
+    assert @word.reload.annotation_on_hold?
+    assert_nil @word.annotated_at
+  end
+
   # 最低限のアノテーション項目(読み・語種・ジャンル・品詞・エンティティ)が揃うと
   # 語義カードの枠が緑(is-complete)になる。保存できるかどうかとは無関係の目印。
   test "最低限の項目が揃うと語義カードが完了表示になり、ひとつ欠けると戻る" do
