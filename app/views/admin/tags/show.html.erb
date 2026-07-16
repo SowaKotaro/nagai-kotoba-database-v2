@@ -7,6 +7,30 @@
   <p class="field-hint"><%= t("admin.tags.seed_note") %></p>
 <% end %>
 
+<% if @kind.creatable? %>
+  <%# 新規追加: 名前だけの単純マスタなので、この1パネルで完結させる。 %>
+  <details class="tag-add" <%= "open" if @new_record&.errors&.any? %>>
+    <summary class="tag-add__summary"><%= t("admin.tags.add.summary", kind: @kind.label) %></summary>
+    <p class="tag-add__hint"><%= t("admin.tags.add.hint") %></p>
+
+    <% if @new_record&.errors&.any? %>
+      <ul class="form-errors">
+        <% @new_record.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <%= form_with url: admin_create_tag_path(@kind.key), method: :post, scope: :tag, class: "tag-add__form" do |form| %>
+      <div class="field">
+        <%= form.label :name, t("admin.tags.name_label") %>
+        <%= form.text_field :name, value: @new_record&.name %>
+      </div>
+      <%= form.submit t("admin.tags.add.submit"), class: "btn btn--primary" %>
+    <% end %>
+  </details>
+<% end %>
+
 <% if @records.any? %>
   <%# 統合: source を付けている全データを target に付け替えて source を削除する。
       ジャンルは同じ階層同士でのみ統合できる。 %>

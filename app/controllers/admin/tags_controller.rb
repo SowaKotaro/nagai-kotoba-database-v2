@@ -12,11 +12,20 @@ class Admin::TagsController < Admin::BaseController
 
   # 1種別のタグ一覧(使用件数つき)。
   def show
-    @records = @kind.records.to_a
-    @usage_counts = @kind.usage_counts
-    @deletable_ids = @kind.deletable_ids(@records, @usage_counts)
-    # ジャンルは親名の表示に使う(id => レコードの索引。N+1 回避)。
-    @genre_index = @records.index_by(&:id) if @kind.hierarchical?
+    load_records
+  end
+
+  # 新規追加。頻繁な操作ではないので、追加口はこの画面だけに置く(TagKind#creatable? の種別のみ)。
+  def create
+    raise ActiveRecord::RecordNotFound, "tag kind not creatable: #{@kind.key}" unless @kind.creatable?
+
+    @new_record = @kind.model.new(tag_params)
+    if @new_record.save
+      redirect_to admin_tag_kind_path(@kind.key), notice: t("admin.tags.flash.created", name: @new_record.name)
+    else
+      load_records
+      render :show, status: :unprocessable_entity
+    end
   end
 
   def edit
@@ -63,6 +72,15 @@ class Admin::TagsController < Admin::BaseController
 
   def set_kind
     @kind = TagKind.find(params[:kind])
+  end
+
+  # 一覧の表示に要る値をまとめて用意する(show と、追加に失敗した際の再表示で使う)。
+  def load_records
+    @records = @kind.records.to_a
+    @usage_counts = @kind.usage_counts
+    @deletable_ids = @kind.deletable_ids(@records, @usage_counts)
+    # ジャンルは親名の表示に使う(id => レコードの索引。N+1 回避)。
+    @genre_index = @records.index_by(&:id) if @kind.hierarchical?
   end
 
   # どの種別でもフォームは tag[name] で受ける(単一コントローラのため)。
