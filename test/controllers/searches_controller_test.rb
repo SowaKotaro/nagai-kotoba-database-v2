@@ -97,7 +97,22 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
   test "正規表現の入力欄が表示される" do
     get search_path
     assert_select "input#regexp"
-    assert_select ".field-hint", text: I18n.t("searches.regexp_hint")
+  end
+
+  test "正規表現の書き方は既定で畳まれたヘルプに入り、記法の早見表を持つ" do
+    get search_path
+    # 畳まれている(open 属性なし)= 目立たせない。ホバー不要で開ける details
+    assert_select "details.field-help#regexp-help"
+    assert_select "details.field-help[open]", count: 0
+    assert_select "summary.field-help__summary", text: /#{I18n.t('searches.regexp_help.summary')}/
+    assert_select ".regexp-help__table dt", text: "^ア"
+    assert_select ".regexp-help__table dd", text: "アで始まる"
+    assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
+  end
+
+  test "正規表現の入力欄はヘルプと aria-describedby で結び付いている" do
+    get search_path
+    assert_select "input#regexp[aria-describedby=?]", "regexp-help"
   end
 
   test "正規表現も単語一覧へ引き継がれる" do

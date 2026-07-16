@@ -12,11 +12,26 @@
     <%= text_field_tag :q, @search.q %>
   </div>
 
-  <%# 正規表現: 表層形・読みのどちらかに一致すればヒット(MySQL の REGEXP) %>
+  <%# 正規表現: 表層形・読みのどちらかに一致すればヒット(MySQL の REGEXP)。
+      書き方は畳んだ早見表に逃がす(ホバーでしか読めない tooltip は使わない。design.md §6) %>
   <div class="field">
     <%= label_tag :regexp, class: "field-legend" do %><%= icon "code" %><%= t("searches.regexp") %><% end %>
-    <%= text_field_tag :regexp, @search.regexp, placeholder: "^ア.*ン$", autocomplete: "off", spellcheck: false %>
-    <p class="field-hint"><%= t("searches.regexp_hint") %></p>
+    <%= text_field_tag :regexp, @search.regexp, placeholder: "^ア.*ン$",
+          autocomplete: "off", spellcheck: false, aria: { describedby: "regexp-help" } %>
+    <details class="field-help" id="regexp-help">
+      <summary class="field-help__summary">
+        <%= icon "caret_down", "field-help__caret" %><%= t("searches.regexp_help.summary") %>
+      </summary>
+      <div class="field-help__body">
+        <dl class="regexp-help__table">
+          <% t("searches.regexp_help.rows").each do |row| %>
+            <dt><%= row[:pattern] %></dt>
+            <dd><%= row[:meaning] %></dd>
+          <% end %>
+        </dl>
+        <p class="field-help__note"><%= t("searches.regexp_help.note") %></p>
+      </div>
+    </details>
   </div>
 
   <%# 読みの文字数: 二つまみスライダー(10〜30)。上限30は「以上」。 %>
