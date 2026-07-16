@@ -2685,6 +2685,36 @@ textarea {
   margin-top: var(--space-1);
 }
 
+/* 追加パネル(details)。統合パネルと同じ墨枠のトーンに揃える */
+.tag-add {
+  border: 1px solid var(--ink);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.tag-add__summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+}
+.tag-add[open] .tag-add__summary {
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  display: block;
+  padding-bottom: var(--space-2);
+}
+.tag-add__hint {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: var(--space-2) 0 var(--space-3);
+  max-width: 46em;
+}
+.tag-add__form .field {
+  margin-bottom: var(--space-3);
+  max-width: 24em;
+}
+
 /* 統合パネル(details)。一括適用パネルと同じ墨枠のトーンに揃える */
 .tag-merge {
   border: 1px solid var(--ink);

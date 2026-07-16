@@ -297,7 +297,12 @@ ja:
         choose: "選択してください"
         submit: "統合する"
         confirm: "統合元のタグを統合先にまとめ、統合元を削除します。元に戻せません。よろしいですか？"
+      add:
+        summary: "%{kind}を追加する"
+        hint: "新しいタグを1件追加します。追加したタグはアノテーション・コンソールの選択肢に並びます。用語解説（config/linguistic_features_glossary.yml）と seed（app/models/seed_catalog.rb）にも同じ名前を追記しておくと、解説が表示され、他の環境にも行き渡ります。"
+        submit: "追加する"
       flash:
+        created: "タグ「%{name}」を追加しました。"
         updated: "「%{name}」に変更しました。"
         destroyed: "タグ「%{name}」を削除しました。"
         destroy_blocked: "タグ「%{name}」は使用中のため削除できません。"

@@ -62,6 +62,8 @@ Rails.application.routes.draw do
     # :kind は TagKind のホワイトリストで解決する(任意モデルを掴ませない)。
     resources :tags, only: :index
     get    "tags/:kind",          to: "tags#show",    as: :tag_kind
+    # 新規追加は種別トップの1パネルで名前だけ受けるため :id を取らない(許可種別は TagKind#creatable?)。
+    post   "tags/:kind",          to: "tags#create",  as: :create_tag
     get    "tags/:kind/:id/edit", to: "tags#edit",    as: :edit_tag
     patch  "tags/:kind/:id",      to: "tags#update",  as: :tag
     # 削除は更新と同じパス(admin_tag_path)を DELETE で叩くため、ヘルパは作らない。

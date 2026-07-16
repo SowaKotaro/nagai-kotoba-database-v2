@@ -110,6 +110,58 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert Genre.exists?(genres(:small_novel).id)
   end
 
+  # --- 新規追加(言語学的特徴のみ) ---
+  test "未認証だと追加できずログインへリダイレクト" do
+    assert_no_difference -> { LinguisticFeature.count } do
+      post admin_create_tag_path("linguistic_features"), params: { tag: { name: "音便" } }
+    end
+    assert_redirected_to new_session_path
+  end
+
+  test "言語学的特徴を追加できる" do
+    sign_in_as(Admin.take)
+    assert_difference -> { LinguisticFeature.count }, 1 do
+      post admin_create_tag_path("linguistic_features"), params: { tag: { name: "音便" } }
+    end
+    assert_redirected_to admin_tag_kind_path("linguistic_features")
+    assert_equal I18n.t("admin.tags.flash.created", name: "音便"), flash[:notice]
+  end
+
+  test "名前が空なら 422 で再描画" do
+    sign_in_as(Admin.take)
+    assert_no_difference -> { LinguisticFeature.count } do
+      post admin_create_tag_path("linguistic_features"), params: { tag: { name: "" } }
+    end
+    assert_response :unprocessable_entity
+    assert_select "ul.form-errors li"
+  end
+
+  test "既存と同じ名前なら 422 で再描画" do
+    sign_in_as(Admin.take)
+    assert_no_difference -> { LinguisticFeature.count } do
+      post admin_create_tag_path("linguistic_features"), params: { tag: { name: "連濁" } }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  test "追加を許可していない種別は 404" do
+    sign_in_as(Admin.take)
+    assert_no_difference -> { PartOfSpeech.count } do
+      post admin_create_tag_path("parts_of_speech"), params: { tag: { name: "形容詞" } }
+    end
+    assert_response :not_found
+  end
+
+  test "追加パネルは言語学的特徴の一覧にだけ出る" do
+    sign_in_as(Admin.take)
+
+    get admin_tag_kind_path("linguistic_features")
+    assert_select "details.tag-add", 1
+
+    get admin_tag_kind_path("parts_of_speech")
+    assert_select "details.tag-add", 0
+  end
+
   # --- seed 管理タグの印と警告(Issue 49) ---
   test "seed 管理タグには一覧で seed 印、編集画面で警告が出る" do
     sign_in_as(Admin.take)

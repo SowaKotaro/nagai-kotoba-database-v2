@@ -37,6 +37,13 @@ class TagKind
     key == "genres"
   end
 
+  # この画面からタグを新規追加できるか。
+  # 言語学的特徴だけを許可する。他の種別はアノテーション・コンソールからその場追加できる
+  # (ジャンルは親の選択が要る)ため、タグ管理では追加を受け付けない。
+  def creatable?
+    key == "linguistic_features"
+  end
+
   # レコードが seed 管理(SeedCatalog 収載)か。「seed」印とリネーム時の警告表示に使う。
   # genre_index は id => Genre の索引(一覧での親参照の N+1 回避用)。
   def seeded?(record, genre_index: nil)
