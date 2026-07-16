@@ -1,5 +1,6 @@
 <%# 1つの語義提案の内訳(意味・ジャンル・エンティティ・品詞・語種・別表記)。
-    local: sense(AnnotationProposal::SenseProposal)。未知のマスタ名は新設候補(朱)で示す。 %>
+    local: sense(AnnotationProposal::SenseProposal) / word / creatable。
+    未知のマスタ名は新設候補(朱)で示し、creatable(単一語義)ならワンタップ作成ボタンにする(Issue 66)。 %>
 <dl class="ann-proposal__grid">
   <% if sense.meaning %>
     <dt><%= t("admin.annotations.meaning") %></dt>
@@ -17,8 +18,11 @@
       <% sense.genre_path.each_with_index do |name, i| %>
         <% if i.positive? %><span class="sep">›</span><% end %><span><%= name %></span>
       <% end %>
+      <%# 小分類だけ未登録でも、中分類まで既存の木で解決していればワンタップ作成できる %>
       <% unless sense.resolved_genre %>
-        <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <%= render "new_master", field: "genre", word: word,
+              creatable: creatable && sense.resolved_genre_chain.last&.medium?,
+              label: t("admin.annotations.proposal.create_master") %>
       <% end %>
     </dd>
   <% end %>
@@ -28,7 +32,8 @@
     <dd>
       <%= sense.entity_type_name %>
       <% unless sense.resolved_entity_type %>
-        <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <%= render "new_master", field: "entity_type", word: word, creatable: creatable,
+              label: t("admin.annotations.proposal.create_master") %>
       <% end %>
     </dd>
   <% end %>
@@ -38,7 +43,8 @@
     <dd>
       <%= sense.part_of_speech_name %>
       <% unless sense.resolved_part_of_speech %>
-        <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <%= render "new_master", field: "part_of_speech", word: word, creatable: creatable,
+              label: t("admin.annotations.proposal.create_master") %>
       <% end %>
     </dd>
   <% end %>
@@ -48,7 +54,12 @@
     <dd>
       <%= sense.resolved_word_origins.map(&:name).join("・") %>
       <% sense.unknown_word_origin_names.each do |name| %>
-        <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <% if creatable %>
+          <%= render "new_master", field: "word_origin", word: word, creatable: true,
+                label: t("admin.annotations.proposal.create_named_master", name: name), name: name %>
+        <% else %>
+          <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+        <% end %>
       <% end %>
     </dd>
   <% end %>

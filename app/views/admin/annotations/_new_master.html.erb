@@ -1,0 +1,12 @@
+<%# locals: (field:, word:, creatable:, label:, name: nil) %>
+<%# 新設候補マスタ(Issue 66)。creatable(単一語義)ならワンタップ作成ボタン、そうでなければ表示だけ。
+    ボタンを押すと create_master が提案名でマスタを作り、apply_proposal=1 で再反映するので、
+    フォームに解決済みで入る(サーバ側で完結・新規 JS 不要)。 %>
+<% if creatable %>
+  <%= button_to label, create_master_admin_annotation_path(word),
+        params: { field: field, name: name, proposed: params[:proposed].presence },
+        form: { class: "ann-proposal__new-form", data: { turbo_frame: "annotation-console" } },
+        class: "ann-proposal__new ann-proposal__new--btn" %>
+<% else %>
+  <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+<% end %>
