@@ -26,4 +26,17 @@ module AdminHelper
     options["aria-current"] = "page" if admin_nav_current == section
     link_to label, path, options
   end
+
+  # 単語一覧のジャンル絞り込みセレクトの選択肢([表示名, id] の配列)。
+  # 大→中→小の階層順に、全角空白の字下げで階層が分かるように並べる。
+  def admin_genre_filter_options(genres)
+    by_parent = genres.group_by(&:parent_id)
+    (by_parent[nil] || []).flat_map do |large|
+      [ [ large.name, large.id ] ] +
+        (by_parent[large.id] || []).flat_map do |medium|
+          [ [ "　#{medium.name}", medium.id ] ] +
+            (by_parent[medium.id] || []).map { |small| [ "　　#{small.name}", small.id ] }
+        end
+    end
+  end
 end

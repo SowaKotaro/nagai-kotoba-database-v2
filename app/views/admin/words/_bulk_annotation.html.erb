@@ -6,8 +6,8 @@
   <p class="bulk-annotation__hint"><%= t("admin.bulk_annotations.hint") %></p>
 
   <%= form_with url: admin_bulk_annotation_path, method: :post, id: "bulk-annotation-form" do %>
-    <%# 適用後も検索・絞り込み・ページ位置を保つ %>
-    <% { q: @query.presence, status: @status, page: (@page if @page > 1) }.compact.each do |key, value| %>
+    <%# 適用後も検索・絞り込み(注釈状態・タグ)・ページ位置を保つ %>
+    <% { q: @query.presence, status: @status, page: (@page if @page > 1) }.merge(@tag_filters).compact.each do |key, value| %>
       <%= hidden_field_tag key, value %>
     <% end %>
 

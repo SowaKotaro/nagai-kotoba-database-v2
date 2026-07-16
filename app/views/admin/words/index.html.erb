@@ -2,13 +2,55 @@
 
 <h1 class="page-title"><%= t("admin.words.title") %></h1>
 
-<%# 検索(表層形・読みの部分一致)と注釈状態の絞り込み。状態はタブで切り替え、q を保持する %>
+<%# 検索(表層形・読みの部分一致)+タグ絞り込みと、注釈状態のタブ。
+    タグのセレクトは選択で即送信(auto-submit)。同質な語群を一括適用パネルで
+    まとめて付け替えるための入口になる(例: ジャンル「ことわざ」×品詞「普通名詞」→ 連語へ)。 %>
 <div class="admin-words-toolbar">
-  <%= form_with url: admin_words_path, method: :get, class: "admin-words-search" do %>
+  <%= form_with url: admin_words_path, method: :get, class: "admin-words-filter",
+        data: { controller: "auto-submit" } do %>
     <% if @status %><%= hidden_field_tag :status, @status %><% end %>
-    <%= text_field_tag :q, @query, placeholder: t("admin.words.index.q_placeholder"),
-          class: "admin-words-search__input", aria: { label: t("admin.words.index.q_label") } %>
-    <button type="submit" class="admin-words-search__submit" aria-label="<%= t("admin.words.index.search") %>"><%= icon "magnifying_glass" %></button>
+    <div class="admin-words-search">
+      <%= text_field_tag :q, @query, placeholder: t("admin.words.index.q_placeholder"),
+            class: "admin-words-search__input", aria: { label: t("admin.words.index.q_label") } %>
+      <button type="submit" class="admin-words-search__submit" aria-label="<%= t("admin.words.index.search") %>"><%= icon "magnifying_glass" %></button>
+    </div>
+
+    <div class="admin-words-tag-filters">
+      <label class="admin-words-tag-filter">
+        <span class="admin-words-tag-filter__label"><%= t("admin.words.index.filter_genre") %></span>
+        <%= select_tag :genre_id,
+              options_for_select(admin_genre_filter_options(@all_genres), @tag_filters[:genre_id]),
+              include_blank: t("admin.words.index.filter_any"),
+              data: { action: "change->auto-submit#submit" } %>
+      </label>
+      <label class="admin-words-tag-filter">
+        <span class="admin-words-tag-filter__label"><%= t("admin.words.index.filter_pos") %></span>
+        <%= select_tag :part_of_speech_id,
+              options_from_collection_for_select(@parts_of_speech, :id, :name, @tag_filters[:part_of_speech_id]),
+              include_blank: t("admin.words.index.filter_any"),
+              data: { action: "change->auto-submit#submit" } %>
+      </label>
+      <label class="admin-words-tag-filter">
+        <span class="admin-words-tag-filter__label"><%= t("admin.words.index.filter_entity") %></span>
+        <%= select_tag :entity_type_id,
+              options_from_collection_for_select(@entity_types, :id, :name, @tag_filters[:entity_type_id]),
+              include_blank: t("admin.words.index.filter_any"),
+              data: { action: "change->auto-submit#submit" } %>
+      </label>
+      <label class="admin-words-tag-filter">
+        <span class="admin-words-tag-filter__label"><%= t("admin.words.index.filter_origin") %></span>
+        <%= select_tag :word_origin_id,
+              options_from_collection_for_select(@word_origins, :id, :name, @tag_filters[:word_origin_id]),
+              include_blank: t("admin.words.index.filter_any"),
+              data: { action: "change->auto-submit#submit" } %>
+      </label>
+      <% if @tag_filters.any? %>
+        <%= link_to t("admin.words.index.filter_reset"),
+              admin_words_path({ q: @query.presence, status: @status }.compact),
+              class: "admin-words-tag-filter__reset" %>
+      <% end %>
+      <noscript><%= submit_tag t("admin.words.index.search"), class: "btn btn--sm" %></noscript>
+    </div>
   <% end %>
 
   <nav class="admin-status-tabs" aria-label="<%= t("admin.words.index.status_label") %>">
@@ -16,7 +58,7 @@
          "annotation_pending" => t("admin.words.index.status_pending"),
          "annotation_on_hold" => t("admin.words.index.status_on_hold"),
          "annotation_done" => t("admin.words.index.status_done") }.each do |status, label| %>
-      <%= link_to label, admin_words_path({ q: @query.presence, status: status }.compact),
+      <%= link_to label, admin_words_path({ q: @query.presence, status: status }.merge(@tag_filters).compact),
             class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
     <% end %>
   </nav>
