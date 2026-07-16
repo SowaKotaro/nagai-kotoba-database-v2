@@ -108,6 +108,34 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.entry-row__surface[href=?]", word_path(words(:pending_haruhi)), count: 0
   end
 
+  # --- 正規表現での絞り込み ---
+  test "一覧を正規表現で絞り込める" do
+    get words_path(regexp: "^ABC.*事件$")
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry)), count: 0
+  end
+
+  test "不正な正規表現(URL 直打ち)は 500 にせず、条件から外して警告を出す" do
+    get words_path(regexp: "(ア")
+    assert_response :success
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.syntax')}/
+    # 壊れた式は無視されるので、公開語は変わらず並ぶ
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
+  end
+
+  test "照合が打ち切られる正規表現は 500 にせず空の結果と警告を返す" do
+    # MySQL が regexp_time_limit を超えて照合を打ち切ったときの動き。
+    # この上限は GLOBAL 変数でテストからは絞れず、フィクスチャの短い読みでは
+    # 実際に踏ませられないため、DB が返すエラーを差し込んで再現する。
+    with_regexp_matching_timeout do
+      get words_path(regexp: "^(ア+)+$X")
+    end
+    assert_response :success
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.runtime')}/
+    assert_select "a.entry-row__surface", count: 0
+  end
+
   test "未注釈の語の詳細は 404" do
     get word_path(words(:pending_haruhi))
     assert_response :not_found
@@ -453,5 +481,18 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     position = response.body.index(%(href="#{word_path(word)}"))
     assert position, "#{word.surface} が一覧に見当たりません"
     position
+  end
+
+  # 正規表現の照合中に MySQL が打ち切りエラーを返す状況を、ブロックの間だけ作る。
+  # (minitest/mock は Minitest 6 で同梱されなくなったため差し替えは手で行う)
+  def with_regexp_matching_timeout
+    singleton = WordSense.singleton_class
+    original = WordSense.method(:regexp_matching)
+    singleton.define_method(:regexp_matching) do |*|
+      raise ActiveRecord::StatementInvalid, "Mysql2::Error: Timeout exceeded in regular expression match."
+    end
+    yield
+  ensure
+    singleton.define_method(:regexp_matching) { |*args| original.call(*args) }
   end
 end

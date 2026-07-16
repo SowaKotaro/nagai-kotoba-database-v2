@@ -11,6 +11,8 @@ class WordSenseSearch
   def results
     relation = WordSense.published
     relation = relation.keyword(q) if q.present?
+    # 不正なパターンは条件から外す(SQL エラーにせず、他の条件だけで検索する)。
+    relation = relation.regexp_matching(search_regexp) if search_regexp.present? && regexp_error.nil?
     relation = relation.reading_length_at_least(reading_length_min) if reading_length_min
     relation = relation.reading_length_at_most(reading_length_max) if reading_length_max
     relation = relation.reading_length_is(reading_length) if reading_length
@@ -34,6 +36,11 @@ class WordSenseSearch
 
   # --- フォーム再表示用に、受け取った値をそのまま返すアクセサ ---
   def q = @params[:q].to_s.strip
+  def regexp = search_regexp.source
+  # 正規表現条件の値オブジェクト。フォームの入力値・エラー判定・実際に投げるパターンを持つ。
+  def search_regexp = @search_regexp ||= SearchRegexp.new(@params[:regexp])
+  # 検索前に分かる正規表現のエラー(:syntax / :too_long)。無ければ nil。
+  def regexp_error = search_regexp.error
   def reading_length_min = positive_integer(:reading_length_min)
   def reading_length_max = positive_integer(:reading_length_max)
   def reading_length = positive_integer(:reading_length)
@@ -65,6 +72,7 @@ class WordSenseSearch
   def to_query_params
     {
       q: q.presence,
+      regexp: regexp.presence,
       reading_length_min: reading_length_min,
       reading_length_max: reading_length_max,
       reading_length: reading_length,

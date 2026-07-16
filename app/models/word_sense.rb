@@ -36,6 +36,12 @@ class WordSense < ApplicationRecord
     pattern = "%#{sanitize_sql_like(text)}%"
     joins(:word).where("words.surface LIKE :pattern OR word_senses.reading LIKE :pattern", pattern: pattern)
   }
+  # 表層形・読みの正規表現一致(MySQL の REGEXP)。インデックスは効かず全表スキャンになる。
+  # 読み用と表層形用でパターンが異なる理由は SearchRegexp を参照。
+  scope :regexp_matching, lambda { |search_regexp|
+    joins(:word).where("word_senses.reading REGEXP :reading OR words.surface REGEXP :surface",
+                       reading: search_regexp.for_reading, surface: search_regexp.for_surface)
+  }
   # 読みの長さ(生成カラム reading_length)の範囲・完全一致。
   scope :reading_length_at_least, ->(n) { where(reading_length: n..) }
   scope :reading_length_at_most, ->(n) { where(reading_length: ..n) }

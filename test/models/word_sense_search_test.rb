@@ -32,6 +32,52 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [], ids(q: "%殺人%")
   end
 
+  # --- 正規表現(表層形・読み) ---
+  # フィクスチャの murder は読みがひらがなだが、実データの読みはカタカナで統一されている。
+  # 読みへの一致はカタカナの curry で確かめる。
+  test "正規表現は読みに一致で絞れる" do
+    assert_equal [ word_senses(:curry).id ], ids(regexp: "^カ.*ー$")
+  end
+
+  test "正規表現は表層形に一致でも絞れる" do
+    assert_equal [ word_senses(:murder).id ], ids(regexp: "^ABC.*事件$")
+  end
+
+  test "正規表現のひらがな入力はカタカナの読みに一致する" do
+    assert_equal [ word_senses(:curry).id ], ids(regexp: "^かれー$")
+  end
+
+  test "正規表現は一致しなければ空" do
+    assert_equal [], ids(regexp: "^ゼッタイニナイヨミ$")
+  end
+
+  test "正規表現は未注釈語には当たらない" do
+    assert_equal [], ids(regexp: "涼宮")
+  end
+
+  test "正規表現は他の条件と AND で積む" do
+    assert_equal [], ids(regexp: "^カ.*ー$", first_char: [ "さ" ])
+  end
+
+  test "不正な正規表現は :syntax を返し、条件から外して検索する" do
+    search = WordSenseSearch.new(regexp: "(ア")
+    assert_equal :syntax, search.regexp_error
+    # 壊れた式で SQL エラーにせず、他の条件だけで絞る(ここでは条件なし = 公開全件)。
+    assert_equal WordSense.published.pluck(:id).sort, search.results.pluck(:id).sort
+  end
+
+  test "正規表現は条件チップ・引き継ぎ用のクエリに含まれる" do
+    assert_equal "^ア.*ン$", WordSenseSearch.new(regexp: "^ア.*ン$").to_query_params[:regexp]
+  end
+
+  test "正規表現だけでも絞り込み条件ありと判定する" do
+    assert WordSenseSearch.new(regexp: "^ア").conditions?
+  end
+
+  test "正規表現はインデックス許可ファセットにならない" do
+    assert_nil WordSenseSearch.new(regexp: "^ア").indexable_facet
+  end
+
   test "読みの文字数の下限で絞れる" do
     result = ids(reading_length_min: "5")
     assert_includes result, word_senses(:murder).id

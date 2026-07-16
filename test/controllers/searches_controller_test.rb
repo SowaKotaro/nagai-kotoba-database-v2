@@ -93,6 +93,47 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to words_path(word_origin_id: [ word_origins(:kango).id ])
   end
 
+  # --- 正規表現 ---
+  test "正規表現の入力欄が表示される" do
+    get search_path
+    assert_select "input#regexp"
+  end
+
+  test "正規表現の書き方は既定で畳まれたヘルプに入り、記法の早見表を持つ" do
+    get search_path
+    # 畳まれている(open 属性なし)= 目立たせない。ホバー不要で開ける details
+    assert_select "details.field-help#regexp-help"
+    assert_select "details.field-help[open]", count: 0
+    assert_select "summary.field-help__summary", text: /#{I18n.t('searches.regexp_help.summary')}/
+    assert_select ".regexp-help__table dt", text: "^ア"
+    assert_select ".regexp-help__table dd", text: "アで始まる"
+    assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
+  end
+
+  test "正規表現の入力欄はヘルプと aria-describedby で結び付いている" do
+    get search_path
+    assert_select "input#regexp[aria-describedby=?]", "regexp-help"
+  end
+
+  test "正規表現も単語一覧へ引き継がれる" do
+    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "^ア.*ン$" }
+    assert_redirected_to words_path(regexp: "^ア.*ン$")
+  end
+
+  test "不正な正規表現ではリダイレクトせず、入力を残して理由を伝える" do
+    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "(ア" }
+    assert_response :success
+    assert_select "input#regexp[value=?]", "(ア"
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.syntax')}/
+  end
+
+  test "長すぎる正規表現もリダイレクトせず理由を伝える" do
+    get search_path, params: { commit: I18n.t("searches.submit"),
+                               regexp: "ア" * (SearchRegexp::MAX_LENGTH + 1) }
+    assert_response :success
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.too_long')}/
+  end
+
   test "ジャンルの折り畳みは選択なしではすべて畳まれている" do
     get search_path
     assert_select "details.genre-fold", minimum: 1

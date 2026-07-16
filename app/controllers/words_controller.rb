@@ -12,6 +12,8 @@ class WordsController < ApplicationController
     @page = [ params[:page].to_i, 1 ].max
     @search = WordSenseSearch.new(search_filter_params)
     @sort = WordSort.new(params[:sort])
+    # 不正な正規表現(URL 直打ち等)は条件から外して検索されるので、外したことを伝える。
+    flash.now[:alert] = t("searches.regexp_error.#{@search.regexp_error}") if @search.regexp_error
 
     respond_to do |format|
       format.html { load_paginated_words }
@@ -61,6 +63,16 @@ class WordsController < ApplicationController
                   .order(@sort.order_clause)
                   .limit(PER_PAGE)
                   .offset((@page - 1) * PER_PAGE)
+                  .to_a
+  rescue ActiveRecord::StatementInvalid
+    # MySQL が正規表現の照合を打ち切ったとき(regexp_time_limit 超過)だけ、
+    # 500 にせず空の結果 + 警告で返す。正規表現を指定していないなら別の障害なので投げ直す。
+    raise unless @search.search_regexp.present?
+
+    flash.now[:alert] = t("searches.regexp_error.runtime")
+    @words = []
+    @total_count = 0
+    @total_pages = 1
   end
 
   # 新着フィード(Atom 用)。注釈された順に新しいものから FEED_LIMIT 件。
@@ -83,7 +95,7 @@ class WordsController < ApplicationController
   # 検索フォーム経由は配列、ファセットリンクは単一値で届くキーがあるため両方許可する。
   def search_filter_params
     params.permit(
-      :q, :reading_length_min, :reading_length_max, :reading_length, :mora_count,
+      :q, :regexp, :reading_length_min, :reading_length_max, :reading_length, :mora_count,
       :char_type_pattern, :char_type_partial, :char_type_ignore_case,
       :rhythm_pattern, :vowel_reading, :word_origin_id,
       :genre_id, :first_char, :last_char,

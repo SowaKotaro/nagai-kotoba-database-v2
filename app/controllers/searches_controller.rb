@@ -7,11 +7,13 @@ class SearchesController < ApplicationController
   # commit なし(条件変更リンクからの遷移など)は、受け取った条件をフォームに反映して表示するだけ。
   def index
     @search = WordSenseSearch.new(search_params)
-    if params[:commit].present?
+    if params[:commit].present? && @search.regexp_error.nil?
       redirect_to words_path(@search.to_query_params)
       return
     end
 
+    # 正規表現が不正なら一覧へ飛ばさず、フォームに入力を残したまま理由を伝える。
+    flash.now[:alert] = t("searches.regexp_error.#{@search.regexp_error}") if @search.regexp_error
     load_filter_masters
   end
 
@@ -31,7 +33,7 @@ class SearchesController < ApplicationController
     # genre_id / word_origin_id はフォームからは配列、ファセットリンクからは単一値で
     # 届くため両方許可する。vowel_reading は母音パターン検索用の生カナ入力。
     params.permit(
-      :q, :reading_length_min, :reading_length_max,
+      :q, :regexp, :reading_length_min, :reading_length_max,
       :char_type_pattern, :char_type_partial, :char_type_ignore_case,
       :rhythm_pattern, :vowel_reading, :genre_id, :word_origin_id,
       genre_id: [], first_char: [], last_char: [], word_origin_id: [],

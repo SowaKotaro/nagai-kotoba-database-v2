@@ -25,6 +25,7 @@ module SearchesHelper
   def applied_search_conditions(search)
     conditions = []
     conditions << [ t("searches.q_label"), search.q ] if search.q.present?
+    conditions << [ t("searches.regexp"), search.regexp ] if search.regexp.present?
     if search.reading_length_min || search.reading_length_max
       conditions << [ t("searches.reading_length"), reading_length_phrase(search) ]
     end

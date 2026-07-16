@@ -111,6 +111,29 @@ ja:
   searches:
     title: "検索・絞り込み"
     q_label: "キーワード（表層形・読み）"
+    regexp: "正規表現（表層形・読み）"
+    regexp_help:
+      summary: "書き方"
+      note: "表層形か読みのどちらかに一致すればヒットします。読みはカタカナで照合するので、ひらがなで書いても構いません。"
+      rows:
+        - pattern: "^ア"
+          meaning: "アで始まる"
+        - pattern: "ン$"
+          meaning: "ンで終わる"
+        - pattern: "."
+          meaning: "任意の1文字"
+        - pattern: ".*"
+          meaning: "任意の0文字以上"
+        - pattern: "ア{3}"
+          meaning: "アを3回繰り返す"
+        - pattern: "[アイウ]"
+          meaning: "ア・イ・ウ のどれか1文字"
+        - pattern: "(キョウ|トウ)"
+          meaning: "キョウ または トウ"
+    regexp_error:
+      syntax: "正規表現の書き方に誤りがあります。式を見直してください。"
+      too_long: "正規表現が長すぎます（200文字まで）。式を短くしてください。"
+      runtime: "正規表現の照合に時間がかかりすぎたため中断しました。より単純な式でお試しください。"
     legend:
       reading: "読みの条件"
       category: "分類・特徴の条件"
