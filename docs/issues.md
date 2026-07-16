@@ -191,17 +191,6 @@
   - [ ] 規模拡大時: FULLTEXT インデックス(ngram parser)への移行検討
 - 期待効果: クローラ・悪意あるアクセスへの耐性。単一サーバ構成の延命。
 
-## Issue 54: Atom フィードのジャンル祖先 N+1 解消
-- 種別: bug
-- 状態: 未着手
-- 優先度: P2 ／ Impact: Low ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-07-12 の技術監査より(Medium)。`words#feed` は `includes(word_senses: :genre)` だが、リード文生成(`words_helper.rb` の `self_and_ancestors`)で genre の parent→parent を遅延ロードするため、最大 20語×2階層 ≒ 40 クエリの N+1。`words#show` は `genre: { parent: :parent }` を preload しており対照的。
-- 内容:
-  - [ ] feed の preload を `words#show` と同じ深さ(`genre: { parent: :parent }`)に揃える
-  - [ ] フィードへの HTTP キャッシュ(`fresh_when` / `expires_in`)の追加検討
-- 期待効果: フィード取得のクエリ数削減(約40→数クエリ)。クローラ・リーダーの定期アクセスに強くなる。
-
 ## Issue 55: config.load_defaults を 8.1 へ引き上げ
 - 種別: improvement
 - 状態: 未着手
@@ -403,6 +392,7 @@
 - **Issue 49: deploy:seed × マスタリネームの重複再発防止** [bug] — 完了(PR #73)。対策方式は「案a+b(リネーム追従マップ + UI警告)」をオーナー決定。マスタの名前リストを `app/models/seed_catalog.rb`(単一の正)に集約し、seed 実行時に RENAMES(旧名→新名)で全環境が改名に追従。移行先が既存の場合は改名せず警告(統合は /admin/tags に委ねる)。タグ統括管理には seed 収載タグの「seed」印(一覧)と更新手順の警告(編集画面)を表示。旧 `db/seeds/*.rb` 4本は削除。
 - **Issue 50: 管理者セッションの有効期限** [improvement] — 完了(PR #71)。永続 Cookie(約20年)を2週間の `expires` に変更。サーバ側も `updated_at` ベースのスライディング失効(`Session::LIFETIME`)を導入し、期限切れはアクセス時に破棄・ログイン時に掃除。DB 書き込みと Set-Cookie は1時間間隔に間引き。
 - **Issue 51: backfill タスクの last_char 再計算漏れ** [bug] — 完了(PR #72)。`backfill:reading_metrics` に `last_char` の再計算を追加。全派生カラム(words.char_type_pattern 含む)の現在値と再計算値の差分を報告する読み取り専用タスク `backfill:verify` を新設。verify がフィクスチャの実バグ(涼宮ハルヒの憂鬱の char_type_pattern で「の」が文字クラス化されていない)を検出したため同時修正。
+- **Issue 54: Atom フィードのジャンル祖先 N+1 解消** [bug] — 完了(PR #95)。feed の preload を `words#show` と同じ深さ(`genre: { parent: :parent }`)に揃え、リード文の `self_and_ancestors` による遅延ロード(最大 20語×2階層 ≒ 40 クエリ)を解消。あわせて条件付き GET(`fresh_when`。ETag はジャンル祖先を含む = touch されないマスタの改名も検知)を追加。
 
 ## アノテーション高速化(Issue 63〜70、2026-07-16 の UX 調査より)
 

@@ -18,7 +18,11 @@ class WordsController < ApplicationController
     respond_to do |format|
       format.html { load_paginated_words }
       format.json { load_paginated_words }
-      format.atom { @words = feed_words }
+      format.atom do
+        @words = feed_words
+        records = feed_cache_records
+        fresh_when(etag: records, last_modified: records.map(&:updated_at).max, public: true)
+      end
     end
   end
 
@@ -76,11 +80,24 @@ class WordsController < ApplicationController
   end
 
   # 新着フィード(Atom 用)。注釈された順に新しいものから FEED_LIMIT 件。
+  # リード文がジャンルのパンくず(大→中→小)を使うため、words#show と同じ深さで祖先まで
+  # preload する(genre 止まりだと語ごとに parent を遅延ロードする N+1 になる。Issue 54)。
   def feed_words
     Word.annotated
-        .includes(word_senses: :genre)
+        .includes(word_senses: { genre: { parent: :parent } })
         .order(annotated_at: :desc, id: :desc)
         .limit(FEED_LIMIT)
+        .to_a
+  end
+
+  # フィードの鮮度判定(条件付きGET)に関わるレコード一式。エントリ本文のリード文は
+  # ジャンル階層の名称を含むが、マスタは touch されず Word が古いままになるため、
+  # ジャンル(祖先含む)も明示的に加える(words#show の cache_dependencies と同じ理由)。
+  def feed_cache_records
+    @words.flat_map do |word|
+      genres = word.word_senses.flat_map { |sense| sense.genre&.self_and_ancestors }
+      [ word, *genres.compact ]
+    end
   end
 
   # 条件指定があれば、その条件を満たす語義を持つ注釈済みの語だけに絞る。
