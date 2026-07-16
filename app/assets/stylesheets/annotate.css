@@ -63,6 +63,10 @@
 .ann-proposal__grid dd { margin: 0; font-size: 14px; }
 .ann-proposal__grid .sep { color: var(--shu); margin: 0 4px; }
 .ann-proposal__new { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--shu); border: 1px solid var(--shu); padding: 0 6px; margin-left: 6px; }
+/* 新設候補のワンタップ作成ボタン(Issue 66)。バッジと同じ見た目で、hover で朱反転 */
+.ann-proposal__new-form { display: inline; margin: 0; }
+.ann-proposal__new--btn { background: transparent; cursor: pointer; line-height: 1.5; }
+.ann-proposal__new--btn:hover { background: var(--shu); color: var(--on-ink); }
 /* 提案パネルの特徴(該当部分つき)。1件ずつ縦に積み、該当部分は極小の等幅で添える */
 .ann-proposal__feature { display: block; margin: 2px 0; }
 .ann-proposal__feature b { font-weight: 600; }

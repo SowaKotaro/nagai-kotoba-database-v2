@@ -28,17 +28,18 @@
           class: "btn btn--sm", data: { turbo_frame: "annotation-console" } %>
   </div>
 
-  <%# 複数語義(同音異義語・Issue 41)は語義ごとに区切って見せる。単一なら見出しは付けない %>
+  <%# 複数語義(同音異義語・Issue 41)は語義ごとに区切って見せる。単一なら見出しは付けない。
+      新設候補のワンタップ作成(Issue 66)は再反映で全語義を組み直す都合上、単一語義のときだけ有効にする %>
   <% if proposal.multiple_senses? %>
     <p class="ann-proposal__senses-note"><%= t("admin.annotations.proposal.multiple_senses", count: proposal.senses.size) %></p>
     <% proposal.senses.each_with_index do |sense, i| %>
       <div class="ann-proposal__sense">
         <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= format("%02d", i + 1) %></span>
-        <%= render "proposal_sense", sense: sense %>
+        <%= render "proposal_sense", sense: sense, word: word, creatable: false %>
       </div>
     <% end %>
   <% else %>
-    <%= render "proposal_sense", sense: proposal.senses.first %>
+    <%= render "proposal_sense", sense: proposal.senses.first, word: word, creatable: true %>
   <% end %>
 
   <% if proposal.entry_notes %>

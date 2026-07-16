@@ -29,57 +29,18 @@
 
 # 未完了イシュー(優先度順)
 
-## Issue 63: 提案の言語的特徴をコンソールで表示・反映する
-- 種別: bug / improvement
-- 状態: 実装・テスト完了(branch feature/proposal-feature-fill・PR 未作成)
-- 優先度: P1 ／ Impact: High ／ Effort: Med
-- 依存: Issue 38・41(実装済み)
-- 背景・現状: 2026-07-16 のアノテーション UX 調査より。`word-annotation-research` スキルは `senses[].linguistic_features`(`{name, target, target_reading}`)を出力し、取り込み時も `AnnotationProposalImport::PAYLOAD_KEYS` の `senses` 経由で **payload に丸ごと保持されている**。しかしコンソール側で完全に捨てられていた: (1) 提案パネル `_proposal_sense.html.erb` が特徴を描画しない、(2) `AnnotationsController#apply_sense_proposal` が `word_sense_features` を組み立てない、(3) `AnnotationProposal::SenseProposal` に特徴のアクセサが無い。結果、手作業で最も重い範囲タップを Claude が特定済みでも、管理者は毎回ゼロから指定し直していた。
-- 内容:
-  - [x] `SenseProposal#linguistic_features`(`{name, target, target_reading}` 揃いのみ)と `resolved_linguistic_feature`(`LinguisticFeature.find_by(name:)`)を追加。既知/未知(新設候補)を分離
-  - [x] 提案パネル(`_proposal_sense.html.erb`)に特徴行を追加。未知の特徴名は他マスタと同じ朱「新設候補」バッジで表示
-  - [x] `apply_sense_proposal` に `build_proposed_features` を追加。解決できた特徴だけ `sense.word_sense_features.build(linguistic_feature:, target:, target_reading:)`。`target_start` はモデルの `before_validation` が先頭出現に補完 → ロード時に `feature-range#restoreFromFields` が範囲ハイライトを自動復元
-  - [x] 反映した特徴は保存時に target/target_reading の部分一致検証を受ける(外れたら人が直す)。既存特徴とは (linguistic_feature_id, target) で重複追加しない
-  - [x] モデル/結合テスト: 特徴つき提案の反映でフォームに特徴が組まれる/パネルに出る、未知特徴名は build しない、保存で target_start が補完される
-  - [ ] 残: 複製(sense-cloner)経由の実ブラウザ挙動はシステムテスト未整備のため未検証([[system-tests-wsl-chrome]] の制約)
-- 期待効果: 手入力で最も重い項目が「Claude 提案をそのまま確認」に変わる。速度・一貫性ともに最大の改善。
-
-## Issue 64: 提案あり語のロード時自動反映
-- 種別: improvement
-- 状態: 実装・テスト完了(branch feature/proposal-feature-fill・PR 未作成)
-- 優先度: P1 ／ Impact: Med ／ Effort: Low
-- 依存: Issue 63(反映ロジックの拡張と同時が望ましい)
-- 背景・現状: `AnnotationsController#show` は `params[:apply_proposal]=="1"` のときだけ提案を反映していた。「保存して次へ」の `redirect_to_next_word` は `apply_proposal` を付けずに次語へ飛ぶため、`?proposed=1`(全語に提案がある文脈)でも毎回「提案を反映」ボタンを押す = Turbo Frame の GET 往復が1手増えていた。
-- 内容:
-  - [x] `?proposed=1` かつ pending 提案あり のとき、`show` でロード時に既定反映(`apply_proposal?` に集約。手動反映リンクは注釈済み見直し用に残す)
-  - [x] スティッキー引き継ぎとの優先順位を整理(提案 > スティッキー)。反映済み/見送りの提案は自動反映しない(二重反映回避)
-  - [x] 結合テスト: proposed キューで語を開くと提案値が初期表示される/通常表示では反映しない/applied は反映しない
-- 期待効果: 提案キュー全体で毎語「1クリック + 1往復」を削減。タブレット操作で効く。
-
-## Issue 65: 提案の一括承認(解決可能な高信頼提案)
-- 種別: feature
-- 状態: 実装・テスト完了(branch feature/proposal-feature-fill・PR 未作成)
-- 優先度: P1 ／ Impact: High ／ Effort: Med
-- 依存: Issue 63(特徴も含めて反映できること)
-- 背景・現状: 提案は1語ずつ「反映→保存」しかなく、`BulkAnnotation`(Issue 37)は人が手で選んだ共通属性を撒くもので `annotation_proposals` を読まない。50語キューの多くが「全マスタ解決済み・confidence=high・entry_score≥4・新設マスタ無し・単一語義」の掃除機案件でも1語ずつ捌いていた(未注釈約6,000語)。
-- 内容:
-  - [x] ゲート(**厳格**・2026-07-16 オーナー選択): confidence=high・entry_score≥4・単一語義・ジャンル小分類/エンティティ/品詞/語種/特徴すべて既存に解決・新設マスタ0。1つでも欠けたら対象外(`BulkProposalApproval.eligible?`)
-  - [x] プレビュー(`GET /admin/bulk_proposal_approval`・対象語一覧)→ 1トランザクションで `word_senses`(語種 join・特徴・別表記含む)を組んで保存・`mark_annotated`(公開)・提案を applied に(`POST` + turbo_confirm)
-  - [x] 危うい提案(低スコア・低信頼・新設マスタ・複数語義)は対象に出さず人手キューに残す。取り込み画面から導線
-  - [x] 反映ロジックはコンソールと共通化(`ProposalApplication`。語種の join は GET=target差替 / 保存=setter で確定と切替)
-  - [x] モデル/結合テスト: ゲート各条件・冪等(applied は非対象)・公開副作用・特徴保存・境界(entry_score 4/3、未知マスタ有無)
-- 期待効果: 簡単な多数を一掃し、人間の時間を難しい少数の判断に集中させる。量と質を同時に担保する本命。
-
 ## Issue 66: 新設マスタのワンタップ作成
 - 種別: improvement
-- 状態: 未着手
+- 状態: 対応中(branch feature/create-proposed-master)
 - 優先度: P2 ／ Impact: Med ／ Effort: Med
 - 依存: Issue 63
 - 背景・現状: 提案が既存に無いマスタ名を出すと、パネルは朱「新設候補」を出すが `apply` は解決済みマスタしか入れない。ジャンルは preselect で親まで開く配慮があるが、エンティティ/品詞/語種は Claude が出した名前を人が手で打ち直して作り、再反映が要る(テキスト入力の残渣)。
 - 内容:
-  - [ ] 「新設候補」バッジ自体を作成ボタン化。提案名で `inline-add`(既存機構)の POST を撃ち、生成チップを選択状態で挿入。input を提案名でプリフィル
-  - [ ] ジャンル小分類も preselect の親下にワンタップ生成(既存の genre-picker その場追加に「提案名で作成」を追加)
-  - [ ] 結合/システムテスト(WSL/Chrome 150 の click 方式に留意)
+  - [ ] 「新設候補」バッジを**作成ボタン化**(`button_to`)。押すと提案名でマスタを1つ作成し、`apply_proposal=1` で再反映して戻る(サーバ側で完結・新規 Stimulus 不要。作成後は解決して自動 fill される)
+  - [ ] 種別: エンティティ/品詞/語種は提案名で `find_or_create_by!`。ジャンルは小分類を、解決済みの中分類(`resolved_genre_chain.last`)の下に作成。語種は未知名ごとにボタン
+  - [ ] ロジックは `ProposedMasterCreation`(値オブジェクト)に集約しコントローラは薄く。`POST /admin/annotations/:id/create_master`(field/name)。多語義提案は先頭語義に限定(新設候補×多語義は稀)
+  - [ ] 結合テスト: 各種別の作成→再反映で解決・fill される / 未認証は弾く / 中分類未解決のジャンルは作成不可
+  - 補足: 特徴(linguistic_features)は現状インライン作成の口が無い(create エンドポイント無し)ため本 Issue の対象外。タグ統括管理で追加する
 - 期待効果: 残るテキスト入力を消し、完全ボタン操作に近づける。
 
 ## Issue 67: アノテーション・キューの並べ替え/フィルタ(提案メタ)
@@ -463,6 +424,16 @@
 - **Issue 49: deploy:seed × マスタリネームの重複再発防止** [bug] — 完了(PR #73)。対策方式は「案a+b(リネーム追従マップ + UI警告)」をオーナー決定。マスタの名前リストを `app/models/seed_catalog.rb`(単一の正)に集約し、seed 実行時に RENAMES(旧名→新名)で全環境が改名に追従。移行先が既存の場合は改名せず警告(統合は /admin/tags に委ねる)。タグ統括管理には seed 収載タグの「seed」印(一覧)と更新手順の警告(編集画面)を表示。旧 `db/seeds/*.rb` 4本は削除。
 - **Issue 50: 管理者セッションの有効期限** [improvement] — 完了(PR #71)。永続 Cookie(約20年)を2週間の `expires` に変更。サーバ側も `updated_at` ベースのスライディング失効(`Session::LIFETIME`)を導入し、期限切れはアクセス時に破棄・ログイン時に掃除。DB 書き込みと Set-Cookie は1時間間隔に間引き。
 - **Issue 51: backfill タスクの last_char 再計算漏れ** [bug] — 完了(PR #72)。`backfill:reading_metrics` に `last_char` の再計算を追加。全派生カラム(words.char_type_pattern 含む)の現在値と再計算値の差分を報告する読み取り専用タスク `backfill:verify` を新設。verify がフィクスチャの実バグ(涼宮ハルヒの憂鬱の char_type_pattern で「の」が文字クラス化されていない)を検出したため同時修正。
+
+## アノテーション高速化(Issue 63〜70、2026-07-16 の UX 調査より)
+
+未注釈約6,000語を「質と量を同時に」捌くため、提案キューの操作を減らす改善群。管理者ロールプレイでコンソールを調査し Issue 63〜70 を起票。3軸(スキルで情報取得 / テキスト入力を極力させず自動 fill / ボタン操作でタブレット可)を強化する。
+
+- **Issue 63: 提案の言語的特徴を表示・反映** [bug/improvement] — 完了(PR #88)。payload に眠っていた特徴(`senses[].linguistic_features`)を提案パネルに表示し、反映時に `word_sense_features` を build(未知名は新設候補・`target_start` はモデルが補完)。
+- **Issue 64: 提案あり語のロード時自動反映** [improvement] — 完了(PR #88)。`?proposed=1` で pending 提案を開いた時点で自動反映(`apply_proposal?`。提案 > スティッキー)。毎語の「提案を反映」1クリック+GET 往復を廃止。
+- **Issue 65: 提案の一括承認** [feature] — 完了(PR #88)。`BulkProposalApproval`(厳格ゲート=high/立項≥4/単一語義/全マスタ解決/新設0)でプレビュー→一括承認・公開。反映は `ProposalApplication` に共通化(語種 join は GET=target 差替 / 保存=setter)。
+
+(Issue 66〜70 は未完了節を参照)
 
 ---
 

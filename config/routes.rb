@@ -55,6 +55,8 @@ Rails.application.routes.draw do
     # hold は現在の語を保留にしてキューから外し、次の未対応へ進む。
     resources :annotations, only: %i[index show update] do
       patch :hold, on: :member
+      # 提案の「新設候補」マスタをワンタップ作成し、再反映して戻る(Issue 66)。
+      post :create_master, on: :member
     end
     # タグ統括管理: マスタ(ジャンル/エンティティ/品詞/語種/特徴)の一覧・リネーム・削除・統合。
     # :kind は TagKind のホワイトリストで解決する(任意モデルを掴ませない)。

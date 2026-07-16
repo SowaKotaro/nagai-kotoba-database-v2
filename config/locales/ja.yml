@@ -464,6 +464,8 @@ ja:
         title: "CLAUDE の提案"
         apply: "提案を反映"
         new_master: "新設候補"
+        create_master: "＋作成"
+        create_named_master: "%{name}＋作成"
         status:
           applied: "反映済み"
           dismissed: "見送り"
@@ -513,6 +515,7 @@ ja:
       back: "戻る"
       saved: "保存しました。"
       held: "保留にしました。あとで単語一覧の「保留」から見直せます。"
+      create_master_failed: "新設候補の作成に失敗しました。タグ統括管理から手動で追加してください。"
       error_header: "入力内容にエラーがあります"
       all_done: "未対応の語はありません"
       all_done_lead: "未対応の語はすべて片付きました(保留にした語は単語一覧の「保留」から見直せます)。"

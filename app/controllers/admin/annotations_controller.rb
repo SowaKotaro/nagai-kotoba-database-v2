@@ -4,7 +4,7 @@
 # キューから外れ、あとで単語一覧の「保留」フィルタから見直せる。
 # ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
-  before_action :set_word, only: %i[show update hold]
+  before_action :set_word, only: %i[show update hold create_master]
 
   # キューの最初の語へ誘導。無ければ完了画面(index ビュー)を出す。
   def index
@@ -48,6 +48,19 @@ class Admin::AnnotationsController < Admin::BaseController
     @word.mark_on_hold
     @word.save!
     redirect_to_next_word(t("admin.annotations.held"))
+  end
+
+  # 提案の「新設候補」マスタをワンタップ作成し、提案を再反映して戻る(Issue 66)。
+  # 作成後は解決してフォームに自動で入る。新設候補は基本 単一語義なので先頭語義を対象にする。
+  def create_master
+    proposal = AnnotationProposal.find_by(word_id: @word.id)
+    raise ActiveRecord::RecordNotFound unless proposal
+
+    ProposedMasterCreation.new(proposal.senses.first, params[:field], params[:name]).create!
+    redirect_to admin_annotation_path(@word, apply_proposal: 1, proposed: proposed_param)
+  rescue ProposedMasterCreation::Error, ActiveRecord::RecordInvalid
+    redirect_to admin_annotation_path(@word, apply_proposal: 1, proposed: proposed_param),
+                alert: t("admin.annotations.create_master_failed")
   end
 
   private

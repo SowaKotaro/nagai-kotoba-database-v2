@@ -287,6 +287,82 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, feature.target_start # 「涼宮」は表層形の先頭
   end
 
+  # --- 新設候補マスタのワンタップ作成(Issue 66) ---
+  test "単一語義の提案では未解決マスタに作成ボタン(button_to)が出る" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
+    })
+    get admin_annotation_path(@word)
+    assert_select "form.ann-proposal__new-form", minimum: 1
+  end
+
+  test "複数語義の提案には作成ボタンを出さない(バッジ表示のみ)" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "entity_type" => "架空種別A" }, { "entity_type" => "架空種別B" } ]
+    })
+    get admin_annotation_path(@word)
+    assert_select "form.ann-proposal__new-form", count: 0
+    assert_select ".ann-proposal__new", minimum: 1
+  end
+
+  test "create_master でエンティティを作成し、再反映で解決してフォームに入る" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
+    })
+    assert_difference -> { EntityType.count } => 1 do
+      post create_master_admin_annotation_path(@word), params: { field: "entity_type" }
+    end
+    assert_redirected_to admin_annotation_path(@word, apply_proposal: 1)
+    follow_redirect!
+    assert_select "input[type=radio][value=?][checked]", EntityType.find_by(name: "架空種別").id.to_s
+  end
+
+  test "create_master で語種を指定名で作成する" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "word_origins" => %w[和語 タミル語] } ]
+    })
+    assert_difference -> { WordOrigin.count } => 1 do
+      post create_master_admin_annotation_path(@word), params: { field: "word_origin", name: "タミル語" }
+    end
+    assert_not_nil WordOrigin.find_by(name: "タミル語")
+  end
+
+  test "create_master でジャンル小分類を中分類の下に作る" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "genre_path" => %w[文学 日本文学 私小説] } ]
+    })
+    assert_difference -> { Genre.count } => 1 do
+      post create_master_admin_annotation_path(@word), params: { field: "genre" }
+    end
+    created = Genre.find_by(name: "私小説")
+    assert created.small?
+    assert_equal genres(:medium_japanese), created.parent
+  end
+
+  test "create_master は作れない指定で alert を出して戻る" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "genre_path" => %w[無い 無い 無い] } ]
+    })
+    assert_no_difference -> { Genre.count } do
+      post create_master_admin_annotation_path(@word), params: { field: "genre" }
+    end
+    assert_redirected_to admin_annotation_path(@word, apply_proposal: 1)
+    assert_equal I18n.t("admin.annotations.create_master_failed"), flash[:alert]
+  end
+
+  test "未認証は create_master できない" do
+    assert_no_difference -> { EntityType.count } do
+      post create_master_admin_annotation_path(@word), params: { field: "entity_type" }
+    end
+    assert_redirected_to new_session_path
+  end
+
   # --- 注釈済みの語でも提案を見直せる(Issue 41 FB) ---
   test "注釈済みの語でも Claude の提案が状態バッジ付きで表示される" do
     sign_in_as(Admin.take)
