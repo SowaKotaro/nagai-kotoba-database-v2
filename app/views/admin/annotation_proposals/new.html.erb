@@ -17,3 +17,6 @@
   <%= t("admin.annotation_proposals.new.next_step") %>
   <%= link_to t("admin.annotation_proposals.new.to_console"), admin_annotations_path(proposed: 1) %>
 </p>
+<p class="proposal-next">
+  <%= link_to t("admin.annotation_proposals.new.to_bulk_approval"), admin_bulk_proposal_approval_path %>
+</p>

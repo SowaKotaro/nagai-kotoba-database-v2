@@ -114,4 +114,49 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     # 後方互換の委譲は先頭語義を指す
     assert_equal "通俗心理学の用語。", @proposal.meaning
   end
+
+  # --- 言語的特徴の提案(Issue 63) ---
+
+  test "senses の言語的特徴を name/target/target_reading で読み出せる" do
+    @proposal.payload = {
+      "senses" => [ {
+        "meaning" => "テスト。",
+        "linguistic_features" => [
+          { "name" => "連濁", "target" => "涼宮", "target_reading" => "すずみや" }
+        ]
+      } ]
+    }
+    features = @proposal.senses.first.linguistic_features
+    assert_equal 1, features.size
+    assert_equal "連濁", features.first["name"]
+    assert_equal "涼宮", features.first["target"]
+    assert_equal linguistic_features(:rendaku),
+                 @proposal.senses.first.resolved_linguistic_feature(features.first)
+  end
+
+  test "特徴は name/target/target_reading が揃ったものだけ返す(保存できない欠けは捨てる)" do
+    @proposal.payload = {
+      "senses" => [ {
+        "linguistic_features" => [
+          { "name" => "連濁", "target" => "涼宮", "target_reading" => "すずみや" }, # 揃い
+          { "name" => "連濁", "target" => "涼宮" },                                # target_reading 欠け
+          { "name" => "", "target" => "宮", "target_reading" => "みや" },          # name 欠け
+          { "target" => "涼", "target_reading" => "すず" }                          # name 無し
+        ]
+      } ]
+    }
+    assert_equal 1, @proposal.senses.first.linguistic_features.size
+  end
+
+  test "未知の特徴名は解決せず nil(新設候補)" do
+    @proposal.payload = {
+      "senses" => [ {
+        "linguistic_features" => [
+          { "name" => "存在しない特徴", "target" => "涼宮", "target_reading" => "すずみや" }
+        ]
+      } ]
+    }
+    feature = @proposal.senses.first.linguistic_features.first
+    assert_nil @proposal.senses.first.resolved_linguistic_feature(feature)
+  end
 end

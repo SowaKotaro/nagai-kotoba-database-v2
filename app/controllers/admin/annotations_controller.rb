@@ -15,9 +15,9 @@ class Admin::AnnotationsController < Admin::BaseController
   def show
     @word.word_senses.build if @word.word_senses.empty?
     # 提案は status を問わず表示する(注釈済みの語を「戻る」で見直すときも Claude の提案を
-    # 参照できるように)。反映(apply)は明示操作のときだけ行う。
+    # 参照できるように)。反映(apply)は明示操作か、提案キューでの自動反映のときだけ行う。
     @proposal = AnnotationProposal.find_by(word_id: @word.id)
-    if params[:apply_proposal] == "1" && @proposal
+    if apply_proposal?
       apply_proposal_defaults
     else
       apply_sticky_defaults
@@ -77,55 +77,22 @@ class Admin::AnnotationsController < Admin::BaseController
 
   # --- Claude の提案(Issue 38) ---
 
+  # 提案をフォームへ反映するか。明示操作(apply_proposal=1)に加え、提案キュー(?proposed=1)では
+  # 未承認提案を開いた時点で自動反映する(毎語「提案を反映」を押す手間と GET 往復を省く・Issue 64)。
+  # 自動反映は pending の提案だけ(反映済み/見送りは二重反映しない)。提案があればスティッキー
+  # 引き継ぎより優先する。
+  def apply_proposal?
+    return false unless @proposal
+    return true if params[:apply_proposal] == "1"
+
+    proposed_param.present? && @proposal.pending?
+  end
+
   # 「提案を反映」: 提案の値をフォームの初期値として流し込む(保存はしない。人間が確認・修正
-  # して保存した時点で承認)。ジャンルは既存の木の小分類まで解決できたときだけ入れる。
-  # 複数語義(Issue 41)は提案の語義を1つずつ word_senses へ割り当てる。既存の語義(一括登録で
-  # 読みだけ入った語義など)を先頭から使い回し、足りない分は同じ読みで新しい語義を組み立てる。
+  # して保存した時点で承認)。組み立ては ProposalApplication に集約し、一括承認(Issue 65)と
+  # 同じ規則で反映する。
   def apply_proposal_defaults
-    base_reading = @word.word_senses.first&.reading
-    existing = @word.word_senses.reject(&:marked_for_destruction?)
-
-    @proposal.senses.each_with_index do |sense_proposal, index|
-      sense = existing[index] ||
-              @word.word_senses.build(reading: sense_proposal.reading.presence || base_reading)
-      apply_sense_proposal(sense, sense_proposal)
-    end
-  end
-
-  # 1つの語義に、対応する語義提案の値を初期値として流し込む。
-  # 語種はスティッキー引き継ぎと同じ理由(永続化済み語義での即時書き込み回避)で
-  # 関連 target をメモリ上で差し替える。
-  def apply_sense_proposal(sense, sense_proposal)
-    sense.reading = sense_proposal.reading if sense_proposal.reading.present? && sense.reading.blank?
-    sense.meaning = sense_proposal.meaning if sense_proposal.meaning
-    apply_proposed_genre(sense, sense_proposal)
-    sense.entity_type_id = sense_proposal.resolved_entity_type&.id if sense_proposal.entity_type_name
-    sense.part_of_speech_id = sense_proposal.resolved_part_of_speech&.id if sense_proposal.part_of_speech_name
-    origins = sense_proposal.resolved_word_origins.to_a
-    sense.association(:word_origins).target = origins.dup if origins.any?
-    build_proposed_variants(sense, sense_proposal)
-  end
-
-  # 提案ジャンルを既存の木で解決する。小分類まで在れば genre_id を確定させ、
-  # 大・中までしか無ければ preselect にその祖先 id を積み、ピッカーをそこまで開かせる
-  # (末端の小分類はその場追加で作って選ぶ運用)。
-  def apply_proposed_genre(sense, sense_proposal)
-    chain = sense_proposal.resolved_genre_chain
-    if chain.last&.small?
-      sense.genre_id = chain.last.id
-    elsif chain.any?
-      sense.genre_preselect_ids = chain.map(&:id)
-    end
-  end
-
-  # 提案の別表記を、まだ無いものだけフォームに足す(重複追加しない)。
-  def build_proposed_variants(sense, sense_proposal)
-    existing = sense.word_sense_variants.map(&:surface)
-    sense_proposal.variants.each do |variant|
-      next if existing.include?(variant["surface"])
-
-      sense.word_sense_variants.build(surface: variant["surface"], reading: variant["reading"])
-    end
+    ProposalApplication.new(@word, @proposal).build
   end
 
   # 保存(承認)された語の提案は applied にする。

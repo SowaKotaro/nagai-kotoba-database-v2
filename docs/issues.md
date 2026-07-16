@@ -29,6 +29,107 @@
 
 # 未完了イシュー(優先度順)
 
+## Issue 63: 提案の言語的特徴をコンソールで表示・反映する
+- 種別: bug / improvement
+- 状態: 実装・テスト完了(branch feature/proposal-feature-fill・PR 未作成)
+- 優先度: P1 ／ Impact: High ／ Effort: Med
+- 依存: Issue 38・41(実装済み)
+- 背景・現状: 2026-07-16 のアノテーション UX 調査より。`word-annotation-research` スキルは `senses[].linguistic_features`(`{name, target, target_reading}`)を出力し、取り込み時も `AnnotationProposalImport::PAYLOAD_KEYS` の `senses` 経由で **payload に丸ごと保持されている**。しかしコンソール側で完全に捨てられていた: (1) 提案パネル `_proposal_sense.html.erb` が特徴を描画しない、(2) `AnnotationsController#apply_sense_proposal` が `word_sense_features` を組み立てない、(3) `AnnotationProposal::SenseProposal` に特徴のアクセサが無い。結果、手作業で最も重い範囲タップを Claude が特定済みでも、管理者は毎回ゼロから指定し直していた。
+- 内容:
+  - [x] `SenseProposal#linguistic_features`(`{name, target, target_reading}` 揃いのみ)と `resolved_linguistic_feature`(`LinguisticFeature.find_by(name:)`)を追加。既知/未知(新設候補)を分離
+  - [x] 提案パネル(`_proposal_sense.html.erb`)に特徴行を追加。未知の特徴名は他マスタと同じ朱「新設候補」バッジで表示
+  - [x] `apply_sense_proposal` に `build_proposed_features` を追加。解決できた特徴だけ `sense.word_sense_features.build(linguistic_feature:, target:, target_reading:)`。`target_start` はモデルの `before_validation` が先頭出現に補完 → ロード時に `feature-range#restoreFromFields` が範囲ハイライトを自動復元
+  - [x] 反映した特徴は保存時に target/target_reading の部分一致検証を受ける(外れたら人が直す)。既存特徴とは (linguistic_feature_id, target) で重複追加しない
+  - [x] モデル/結合テスト: 特徴つき提案の反映でフォームに特徴が組まれる/パネルに出る、未知特徴名は build しない、保存で target_start が補完される
+  - [ ] 残: 複製(sense-cloner)経由の実ブラウザ挙動はシステムテスト未整備のため未検証([[system-tests-wsl-chrome]] の制約)
+- 期待効果: 手入力で最も重い項目が「Claude 提案をそのまま確認」に変わる。速度・一貫性ともに最大の改善。
+
+## Issue 64: 提案あり語のロード時自動反映
+- 種別: improvement
+- 状態: 実装・テスト完了(branch feature/proposal-feature-fill・PR 未作成)
+- 優先度: P1 ／ Impact: Med ／ Effort: Low
+- 依存: Issue 63(反映ロジックの拡張と同時が望ましい)
+- 背景・現状: `AnnotationsController#show` は `params[:apply_proposal]=="1"` のときだけ提案を反映していた。「保存して次へ」の `redirect_to_next_word` は `apply_proposal` を付けずに次語へ飛ぶため、`?proposed=1`(全語に提案がある文脈)でも毎回「提案を反映」ボタンを押す = Turbo Frame の GET 往復が1手増えていた。
+- 内容:
+  - [x] `?proposed=1` かつ pending 提案あり のとき、`show` でロード時に既定反映(`apply_proposal?` に集約。手動反映リンクは注釈済み見直し用に残す)
+  - [x] スティッキー引き継ぎとの優先順位を整理(提案 > スティッキー)。反映済み/見送りの提案は自動反映しない(二重反映回避)
+  - [x] 結合テスト: proposed キューで語を開くと提案値が初期表示される/通常表示では反映しない/applied は反映しない
+- 期待効果: 提案キュー全体で毎語「1クリック + 1往復」を削減。タブレット操作で効く。
+
+## Issue 65: 提案の一括承認(解決可能な高信頼提案)
+- 種別: feature
+- 状態: 実装・テスト完了(branch feature/proposal-feature-fill・PR 未作成)
+- 優先度: P1 ／ Impact: High ／ Effort: Med
+- 依存: Issue 63(特徴も含めて反映できること)
+- 背景・現状: 提案は1語ずつ「反映→保存」しかなく、`BulkAnnotation`(Issue 37)は人が手で選んだ共通属性を撒くもので `annotation_proposals` を読まない。50語キューの多くが「全マスタ解決済み・confidence=high・entry_score≥4・新設マスタ無し・単一語義」の掃除機案件でも1語ずつ捌いていた(未注釈約6,000語)。
+- 内容:
+  - [x] ゲート(**厳格**・2026-07-16 オーナー選択): confidence=high・entry_score≥4・単一語義・ジャンル小分類/エンティティ/品詞/語種/特徴すべて既存に解決・新設マスタ0。1つでも欠けたら対象外(`BulkProposalApproval.eligible?`)
+  - [x] プレビュー(`GET /admin/bulk_proposal_approval`・対象語一覧)→ 1トランザクションで `word_senses`(語種 join・特徴・別表記含む)を組んで保存・`mark_annotated`(公開)・提案を applied に(`POST` + turbo_confirm)
+  - [x] 危うい提案(低スコア・低信頼・新設マスタ・複数語義)は対象に出さず人手キューに残す。取り込み画面から導線
+  - [x] 反映ロジックはコンソールと共通化(`ProposalApplication`。語種の join は GET=target差替 / 保存=setter で確定と切替)
+  - [x] モデル/結合テスト: ゲート各条件・冪等(applied は非対象)・公開副作用・特徴保存・境界(entry_score 4/3、未知マスタ有無)
+- 期待効果: 簡単な多数を一掃し、人間の時間を難しい少数の判断に集中させる。量と質を同時に担保する本命。
+
+## Issue 66: 新設マスタのワンタップ作成
+- 種別: improvement
+- 状態: 未着手
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: Issue 63
+- 背景・現状: 提案が既存に無いマスタ名を出すと、パネルは朱「新設候補」を出すが `apply` は解決済みマスタしか入れない。ジャンルは preselect で親まで開く配慮があるが、エンティティ/品詞/語種は Claude が出した名前を人が手で打ち直して作り、再反映が要る(テキスト入力の残渣)。
+- 内容:
+  - [ ] 「新設候補」バッジ自体を作成ボタン化。提案名で `inline-add`(既存機構)の POST を撃ち、生成チップを選択状態で挿入。input を提案名でプリフィル
+  - [ ] ジャンル小分類も preselect の親下にワンタップ生成(既存の genre-picker その場追加に「提案名で作成」を追加)
+  - [ ] 結合/システムテスト(WSL/Chrome 150 の click 方式に留意)
+- 期待効果: 残るテキスト入力を消し、完全ボタン操作に近づける。
+
+## Issue 67: アノテーション・キューの並べ替え/フィルタ(提案メタ)
+- 種別: improvement
+- 状態: 未着手
+- 優先度: P2 ／ Impact: Med ／ Effort: Low〜Med
+- 依存: なし
+- 背景・現状: `queue_scope` は `order(:id)` のみで、confidence・entry_score・新設マスタ有無・特徴有無で選り分けられない。易しい語と要判断の語が混在し、集中の切り替えコストが掛かる。
+- 内容:
+  - [ ] `?proposed=1` に `sort`(confidence / entry_score)・`filter`(要判断 = entry_score≤3 or confidence=low or 新設マスタ有)を追加
+  - [ ] バッジ情報は既存(confidence/entry_score)。新設マスタ有無は解決判定で導出
+  - [ ] キュー件数・スキップ/戻るの整合(既存 `set_navigation`)を保つ
+- 期待効果: 「易しいバッチを高速で流し切る → 要判断バッチを腰を据えて見る」運用でスループットと精度を両立。
+
+## Issue 68: 公開事故ガード(未完了のまま公開を防ぐ)
+- 種別: improvement
+- 状態: 未着手(方式は着手前に相談)
+- 優先度: P2 ／ Impact: Med ／ Effort: Low〜Med
+- 依存: なし
+- 背景・現状: `Word#mark_annotated` が毎保存で `annotated_at`(=公開)を立てる。読みだけ入れて「保存して次へ」を誤爆すると、ジャンル/エンティティ空のまま公開されファセット検索が痩せる。`sense-completeness` の緑枠は見た目だけで保存を出し分けない。
+- 内容:
+  - [ ] 最低限未達(sense-completeness 未達)で「保存して次へ」時に確認を挟む、または「下書き保存(非公開)/確定して公開」を分離。完了済みは無確認で即公開(速度を殺さない)
+  - [ ] confirm 実装/テストは WSL/Chrome 150 の自動クローズ問題に留意(`click_accepting_confirm`)
+- 期待効果: 大量処理時の品質の底割れ防止。
+
+## Issue 69: 既定キューを提案付き優先に
+- 種別: improvement
+- 状態: 未着手
+- 優先度: P2 ／ Impact: Low〜Med ／ Effort: Low
+- 依存: なし
+- 背景・現状: 既定キュー = 全 pending、提案付きは `?proposed=1` 別動線。提案の無い語に着地すると surface+reading だけで手調査になり激遅。
+- 内容:
+  - [ ] 既定順を「提案あり→先頭」に寄せる、またはコンソール入口を提案付き優先に
+  - [ ] 提案の無い語しか残っていないときの導線(書き出しへ誘導)
+- 期待効果: 人間が常に下調べ済みの語に着地する(スキルを事実上の正面玄関に)。
+
+## Issue 70: アノテーション体験の小粒改善まとめ
+- 種別: improvement
+- 状態: 未着手(項目ごとに分割してよい)
+- 優先度: P2 ／ Impact: Low ／ Effort: Low〜Med
+- 依存: なし
+- 背景・現状: 2026-07-16 のアノテーション UX 調査で挙がった、単独 Issue にするほどでない磨き込みをまとめて記録する(実施は任意・随時)。
+- 内容:
+  - [ ] 新設マスタ作成時に「似ているマスタ」を提示し分類ドリフト(近似重複マスタ)を防ぐ
+  - [ ] デスクトップ・キーボードパワーモード(数字キーでチップ選択・Ctrl/Cmd+Enter でどこからでも保存・次語プリフェッチ)。タブレット第一の思想と両立する補助として
+  - [ ] 長い読みの範囲タップ改善(セル拡大・「語全体を選択」ショートカット)
+  - [ ] 書き出し/取り込みのファイル入出力(DL/UP)・書き出し画面に実行プロンプト同梱でコピペ往復を短縮
+  - [ ] 未提案語の「調べる」導線(web 検索リンク or 提案生成への誘導)
+- 期待効果: 1操作あたりの摩擦低減の積み上げ。
+
 ## Issue 34: 統計ページ(収録データの分布・集計)
 - 種別: feature
 - 状態: 未着手(着手前に相談。Phase 1 から)
@@ -388,3 +489,8 @@
 11. **不採用**: 最長語番付(一覧のソートで足りる)・逆さ読み/回文・隠れ単語(読み10文字以上の収録語では偶然の一致がほぼ起きない)・長音無限化(メモ帳で再現できる)。汎用「ことばの遊具」変換ページも作らない(ンホホ変換のみ詳細ページの一行に)。
 12. **保留**: 読み切りメーター(拍を一定テンポで点灯させ長さを時間で体感させる案。趣旨が伝わる形で要再提案)・リクエスト機能(要件を詰めてから。図鑑の「未発見募集」が将来の受け皿)。
 13. **ガチャ的な演出はしない**。希少性の表現は標本ラベル風の文言と朱の一文字印程度に抑える(活字見本帖の雰囲気を優先)。「今日の一語」は実装済みのため対象外。
+
+## 2026-07-16(アノテーション高速化の UX 調査)
+
+14. **アノテーション高速化の思想**: (a) Claude Code スキルで情報取得、(b) テキスト入力を極力させず自動 fill、(c) ボタン操作でタブレット/スマホでも捌ける、の3軸を維持・強化する。この観点でコンソールを調査し **Issue 63〜70** を起票。優先度の高い順(P1: 63→64→65)に着手する。
+15. **旗艦 = Issue 63**(提案の言語的特徴が表示も反映もされず捨てられている問題)から実装に入る。投資対効果が最も高い(手作業で最も重い範囲タップの自動化)ため。

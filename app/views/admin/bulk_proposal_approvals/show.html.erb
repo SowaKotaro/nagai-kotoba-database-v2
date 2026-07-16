@@ -1,0 +1,51 @@
+<% content_for :title, t("admin.bulk_proposal_approvals.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.bulk_proposal_approvals.title") %></h1>
+
+<p class="proposal-lead"><%= t("admin.bulk_proposal_approvals.lead") %></p>
+
+<% if @approval.count.positive? %>
+  <p class="proposal-limit__count"><%= t("admin.bulk_proposal_approvals.count", count: @approval.count) %></p>
+
+  <%# 一括対象の一覧。表示はすべて提案 payload の文字列(マスタ問い合わせを増やさない) %>
+  <table class="bulk-approval">
+    <thead>
+      <tr>
+        <th class="bulk-approval__no">NO.</th>
+        <th><%= t("admin.annotations.eyebrow") %></th>
+        <th><%= t("admin.annotations.meaning") %></th>
+        <th><%= t("admin.annotations.genre") %></th>
+        <th><%= t("admin.annotations.entity") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @approval.proposals.each do |proposal| %>
+        <% sense = proposal.senses.first %>
+        <tr>
+          <td class="bulk-approval__no"><%= proposal.word.id %></td>
+          <td class="bulk-approval__word">
+            <%= link_to proposal.word.surface, admin_annotation_path(proposal.word), data: { turbo_frame: "_top" } %>
+          </td>
+          <td><%= truncate(sense.meaning, length: 44) %></td>
+          <td class="bulk-approval__genre"><%= sense.genre_path.join(" › ") %></td>
+          <td><%= sense.entity_type_name %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%= form_with url: admin_bulk_proposal_approval_path, method: :post do %>
+    <div class="proposal-actions">
+      <%= submit_tag t("admin.bulk_proposal_approvals.approve", count: @approval.count),
+            class: "btn btn--primary",
+            data: { turbo_confirm: t("admin.bulk_proposal_approvals.confirm", count: @approval.count) } %>
+    </div>
+  <% end %>
+<% else %>
+  <p class="empty-note"><%= t("admin.bulk_proposal_approvals.empty") %></p>
+<% end %>
+
+<p class="proposal-next">
+  <%= link_to t("admin.bulk_proposal_approvals.to_console"), admin_annotations_path(proposed: 1) %>
+</p>
