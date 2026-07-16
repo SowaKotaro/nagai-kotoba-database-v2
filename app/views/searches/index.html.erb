@@ -12,6 +12,13 @@
     <%= text_field_tag :q, @search.q %>
   </div>
 
+  <%# 正規表現: 表層形・読みのどちらかに一致すればヒット(MySQL の REGEXP) %>
+  <div class="field">
+    <%= label_tag :regexp, class: "field-legend" do %><%= icon "code" %><%= t("searches.regexp") %><% end %>
+    <%= text_field_tag :regexp, @search.regexp, placeholder: "^ア.*ン$", autocomplete: "off", spellcheck: false %>
+    <p class="field-hint"><%= t("searches.regexp_hint") %></p>
+  </div>
+
   <%# 読みの文字数: 二つまみスライダー(10〜30)。上限30は「以上」。 %>
   <fieldset class="slider-field">
     <legend class="field-legend"><%= icon "ruler" %><%= t("searches.reading_length") %></legend>

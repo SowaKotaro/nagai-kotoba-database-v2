@@ -93,6 +93,32 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to words_path(word_origin_id: [ word_origins(:kango).id ])
   end
 
+  # --- 正規表現 ---
+  test "正規表現の入力欄が表示される" do
+    get search_path
+    assert_select "input#regexp"
+    assert_select ".field-hint", text: I18n.t("searches.regexp_hint")
+  end
+
+  test "正規表現も単語一覧へ引き継がれる" do
+    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "^ア.*ン$" }
+    assert_redirected_to words_path(regexp: "^ア.*ン$")
+  end
+
+  test "不正な正規表現ではリダイレクトせず、入力を残して理由を伝える" do
+    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "(ア" }
+    assert_response :success
+    assert_select "input#regexp[value=?]", "(ア"
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.syntax')}/
+  end
+
+  test "長すぎる正規表現もリダイレクトせず理由を伝える" do
+    get search_path, params: { commit: I18n.t("searches.submit"),
+                               regexp: "ア" * (SearchRegexp::MAX_LENGTH + 1) }
+    assert_response :success
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.too_long')}/
+  end
+
   test "ジャンルの折り畳みは選択なしではすべて畳まれている" do
     get search_path
     assert_select "details.genre-fold", minimum: 1

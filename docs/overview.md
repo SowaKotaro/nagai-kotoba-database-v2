@@ -64,6 +64,10 @@
 - ✅ Issue 9: **検索・絞り込み**（公開 `GET /search`）
   - `reading_length`（範囲）/先頭・末尾文字/`char_type_pattern`/`rhythm_pattern`（部分一致）/ジャンル階層/品詞/エンティティタイプ/言語学的特徴
   - `WordSense` のスコープ群＋クエリオブジェクト `WordSenseSearch`。生成カラム/インデックスを活用
+  - `regexp`（表層形・読みの正規表現。MySQL の `REGEXP`）… 値オブジェクト `SearchRegexp`。
+    `REGEXP` は照合順序のかな同一視が効かないため、読みに当てるパターンだけカタカナへ畳む。
+    不正な式は検索前に弾き（構文チェックは MySQL に空文字を照合させて判定）、
+    照合の打ち切り（`regexp_time_limit` 超過）は空結果＋警告にフォールバックする
 - ⬜ Issue 10: マスタのインライン追加（単語登録画面から完結）
 - ✅ Issue 11: **拡張データ（読み指標・語種・別表記）** … データ層のみ（画面機能は別 Issue）
   - `word_senses` に `mora_count`（モーラ数・拗音は1拍）/ `vowel_pattern`（母音パターン）を追加。値オブジェクト `MoraCount` / `VowelPattern` ＋ `before_validation` で reading から生成
