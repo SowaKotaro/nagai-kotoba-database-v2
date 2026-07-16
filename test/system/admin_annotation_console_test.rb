@@ -21,13 +21,28 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     end
     assert_equal genres(:small_novel).id.to_s, find(".js-genre-value", visible: false).value
 
-    # 次の未注釈(bermuda)のコンソールへ進む
-    click_expecting(expect_css: "h1.ann-word", text: words(:pending_bermuda).surface, wait: 10) do
+    # ジャンルだけで最低限が揃っていないので、保存に確認が挟まる(公開事故ガード・Issue 68)。
+    # 承認して公開し、次の未注釈(bermuda)へ進む。
+    click_accepting_confirm(I18n.t("admin.annotations.publish_incomplete_confirm")) do
       find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
     end
+    assert_selector "h1.ann-word", text: words(:pending_bermuda).surface, wait: 10
     # 保存した語は注釈済みになり、選んだジャンルが付いている
-    assert_not_nil @word.reload.annotated_at
+    assert wait_until { @word.reload.annotated_at.present? }
     assert_equal genres(:small_novel).id, word_senses(:pending).reload.genre_id
+  end
+
+  # 最低限(読み・語種・ジャンル・品詞・エンティティ)が揃っていない語を「保存して次へ」で
+  # 公開しようとしたら確認が出る(未完了公開の事故ガード・Issue 68)。
+  test "未完了のまま保存しようとすると確認が出て、承認すれば公開される" do
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "publish-guard"
+
+    # haruhi は読みだけで未完了。保存に確認が挟まり、承認すると公開される
+    click_accepting_confirm(I18n.t("admin.annotations.publish_incomplete_confirm")) do
+      find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
+    end
+    assert wait_until { @word.reload.annotated_at.present? }
   end
 
   test "保留にすると状態が保留になり、キューから外れて次の未対応へ進む" do
@@ -167,7 +182,8 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     end
 
     submit = find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
-    execute_script("arguments[0].click()", submit)
+    # この語も最低限が未完了なので保存に確認が挟まる(Issue 68)。承認して公開する。
+    page.execute_script("window.confirm = () => true; arguments[0].click()", submit)
 
     # 保存された特徴が「びしょ / 位置3」で記録されている
     assert wait_until { word.reload.annotated_at.present? }

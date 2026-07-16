@@ -29,17 +29,6 @@
 
 # 未完了イシュー(優先度順)
 
-## Issue 68: 公開事故ガード(未完了のまま公開を防ぐ)
-- 種別: improvement
-- 状態: 未着手(方式は着手前に相談)
-- 優先度: P2 ／ Impact: Med ／ Effort: Low〜Med
-- 依存: なし
-- 背景・現状: `Word#mark_annotated` が毎保存で `annotated_at`(=公開)を立てる。読みだけ入れて「保存して次へ」を誤爆すると、ジャンル/エンティティ空のまま公開されファセット検索が痩せる。`sense-completeness` の緑枠は見た目だけで保存を出し分けない。
-- 内容:
-  - [ ] 最低限未達(sense-completeness 未達)で「保存して次へ」時に確認を挟む、または「下書き保存(非公開)/確定して公開」を分離。完了済みは無確認で即公開(速度を殺さない)
-  - [ ] confirm 実装/テストは WSL/Chrome 150 の自動クローズ問題に留意(`click_accepting_confirm`)
-- 期待効果: 大量処理時の品質の底割れ防止。
-
 ## Issue 69: 既定キューを提案付き優先に
 - 種別: improvement
 - 状態: 未着手
@@ -408,8 +397,9 @@
 - **Issue 65: 提案の一括承認** [feature] — 完了(PR #88)。`BulkProposalApproval`(厳格ゲート=high/立項≥4/単一語義/全マスタ解決/新設0)でプレビュー→一括承認・公開。反映は `ProposalApplication` に共通化(語種 join は GET=target 差替 / 保存=setter)。
 - **Issue 66: 新設マスタのワンタップ作成** [improvement] — 完了(PR #89)。提案パネルの「新設候補」を作成ボタン化(`ProposedMasterCreation`。`POST create_master` → 作成して `apply_proposal=1` で再反映)。エンティティ/品詞/語種/ジャンル小分類に対応(特徴は create 口が無く対象外)。
 - **Issue 67: キューの並べ替え/フィルタ** [improvement] — 完了(PR #90)。`?proposed=1` に `review`(要判断=立項≤3 or 確信 low の `needs_review` scope)と `sort`(easy=確実な順 / review=要判断を先に。payload JSON を SQL で並べ替え)を追加。ナビゲーション(index/skip/戻る/保存後移動)を並び順追従に。`nav_params` でリンク・フォームに持ち回る。
+- **Issue 68: 公開事故ガード** [improvement] — 完了(PR #91)。方式は「保存時 confirm」(オーナー選択)。`publish-guard`(Stimulus)が「保存して次へ」で全語義が最低限(is-complete)未達なら確認を挟む。完了済み・保留は無確認。状態モデルは変えない軽量案。
 
-(Issue 68〜70 は未完了節を参照)
+(Issue 69〜70 は未完了節を参照)
 
 ---
 

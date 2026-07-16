@@ -39,8 +39,11 @@
     <%# Claude の提案(Issue 38)。反映はリンク(GET)で行い、保存＝承認は下のフォームのみ %>
     <%= render "proposal", proposal: @proposal, word: @word if @proposal %>
 
+    <%# publish-guard(Issue 68): 未完了のまま「保存して次へ」で公開しようとしたら確認を挟む %>
     <%= form_with model: @word, url: admin_annotation_path(@word), method: :patch,
-                  data: { queue_nav_target: "form" } do |form| %>
+                  data: { queue_nav_target: "form", controller: "publish-guard",
+                          action: "submit->publish-guard#guard",
+                          publish_guard_message_value: t("admin.annotations.publish_incomplete_confirm") } do |form| %>
       <%# フィルタ・並べ替え(nav_params)を保存後のキュー移動でも保つ %>
       <% nav_params.each do |key, value| %>
         <%= hidden_field_tag key, value %>
@@ -98,7 +101,7 @@
             hold アクションはフォーム内容を保存せず、状態だけ保留にしてキューから外す %>
         <%= form.submit t("admin.annotations.hold"), name: nil,
                     formaction: hold_admin_annotation_path(@word), formnovalidate: true,
-                    class: "btn" %>
+                    class: "btn", data: { publish_guard_skip: "" } %>
         <%= form.submit t("admin.annotations.save_next"), class: "btn btn--primary" %>
       </div>
     <% end %>
