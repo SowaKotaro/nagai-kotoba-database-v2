@@ -363,6 +363,53 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
+  # --- キューの絞り込み・並べ替え(Issue 67) ---
+  test "提案キューに絞り込み・並べ替えの導線が出る(通常キューには出ない)" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word, proposed: 1)
+    assert_select ".ann-queue-filter"
+    assert_select ".ann-queue-filter__link", text: "要判断だけ"
+
+    get admin_annotation_path(@word)
+    assert_select ".ann-queue-filter", count: 0
+  end
+
+  test "review=1 は要判断(立項低 or 確信 low)の語だけに絞る" do
+    sign_in_as(Admin.take)
+    # haruhi=立項5/high(要判断でない)。bermuda に要判断の提案を足す
+    AnnotationProposal.create!(word: words(:pending_bermuda),
+      payload: { "confidence" => "low", "entry_score" => 2, "meaning" => "x。" })
+    get admin_annotations_path(proposed: 1, review: 1)
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda), proposed: "1", review: "1")
+  end
+
+  test "sort=review は要判断の語(立項低)を先頭にする" do
+    sign_in_as(Admin.take)
+    AnnotationProposal.create!(word: words(:pending_bermuda),
+      payload: { "confidence" => "low", "entry_score" => 2, "meaning" => "x。" })
+    get admin_annotations_path(proposed: 1, sort: "review")
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda), proposed: "1", sort: "review")
+  end
+
+  test "sort=easy は確実な語(確信高・立項高)を先頭にする" do
+    sign_in_as(Admin.take)
+    AnnotationProposal.create!(word: words(:pending_bermuda),
+      payload: { "confidence" => "low", "entry_score" => 2, "meaning" => "x。" })
+    get admin_annotations_path(proposed: 1, sort: "easy")
+    assert_redirected_to admin_annotation_path(words(:pending_haruhi), proposed: "1", sort: "easy")
+  end
+
+  test "並べ替え・絞り込みは保存後のキュー移動でも保たれる" do
+    sign_in_as(Admin.take)
+    AnnotationProposal.create!(word: words(:pending_bermuda),
+      payload: { "confidence" => "low", "entry_score" => 2, "meaning" => "x。" })
+    patch admin_annotation_path(@word), params: {
+      proposed: "1", sort: "review",
+      word: { word_senses_attributes: { "0" => { id: @sense.id, reading: @sense.reading } } }
+    }
+    assert_redirected_to admin_annotation_path(words(:pending_bermuda), proposed: "1", sort: "review")
+  end
+
   # --- 注釈済みの語でも提案を見直せる(Issue 41 FB) ---
   test "注釈済みの語でも Claude の提案が状態バッジ付きで表示される" do
     sign_in_as(Admin.take)

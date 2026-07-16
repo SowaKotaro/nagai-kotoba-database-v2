@@ -12,6 +12,13 @@ class AnnotationProposal < ApplicationRecord
   # pending: 未承認 / applied: コンソールで保存済み / dismissed: 見送り
   enum :status, { pending: 0, applied: 1, dismissed: 2 }, default: :pending
 
+  # コンソールのキューで「要判断」に絞る(Issue 67)。立項スコアが低い(≤3)か確信度が low の提案。
+  # payload(JSON)から取り出す。joins された words クエリからも呼べるよう列を明示修飾する。
+  scope :needs_review, -> {
+    where("CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) <= 3 " \
+          "OR annotation_proposals.payload->>'$.confidence' = 'low'")
+  }
+
   validates :payload, presence: true
 
   # 語義ごとの提案(意味・ジャンル・エンティティ・品詞・語種・別表記・読み)を持つ値オブジェクト。

@@ -13,6 +13,25 @@
       </span>
     </div>
 
+    <%# 提案キューの絞り込み・並べ替え(Issue 67)。index へ飛んで新しい順序の先頭から辿り直す %>
+    <% if params[:proposed].present? %>
+      <nav class="ann-queue-filter">
+        <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.filter") %></span>
+        <%= link_to t("admin.annotations.queue.all"), admin_annotations_path(nav_params.except(:review)),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:review].blank?) %>
+        <%= link_to t("admin.annotations.queue.review"), admin_annotations_path(nav_params.merge(review: "1")),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:review] == "1") %>
+        <span class="ann-queue-filter__sep" aria-hidden="true">|</span>
+        <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.sort") %></span>
+        <%= link_to t("admin.annotations.queue.sort_default"), admin_annotations_path(nav_params.except(:sort)),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:sort].blank?) %>
+        <%= link_to t("admin.annotations.queue.sort_easy"), admin_annotations_path(nav_params.merge(sort: "easy")),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "easy") %>
+        <%= link_to t("admin.annotations.queue.sort_review"), admin_annotations_path(nav_params.merge(sort: "review")),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "review") %>
+      </nav>
+    <% end %>
+
     <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.annotations.eyebrow") %></span></p>
     <h1 class="ann-word"><%= @word.surface %></h1>
     <p class="ann-word-meta"><%= t("admin.annotations.char_type") %>　<%= @word.char_type_pattern %></p>
@@ -22,9 +41,9 @@
 
     <%= form_with model: @word, url: admin_annotation_path(@word), method: :patch,
                   data: { queue_nav_target: "form" } do |form| %>
-      <%# 「提案あり」フィルタ(?proposed=1)を保存後のキュー移動でも保つ %>
-      <% if params[:proposed].present? %>
-        <%= hidden_field_tag :proposed, params[:proposed] %>
+      <%# フィルタ・並べ替え(nav_params)を保存後のキュー移動でも保つ %>
+      <% nav_params.each do |key, value| %>
+        <%= hidden_field_tag key, value %>
       <% end %>
       <% if @word.errors.any? %>
         <div class="error-explanation">
@@ -65,15 +84,15 @@
           <%= t("admin.annotations.sticky") %>
         </label>
         <% if @prev_word %>
-          <%= link_to t("admin.annotations.back"), admin_annotation_path(@prev_word, proposed: params[:proposed].presence),
+          <%= link_to t("admin.annotations.back"), admin_annotation_path(@prev_word, nav_params),
                       class: "btn", data: { queue_nav_target: "back" } %>
         <% else %>
           <span class="btn" aria-disabled="true"><%= t("admin.annotations.back") %></span>
         <% end %>
         <span class="spacer"></span>
         <%= link_to t("admin.annotations.skip"),
-                    (@skip_word ? admin_annotation_path(@skip_word, proposed: params[:proposed].presence)
-                                : admin_annotations_path(proposed: params[:proposed].presence)),
+                    (@skip_word ? admin_annotation_path(@skip_word, nav_params)
+                                : admin_annotations_path(nav_params)),
                     class: "btn", data: { queue_nav_target: "skip" } %>
         <%# 保留: 同じフォームを hold へ送る。formnovalidate で必須チェックを外し、途中入力でも保留できる。
             hold アクションはフォーム内容を保存せず、状態だけ保留にしてキューから外す %>

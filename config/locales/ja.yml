@@ -458,6 +458,14 @@ ja:
       remaining: "未対応"
       eyebrow: "見出し語"
       char_type: "文字種"
+      queue:
+        filter: "絞り込み"
+        all: "すべて"
+        review: "要判断だけ"
+        sort: "並び"
+        sort_default: "登録順"
+        sort_easy: "確実な順"
+        sort_review: "要判断を先に"
       glossary:
         summary: "用語解説（連濁・音韻添加など）"
       proposal:

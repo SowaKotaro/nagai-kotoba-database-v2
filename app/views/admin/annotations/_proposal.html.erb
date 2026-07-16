@@ -24,7 +24,7 @@
     <% end %>
     <span class="spacer"></span>
     <%= link_to t("admin.annotations.proposal.apply"),
-          admin_annotation_path(word, apply_proposal: 1, proposed: params[:proposed].presence),
+          admin_annotation_path(word, nav_params.merge(apply_proposal: 1)),
           class: "btn btn--sm", data: { turbo_frame: "annotation-console" } %>
   </div>
 

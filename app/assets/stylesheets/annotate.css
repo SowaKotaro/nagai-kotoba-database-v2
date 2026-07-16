@@ -18,6 +18,14 @@
 .ann-bar__legend { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); }
 .ann-bar__legend key { color: var(--shu); border: 1px solid var(--rule-mid); padding: 1px 5px; margin-right: 6px; }
 
+/* 提案キューの絞り込み・並べ替え(Issue 67)。極小の等幅リンク、選択中は朱 */
+.ann-queue-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; margin-bottom: var(--space-4); }
+.ann-queue-filter__label { color: var(--ink-3); }
+.ann-queue-filter__link { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; }
+.ann-queue-filter__link:hover { color: var(--ink); border-bottom-color: var(--rule-mid); }
+.ann-queue-filter__link.is-on { color: var(--shu); border-bottom-color: var(--shu); }
+.ann-queue-filter__sep { color: var(--rule-mid); }
+
 /* 見本語 */
 .ann-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-3); display: flex; gap: 14px; align-items: center; }
 .ann-eyebrow .no { color: var(--shu); }

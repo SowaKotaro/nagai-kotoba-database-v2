@@ -29,32 +29,6 @@
 
 # 未完了イシュー(優先度順)
 
-## Issue 66: 新設マスタのワンタップ作成
-- 種別: improvement
-- 状態: 対応中(branch feature/create-proposed-master)
-- 優先度: P2 ／ Impact: Med ／ Effort: Med
-- 依存: Issue 63
-- 背景・現状: 提案が既存に無いマスタ名を出すと、パネルは朱「新設候補」を出すが `apply` は解決済みマスタしか入れない。ジャンルは preselect で親まで開く配慮があるが、エンティティ/品詞/語種は Claude が出した名前を人が手で打ち直して作り、再反映が要る(テキスト入力の残渣)。
-- 内容:
-  - [ ] 「新設候補」バッジを**作成ボタン化**(`button_to`)。押すと提案名でマスタを1つ作成し、`apply_proposal=1` で再反映して戻る(サーバ側で完結・新規 Stimulus 不要。作成後は解決して自動 fill される)
-  - [ ] 種別: エンティティ/品詞/語種は提案名で `find_or_create_by!`。ジャンルは小分類を、解決済みの中分類(`resolved_genre_chain.last`)の下に作成。語種は未知名ごとにボタン
-  - [ ] ロジックは `ProposedMasterCreation`(値オブジェクト)に集約しコントローラは薄く。`POST /admin/annotations/:id/create_master`(field/name)。多語義提案は先頭語義に限定(新設候補×多語義は稀)
-  - [ ] 結合テスト: 各種別の作成→再反映で解決・fill される / 未認証は弾く / 中分類未解決のジャンルは作成不可
-  - 補足: 特徴(linguistic_features)は現状インライン作成の口が無い(create エンドポイント無し)ため本 Issue の対象外。タグ統括管理で追加する
-- 期待効果: 残るテキスト入力を消し、完全ボタン操作に近づける。
-
-## Issue 67: アノテーション・キューの並べ替え/フィルタ(提案メタ)
-- 種別: improvement
-- 状態: 未着手
-- 優先度: P2 ／ Impact: Med ／ Effort: Low〜Med
-- 依存: なし
-- 背景・現状: `queue_scope` は `order(:id)` のみで、confidence・entry_score・新設マスタ有無・特徴有無で選り分けられない。易しい語と要判断の語が混在し、集中の切り替えコストが掛かる。
-- 内容:
-  - [ ] `?proposed=1` に `sort`(confidence / entry_score)・`filter`(要判断 = entry_score≤3 or confidence=low or 新設マスタ有)を追加
-  - [ ] バッジ情報は既存(confidence/entry_score)。新設マスタ有無は解決判定で導出
-  - [ ] キュー件数・スキップ/戻るの整合(既存 `set_navigation`)を保つ
-- 期待効果: 「易しいバッチを高速で流し切る → 要判断バッチを腰を据えて見る」運用でスループットと精度を両立。
-
 ## Issue 68: 公開事故ガード(未完了のまま公開を防ぐ)
 - 種別: improvement
 - 状態: 未着手(方式は着手前に相談)
@@ -432,8 +406,10 @@
 - **Issue 63: 提案の言語的特徴を表示・反映** [bug/improvement] — 完了(PR #88)。payload に眠っていた特徴(`senses[].linguistic_features`)を提案パネルに表示し、反映時に `word_sense_features` を build(未知名は新設候補・`target_start` はモデルが補完)。
 - **Issue 64: 提案あり語のロード時自動反映** [improvement] — 完了(PR #88)。`?proposed=1` で pending 提案を開いた時点で自動反映(`apply_proposal?`。提案 > スティッキー)。毎語の「提案を反映」1クリック+GET 往復を廃止。
 - **Issue 65: 提案の一括承認** [feature] — 完了(PR #88)。`BulkProposalApproval`(厳格ゲート=high/立項≥4/単一語義/全マスタ解決/新設0)でプレビュー→一括承認・公開。反映は `ProposalApplication` に共通化(語種 join は GET=target 差替 / 保存=setter)。
+- **Issue 66: 新設マスタのワンタップ作成** [improvement] — 完了(PR #89)。提案パネルの「新設候補」を作成ボタン化(`ProposedMasterCreation`。`POST create_master` → 作成して `apply_proposal=1` で再反映)。エンティティ/品詞/語種/ジャンル小分類に対応(特徴は create 口が無く対象外)。
+- **Issue 67: キューの並べ替え/フィルタ** [improvement] — 完了(PR #90)。`?proposed=1` に `review`(要判断=立項≤3 or 確信 low の `needs_review` scope)と `sort`(easy=確実な順 / review=要判断を先に。payload JSON を SQL で並べ替え)を追加。ナビゲーション(index/skip/戻る/保存後移動)を並び順追従に。`nav_params` でリンク・フォームに持ち回る。
 
-(Issue 66〜70 は未完了節を参照)
+(Issue 68〜70 は未完了節を参照)
 
 ---
 
