@@ -26,12 +26,52 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  # --- index: 最初の未注釈へ誘導 ---
-  test "index は最初の未注釈へリダイレクトする" do
+  # --- index: 入口は提案付きの語を優先(Issue 69) ---
+  test "index は未承認の提案がある語が残っていれば提案キューへ寄せる" do
     sign_in_as(Admin.take)
+    # フィクスチャでは haruhi に未承認の提案が付いている
     get admin_annotations_path
-    assert_response :redirect
-    assert_match %r{/admin/annotations/\d+}, @response.redirect_url
+    assert_redirected_to admin_annotations_path(proposed: 1)
+    follow_redirect!
+    assert_redirected_to admin_annotation_path(@word, proposed: 1)
+  end
+
+  test "index は提案が無ければ最初の未対応へリダイレクトする" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).applied!
+    get admin_annotations_path
+    assert_redirected_to admin_annotation_path(Word.annotation_pending.order(:id).first)
+  end
+
+  # --- index: キューを捌き切ったときの完了画面の出し分け(Issue 69) ---
+  test "提案キューを捌き切ると残りの未対応語数と書き出しへの導線を出す" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).applied!
+    get admin_annotations_path(proposed: 1)
+    assert_response :success
+    assert_select ".ann-done__lead", text: "提案付きの未対応語はありません"
+    assert_select "a[href=?]", export_admin_annotation_proposals_path
+    assert_select "a[href=?]", admin_annotations_path, text: "提案なしで進める"
+  end
+
+  test "要判断で絞った提案が尽きても他の提案が残っていれば提案キューへの導線を出す" do
+    sign_in_as(Admin.take)
+    # haruhi の提案は high/立項5 なので「要判断」には掛からず、review キューは空になる
+    get admin_annotations_path(proposed: 1, review: 1)
+    assert_response :success
+    assert_select ".ann-done__lead", text: "要判断の提案は片付きました"
+    assert_select "a[href=?]", admin_annotations_path(proposed: 1), text: "残りの提案キューへ(1語)"
+  end
+
+  test "未対応の語が無ければ全完了の画面を出す" do
+    sign_in_as(Admin.take)
+    Word.annotation_pending.find_each do |word|
+      word.mark_annotated
+      word.save!
+    end
+    get admin_annotations_path
+    assert_response :success
+    assert_select ".ann-done__lead", text: "未対応の語はありません"
   end
 
   # --- show: コンソールを描画できる(全 partial のスモーク) ---

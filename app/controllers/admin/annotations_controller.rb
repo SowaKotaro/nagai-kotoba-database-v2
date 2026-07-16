@@ -12,8 +12,17 @@ class Admin::AnnotationsController < Admin::BaseController
 
   # キューの最初の語へ誘導。無ければ完了画面(index ビュー)を出す。
   def index
+    # 入口は提案付きの語を優先する(Issue 69)。Claude の下調べ(提案)が残っているのに
+    # 提案なしの語(surface+reading だけの手調査になる)へ着地させない。?proposed の明示指定は尊重。
+    return redirect_to admin_annotations_path(proposed: 1) if enter_proposed_queue?
+
     first = ordered_queue.first
-    redirect_to admin_annotation_path(first, nav_params) if first
+    return redirect_to admin_annotation_path(first, nav_params) if first
+
+    # 完了画面。提案キュー(?proposed=1)を捌き切っても提案なしの未対応語が残っていることが
+    # あるため、残数を数えて書き出し(下調べの補充)への導線を出し分ける(Issue 69)。
+    @pending_count = Word.annotation_pending.count
+    @proposed_count = Word.annotation_pending.with_pending_proposal.count
   end
 
   def show
@@ -120,6 +129,11 @@ class Admin::AnnotationsController < Admin::BaseController
   # 「提案あり」フィルタ(?proposed=1)を保ったままキューを辿るための値。
   def proposed_param
     params[:proposed].presence
+  end
+
+  # 入口(?proposed 無しの index)を提案キューへ寄せるか(Issue 69)。
+  def enter_proposed_queue?
+    proposed_param.blank? && Word.annotation_pending.with_pending_proposal.exists?
   end
 
   # コンソールのキュー(順序なし)。既定は未対応(pending)の語、?proposed=1 なら未承認の提案が

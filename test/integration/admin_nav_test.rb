@@ -23,9 +23,9 @@ class AdminNavTest < ActionDispatch::IntegrationTest
     get admin_words_path
     assert_select ".admin-nav a[aria-current=page][href=?]", admin_words_path
 
-    # アノテーション・コンソール
+    # アノテーション・コンソール(入口は提案キュー優先で多段リダイレクトになる。Issue 69)
     get admin_annotations_path
-    follow_redirect! if response.redirect?
+    follow_redirect! while response.redirect?
     assert_select ".admin-nav a[aria-current=page][href=?]", admin_annotations_path
   end
 
