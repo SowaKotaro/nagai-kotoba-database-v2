@@ -6,10 +6,14 @@
 class Admin::AnnotationsController < Admin::BaseController
   before_action :set_word, only: %i[show update hold create_master]
 
+  # ビューのリンク/フォームで、提案フィルタ(proposed)・並べ替え(sort)・要判断フィルタ(review)を
+  # 保ったままキューを辿るためのパラメータ一式(Issue 38/67)。
+  helper_method :nav_params
+
   # キューの最初の語へ誘導。無ければ完了画面(index ビュー)を出す。
   def index
-    first = queue_scope.order(:id).first
-    redirect_to admin_annotation_path(first, proposed: proposed_param) if first
+    first = ordered_queue.first
+    redirect_to admin_annotation_path(first, nav_params) if first
   end
 
   def show
@@ -57,20 +61,20 @@ class Admin::AnnotationsController < Admin::BaseController
     raise ActiveRecord::RecordNotFound unless proposal
 
     ProposedMasterCreation.new(proposal.senses.first, params[:field], params[:name]).create!
-    redirect_to admin_annotation_path(@word, apply_proposal: 1, proposed: proposed_param)
+    redirect_to admin_annotation_path(@word, nav_params.merge(apply_proposal: 1))
   rescue ProposedMasterCreation::Error, ActiveRecord::RecordInvalid
-    redirect_to admin_annotation_path(@word, apply_proposal: 1, proposed: proposed_param),
+    redirect_to admin_annotation_path(@word, nav_params.merge(apply_proposal: 1)),
                 alert: t("admin.annotations.create_master_failed")
   end
 
   private
 
   # 保存/保留のあと、キューに残る次の語(無ければ完了画面)へ誘導する。
-  # ?proposed=1 のフィルタは保ったまま辿る。
+  # 提案フィルタ・並べ替え・要判断フィルタ(nav_params)は保ったまま辿る。
   def redirect_to_next_word(notice)
-    next_word = queue_scope.where.not(id: @word.id).order(:id).first
-    redirect_to(next_word ? admin_annotation_path(next_word, proposed: proposed_param)
-                          : admin_annotations_path(proposed: proposed_param),
+    next_word = ordered_queue.where.not(id: @word.id).first
+    redirect_to(next_word ? admin_annotation_path(next_word, nav_params)
+                          : admin_annotations_path(nav_params),
                 notice: notice)
   end
 
@@ -118,12 +122,45 @@ class Admin::AnnotationsController < Admin::BaseController
     params[:proposed].presence
   end
 
-  # コンソールのキュー。既定は未対応(pending)の語、?proposed=1 なら未承認の提案が付いた語だけ。
+  # コンソールのキュー(順序なし)。既定は未対応(pending)の語、?proposed=1 なら未承認の提案が
+  # 付いた語だけ。さらに ?review=1 で「要判断」の提案(立項スコア低・確信度 low)に絞る(Issue 67)。
   # 保留(on_hold)にした語はキューに出ない。
   def queue_scope
     scope = Word.annotation_pending
-    scope = scope.with_pending_proposal if proposed_param
+    if proposed_param
+      scope = scope.with_pending_proposal
+      scope = scope.merge(AnnotationProposal.needs_review) if params[:review] == "1"
+    end
     scope
+  end
+
+  # キューに並び順を付けたもの。既定は id 順。?proposed=1 のときだけ提案メタ(確信度・立項
+  # スコア)で並べ替えられる(Issue 67)。
+  def ordered_queue
+    queue_scope.order(queue_order)
+  end
+
+  # 並び順。sort=easy は確実な提案(確信度 高→低・立項 高→低)を先に、sort=review は要判断
+  # (立項 低→高・確信度 low 先)を先に。提案メタは JSON カラムから取り出す。既定と proposed 以外は id 順。
+  # 並べ替えの SQL 断片は定数(ユーザー入力を埋め込まない)。
+  def queue_order
+    return Word.arel_table[:id] unless proposed_param
+
+    case params[:sort]
+    when "easy"
+      Arel.sql("FIELD(annotation_proposals.payload->>'$.confidence','high','medium','low'), " \
+               "CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) DESC, words.id")
+    when "review"
+      Arel.sql("CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) ASC, " \
+               "FIELD(annotation_proposals.payload->>'$.confidence','low','medium','high'), words.id")
+    else
+      Word.arel_table[:id]
+    end
+  end
+
+  # リンク/フォームで提案フィルタ・並べ替え・要判断フィルタを保つためのパラメータ。
+  def nav_params
+    { proposed: proposed_param, sort: params[:sort].presence, review: params[:review].presence }.compact
   end
 
   # --- スティッキー引き継ぎ(Issue 37) ---
@@ -172,15 +209,31 @@ class Admin::AnnotationsController < Admin::BaseController
     }
   end
 
-  # キューの残数と、スキップ(次の語)・戻る(直前の語)のリンク先。?proposed=1 も同じキューを辿る。
+  # キューの残数と、スキップ(順序上の次)・戻る(順序上の前)のリンク先。並べ替え(Issue 67)に
+  # 追従させるため、キューの語 id を順序どおりに取り出して現在語の前後を採る。
+  # (提案キューは取り込み単位で高々数百件なので、id 列の取得は軽い。words.id は
+  # annotation_proposals.id との曖昧を避けるため明示修飾する。)
   def set_navigation
-    # queue_scope は ?proposed=1 で annotation_proposals を joins するため、
-    # 素の id は words.id / annotation_proposals.id で曖昧になる。words.id に明示修飾する。
-    words_id = Word.arel_table[:id]
-    @remaining = queue_scope.count
-    @skip_word = queue_scope.where(words_id.gt(@word.id)).order(words_id).first ||
-                 queue_scope.where.not(id: @word.id).order(words_id).first
-    @prev_word = Word.where(words_id.lt(@word.id)).order(words_id.desc).first
+    ordered_ids = ordered_queue.pluck("words.id")
+    @remaining = ordered_ids.size
+    position = ordered_ids.index(@word.id)
+    @skip_word = skip_target(ordered_ids, position)
+    @prev_word = prev_target(ordered_ids, position)
+  end
+
+  # スキップ先(順序上の次)。末尾なら先頭へ回り込み、現在語がキュー外なら先頭。
+  def skip_target(ordered_ids, position)
+    return Word.find_by(id: ordered_ids.first) if position.nil?
+
+    next_id = ordered_ids[position + 1] || ordered_ids.find { |id| id != @word.id }
+    Word.find_by(id: next_id)
+  end
+
+  # 戻る先(順序上の前)。無ければ id が小さい直近の語(既存挙動のフォールバック)。
+  def prev_target(ordered_ids, position)
+    prev_id = ordered_ids[position - 1] if position&.positive?
+    (Word.find_by(id: prev_id) if prev_id) ||
+      Word.where(Word.arel_table[:id].lt(@word.id)).order(id: :desc).first
   end
 
   # 語種は多対多(word_origin_ids)、ジャンル/品詞/エンティティは belongs_to の *_id、

@@ -4,7 +4,7 @@
     フォームに解決済みで入る(サーバ側で完結・新規 JS 不要)。 %>
 <% if creatable %>
   <%= button_to label, create_master_admin_annotation_path(word),
-        params: { field: field, name: name, proposed: params[:proposed].presence },
+        params: nav_params.merge(field: field, name: name),
         form: { class: "ann-proposal__new-form", data: { turbo_frame: "annotation-console" } },
         class: "ann-proposal__new ann-proposal__new--btn" %>
 <% else %>

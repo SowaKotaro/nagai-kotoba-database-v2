@@ -159,4 +159,17 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     feature = @proposal.senses.first.linguistic_features.first
     assert_nil @proposal.senses.first.resolved_linguistic_feature(feature)
   end
+
+  # --- 要判断フィルタ(Issue 67) ---
+  test "needs_review は立項3以下か確信 low の提案に絞る" do
+    # haruhi は 立項5/high なので対象外
+    assert_not_includes AnnotationProposal.needs_review, @proposal
+
+    @proposal.update!(payload: @proposal.payload.merge("entry_score" => 3))
+    assert_includes AnnotationProposal.needs_review, @proposal
+
+    # 立項が十分でも確信度 low なら要判断
+    @proposal.update!(payload: @proposal.payload.merge("entry_score" => 5, "confidence" => "low"))
+    assert_includes AnnotationProposal.needs_review, @proposal
+  end
 end
