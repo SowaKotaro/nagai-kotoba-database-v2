@@ -49,6 +49,8 @@ Rails.application.routes.draw do
     resources :annotation_proposals, only: %i[new create] do
       get :export, on: :collection
     end
+    # 提案の一括承認(Issue 65): 厳格ゲートを満たす提案をプレビュー(show)→ まとめて承認・公開(create)。
+    resource :bulk_proposal_approval, only: %i[show create]
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未対応へ誘導。
     # hold は現在の語を保留にしてキューから外し、次の未対応へ進む。
     resources :annotations, only: %i[index show update] do

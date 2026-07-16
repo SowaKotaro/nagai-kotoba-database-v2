@@ -63,6 +63,10 @@
 .ann-proposal__grid dd { margin: 0; font-size: 14px; }
 .ann-proposal__grid .sep { color: var(--shu); margin: 0 4px; }
 .ann-proposal__new { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--shu); border: 1px solid var(--shu); padding: 0 6px; margin-left: 6px; }
+/* 提案パネルの特徴(該当部分つき)。1件ずつ縦に積み、該当部分は極小の等幅で添える */
+.ann-proposal__feature { display: block; margin: 2px 0; }
+.ann-proposal__feature b { font-weight: 600; }
+.ann-proposal__feature-target { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-3); margin-left: 8px; }
 .ann-proposal__notes { font-size: 13px; color: var(--ink-2); margin: var(--space-2) 0 0; }
 
 /* スティッキー引き継ぎ(Issue 37)。アクションバー左端の小さなトグル */
@@ -191,6 +195,22 @@
   .ann-row { grid-template-columns: 1fr; gap: 6px; }
   .ann-row__label { padding-top: 0; }
   .ann-bar__legend { display: none; }
+}
+
+/* 提案の一括承認プレビュー表(Issue 65)。墨の細罫・等幅の極小ヘッダ(角丸・影なし) */
+.bulk-approval { width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 13px; }
+.bulk-approval th { text-align: left; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); font-weight: 400; border-bottom: 2px solid var(--ink); padding: 6px 10px; white-space: nowrap; }
+.bulk-approval td { border-bottom: 1px solid var(--rule); padding: 8px 10px; vertical-align: top; }
+.bulk-approval__no { font-family: var(--font-mono); font-size: 11px; color: var(--shu); white-space: nowrap; }
+.bulk-approval__word { font-family: var(--font-mincho); font-size: 15px; }
+.bulk-approval__word a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule-mid); }
+.bulk-approval__word a:hover { color: var(--shu); border-color: var(--shu); }
+.bulk-approval__genre { font-size: 12px; color: var(--ink-2); }
+@media (max-width: 700px) {
+  .bulk-approval, .bulk-approval tbody, .bulk-approval tr, .bulk-approval td { display: block; }
+  .bulk-approval thead { display: none; }
+  .bulk-approval tr { border: 1px solid var(--rule-mid); padding: 6px 4px; margin-bottom: var(--space-2); }
+  .bulk-approval td { border: 0; padding: 3px 8px; }
 }
 
 /* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。

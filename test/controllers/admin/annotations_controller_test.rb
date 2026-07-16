@@ -200,6 +200,93 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".ann-proposal__sense", count: 2
   end
 
+  # --- 提案の言語的特徴の表示・反映(Issue 63) ---
+  test "提案パネルに言語的特徴が該当部分つきで出る" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ {
+        "meaning" => "谷川流のライトノベル。",
+        "linguistic_features" => [
+          { "name" => "連濁", "target" => "涼宮", "target_reading" => "すずみや" }
+        ]
+      } ]
+    })
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal__feature", text: /連濁/
+    assert_select ".ann-proposal__feature-target", text: /涼宮/
+    # 既存マスタに解決できるので新設候補バッジは付かない
+    assert_select ".ann-proposal__feature .ann-proposal__new", count: 0
+  end
+
+  test "提案パネルの未知の特徴名には新設候補バッジが付く" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ {
+        "linguistic_features" => [
+          { "name" => "存在しない特徴", "target" => "涼宮", "target_reading" => "すずみや" }
+        ]
+      } ]
+    })
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal__feature .ann-proposal__new"
+  end
+
+  test "「提案を反映」で言語的特徴が該当部分つきでフォームに組まれる(保存はしない)" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ {
+        "meaning" => "谷川流のライトノベル。",
+        "linguistic_features" => [
+          { "name" => "連濁", "target" => "涼宮", "target_reading" => "すずみや" }
+        ]
+      } ]
+    })
+    get admin_annotation_path(@word, apply_proposal: 1)
+    assert_response :success
+
+    # 特徴の種別と該当部分が hidden field に入る(feature-range が connect でハイライト復元)
+    assert_select "input[name$='[linguistic_feature_id]'][value=?]", linguistic_features(:rendaku).id.to_s
+    assert_select "input[name$='[target]'][value=?]", "涼宮"
+    assert_select "input[name$='[target_reading]'][value=?]", "すずみや"
+
+    # プレフィルは表示だけで、DB には書き込まない
+    assert_equal 0, @sense.reload.word_sense_features.count
+  end
+
+  test "未知の特徴名は反映で組まれない(新設候補のまま残す)" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ {
+        "linguistic_features" => [
+          { "name" => "存在しない特徴", "target" => "涼宮", "target_reading" => "すずみや" }
+        ]
+      } ]
+    })
+    get admin_annotation_path(@word, apply_proposal: 1)
+    assert_response :success
+    # 解決できない特徴は該当部分の hidden field に載らない
+    assert_select "input[name$='[target]'][value=?]", "涼宮", count: 0
+  end
+
+  test "反映した特徴はそのまま保存でき、target_start が先頭出現に補完される" do
+    sign_in_as(Admin.take)
+    assert_difference -> { WordSenseFeature.count } => 1 do
+      patch admin_annotation_path(@word), params: {
+        word: { word_senses_attributes: { "0" => {
+          id: @sense.id, reading: @sense.reading,
+          word_sense_features_attributes: { "0" => {
+            linguistic_feature_id: linguistic_features(:rendaku).id,
+            target: "涼宮", target_reading: "すずみや"
+          } }
+        } } }
+      }
+    end
+    feature = @sense.reload.word_sense_features.first
+    assert_equal "涼宮", feature.target
+    assert_equal "すずみや", feature.target_reading
+    assert_equal 0, feature.target_start # 「涼宮」は表層形の先頭
+  end
+
   # --- 注釈済みの語でも提案を見直せる(Issue 41 FB) ---
   test "注釈済みの語でも Claude の提案が状態バッジ付きで表示される" do
     sign_in_as(Admin.take)
@@ -232,6 +319,36 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     # StatementInvalid になっていた(回帰防止)。
     get admin_annotation_path(@word, proposed: 1)
     assert_response :success
+  end
+
+  # --- 提案あり語のロード時自動反映(Issue 64) ---
+  test "?proposed=1 では明示操作なしで提案が自動反映される" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word, proposed: 1)
+    assert_response :success
+    # 「提案を反映」を押さずとも初期表示される
+    assert_select "textarea.js-meaning", text: /谷川流/
+    assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s
+    # 自動反映も表示だけで、DB には書き込まない
+    assert_nil @sense.reload.meaning
+    assert_nil @sense.genre_id
+  end
+
+  test "通常表示(proposed なし)は自動反映しない(スティッキー既定のまま)" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word)
+    assert_response :success
+    # フォームの意味欄は空(パネルには出るが反映はしない)
+    assert_select "textarea.js-meaning", text: /谷川流/, count: 0
+  end
+
+  test "反映済みの提案は proposed でも自動反映しない(二重反映を避ける)" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).applied!
+    @word.update!(annotated_at: Time.current)
+    get admin_annotation_path(@word, proposed: 1)
+    assert_response :success
+    assert_select "textarea.js-meaning", text: /谷川流/, count: 0
   end
 
   # --- 表層形の訂正(Issue 36: 編集画面をコンソールへ統合) ---

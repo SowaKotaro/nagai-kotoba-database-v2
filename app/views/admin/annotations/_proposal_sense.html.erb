@@ -53,6 +53,23 @@
     </dd>
   <% end %>
 
+  <%# 言語的特徴(該当部分つき)。反映すると範囲タップ済みの状態でフォームに組まれる。
+      マスタに無い特徴名は朱「新設候補」で示す(反映では組まれず、その場追加が要る)。 %>
+  <% if sense.linguistic_features.any? %>
+    <dt><%= t("admin.annotations.features") %></dt>
+    <dd>
+      <% sense.linguistic_features.each do |feature| %>
+        <span class="ann-proposal__feature">
+          <b><%= feature["name"] %></b>
+          <span class="ann-proposal__feature-target"><%= feature["target"] %> / <%= feature["target_reading"] %></span>
+          <% unless sense.resolved_linguistic_feature(feature) %>
+            <span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
+          <% end %>
+        </span>
+      <% end %>
+    </dd>
+  <% end %>
+
   <% if sense.variants.any? %>
     <dt><%= t("admin.annotations.variants") %></dt>
     <dd><%= sense.variants.map { |v| v["surface"] }.join("・") %></dd>

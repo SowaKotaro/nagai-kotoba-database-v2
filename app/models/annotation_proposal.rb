@@ -37,6 +37,15 @@ class AnnotationProposal < ApplicationRecord
       Array(@data["variants"]).select { |v| v.is_a?(Hash) && v["surface"].present? }
     end
 
+    # 言語的特徴の提案。name/target/target_reading が揃った要素だけを返す。
+    # target_reading も必須にするのは WordSenseFeature が両方を必須にするためで、
+    # 欠けたものは反映しても保存できない(パネルには出さず、反映もしない)。
+    def linguistic_features
+      Array(@data["linguistic_features"]).select do |f|
+        f.is_a?(Hash) && f["name"].present? && f["target"].present? && f["target_reading"].present?
+      end
+    end
+
     # ジャンルパス(大→中→小)を既存の木から辿れるところまでの Genre 鎖を返す。
     # 末端まで一致すれば [大, 中, 小]、途中までなら [大] や [大, 中]、1つも無ければ []。
     def resolved_genre_chain
@@ -65,6 +74,9 @@ class AnnotationProposal < ApplicationRecord
     # 見つかった語種だけを返す(見つからない名前は unknown_word_origin_names)。
     def resolved_word_origins = WordOrigin.where(name: word_origin_names)
     def unknown_word_origin_names = word_origin_names - resolved_word_origins.pluck(:name)
+
+    # 特徴名を既存マスタに解決する(無ければ nil = 新設候補)。
+    def resolved_linguistic_feature(feature) = LinguisticFeature.find_by(name: feature["name"])
   end
 
   # 語義ごとの提案。payload["senses"] があればそれを、無ければトップレベル形式を1件とみなす。
