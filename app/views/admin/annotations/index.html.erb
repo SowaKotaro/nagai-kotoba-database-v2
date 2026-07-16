@@ -2,8 +2,25 @@
 <%= turbo_frame_tag "annotation-console", data: { turbo_action: "advance" } do %>
   <div class="ann-done">
     <p class="ann-eyebrow"><span><%= t("admin.annotations.title") %></span></p>
-    <p class="ann-done__lead"><%= t("admin.annotations.all_done") %></p>
-    <p><%= t("admin.annotations.all_done_lead") %></p>
-    <p><%= link_to t("admin.annotations.to_words"), admin_words_path, class: "btn" %></p>
+    <% if @pending_count.zero? %>
+      <p class="ann-done__lead"><%= t("admin.annotations.all_done") %></p>
+      <p><%= t("admin.annotations.all_done_lead") %></p>
+      <p><%= link_to t("admin.annotations.to_words"), admin_words_path, class: "btn", data: { turbo_frame: "_top" } %></p>
+    <% elsif @proposed_count.positive? %>
+      <%# 要判断(review=1)で絞った提案だけが片付いた状態。絞り込みを外した提案キューへ戻す %>
+      <p class="ann-done__lead"><%= t("admin.annotations.review_done") %></p>
+      <p><%= t("admin.annotations.review_done_lead") %></p>
+      <p><%= link_to t("admin.annotations.to_remaining_proposals", count: @proposed_count),
+                     admin_annotations_path(proposed: 1), class: "btn btn--primary" %></p>
+    <% else %>
+      <%# 提案付きの語は尽きたが、提案なしの未対応語が残っている。書き出し(下調べの補充)へ誘導する(Issue 69) %>
+      <p class="ann-done__lead"><%= t("admin.annotations.proposed_done") %></p>
+      <p><%= t("admin.annotations.proposed_done_lead", count: @pending_count) %></p>
+      <p>
+        <%= link_to t("admin.annotations.to_export"), export_admin_annotation_proposals_path,
+                    class: "btn btn--primary", data: { turbo_frame: "_top" } %>
+        <%= link_to t("admin.annotations.continue_without_proposal"), admin_annotations_path, class: "btn" %>
+      </p>
+    <% end %>
   </div>
 <% end %>
