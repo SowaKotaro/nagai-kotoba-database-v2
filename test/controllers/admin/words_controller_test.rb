@@ -110,6 +110,69 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td a", text: words(:pending_haruhi).surface, count: 0
   end
 
+  # --- タグ絞り込み(ジャンル・品詞・エンティティ・語種) ---
+  test "一覧を品詞・エンティティ・語種で絞り込める" do
+    sign_in_as(Admin.take)
+    # 品詞「名詞」: murder と curry の語義に付いている
+    get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id)
+    assert_select "td a", text: @word.surface
+    assert_select "td a", text: words(:curry).surface
+    assert_select "td a", text: words(:pending_haruhi).surface, count: 0
+
+    # エンティティ「書籍名」: murder のみ
+    get admin_words_path(entity_type_id: entity_types(:book_title).id)
+    assert_select "td a", text: @word.surface
+    assert_select "td a", text: words(:curry).surface, count: 0
+
+    # 語種「英語」: curry のみ
+    get admin_words_path(word_origin_id: word_origins(:eigo).id)
+    assert_select "td a", text: words(:curry).surface
+    assert_select "td a", text: @word.surface, count: 0
+  end
+
+  test "ジャンルは上位(大分類)を選んでも配下の小分類ごと絞り込める" do
+    sign_in_as(Admin.take)
+    # 小分類「小説」を直接指定
+    get admin_words_path(genre_id: genres(:small_novel).id)
+    assert_select "td a", text: @word.surface
+    assert_select "td a", text: words(:curry).surface, count: 0
+
+    # 大分類「文学」でも配下の小説に付く語が出る
+    get admin_words_path(genre_id: genres(:large_literature).id)
+    assert_select "td a", text: @word.surface
+    assert_select "td a", text: words(:curry).surface, count: 0
+
+    # 存在しないジャンル id は0件(絞り込みは黙って外さない)
+    get admin_words_path(genre_id: 999_999)
+    assert_select "p.empty-note"
+  end
+
+  test "タグ絞り込みは検索・注釈状態と組み合わせられる(AND)" do
+    sign_in_as(Admin.take)
+    # 品詞「名詞」× 表層形「カレー」→ curry のみ
+    get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id, q: "カレー")
+    assert_select "td a", text: words(:curry).surface
+    assert_select "td a", text: @word.surface, count: 0
+
+    # 品詞「名詞」× 未対応 → 0件(名詞が付く語はどちらも注釈済み)
+    get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id, status: "annotation_pending")
+    assert_select "p.empty-note"
+  end
+
+  test "タグ絞り込みは状態タブ・一括適用フォーム・セレクトに引き継がれる" do
+    sign_in_as(Admin.take)
+    pos_id = parts_of_speech(:noun).id
+    get admin_words_path(part_of_speech_id: pos_id)
+
+    # 状態タブのリンクが条件を保持する
+    assert_select ".admin-status-tabs__tab[href*=?]", "part_of_speech_id=#{pos_id}", count: 4
+    # 一括適用フォームの hidden で適用後も条件を保つ
+    assert_select "#bulk-annotation-form input[type=hidden][name=part_of_speech_id][value=?]", pos_id.to_s
+    # セレクトは選択状態を復元し、解除リンクが出る
+    assert_select "select[name=part_of_speech_id] option[selected][value=?]", pos_id.to_s
+    assert_select ".admin-words-tag-filter__reset"
+  end
+
   test "一覧は100語ごとにページ送りする" do
     sign_in_as(Admin.take)
     # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)

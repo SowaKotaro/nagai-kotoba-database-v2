@@ -29,6 +29,18 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @haruhi.reload.annotated_at
   end
 
+  test "タグ絞り込みの条件も保って一覧へ戻る" do
+    sign_in_as(Admin.take)
+    post admin_bulk_annotation_path, params: {
+      genre_id: genres(:large_literature).id, part_of_speech_id: parts_of_speech(:noun).id,
+      bulk_annotation: { word_ids: [ @haruhi.id ], part_of_speech_id: parts_of_speech(:noun).id }
+    }
+
+    assert_redirected_to admin_words_path(genre_id: genres(:large_literature).id,
+                                          part_of_speech_id: parts_of_speech(:noun).id)
+    assert_equal parts_of_speech(:noun).id, word_senses(:pending).reload.part_of_speech_id
+  end
+
   test "複数語義の語はスキップし、件数をフラッシュで知らせる" do
     sign_in_as(Admin.take)
     @haruhi.word_senses.create!(reading: "すずみやはるひのゆううつべつぎ")

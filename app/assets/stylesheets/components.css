@@ -1644,6 +1644,51 @@ a.tag:hover .genre-hub__count {
   color: var(--shu);
 }
 
+/* 検索とタグ絞り込みを縦に積む(タグは語義のジャンル・品詞・エンティティ・語種) */
+.admin-words-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-words-tag-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* データラベルは極小の等幅(デザインシステムのスケール対比) */
+.admin-words-tag-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-words-tag-filter__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+
+.admin-words-tag-filter select {
+  font-size: 13px;
+  padding: 4px 8px;
+  max-width: 14em;
+}
+
+.admin-words-tag-filter__reset {
+  font-size: 13px;
+  color: var(--ink-2);
+  align-self: flex-end;
+  padding-bottom: 5px;
+}
+
+.admin-words-tag-filter__reset:hover {
+  color: var(--shu);
+}
+
 .admin-status-tabs {
   display: flex;
   align-items: baseline;

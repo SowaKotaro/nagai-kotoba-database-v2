@@ -20,9 +20,9 @@ class Admin::BulkAnnotationsController < Admin::BaseController
     )
   end
 
-  # 適用後も一覧の検索・絞り込み・ページ位置を保つ。
+  # 適用後も一覧の検索・絞り込み(注釈状態・タグ)・ページ位置を保つ。
   def list_params
-    params.permit(:q, :status, :page).to_h.compact_blank
+    params.permit(:q, :status, :page, *Admin::WordsController::TAG_FILTER_KEYS).to_h.compact_blank
   end
 
   def applied_message(result)
