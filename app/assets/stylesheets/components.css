@@ -2935,3 +2935,761 @@ textarea {
     font-size: 16px;
   }
 }
+
+/* --- 統計ページ「蔵版目録」(Issue 34 / docs/stats.md) ---------------------------------
+   本編は言葉が主役、この頁だけは等幅数字と罫線が主役。チャートはインライン SVG で描き、
+   量の濃淡は朱チント(color-mix)、識別は色でなくラベルと位置で持つ。朱は「最」にだけ使う。 */
+
+.stats-computed {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+
+/* 数字の壁: 4群×5指標の定義リスト。罫線で仕切り、箱にしない */
+.stats-wall {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: var(--space-7);
+}
+
+.stats-wall__heading {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  color: var(--shu);
+}
+
+.stats-wall__list {
+  margin: 0;
+}
+
+.stats-wall__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 6px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.stats-wall__row dt {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.stats-wall__row dd {
+  margin: 0;
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stats-wall__unit {
+  margin-left: 3px;
+  font-family: var(--font-gothic);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+@media (max-width: 1023px) {
+  .stats-wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 519px) {
+  .stats-wall {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 章立て。§番号は朱の等幅ラベル、見出しは明朝。章の区切りは墨の太罫 */
+.stats-section {
+  margin-bottom: var(--space-7);
+}
+
+.stats-section__title {
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--ink);
+  font-size: clamp(20px, 2.8vw, 26px);
+}
+
+.stats-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: var(--space-4);
+}
+
+.stats-section__header .stats-section__title {
+  margin: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.stats-section__lead {
+  margin: 0 0 var(--space-4);
+  max-width: 46em;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-2);
+}
+
+.stats-subheading {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: clamp(16px, 2.2vw, 19px);
+}
+
+.stats-subheading:first-child {
+  margin-top: 0;
+}
+
+/* 章内の注記・補足(等幅の欄外注) */
+.stats-hint,
+.stats-covered {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+/* 読み物キャプション。行頭に朱の「※」を置く(欄外注の文法) */
+.stats-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stats-notes li {
+  position: relative;
+  padding-left: 1.4em;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-2);
+}
+
+.stats-notes li + li {
+  margin-top: var(--space-2);
+}
+
+.stats-notes li::before {
+  content: "※";
+  position: absolute;
+  left: 0;
+  color: var(--shu);
+}
+
+/* 幅の広いチャートは自身の中で横スクロールさせる(ページ全体は横スクロール禁止) */
+.stats-scroll {
+  overflow-x: auto;
+}
+
+/* 墨枠セグメントボタン(文字数/モーラ・期間切替)。選択中は墨に反転 */
+.segmented {
+  display: inline-flex;
+  margin-bottom: var(--space-4);
+}
+
+.segmented__button {
+  margin-left: -1px;
+  padding: 5px 16px;
+  border: 1px solid var(--ink);
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.segmented__button:first-child {
+  margin-left: 0;
+}
+
+.segmented__button:hover,
+.segmented__button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* --- 頭文字と末尾文字: 50音表ヒートマップ(索引の kana-grid を再利用)と行×行マトリクス --- */
+.stats-kana-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-5);
+}
+
+.stats-kana {
+  flex: 1 1 340px;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.stats-matrix-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 767px) {
+  .stats-matrix-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* マスの間隔は border-spacing の1本で持つ(上下左右とも4px)。
+   基底の table { width: 100% } を打ち消して内容幅に縮め、列がマス幅(32px)より
+   広がらないようにする(広がると横の間隔だけ開いてしまう) */
+.sound-matrix {
+  border-collapse: separate;
+  border-spacing: 4px;
+  width: auto;
+}
+
+.sound-matrix th {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.sound-matrix thead th {
+  width: 32px;
+  padding: 0 0 2px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.sound-matrix tbody th {
+  padding: 0 8px 0 0;
+  text-align: left;
+}
+
+.sound-matrix thead th.sound-matrix__corner {
+  width: 96px;
+  text-align: left;
+}
+
+.sound-matrix td {
+  padding: 0;
+}
+
+/* セルの朱ヒートは索引の kana-cell--heat と同じ式(--fill 0〜1) */
+.sound-matrix__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 55% + 12%), var(--rule-mid));
+  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 70%), transparent);
+  text-decoration: none;
+}
+
+a.sound-matrix__cell:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.sound-matrix__cell--empty {
+  border-color: var(--rule);
+  background: none;
+}
+
+/* 最多セルだけ数字を白抜きで直書きする(朱は「最」にだけ) */
+.sound-matrix__count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--bg);
+}
+
+/* --- §3 波形塗りバー --- */
+.wave-chart {
+  display: block;
+  width: min(100%, calc(var(--chart-width, 720px) * 1.3));
+  height: auto;
+}
+
+.wave-chart__bar path {
+  fill: color-mix(in srgb, var(--shu) 38%, transparent);
+  transition: fill 0.15s;
+}
+
+.wave-chart__bar--mode path {
+  fill: var(--shu);
+}
+
+.wave-chart__bar:hover path {
+  fill: var(--ink);
+}
+
+.wave-chart__baseline {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.wave-chart__value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--ink-3);
+}
+
+.wave-chart__count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--ink-2);
+}
+
+.wave-chart__count--mode {
+  fill: var(--shu);
+}
+
+/* --- §4 収録の推移(株価チャート式) --- */
+.stats-current {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.stats-current__total {
+  font-family: var(--font-mincho);
+  font-weight: 600;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-current__delta {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--shu);
+}
+
+.timeline-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.timeline-chart__area {
+  fill: color-mix(in srgb, var(--shu) 10%, transparent);
+}
+
+.timeline-chart__line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.timeline-chart__dot {
+  fill: var(--shu);
+}
+
+.timeline-chart__value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--ink-2);
+}
+
+.timeline-chart__value--now {
+  fill: var(--shu);
+}
+
+.timeline-chart__vol {
+  fill: var(--ink);
+}
+
+.timeline-chart__vol--last {
+  fill: var(--shu);
+}
+
+.timeline-chart__base {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.timeline-chart__date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+
+/* --- ジャンル別の語義数(Plotly サンバースト + 連動する積み上げ棒) ---
+   描画は genre_sunburst_controller(Plotly)。ここでは器のサイズと見出しだけを持つ */
+.genre-analysis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5) var(--space-6);
+  align-items: flex-start;
+}
+
+.genre-analysis__sunburst {
+  flex: 0 1 460px;
+  min-width: 300px;
+}
+
+.genre-analysis__sunburst-plot {
+  width: 100%;
+  height: 440px;
+}
+
+.genre-analysis__bars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.genre-analysis__label {
+  margin: 0 0 var(--space-1);
+  font-size: 13px;
+  color: var(--ink-2);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.genre-analysis__column {
+  width: 76px;
+  flex: none;
+}
+
+.genre-analysis__column-plot {
+  width: 76px;
+  height: 400px;
+}
+
+.genre-analysis__smalls {
+  flex: 1 1 300px;
+  min-width: 280px;
+  max-width: 560px;
+}
+
+.genre-analysis__smalls .genre-analysis__label {
+  text-align: left;
+}
+
+.genre-analysis__small-bar {
+  height: 56px;
+  width: 100%;
+}
+
+/* --- 語種の構成(ワッフル)とエンティティ型のヒートマップ ---
+   ワッフルの塗りは順位で固定: 1位=朱ベタ / 2位=墨ベタ / 3位=朱チント / 4位=紙+墨枠 /
+   5番目(その他)=墨チント。明度差で識別する(色相に依存しない) */
+.origin-case {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.waffle {
+  display: grid;
+  grid-template-columns: repeat(10, 18px);
+  grid-auto-rows: 18px;
+  gap: 3px;
+}
+
+.waffle__cell {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ink);
+}
+
+.waffle__cell--f1 {
+  background: var(--shu);
+  border-color: var(--shu);
+}
+
+.waffle__cell--f2 {
+  background: var(--ink);
+}
+
+.waffle__cell--f3 {
+  background: color-mix(in srgb, var(--shu) 35%, var(--bg));
+  border-color: color-mix(in srgb, var(--shu) 55%, var(--rule-mid));
+}
+
+.waffle__cell--f4 {
+  background: var(--bg);
+}
+
+.waffle__cell--f5 {
+  background: color-mix(in srgb, var(--ink) 20%, var(--bg));
+}
+
+/* 同じ100マスを語種ごとに横へ並べ直した棒(凡例を兼ねる)。
+   「名前 | マス… 件数」の3列。名前とマスの間は墨罫で仕切る */
+.waffle-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.waffle-bars__row {
+  display: grid;
+  grid-template-columns: 4.5em minmax(0, 1fr) max-content;
+  column-gap: var(--space-3);
+  align-items: center;
+}
+
+.waffle-bars__name {
+  font-size: 14px;
+  text-align: right;
+}
+
+.waffle-bars__cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--ink);
+}
+
+.waffle-bars__cells .waffle__cell {
+  width: 12px;
+  height: 12px;
+}
+
+.waffle-bars__count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* エンティティ型のツリーマップ。面積 = 語義数(squarified、座標は%)。
+   罫は各セルの墨 1px 枠の重なりで引く。塗りは朱チントの濃淡 */
+.entity-treemap {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  border: 1px solid var(--ink);
+  background: var(--bg);
+}
+
+.entity-treemap__cell {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 6px 8px;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 50% + 6%), var(--bg));
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.entity-treemap__cell:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.entity-treemap__name {
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.entity-treemap__count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: inherit;
+}
+
+/* --- §7 母音スペクトルと頭子音 ---
+   帯は墨の明度4段 + オ段のみ朱チントの5値。右端の段名で識別する(色相に依存しない) */
+.vowel-spectrum {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.vowel-spectrum__band--a {
+  fill: var(--ink);
+}
+
+.vowel-spectrum__band--i {
+  fill: color-mix(in srgb, var(--ink) 68%, var(--bg));
+}
+
+.vowel-spectrum__band--u {
+  fill: color-mix(in srgb, var(--ink) 44%, var(--bg));
+}
+
+.vowel-spectrum__band--e {
+  fill: color-mix(in srgb, var(--ink) 22%, var(--bg));
+}
+
+.vowel-spectrum__band--o {
+  fill: color-mix(in srgb, var(--shu) 38%, var(--bg));
+}
+
+.vowel-spectrum__label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--ink);
+}
+
+.vowel-spectrum__tick {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+
+/* 頭子音の横棒。行ラベル + 墨の棒(最多のみ朱) + 等幅の件数 */
+.stats-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 560px;
+}
+
+.stats-bars__row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 4px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.stats-bars__row:first-child {
+  border-top: none;
+}
+
+.stats-bars__label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+.stats-bars__bar {
+  display: block;
+  height: 16px;
+}
+
+.stats-bars__fill {
+  display: block;
+  height: 100%;
+  width: var(--w, 0%);
+  background: var(--ink);
+  transition: background 0.15s;
+}
+
+.stats-bars__row:first-child .stats-bars__fill {
+  background: var(--shu);
+}
+
+.stats-bars__bar:hover .stats-bars__fill {
+  background: var(--shu-deep);
+}
+
+.stats-bars__count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+/* --- §8 特徴の見本つきランキング --- */
+.feature-rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 720px;
+}
+
+.feature-rank__row {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.feature-rank__row:first-child {
+  border-top: none;
+}
+
+.feature-rank__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+
+.feature-rank__count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+/* 実例語は明朝。該当部分に朱2px下線(単語詳細の校正記号の文法) */
+.feature-rank__example {
+  font-family: var(--font-mincho);
+  font-weight: 500;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.feature-rank__target {
+  border-bottom: 2px solid var(--shu);
+  padding-bottom: 1px;
+}
+
+.feature-rank__bar {
+  height: 6px;
+  margin-top: var(--space-2);
+}
+
+.feature-rank__fill {
+  display: block;
+  height: 100%;
+  width: var(--w, 0%);
+  background: var(--ink);
+}
+
+.feature-rank__row:first-child .feature-rank__fill {
+  background: var(--shu);
+}
+
+/* --- 奥付(フッター直前の等幅一行) --- */
+.stats-colophon {
+  margin: var(--space-7) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}

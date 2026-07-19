@@ -1,0 +1,52 @@
+<%# 数字の壁(蔵版目録)。4群×5指標を罫線区切りの定義リストで組む(docs/stats.md §0)。
+    値は大きめの明朝 + tabular-nums、ラベルは等幅。箱にしない %>
+<%
+  unit = ->(key) { t("stats.index.unit.#{key}") }
+  wall = [
+    [ t("stats.index.wall.scale.heading"), [
+      [ t("stats.index.wall.scale.words"), stats_number(@stats.scale[:words]), unit.(:words) ],
+      [ t("stats.index.wall.scale.senses"), stats_number(@stats.scale[:senses]), unit.(:senses) ],
+      [ t("stats.index.wall.scale.variants"), stats_number(@stats.scale[:variants]), unit.(:senses) ],
+      [ t("stats.index.wall.scale.homophones"), stats_number(@stats.scale[:homophone_groups]), unit.(:pairs) ],
+      [ t("stats.index.wall.scale.total_reading_chars"), stats_number(@stats.scale[:total_reading_chars]), unit.(:chars) ]
+    ] ],
+    [ t("stats.index.wall.length.heading"), [
+      [ t("stats.index.wall.length.average"), stats_number(@stats.reading_length[:average]), unit.(:chars) ],
+      [ t("stats.index.wall.length.median"), stats_number(@stats.reading_length[:median]), unit.(:chars) ],
+      [ t("stats.index.wall.length.mode"), stats_number(@stats.reading_length[:mode]), unit.(:chars) ],
+      [ t("stats.index.wall.length.max"), stats_number(@stats.reading_length[:max]), unit.(:chars) ],
+      [ t("stats.index.wall.length.average_mora"), stats_number(@stats.reading_length[:average_mora]), unit.(:mora) ]
+    ] ],
+    [ t("stats.index.wall.letters.heading"), [
+      [ t("stats.index.wall.letters.first_kinds"), stats_number(@stats.letters[:first_char_kinds]),
+        "／#{@stats.letters[:kana_total]}#{unit.(:chars)}" ],
+      [ t("stats.index.wall.letters.last_kinds"), stats_number(@stats.letters[:last_char_kinds]),
+        "／#{@stats.letters[:kana_total]}#{unit.(:chars)}" ],
+      [ t("stats.index.wall.letters.katakana_only"), stats_number(@stats.letters[:katakana_only_pct]), unit.(:percent) ],
+      [ t("stats.index.wall.letters.with_kanji"), stats_number(@stats.letters[:with_kanji_pct]), unit.(:percent) ],
+      [ t("stats.index.wall.letters.with_chouon"), stats_number(@stats.letters[:with_chouon_pct]), unit.(:percent) ]
+    ] ],
+    [ t("stats.index.wall.growth.heading"), [
+      [ t("stats.index.wall.growth.this_month"), stats_number(@stats.growth[:this_month]), unit.(:words) ],
+      [ t("stats.index.wall.growth.genres"), stats_number(@stats.growth[:genre_count]), unit.(:genres) ],
+      [ t("stats.index.wall.growth.features"), stats_number(@stats.growth[:feature_count]), unit.(:features) ],
+      [ t("stats.index.wall.growth.per_day"), stats_number(@stats.growth[:per_day]), unit.(:words) ],
+      [ t("stats.index.wall.growth.days_open"), stats_number(@stats.growth[:days_open]), unit.(:days) ]
+    ] ]
+  ]
+%>
+<section class="stats-wall">
+  <% wall.each do |heading, rows| %>
+    <div class="stats-wall__group">
+      <h2 class="stats-wall__heading"><%= heading %></h2>
+      <dl class="stats-wall__list">
+        <% rows.each do |label, value, unit_text| %>
+          <div class="stats-wall__row">
+            <dt><%= label %></dt>
+            <dd><%= value %><span class="stats-wall__unit"><%= unit_text %></span></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+  <% end %>
+</section>

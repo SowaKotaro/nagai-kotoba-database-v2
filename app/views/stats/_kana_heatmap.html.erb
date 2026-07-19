@@ -1,0 +1,30 @@
+<%# 50音表のヒートマップ(索引ページと同じ kana-grid / 朱ヒートの部品を使う)。
+    locals: counts({ カナ => 語義数 }) / param(:first_char か :last_char) / heading %>
+<% max_count = counts.values.max.to_i %>
+<div class="stats-kana">
+  <h3 class="stats-subheading"><%= heading %></h3>
+  <div class="kana-grid">
+    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+      <div class="kana-col">
+        <% column.each do |kana| %>
+          <% if kana.nil? %>
+            <span class="kana-cell--blank" aria-hidden="true"></span>
+          <% elsif (count = counts[kana].to_i).positive? %>
+            <% fill = max_count.positive? ? (count.to_f / max_count).round(3) : 0 %>
+            <%= link_to words_path(param => kana),
+                  class: "kana-cell kana-cell--link kana-cell--heat",
+                  style: "--fill: #{fill}",
+                  title: t("stats.index.sound_matrix.count_label", char: kana, count: count) do %>
+              <span class="kana-cell__face"><%= kana %></span>
+            <% end %>
+          <% else %>
+            <span class="kana-cell kana-cell--muted"
+                  title="<%= t('stats.index.sound_matrix.count_label', char: kana, count: 0) %>">
+              <span class="kana-cell__face"><%= kana %></span>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

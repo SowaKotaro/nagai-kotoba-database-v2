@@ -1,0 +1,29 @@
+<%# §8 言語学的特徴の見本つきランキング(docs/stats.md §8)。
+    件数バーに、実例語の該当部分へ朱2px下線(単語詳細の校正記号の文法)を添える。
+    特徴名は墨枠チップ(hover 反転)→ 特徴での絞り込み検索へ %>
+<% ranking = @stats.feature_ranking %>
+<% max_count = ranking[:rows].first[:count].to_f %>
+<ol class="feature-rank">
+  <% ranking[:rows].each do |row| %>
+    <li class="feature-rank__row">
+      <div class="feature-rank__head">
+        <%= link_to row[:name], words_path(linguistic_feature_id: row[:id]), class: "tag feature-rank__chip" %>
+        <span class="feature-rank__count"><%= t("stats.index.features.count", count: number_with_delimiter(row[:count])) %></span>
+        <% if (example = row[:example]) %>
+          <%# 該当部分(target_start から target の文字数分)に朱の下線を引いた実例 %>
+          <span class="feature-rank__example"><%=
+            surface = example[:surface]
+            start = example[:target_start]
+            length = example[:target].length
+            safe_join([ surface[0, start],
+                        content_tag(:span, surface[start, length], class: "feature-rank__target"),
+                        surface[(start + length)..] ])
+          %></span>
+        <% end %>
+      </div>
+      <div class="feature-rank__bar">
+        <span class="feature-rank__fill" style="--w: <%= (row[:count] / max_count * 100).round(1) %>%"></span>
+      </div>
+    </li>
+  <% end %>
+</ol>

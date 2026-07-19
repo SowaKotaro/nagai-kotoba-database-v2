@@ -1,0 +1,31 @@
+<%# ジャンル別の語義数(Plotly)。左にサンバースト(扇を押すとその部分を全体として展開)、
+    右に大分類の積み上げ棒(押すとその大分類の中分類・小分類の内訳を展開)。
+    データは JSON で埋め込み、描画は genre_sunburst_controller が Plotly を読み込んで行う %>
+<div class="genre-analysis" data-controller="genre-sunburst"
+     data-genre-sunburst-script-value="<%= asset_path("plotly.min.js") %>"
+     data-genre-sunburst-search-url-value="<%= words_path %>"
+     data-genre-sunburst-count-label-value="<%= t("stats.index.genre_map.count_label") %>"
+     data-genre-sunburst-smalls-suffix-value="<%= t("stats.index.genre_map.smalls_suffix") %>">
+  <script type="application/json" data-genre-sunburst-target="data"><%= raw ERB::Util.json_escape(stats_genre_sunburst_data(@stats.genre_map).to_json) %></script>
+
+  <div class="genre-analysis__sunburst">
+    <h3 class="stats-subheading"><%= t("stats.index.genre_map.sunburst_heading") %></h3>
+    <div class="genre-analysis__sunburst-plot" data-genre-sunburst-target="sunburst"></div>
+  </div>
+
+  <div class="genre-analysis__bars">
+    <div class="genre-analysis__column">
+      <p class="genre-analysis__label"><%= t("stats.index.genre_map.large_heading") %></p>
+      <div class="genre-analysis__column-plot" data-genre-sunburst-target="largeBar"></div>
+    </div>
+    <div class="genre-analysis__column" data-genre-sunburst-target="mediumContainer" hidden>
+      <p class="genre-analysis__label" data-genre-sunburst-target="mediumTitle"></p>
+      <div class="genre-analysis__column-plot" data-genre-sunburst-target="mediumBar"></div>
+    </div>
+    <div class="genre-analysis__smalls" data-genre-sunburst-target="smallContainer" hidden>
+      <p class="genre-analysis__label" data-genre-sunburst-target="smallTitle"></p>
+      <div data-genre-sunburst-target="smallBars"></div>
+    </div>
+  </div>
+</div>
+<noscript><p class="stats-hint"><%= t("stats.index.genre_map.noscript") %></p></noscript>

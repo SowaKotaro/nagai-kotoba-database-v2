@@ -1,0 +1,51 @@
+<%# 語種の構成(左: 10×10 ワッフル、右: 同じ100マスを語種ごとの横棒に並べ替えたもの)と、
+    エンティティ型のツリーマップ(面積が語義数に比例)。
+    塗りは順位で固定: 1位=朱ベタ / 2位=墨ベタ / 3位=朱チント / 4位=紙+墨枠 /
+    5番目(その他)=墨チント(明度差で識別する) %>
+<% categories = @stats.origins[:categories] %>
+<% if categories.any? %>
+  <h3 class="stats-subheading"><%= t("stats.index.origins.waffle_heading") %></h3>
+  <p class="stats-section__lead"><%= t("stats.index.origins.waffle_lead") %></p>
+  <div class="origin-case">
+    <div class="waffle" role="img" aria-label="<%= t("stats.index.origins.waffle_aria") %>">
+      <% categories.each_with_index do |category, index| %>
+        <% category[:cells].times do %>
+          <span class="waffle__cell waffle__cell--f<%= index + 1 %>"></span>
+        <% end %>
+      <% end %>
+    </div>
+    <%# 同じ100マスを語種ごとに横へ並べ直した棒。凡例を兼ねる %>
+    <div class="waffle-bars">
+      <% categories.each_with_index do |category, index| %>
+        <div class="waffle-bars__row">
+          <span class="waffle-bars__name"><%= category[:name] %></span>
+          <span class="waffle-bars__cells">
+            <% category[:cells].times do %>
+              <span class="waffle__cell waffle__cell--f<%= index + 1 %>"></span>
+            <% end %>
+          </span>
+          <span class="waffle-bars__count"><%= t("stats.index.origins.bar_count", count: number_with_delimiter(category[:count])) %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.origins[:covered])) %></p>
+<% end %>
+
+<% if @stats.entity_types.any? %>
+  <h3 class="stats-subheading"><%= t("stats.index.origins.entity_heading") %></h3>
+  <p class="stats-section__lead"><%= t("stats.index.origins.entity_lead") %></p>
+  <% max_count = @stats.entity_types.first[:count].to_f %>
+  <div class="entity-treemap">
+    <% stats_entity_treemap(@stats.entity_types).each do |rect| %>
+      <%= link_to words_path(entity_type_id: rect[:id]), class: "entity-treemap__cell",
+            style: "left: #{rect[:left]}%; top: #{rect[:top]}%; width: #{rect[:width]}%; height: #{rect[:height]}%; " \
+                   "--fill: #{(rect[:count] / max_count).round(3)}",
+            title: t("stats.index.origins.cell_title", name: rect[:name], count: rect[:count]) do %>
+        <span class="entity-treemap__name"><%= rect[:name] %></span>
+        <span class="entity-treemap__count"><%= number_with_delimiter(rect[:count]) %></span>
+      <% end %>
+    <% end %>
+  </div>
+  <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.entity_types.sum { |entity| entity[:count] })) %></p>
+<% end %>
