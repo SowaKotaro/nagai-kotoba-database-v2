@@ -17,12 +17,12 @@
   <%= render "number_wall" %>
 
   <section class="stats-section">
-    <h2 class="stats-section__title"><%= t("stats.index.sound_matrix.title") %></h2>
+    <h2 class="stats-section__title"><%= icon "grid_nine" %><%= t("stats.index.sound_matrix.title") %></h2>
     <%= render "sound_matrix" %>
   </section>
 
   <section class="stats-section">
-    <h2 class="stats-section__title"><%= t("stats.index.length_chart.title") %></h2>
+    <h2 class="stats-section__title"><%= icon "ruler" %><%= t("stats.index.length_chart.title") %></h2>
     <p class="stats-section__lead"><%= t("stats.index.length_chart.lead") %></p>
     <div data-controller="panel-switch">
       <div class="segmented" role="group" aria-label="<%= t("stats.index.length_chart.toggle_label") %>">
@@ -46,7 +46,7 @@
 
   <section class="stats-section">
     <header class="stats-section__header">
-      <h2 class="stats-section__title"><%= t("stats.index.timeline.title") %></h2>
+      <h2 class="stats-section__title"><%= icon "chart_line_up" %><%= t("stats.index.timeline.title") %></h2>
       <p class="stats-current">
         <span class="stats-current__total"><%= t("stats.index.timeline.current", count: number_with_delimiter(@stats.word_count)) %></span>
         <% if @stats.growth[:this_month].positive? %>
@@ -77,7 +77,7 @@
 
   <% if @stats.genre_map[:covered].positive? %>
     <section class="stats-section">
-      <h2 class="stats-section__title"><%= t("stats.index.genre_map.title") %></h2>
+      <h2 class="stats-section__title"><%= icon "tag" %><%= t("stats.index.genre_map.title") %></h2>
       <p class="stats-section__lead"><%= t("stats.index.genre_map.lead") %></p>
       <%= render "genre_sunburst" %>
       <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.genre_map[:covered])) %></p>
@@ -86,19 +86,19 @@
 
   <% if @stats.origins[:categories].any? || @stats.entity_types.any? %>
     <section class="stats-section">
-      <h2 class="stats-section__title"><%= t("stats.index.origins.title") %></h2>
+      <h2 class="stats-section__title"><%= icon "translate" %><%= t("stats.index.origins.title") %></h2>
       <%= render "origins" %>
     </section>
   <% end %>
 
   <section class="stats-section">
-    <h2 class="stats-section__title"><%= t("stats.index.sound.title") %></h2>
+    <h2 class="stats-section__title"><%= icon "music_notes" %><%= t("stats.index.sound.title") %></h2>
     <%= render "sound_breakdown" %>
   </section>
 
   <% if @stats.feature_ranking[:rows].any? %>
     <section class="stats-section">
-      <h2 class="stats-section__title"><%= t("stats.index.features.title") %></h2>
+      <h2 class="stats-section__title"><%= icon "pen_nib" %><%= t("stats.index.features.title") %></h2>
       <p class="stats-section__lead"><%= t("stats.index.features.lead") %></p>
       <%= render "feature_ranking" %>
     </section>

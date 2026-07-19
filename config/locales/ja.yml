@@ -216,6 +216,7 @@ ja:
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
       random: "ランダムな言葉へ"
+      random_next: "別の言葉へ"
       share:
         x: "Xでシェア"
         copy: "URLをコピー"
