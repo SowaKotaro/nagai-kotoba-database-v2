@@ -5,7 +5,7 @@
 
 ## 前提（解禁判断の条件）
 
-- [ ] 注釈済みの公開語数が 300〜500 語に達している（`Word.annotated.count`）
+- [x] 注釈済みの公開語数が 300〜500 語に達している（`Word.annotated.count`）
 - [ ] プライバシーポリシー `/privacy` が公開されている（Issue 42。実装済み）
 - [ ] About・ライセンス表記（CC BY 4.0）・連絡先が最新である
 
@@ -20,15 +20,15 @@
 
 ## 2. インデックス解禁（Issue 43）
 
-- [ ] 本番サーバの環境変数に `INDEXING_ENABLED=true` を設定して Puma を再起動
+- [x] 本番サーバの環境変数に `INDEXING_ENABLED=true` を設定して Puma を再起動
   （未設定 = 全ページ `noindex`。設定すると通常ページの robots メタが消え、ファセット等の個別 noindex だけが残る）
-- [ ] 本番で確認: トップ・単語詳細に `<meta name="robots"` が**無い**こと、`/search` には `noindex,follow` が**残る**こと
+- [x] 本番で確認: トップ・単語詳細に `<meta name="robots"` が**無い**こと、`/search` には `noindex,follow` が**残る**こと
 
 ## 3. sitemap 送信（解禁と同時）
 
 - [ ] Search Console に `https://nagai-kotoba-database.jp/sitemap.xml` を送信
 - [ ] Bing Webmaster Tools にも同じ sitemap を送信
-- [ ] robots.txt の `Sitemap:` 行が本番ホストを指していることを確認（動的生成済み）
+- [x] robots.txt の `Sitemap:` 行が本番ホストを指していることを確認（動的生成済み）
 
 ## 4. 観測の開始（解禁後）
 
@@ -41,5 +41,5 @@
 
 | 項目 | 値 |
 |---|---|
-| 解禁日 | （未実施） |
-| 解禁時の注釈済み語数 | — |
+| 解禁日 | 2026-07-19 |
+| 解禁時の注釈済み語数 | 294（sitemap.xml の単語ページ数。登録語数は 300 超） |
