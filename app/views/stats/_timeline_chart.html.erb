@@ -1,0 +1,23 @@
+<%# §4 収録の推移(株価チャート式。docs/stats.md §4)。
+    上段: 累計の折れ線(墨2px) + 朱チントの面。端点に朱の点 + 累計値の直書き。
+    下段: 「出来高」= 週別新収録の棒(墨、直近週のみ朱)。locals: weeks %>
+<% chart = stats_timeline_chart(weeks) %>
+<% if chart %>
+  <svg class="timeline-chart" viewBox="0 0 <%= chart[:width] %> <%= chart[:height] %>" role="img"
+       aria-label="<%= t("stats.index.timeline.aria") %>">
+    <path class="timeline-chart__area" d="<%= chart[:area] %>" />
+    <path class="timeline-chart__line" d="<%= chart[:line] %>" />
+    <% if weeks.size > 1 %>
+      <text class="timeline-chart__value" x="<%= chart[:first][:x] + 4 %>" y="<%= [ chart[:first][:y] - 10, 12 ].max %>"><%= number_with_delimiter(chart[:first][:cumulative]) %></text>
+    <% end %>
+    <circle class="timeline-chart__dot" cx="<%= chart[:last][:x] %>" cy="<%= chart[:last][:y] %>" r="3.5" />
+    <text class="timeline-chart__value timeline-chart__value--now" x="<%= chart[:last][:x] - 8 %>" y="<%= [ chart[:last][:y] - 10, 12 ].max %>" text-anchor="end"><%= number_with_delimiter(chart[:last][:cumulative]) %></text>
+    <% chart[:volume_bars].each do |bar| %>
+      <rect class="timeline-chart__vol<%= " timeline-chart__vol--last" if bar[:last] %>"
+            x="<%= bar[:x] %>" y="<%= bar[:y] %>" width="<%= bar[:width] %>" height="<%= bar[:height] %>" />
+    <% end %>
+    <line class="timeline-chart__base" x1="0" y1="<%= chart[:volume_bottom] %>" x2="<%= chart[:width] %>" y2="<%= chart[:volume_bottom] %>" />
+    <text class="timeline-chart__date" x="0" y="<%= chart[:height] - 4 %>"><%= weeks.first[:start_on].strftime("%Y-%m") %></text>
+    <text class="timeline-chart__date" x="<%= chart[:width] %>" y="<%= chart[:height] - 4 %>" text-anchor="end"><%= weeks.last[:start_on].strftime("%Y-%m") %></text>
+  </svg>
+<% end %>

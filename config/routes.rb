@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   # 50音・読みの文字数の索引(ブラウズ導線)。Issue 22。
   get "browse", to: "browse#index", as: :browse
 
+  # 収録統計「蔵版目録」(Issue 34)。数字と分布でコレクションを見せる公開ページ。
+  get "stats", to: "stats#index", as: :stats
+
   # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
 

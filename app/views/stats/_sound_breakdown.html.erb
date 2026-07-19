@@ -1,0 +1,46 @@
+<%# §7 音の内訳(docs/stats.md §7)。
+    母音スペクトル: 横=語頭からの拍位置、縦=母音(ア〜オ段)構成比の積み上げ面。
+    帯は墨/朱の明度5段 + 右端に段名の直書き(識別を色に依存させない)。
+    頭の子音: 読み第1拍の子音(ヘボン式)の横棒ランキング。棒押下で頭文字の絞り込みへ %>
+<% spectrum = stats_vowel_spectrum(@stats.vowel_spectrum[:positions]) %>
+<% if spectrum %>
+  <h3 class="stats-subheading"><%= t("stats.index.sound.spectrum_heading") %></h3>
+  <p class="stats-section__lead"><%= t("stats.index.sound.spectrum_lead") %></p>
+  <div class="stats-scroll">
+    <svg class="vowel-spectrum" viewBox="0 0 <%= spectrum[:width] %> <%= spectrum[:height] %>" role="img"
+         aria-label="<%= t("stats.index.sound.spectrum_aria") %>">
+      <% spectrum[:bands].each do |band| %>
+        <path class="vowel-spectrum__band vowel-spectrum__band--<%= band[:vowel] %>" d="<%= band[:path] %>" />
+      <% end %>
+      <% spectrum[:bands].each do |band| %>
+        <text class="vowel-spectrum__label" x="<%= spectrum[:label_x] %>" y="<%= band[:label_y] + 4 %>"><%= t("stats.index.sound.vowel_labels.#{band[:vowel]}") %></text>
+      <% end %>
+      <%# 横軸: 拍位置の番号(等幅極小)。全点に振らず、1 と 5 刻みだけ %>
+      <% spectrum[:xs].each_with_index do |x, index| %>
+        <% position = index + 1 %>
+        <% if position == 1 || (position % 5).zero? %>
+          <text class="vowel-spectrum__tick" x="<%= x %>" y="<%= spectrum[:height] - 2 %>" text-anchor="middle"><%= position %></text>
+        <% end %>
+      <% end %>
+    </svg>
+  </div>
+  <p class="stats-hint"><%= t("stats.index.sound.position_axis") %></p>
+<% end %>
+
+<% if @stats.head_consonants.any? %>
+  <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
+  <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
+  <% max_count = @stats.head_consonants.first[:count].to_f %>
+  <ol class="stats-bars">
+    <% @stats.head_consonants.each do |group| %>
+      <li class="stats-bars__row">
+        <span class="stats-bars__label"><%= group[:consonant] || t("stats.index.sound.vowel_initial") %></span>
+        <%= link_to words_path(first_char: group[:chars]), class: "stats-bars__bar",
+              title: t("stats.index.sound.consonant_title", chars: group[:chars].join("・"), count: group[:count]) do %>
+          <span class="stats-bars__fill" style="--w: <%= (group[:count] / max_count * 100).round(1) %>%"></span>
+        <% end %>
+        <span class="stats-bars__count"><%= number_with_delimiter(group[:count]) %></span>
+      </li>
+    <% end %>
+  </ol>
+<% end %>

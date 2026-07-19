@@ -1,0 +1,65 @@
+<%# 頭文字と末尾文字の分布。50音表ヒートマップ(先頭・末尾)と、
+    頭文字の行×末尾文字の行の10×11マトリクス。
+    セルの朱ヒートは索引と同じ式(--fill 0〜1)。最多セルのみ数字を直書き、他はホバー(title) %>
+<div class="stats-kana-pair">
+  <%= render "kana_heatmap", counts: @stats.first_char_counts, param: :first_char,
+        heading: t("stats.index.sound_matrix.first_heading") %>
+  <%= render "kana_heatmap", counts: @stats.last_char_counts, param: :last_char,
+        heading: t("stats.index.sound_matrix.last_heading") %>
+</div>
+
+<%# 行はンを含む11行(列と同じ並び)で、11×11 の正方形にする %>
+<% matrix = @stats.sound_matrix %>
+<% rows = KanaRow::ROW_KEYS %>
+<% cols = KanaRow::ROW_KEYS %>
+<% col_label = ->(col) { col == "ン" ? t("stats.index.sound_matrix.n_column") : t("stats.index.sound_matrix.row_label", row: col) } %>
+<h3 class="stats-subheading"><%= t("stats.index.sound_matrix.matrix_heading") %></h3>
+<p class="stats-section__lead"><%= t("stats.index.sound_matrix.matrix_lead") %></p>
+<div class="stats-matrix-layout">
+  <div class="stats-scroll">
+    <table class="sound-matrix">
+      <thead>
+        <tr>
+          <th scope="col" class="sound-matrix__corner"><%= t("stats.index.sound_matrix.corner") %></th>
+          <%# 列見出しは1文字(ア〜ン)。「行」を付けると列幅が見出しに引っ張られ、
+              マスの間隔が縦横で揃わなくなる(意味はタイトル・行見出し側で補う) %>
+          <% cols.each do |col| %>
+            <th scope="col"><%= col %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% rows.each do |row| %>
+          <tr>
+            <th scope="row"><%= t("stats.index.sound_matrix.row_label", row: row) %></th>
+            <% cols.each do |col| %>
+              <% count = matrix[:cells][[ row, col ]].to_i %>
+              <td>
+                <% if count.positive? %>
+                  <% fill = (count.to_f / matrix[:max_count]).round(3) %>
+                  <%= link_to words_path(first_char: KanaRow::ROWS[row], last_char: KanaRow::ROWS[col]),
+                        class: "sound-matrix__cell", style: "--fill: #{fill}",
+                        title: t("stats.index.sound_matrix.cell_title", first: row, last: col_label.(col), count: count) do %>
+                    <% if [ row, col ] == matrix[:max_pair] %>
+                      <span class="sound-matrix__count"><%= count %></span>
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <span class="sound-matrix__cell sound-matrix__cell--empty"
+                        title="<%= t('stats.index.sound_matrix.cell_title', first: row, last: col_label.(col), count: 0) %>"></span>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <ul class="stats-notes">
+    <% if matrix[:max_pair] %>
+      <li><%= t("stats.index.sound_matrix.max_note",
+                first: matrix[:max_pair].first, last: col_label.(matrix[:max_pair].last),
+                count: number_with_delimiter(matrix[:max_count])) %></li>
+    <% end %>
+  </ul>
+</div>

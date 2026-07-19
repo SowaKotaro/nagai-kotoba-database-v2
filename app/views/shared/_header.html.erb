@@ -27,6 +27,8 @@
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
         <%# 最長ランキング。一覧を「読みが長い順」で見せる導線(サイト最大のフック) %>
         <%= link_to t("layouts.nav.ranking"), words_path(sort: "length_desc") %>
+        <%# 収録統計「蔵版目録」(Issue 34) %>
+        <%= link_to t("layouts.nav.stats"), stats_path, class: ("is-current" if request.path == stats_path) %>
 
         <%# 「検索」はプルダウン。配下にジャンル・索引・詳細検索を束ねる %>
         <% search_menu_paths = [ genres_path, browse_path, search_path ] %>

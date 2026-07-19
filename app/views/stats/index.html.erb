@@ -1,0 +1,107 @@
+<% content_for :title, t("stats.index.title") %>
+<% content_for :description, t("stats.index.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("stats.index.title"), nil ] ] %>
+
+<header class="page-header stats-header">
+  <h1 class="page-title"><%= t("stats.index.title") %></h1>
+  <p class="page-lead"><%= t("stats.index.lead") %></p>
+  <p class="stats-computed"><%= t("stats.index.computed_at", time: @stats.computed_at.strftime("%Y-%m-%d %H:%M")) %></p>
+</header>
+
+<% if @stats.word_count.zero? %>
+  <p class="empty-note"><%= icon "binoculars" %><%= t("stats.index.empty") %></p>
+<% else %>
+  <%# 数字の壁: 4群×5指標の定義リスト %>
+  <%= render "number_wall" %>
+
+  <section class="stats-section">
+    <h2 class="stats-section__title"><%= t("stats.index.sound_matrix.title") %></h2>
+    <%= render "sound_matrix" %>
+  </section>
+
+  <section class="stats-section">
+    <h2 class="stats-section__title"><%= t("stats.index.length_chart.title") %></h2>
+    <p class="stats-section__lead"><%= t("stats.index.length_chart.lead") %></p>
+    <div data-controller="panel-switch">
+      <div class="segmented" role="group" aria-label="<%= t("stats.index.length_chart.toggle_label") %>">
+        <button type="button" class="segmented__button" aria-pressed="true"
+                data-panel-switch-target="button" data-panel-key="chars" data-action="panel-switch#show"><%= t("stats.index.length_chart.toggle_chars") %></button>
+        <button type="button" class="segmented__button" aria-pressed="false"
+                data-panel-switch-target="button" data-panel-key="mora" data-action="panel-switch#show"><%= t("stats.index.length_chart.toggle_mora") %></button>
+      </div>
+      <div data-panel-switch-target="panel" data-panel-key="chars">
+        <%= render "length_chart", distribution: @stats.reading_length_distribution, param: :reading_length,
+              title_key: "stats.index.length_chart.chars_bar_title", aria: t("stats.index.length_chart.chars_aria") %>
+      </div>
+      <div data-panel-switch-target="panel" data-panel-key="mora" hidden>
+        <%= render "length_chart", distribution: @stats.mora_distribution, param: :mora_count,
+              title_key: "stats.index.length_chart.mora_bar_title", aria: t("stats.index.length_chart.mora_aria") %>
+        <p class="stats-hint"><%= t("stats.index.length_chart.mora_hint") %></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-section">
+    <header class="stats-section__header">
+      <h2 class="stats-section__title"><%= t("stats.index.timeline.title") %></h2>
+      <p class="stats-current">
+        <span class="stats-current__total"><%= t("stats.index.timeline.current", count: number_with_delimiter(@stats.word_count)) %></span>
+        <% if @stats.growth[:this_month].positive? %>
+          <span class="stats-current__delta"><%= t("stats.index.timeline.this_month", count: number_with_delimiter(@stats.growth[:this_month])) %></span>
+        <% end %>
+      </p>
+    </header>
+    <p class="stats-section__lead"><%= t("stats.index.timeline.lead") %></p>
+    <% periods = [ [ "all", t("stats.index.timeline.period_all"), @stats.timeline ] ] %>
+    <% periods << [ "m6", t("stats.index.timeline.period_6m"), @stats.timeline.last(26) ] if @stats.timeline.size > 26 %>
+    <% periods << [ "m3", t("stats.index.timeline.period_3m"), @stats.timeline.last(13) ] if @stats.timeline.size > 13 %>
+    <div data-controller="panel-switch">
+      <% if periods.size > 1 %>
+        <div class="segmented" role="group" aria-label="<%= t("stats.index.timeline.period_label") %>">
+          <% periods.each_with_index do |(key, label, _weeks), index| %>
+            <button type="button" class="segmented__button" aria-pressed="<%= index.zero? %>"
+                    data-panel-switch-target="button" data-panel-key="<%= key %>" data-action="panel-switch#show"><%= label %></button>
+          <% end %>
+        </div>
+      <% end %>
+      <% periods.each_with_index do |(key, _label, weeks), index| %>
+        <div data-panel-switch-target="panel" data-panel-key="<%= key %>" <%= "hidden" unless index.zero? %>>
+          <%= render "timeline_chart", weeks: weeks %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @stats.genre_map[:covered].positive? %>
+    <section class="stats-section">
+      <h2 class="stats-section__title"><%= t("stats.index.genre_map.title") %></h2>
+      <p class="stats-section__lead"><%= t("stats.index.genre_map.lead") %></p>
+      <%= render "genre_sunburst" %>
+      <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.genre_map[:covered])) %></p>
+    </section>
+  <% end %>
+
+  <% if @stats.origins[:categories].any? || @stats.entity_types.any? %>
+    <section class="stats-section">
+      <h2 class="stats-section__title"><%= t("stats.index.origins.title") %></h2>
+      <%= render "origins" %>
+    </section>
+  <% end %>
+
+  <section class="stats-section">
+    <h2 class="stats-section__title"><%= t("stats.index.sound.title") %></h2>
+    <%= render "sound_breakdown" %>
+  </section>
+
+  <% if @stats.feature_ranking[:rows].any? %>
+    <section class="stats-section">
+      <h2 class="stats-section__title"><%= t("stats.index.features.title") %></h2>
+      <p class="stats-section__lead"><%= t("stats.index.features.lead") %></p>
+      <%= render "feature_ranking" %>
+    </section>
+  <% end %>
+<% end %>
+
+<p class="stats-colophon"><%= t("stats.index.colophon") %></p>
