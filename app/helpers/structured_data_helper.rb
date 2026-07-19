@@ -10,14 +10,18 @@ module StructuredDataHelper
     content_tag :script, json_escape(data.to_json).html_safe, type: "application/ld+json"
   end
 
-  # 全ページ共通: サイト自身と検索アクション(サイトリンク検索ボックス候補)。
+  # 運営者(Organization)ノードの識別子。WebSite の publisher から参照する。
+  def organization_id = absolute_site_url("/#organization")
+
+  # 全ページ共通: サイト自身(WebSite)+運営者(Organization)+検索アクション。
+  # 運営者情報は E-E-A-T(情報源の明示)のために出力し、連絡先は About と同じ公開メールを使う。
   def website_json_ld
-    json_ld_tag(
-      "@context" => "https://schema.org",
+    website = {
       "@type" => "WebSite",
       "name" => t("layouts.brand"),
       "url" => absolute_site_url("/"),
       "inLanguage" => "ja",
+      "publisher" => { "@id" => organization_id },
       "potentialAction" => {
         "@type" => "SearchAction",
         "target" => {
@@ -26,6 +30,31 @@ module StructuredDataHelper
         },
         "query-input" => "required name=search_term_string"
       }
+    }
+    organization = {
+      "@type" => "Organization",
+      "@id" => organization_id,
+      "name" => t("layouts.brand"),
+      "url" => absolute_site_url("/about"),
+      "logo" => absolute_site_url("/icon.svg"),
+      "email" => t("pages.about.contact_email")
+    }
+    json_ld_tag("@context" => "https://schema.org", "@graph" => [ website, organization ])
+  end
+
+  # About の FAQ(items = [{ question:, answer: }, ...])を FAQPage にする。
+  # 文言は pages.about.faq_items(i18n)を画面表示と共用し、内容の食い違いを防ぐ。
+  def faq_json_ld(items)
+    json_ld_tag(
+      "@context" => "https://schema.org",
+      "@type" => "FAQPage",
+      "mainEntity" => items.map do |item|
+        {
+          "@type" => "Question",
+          "name" => item[:question],
+          "acceptedAnswer" => { "@type" => "Answer", "text" => item[:answer] }
+        }
+      end
     )
   end
 

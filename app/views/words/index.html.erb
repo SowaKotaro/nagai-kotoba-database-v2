@@ -12,7 +12,8 @@
 <% content_for :robots, "noindex,follow" unless indexable %>
 <% content_for :canonical_path, canonical_index_path(@search, @page) %>
 <% content_for :title, page_heading %>
-<% content_for :description, t("words.index.facet_description", label: heading) if heading %>
+<% content_for :description,
+     heading ? t("words.index.facet_description", label: heading) : t("words.index.description") %>
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ page_heading, nil ] ] %>
 
