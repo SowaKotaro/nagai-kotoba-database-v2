@@ -33,7 +33,7 @@ module StatsHelper
       height = max_count.positive? ? bin[:count] * (WAVE_PLOT_HEIGHT - WAVE_AMPLITUDE * 2) / max_count.to_f : 0
       height = 3 if bin[:count].positive? && height < 3
       {
-        value: bin[:value], count: bin[:count],
+        value: bin[:value], count: bin[:count], overflow: bin[:overflow] || false,
         x: x, center_x: (x + WAVE_BAR_WIDTH / 2.0).round(1), top: (baseline - height).round(1),
         path: wave_bar_path(x, baseline - height, WAVE_BAR_WIDTH, baseline),
         mode: bin[:value] == mode_value,

@@ -29,3 +29,7 @@ end
 # 名前リストとリネーム追従マップは app/models/seed_catalog.rb が単一の正
 # (管理画面のタグ統括管理と共有。運用ルールも同ファイルのコメント参照)。
 SeedCatalog.seed_all!
+
+# 開発環境のみ: 統計ページ等を本番相当のボリュームで確認するためのダミーデータ。
+# 本番・テストには投入しない(deploy:seed でも走らない)。
+load Rails.root.join("db/seeds/development.rb") if Rails.env.development?

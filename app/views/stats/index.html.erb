@@ -33,6 +33,7 @@
       </div>
       <div data-panel-switch-target="panel" data-panel-key="chars">
         <%= render "length_chart", distribution: @stats.reading_length_distribution, param: :reading_length,
+              overflow_param: :reading_length_min,
               title_key: "stats.index.length_chart.chars_bar_title", aria: t("stats.index.length_chart.chars_aria") %>
       </div>
       <div data-panel-switch-target="panel" data-panel-key="mora" hidden>

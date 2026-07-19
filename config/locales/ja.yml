@@ -654,13 +654,16 @@ ja:
         max_note: "最多は「%{first}行 → %{last}」の %{count} 語義。"
       length_chart:
         title: "読みの長さ"
-        lead: "読みの長さごとの語義数です。棒を押すとその長さの語の一覧を表示します。"
+        lead: "読みの長さごとの語義数です。棒を押すとその長さの語の一覧を表示します(30以上はまとめて1本にしています)。"
         toggle_label: "単位の切替"
         toggle_chars: "文字数"
         toggle_mora: "モーラ数"
         mora_hint: "モーラ=拍。拗音は直前の音と合わせて1拍(「シャ」=1拍)、長音「ー」も1拍と数えます。"
         chars_bar_title: "%{value}文字: %{count}語義"
+        chars_bar_title_overflow: "%{value}文字以上: %{count}語義"
         mora_bar_title: "%{value}モーラ: %{count}語義"
+        mora_bar_title_overflow: "%{value}モーラ以上: %{count}語義"
+        overflow_value: "%{value}+"
         chars_aria: "読みの文字数ごとの語義数の分布"
         mora_aria: "モーラ数ごとの語義数の分布"
       timeline:
@@ -675,7 +678,7 @@ ja:
         aria: "収録語の累計と週ごとの新収録数"
       genre_map:
         title: "ジャンル別の語義数"
-        lead: "サンバーストは内側から大分類・中分類・小分類で、扇を押すとその部分を全体として展開します(小分類の扇はその語の一覧へ)。右の「大分類」の棒を押すと、その大分類の中分類・小分類の内訳を表示します。"
+        lead: "サンバーストは内側から大分類・中分類・小分類で、表示は常に2階層ずつです。扇を押すとその部分を全体として展開します(小分類の扇はその語の一覧へ)。右は「大分類」の棒 → 中分類の棒 → 小分類の一覧、の順に押して掘り下げます。小分類を押すとその語の一覧へ移動します。"
         sunburst_heading: "サンバースト(大分類・中分類・小分類)"
         large_heading: "大分類"
         smalls_suffix: " の小分類"

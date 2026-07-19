@@ -1,15 +1,16 @@
 import { Controller } from "@hotwired/stimulus"
 
-// ジャンル別の語義数(Plotly)。オーナー実装の「先頭/末尾文字分析」と同じ文法:
-//   - サンバーストは Plotly 標準のドリルダウン(扇を押すとその部分を全体として展開)
-//   - 右の「大分類」積み上げ棒を押すと、その大分類の中分類の積み上げ棒と
-//     小分類の横棒(中分類ごと)を展開する
-//   - 末端(小分類)の扇を押すと、そのジャンルで絞り込んだ語の一覧へ遷移する
+// ジャンル別の語義数(Plotly)。小分類が多くても破綻しないよう「1クリック=1階層」で掘り下げる:
+//   - サンバーストは maxdepth: 2 で常に「中心+2階層」だけ描画する(小分類は中分類を
+//     押したときに初めて現れる。ラベルが読め、ズームの再描画も軽い)
+//   - 右は 大分類の積み上げ棒 → 押すとその大分類の中分類の積み上げ棒 → さらに押すと
+//     その中分類の小分類を墨枠タグ(件数付き)の一覧で表示する
+//   - 末端(小分類)は扇もタグも、そのジャンルで絞り込んだ語の一覧へ遷移する
 // Plotly(vendor/javascript/plotly.min.js)はこのページ専用のため、接続時に1度だけ読み込む。
 export default class extends Controller {
   static targets = ["data", "sunburst", "largeBar",
                     "mediumContainer", "mediumTitle", "mediumBar",
-                    "smallContainer", "smallTitle", "smallBars"]
+                    "smallContainer", "smallTitle", "smallList"]
   static values = { script: String, searchUrl: String, countLabel: String, smallsSuffix: String }
 
   // 朱の濃淡だけのパレット(--shu #C43A1E 起点。多色カテゴリカルは作らない)
@@ -94,6 +95,9 @@ export default class extends Controller {
       branchvalues: "total",
       sort: false,
       rotation: 90,
+      // 常に「中心+2階層」だけ描画する。初期表示は大分類+中分類で、小分類は
+      // 中分類を押したときだけ現れる(全小分類を一度に描くとラベルが潰れ、重い)。
+      maxdepth: 2,
       marker: { line: { width: 1, color: "#FAF8F3" } },
       textfont: { size: 12 },
       hovertemplate: `<b>%{label}</b><br>${this.countLabelValue}: %{value}<extra></extra>`
@@ -115,7 +119,7 @@ export default class extends Controller {
     })
   }
 
-  // --- 大分類の積み上げ棒(押すとその大分類の内訳を展開) ---
+  // --- 大分類の積み上げ棒(押すとその大分類の中分類を展開) ---
 
   renderLargeBar() {
     const largeIds = this.childrenOf("")
@@ -152,7 +156,7 @@ export default class extends Controller {
     })
   }
 
-  // --- 選んだ大分類の中分類(積み上げ棒)と小分類(横棒) ---
+  // --- 選んだ大分類の中分類(積み上げ棒。押すとその中分類の小分類を展開) ---
 
   expandLarge(largeId) {
     const large = this.nodeOf(largeId)
@@ -160,6 +164,8 @@ export default class extends Controller {
 
     this.mediumContainerTarget.hidden = false
     this.mediumTitleTarget.textContent = large.label
+    // 大分類を切り替えたら、前の大分類の小分類一覧は閉じる(段階展開をやり直す)。
+    this.smallContainerTarget.hidden = true
     const traces = mediumIds.slice().reverse().map((id) => {
       const node = this.nodeOf(id)
       return {
@@ -171,7 +177,8 @@ export default class extends Controller {
           color: this.constructor.palette[(mediumIds.indexOf(id) * 2) % this.constructor.palette.length],
           line: { color: "#FAF8F3", width: 1.5 }
         },
-        hovertemplate: this.hoverTemplate(node.label)
+        hovertemplate: this.hoverTemplate(node.label),
+        customdata: [ id ]
       }
     })
     window.Plotly.react(this.mediumBarTarget, traces, {
@@ -182,61 +189,35 @@ export default class extends Controller {
       xaxis: { visible: false },
       yaxis: { visible: false }
     }, this.plotConfig())
-    if (!this.plots.includes(this.mediumBarTarget)) this.plots.push(this.mediumBarTarget)
-
-    this.renderSmallBars(large, mediumIds)
+    if (!this.plots.includes(this.mediumBarTarget)) {
+      this.plots.push(this.mediumBarTarget)
+      // クリックハンドラは要素に1度だけ付ける(Plotly.react を跨いで生き続ける)。
+      this.mediumBarTarget.on("plotly_click", (event) => {
+        const id = event.points[0].customdata
+        if (id) this.expandMedium(id)
+      })
+    }
   }
 
-  renderSmallBars(large, mediumIds) {
+  // --- 選んだ中分類の小分類(墨枠タグ+件数の一覧。多くても縦に伸びず、そのまま検索導線) ---
+
+  expandMedium(mediumId) {
+    const medium = this.nodeOf(mediumId)
+    const smallIds = this.childrenOf(mediumId)
+
     this.smallContainerTarget.hidden = false
-    this.smallTitleTarget.textContent = `${large.label}${this.smallsSuffixValue}`
-    this.smallBarsTarget.querySelectorAll("[data-plot]").forEach((element) => {
-      window.Plotly.purge(element)
-      this.plots = this.plots.filter((plot) => plot !== element)
-    })
-    this.smallBarsTarget.innerHTML = ""
-
-    mediumIds.forEach((mediumId, mediumIndex) => {
-      const medium = this.nodeOf(mediumId)
-      const smallIds = this.childrenOf(mediumId)
-      const container = document.createElement("div")
-      container.className = "genre-analysis__small-bar"
-      container.dataset.plot = "true"
-      this.smallBarsTarget.appendChild(container)
-
-      const traces = smallIds.map((id, index) => {
-        const node = this.nodeOf(id)
-        return {
-          y: [ "" ],
-          x: [ node.value ],
-          name: node.label,
-          type: "bar",
-          orientation: "h",
-          marker: {
-            color: this.constructor.palette[(mediumIndex * 2 + index) % this.constructor.palette.length],
-            line: { color: "#FAF8F3", width: 1.5 }
-          },
-          hovertemplate: this.hoverTemplate(node.label),
-          text: [ node.label ],
-          textposition: "inside",
-          textfont: { size: 11 }
-        }
-      })
-
-      window.Plotly.newPlot(container, traces, {
-        ...this.baseLayout(),
-        barmode: "stack",
-        showlegend: false,
-        margin: { l: 110, r: 8, t: 4, b: 4 },
-        xaxis: { visible: false },
-        yaxis: { visible: true, showticklabels: false, fixedrange: true },
-        annotations: [ {
-          x: 0, y: 0.5, xref: "paper", yref: "paper",
-          text: medium.label, showarrow: false, xanchor: "right", xshift: -8,
-          font: { size: 12 }
-        } ]
-      }, this.plotConfig())
-      this.plots.push(container)
-    })
+    this.smallTitleTarget.textContent = `${medium.label}${this.smallsSuffixValue}`
+    this.smallListTarget.replaceChildren(...smallIds.map((id) => {
+      const node = this.nodeOf(id)
+      const link = document.createElement("a")
+      link.className = "tag genre-hub__small"
+      link.href = `${this.searchUrlValue}?genre_id=${node.genreId}`
+      link.append(node.label)
+      const count = document.createElement("span")
+      count.className = "genre-hub__count"
+      count.textContent = node.value
+      link.append(count)
+      return link
+    }))
   }
 }

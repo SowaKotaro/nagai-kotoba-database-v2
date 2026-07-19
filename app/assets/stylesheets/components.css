@@ -3243,6 +3243,15 @@ a.sound-matrix__cell:hover {
   fill: var(--ink);
 }
 
+/* リンクにならないまとめ棒(モーラの「30+」)。hover の墨反転はさせない */
+.wave-chart__bar--static:hover path {
+  fill: color-mix(in srgb, var(--shu) 38%, transparent);
+}
+
+.wave-chart__bar--static.wave-chart__bar--mode:hover path {
+  fill: var(--shu);
+}
+
 .wave-chart__baseline {
   stroke: var(--ink);
   stroke-width: 2;
@@ -3390,11 +3399,6 @@ a.sound-matrix__cell:hover {
 
 .genre-analysis__smalls .genre-analysis__label {
   text-align: left;
-}
-
-.genre-analysis__small-bar {
-  height: 56px;
-  width: 100%;
 }
 
 /* --- 語種の構成(ワッフル)とエンティティ型のヒートマップ ---
