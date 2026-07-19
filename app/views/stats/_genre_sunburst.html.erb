@@ -1,5 +1,5 @@
-<%# ジャンル別の語義数(Plotly)。左にサンバースト(扇を押すとその部分を全体として展開)、
-    右に大分類の積み上げ棒(押すとその大分類の中分類・小分類の内訳を展開)。
+<%# ジャンル別の語義数(Plotly)。左にサンバースト(maxdepth: 2 で常に2階層ずつ展開)、
+    右は 大分類の積み上げ棒 → 中分類の積み上げ棒 → 小分類のタグ一覧、と1クリック=1階層で掘り下げる。
     データは JSON で埋め込み、描画は genre_sunburst_controller が Plotly を読み込んで行う %>
 <div class="genre-analysis" data-controller="genre-sunburst"
      data-genre-sunburst-script-value="<%= asset_path("plotly.min.js") %>"
@@ -24,7 +24,7 @@
     </div>
     <div class="genre-analysis__smalls" data-genre-sunburst-target="smallContainer" hidden>
       <p class="genre-analysis__label" data-genre-sunburst-target="smallTitle"></p>
-      <div data-genre-sunburst-target="smallBars"></div>
+      <div class="tag-row" data-genre-sunburst-target="smallList"></div>
     </div>
   </div>
 </div>

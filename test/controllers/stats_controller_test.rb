@@ -21,6 +21,9 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "svg.wave-chart", count: 2         # 文字数 / モーラ数の2枚を事前描画
     assert_select "svg.timeline-chart", minimum: 1
     assert_select ".genre-analysis[data-controller=genre-sunburst]", count: 1
+    # 段階展開の受け皿(中分類の棒・小分類のタグ一覧)が最初は隠れて置かれている
+    assert_select "[data-genre-sunburst-target=mediumBar]", count: 1
+    assert_select ".tag-row[data-genre-sunburst-target=smallList]", count: 1
     assert_select "svg.vowel-spectrum", count: 1
     assert_select ".stats-bars__row", minimum: 2     # 頭子音(s / k)
   end
@@ -47,6 +50,18 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "", "L#{genres(:large_literature).id}", "M#{genres(:medium_japanese).id}" ], data["parents"]
     assert_equal [ 1, 1, 1 ], data["values"]
     assert_equal [ genres(:large_literature).id, genres(:medium_japanese).id, genres(:small_novel).id ], data["genre_ids"]
+  end
+
+  test "読みの長さの30以上はまとめ棒になり、文字数側だけ範囲検索へリンクする" do
+    word = Word.create!(surface: "とても長い開発語", annotated_at: Time.current, annotation_status: :done)
+    word.word_senses.create!(reading: "ナ" * 35)
+
+    get stats_path
+    # 文字数の35は単独の棒にならず「30+」のまとめ棒(reading_length_min の範囲検索リンク)になる
+    assert_select "a[href=?]", words_path(reading_length: 35), count: 0
+    assert_select "a[href=?]", words_path(reading_length_min: 30)
+    # モーラ側には範囲検索パラメータが無いため、まとめ棒はリンクにしない
+    assert_select "g.wave-chart__bar--static", count: 1
   end
 
   test "特徴ランキングの実例は該当部分に朱下線の span を持つ" do

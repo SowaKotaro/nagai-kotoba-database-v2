@@ -97,6 +97,9 @@
 - **文字数／モーラ数の切替**を墨枠セグメントボタンで付ける
   （`reading_length` と `mora_count`。モーラ=拗音の小書きを除いた拍、シャ=1拍・ー=1拍）。
 - 棒押下で `search?reading_length=n`（モーラ側は `mora_count`）へ。
+- **30以上は「30+」のまとめ棒**（2026-07-20 変更。まれな超長語が散らばると横軸が間延びするため。
+  `SiteStatistics::DISTRIBUTION_OVERFLOW_MIN`）。文字数側のまとめ棒は `reading_length_min=30` の
+  範囲検索へリンク、モーラ側は範囲検索パラメータが無いためリンクなし（hover 反転もしない）。
 
 ### §4 収録の推移（株価チャート式）
 
@@ -112,9 +115,13 @@
   を経て確定）。内側から大分類・中分類・小分類。`branchvalues: total`・`sort: false`・`rotation: 90`。
 - **扇クリックでその部分が全体となって展開**（Plotly 標準のドリルダウン）。
   末端（小分類）の扇クリックは `words?genre_id=` の絞り込みへ遷移。
-- 右に**大分類の積み上げ縦棒**。セグメントを押すと、その大分類の**中分類の積み上げ縦棒**と
-  **中分類ごとの小分類の積み上げ横棒**を展開する（オーナーの旧 stats ページ
-  「先頭/末尾文字分析」の文法。`app/javascript/controllers/genre_sunburst_controller.js`）。
+- **`maxdepth: 2` で常に「中心+2階層」だけ描画**（2026-07-19 変更）。初期表示は大分類+中分類で、
+  小分類は中分類を押したときだけ現れる。小分類が多くてもラベルが読め、戻るときの再描画も軽い。
+- 右は**1クリック=1階層の段階展開**（2026-07-19 変更。全中分類×小分類の積み上げ横棒の
+  一括展開は、小分類が多いと縦に伸びすぎ・クリック不能になるため廃止）:
+  大分類の積み上げ縦棒 → 押すとその大分類の**中分類の積み上げ縦棒** → さらに押すと
+  その中分類の**小分類を墨枠タグ+件数の一覧**（`.tag` + `.genre-hub__count` を流用、
+  `words?genre_id=` への検索導線）で表示する（`app/javascript/controllers/genre_sunburst_controller.js`）。
 - パレットは朱の濃淡のみ（`sunburstcolorway` + `extendsunburstcolorway`）。
 - Plotly はこのページ専用: コントローラが接続時に `vendor/javascript/plotly.min.js` を1度だけ挿入する。
 

@@ -1,21 +1,34 @@
 <%# §3 波形塗りバー(docs/stats.md §3)。上辺が正弦波の棒 = 「読みの息の長さ」の見立て。
     塗りは朱チント、最頻値のみ朱ベタ。直書きラベルは最頻値と両端のみ。棒押下で一覧へ。
-    locals: distribution([{ value:, count: }]) / param(:reading_length など) / title_key / aria %>
+    30以上はまとめ棒(overflow)。ツールチップは title_key + "_overflow" のキーを使い、
+    overflow_param(範囲検索のパラメータ名)がある軸だけ一覧へのリンクにする。
+    locals: distribution([{ value:, count:, overflow: }]) / param(:reading_length など) /
+            title_key / aria / overflow_param(省略可) %>
 <% chart = stats_wave_bars(distribution) %>
+<% overflow_param = local_assigns[:overflow_param] %>
 <% if chart[:bars].any? %>
   <div class="stats-scroll">
     <svg class="wave-chart" viewBox="0 0 <%= chart[:width] %> <%= chart[:height] %>"
          style="--chart-width: <%= chart[:width] %>px" role="img" aria-label="<%= aria %>">
       <% chart[:bars].each do |bar| %>
         <% if bar[:count].positive? %>
-          <a href="<%= words_path(param => bar[:value]) %>"
-             class="wave-chart__bar<%= " wave-chart__bar--mode" if bar[:mode] %>">
-            <title><%= t(title_key, value: bar[:value], count: bar[:count]) %></title>
-            <path d="<%= bar[:path] %>" />
-          </a>
+          <% bar_title = t("#{title_key}#{"_overflow" if bar[:overflow]}", value: bar[:value], count: bar[:count]) %>
+          <% href = bar[:overflow] ? (overflow_param && words_path(overflow_param => bar[:value])) : words_path(param => bar[:value]) %>
+          <% if href %>
+            <a href="<%= href %>"
+               class="wave-chart__bar<%= " wave-chart__bar--mode" if bar[:mode] %>">
+              <title><%= bar_title %></title>
+              <path d="<%= bar[:path] %>" />
+            </a>
+          <% else %>
+            <g class="wave-chart__bar wave-chart__bar--static<%= " wave-chart__bar--mode" if bar[:mode] %>">
+              <title><%= bar_title %></title>
+              <path d="<%= bar[:path] %>" />
+            </g>
+          <% end %>
         <% end %>
         <% if bar[:labeled] %>
-          <text class="wave-chart__value" x="<%= bar[:center_x] %>" y="<%= chart[:baseline] + 17 %>" text-anchor="middle"><%= bar[:value] %></text>
+          <text class="wave-chart__value" x="<%= bar[:center_x] %>" y="<%= chart[:baseline] + 17 %>" text-anchor="middle"><%= bar[:overflow] ? t("stats.index.length_chart.overflow_value", value: bar[:value]) : bar[:value] %></text>
           <% if bar[:count].positive? %>
             <text class="wave-chart__count<%= " wave-chart__count--mode" if bar[:mode] %>" x="<%= bar[:center_x] %>" y="<%= bar[:top] - 7 %>" text-anchor="middle"><%= bar[:count] %></text>
           <% end %>

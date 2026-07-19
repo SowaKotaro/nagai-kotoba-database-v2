@@ -131,12 +131,22 @@ class SiteStatistics
 
   # ==== §3 読みの長さ分布(文字数・モーラ) ==========================================
 
-  # 最小〜最大の間を 0 件も含めて埋めた [{ value:, count: }] を返す(棒の欠番を作らない)。
+  # 分布の横軸の上限。まれな超長語が散らばると横軸が間延びするため、
+  # この値以上は「30+」の1本にまとめる。
+  DISTRIBUTION_OVERFLOW_MIN = 30
+
+  # 最小〜上限の間を 0 件も含めて埋めた [{ value:, count: }] を返す(棒の欠番を作らない)。
+  # DISTRIBUTION_OVERFLOW_MIN 以上は overflow: true を立てた1本にまとめる。
   def fill_distribution(counts)
     values = counts.keys.compact
     return [] if values.empty?
 
-    (values.min..values.max).map { |value| { value: value, count: counts[value].to_i } }
+    bins = (values.min..[ values.max, DISTRIBUTION_OVERFLOW_MIN - 1 ].min).map do |value|
+      { value: value, count: counts[value].to_i }
+    end
+    overflow_count = values.select { |value| value >= DISTRIBUTION_OVERFLOW_MIN }.sum { |value| counts[value].to_i }
+    bins << { value: DISTRIBUTION_OVERFLOW_MIN, count: overflow_count, overflow: true } if overflow_count.positive?
+    bins
   end
 
   # ==== §4 収録の推移(週次) ========================================================

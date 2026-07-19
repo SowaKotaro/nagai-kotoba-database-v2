@@ -58,6 +58,21 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal [ 1, 0, 0, 0, 1 ], counts
   end
 
+  test "長さの分布は30以上をまとめ棒(overflow)1本に畳む" do
+    [ 32, 40 ].each_with_index do |length, index|
+      word = Word.create!(surface: "長い開発語#{index}", annotated_at: Time.current, annotation_status: :done)
+      word.word_senses.create!(reading: "ナ" * length)
+    end
+
+    distribution = SiteStatistics.new.reading_length_distribution
+    assert_equal (3..29).to_a + [ 30 ], distribution.map { |bin| bin[:value] }
+    overflow = distribution.last
+    assert overflow[:overflow]
+    assert_equal 2, overflow[:count]   # 32文字 + 40文字
+    # まとめ棒より手前(30未満)には overflow を立てない
+    assert distribution[0..-2].none? { |bin| bin[:overflow] }
+  end
+
   test "推移: 週ごとの新収録と累計を開帳の週から並べる" do
     timeline = @stats.timeline
     assert_equal 2, timeline.last[:cumulative]
