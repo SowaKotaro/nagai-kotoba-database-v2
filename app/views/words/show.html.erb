@@ -12,7 +12,14 @@
 <header class="page-header">
   <p class="page-eyebrow">
     <span><%= t("words.show.headword") %></span>
-    <span class="mono"><%= t("words.show.record_number", id: @word.id) %></span>
+    <%# 見出し語ストリップに溶け込ませた控えめなランダム導線。下部まで下がらずに回遊できる %>
+    <span class="page-eyebrow__meta">
+      <span class="mono"><%= t("words.show.record_number", id: @word.id) %></span>
+      <%= link_to random_words_path, class: "eyebrow-random",
+            aria: { label: t("words.show.random") } do %>
+        <%= icon "shuffle" %><span><%= t("words.show.random_next") %></span>
+      <% end %>
+    </span>
   </p>
   <%# 見出しの末尾にさりげない虫眼鏡。アプリ内検索ではなく Web 検索へ別タブで飛ばす。
       リンク内に空白を作ると下線だけが浮くので、ブロックではなく引数で渡す %>

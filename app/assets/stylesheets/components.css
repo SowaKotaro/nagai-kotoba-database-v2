@@ -21,6 +21,8 @@
 .section-heading .icon,
 .sense-attrs dt .icon,
 .stats-grid__item dt .icon,
+.stats-section__title .icon,
+.stats-wall__heading .icon,
 .page-eyebrow .icon,
 .related__title .icon,
 .prose h2 .icon,
@@ -95,6 +97,29 @@
   font-size: 14px;
   letter-spacing: 0.14em;
   color: var(--ink-3);
+}
+
+/* 記録番号とランダム導線を右肩にまとめる。導線は情報より右に置き「めくる」向きにする */
+.page-eyebrow__meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+/* 見出し語ストリップに溶け込む控えめなランダム導線。地は ink-3、朱のシャッフル印を1つ添え、
+   hover で全体を朱へ転じて操作可能と気づかせる(型見本の朱アクセント) */
+.eyebrow-random {
+  color: var(--ink-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.eyebrow-random .icon {
+  color: var(--shu);
+}
+
+.eyebrow-random:hover {
+  color: var(--shu);
 }
 
 .page-title-meta {
