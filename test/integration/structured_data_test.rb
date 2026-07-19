@@ -14,6 +14,30 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     assert_equal "#{HOST}/words?q={search_term_string}", action["target"]["urlTemplate"]
   end
 
+  test "全ページに運営者の Organization が出力され WebSite の publisher から参照される" do
+    get root_path
+    org = find_type("Organization")
+    assert_equal "#{HOST}/#organization", org["@id"]
+    assert_equal I18n.t("layouts.brand"), org["name"]
+    assert_equal "#{HOST}/about", org["url"]
+    assert_equal "#{HOST}/icon.svg", org["logo"]
+    assert_equal I18n.t("pages.about.contact_email"), org["email"]
+
+    site = find_type("WebSite")
+    assert_equal({ "@id" => "#{HOST}/#organization" }, site["publisher"])
+  end
+
+  test "About に FAQPage が出力され文言は画面の FAQ と一致する" do
+    get about_path
+    faq = find_type("FAQPage")
+    items = I18n.t("pages.about.faq_items")
+
+    assert_equal items.map { |item| item[:question] }, faq["mainEntity"].map { |q| q["name"] }
+    first = faq["mainEntity"].first
+    assert_equal "Question", first["@type"]
+    assert_equal items.first[:answer], first.dig("acceptedAnswer", "text")
+  end
+
   test "パンくずのあるページに BreadcrumbList が出力される" do
     # パンくずを描画する主要な公開ページを一巡する(単語詳細は下の DefinedTerm テストで別途確認)
     [ words_path, genres_path, browse_path, about_path ].each do |path|
@@ -31,13 +55,12 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     word = words(:abc_murder)
     get word_path(word)
 
-    graph = json_ld_objects.find { |o| o["@graph"] }["@graph"]
-    set = graph.find { |n| n["@type"] == "DefinedTermSet" }
+    set = flat_map_graph.find { |n| n["@type"] == "DefinedTermSet" }
     assert_equal "#{HOST}/#termset", set["@id"]
     assert_equal StructuredDataHelper::CC_BY_URL, set["license"]
     assert_equal "ja", set["inLanguage"]
 
-    term = graph.find { |n| n["@type"] == "DefinedTerm" }
+    term = flat_map_graph.find { |n| n["@type"] == "DefinedTerm" }
     assert_equal word.surface, term["name"]
     assert_equal [ word_senses(:murder).reading ], term["alternateName"]
     assert_equal({ "@id" => "#{HOST}/#termset" }, term["inDefinedTermSet"])

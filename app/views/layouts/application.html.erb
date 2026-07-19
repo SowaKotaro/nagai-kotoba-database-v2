@@ -42,10 +42,13 @@
     <%= auto_discovery_link_tag :atom, words_path(format: :atom), title: t("words.feed.title") %>
 
     <%# 見出し用の明朝のみ web フォントで読む(本文は OS 標準ゴシック。docs/design.md §2)。
-        display=swap で LCP を阻害しない。 %>
+        display=swap に加え、CSS 自体もレンダーブロッキングにしない: media="print" で
+        描画を止めずに読み込み、完了後に onload で全メディアへ適用する(モバイルの LCP 対策)。
+        JS 無効環境では noscript 側の通常読み込みにフォールバックする。 %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap"></noscript>
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>

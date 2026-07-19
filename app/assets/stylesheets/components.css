@@ -210,6 +210,21 @@
   border-bottom: 1px solid var(--rule-mid);
 }
 
+/* FAQ の質問文(h3)と活用シーンの箇条書き */
+.prose h3 {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: 16px;
+}
+
+.prose ul {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.prose li + li {
+  margin-top: var(--space-1);
+}
+
 /* クレジット文は等幅で「そのまま貼れる」体裁にする */
 .prose__credit {
   font-family: var(--font-mono);

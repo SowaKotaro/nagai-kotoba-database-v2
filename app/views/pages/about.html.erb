@@ -22,6 +22,16 @@
   </section>
 
   <section>
+    <h2><%= icon "binoculars" %><%= t("pages.about.usecases_title") %></h2>
+    <p><%= t("pages.about.usecases_intro") %></p>
+    <ul>
+      <% t("pages.about.usecases_items").each do |item| %>
+        <li><%= item %></li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section>
     <h2><%= icon "scales" %><%= t("pages.about.license_title") %></h2>
     <p><%= t("pages.about.license_intro") %></p>
     <p>
@@ -46,8 +56,19 @@
   </section>
 
   <section>
+    <h2><%= icon "quotes" %><%= t("pages.about.faq_title") %></h2>
+    <% t("pages.about.faq_items").each do |item| %>
+      <h3><%= item[:question] %></h3>
+      <p><%= item[:answer] %></p>
+    <% end %>
+  </section>
+
+  <section>
     <h2><%= icon "envelope_simple" %><%= t("pages.about.contact_title") %></h2>
     <p><%= t("pages.about.contact_body") %></p>
     <p><%= mail_to t("pages.about.contact_email") %></p>
   </section>
 </div>
+
+<%# FAQ の構造化データ(FAQPage)。文言は画面と同じ i18n を共用する %>
+<%= faq_json_ld(t("pages.about.faq_items")) %>

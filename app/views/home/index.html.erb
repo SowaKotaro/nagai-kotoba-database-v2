@@ -1,5 +1,8 @@
 <%# ホーム: 型見本の表紙。ステートメント → 今日の一語(巨大) → 探し方の導線 → 収録統計 → 新着
     (キーワード検索はヘッダーに常設しているため、ここには置かない) %>
+<%# <title> はタグライン付き、meta description は長めの専用文言(ヒーロー見出しとは別管理) %>
+<% content_for :title, t("home.index.title_tagline") %>
+<% content_for :description, t("home.index.meta_description") %>
 <section class="hero">
   <h1 class="hero__lead"><%= t("home.index.description") %></h1>
 

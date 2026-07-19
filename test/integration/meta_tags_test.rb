@@ -4,11 +4,13 @@ require "test_helper"
 class MetaTagsTest < ActionDispatch::IntegrationTest
   HOST = "https://nagai-kotoba-database.jp".freeze
 
-  test "トップページに既定の description・canonical・OGP が出力される" do
+  test "トップページにタグライン付き title と専用の description・canonical・OGP が出力される" do
     get root_path
     assert_response :success
 
-    assert_select "meta[name=description][content=?]", I18n.t("home.index.description")
+    title = "#{I18n.t('home.index.title_tagline')} | #{I18n.t('layouts.brand')}"
+    assert_select "title", text: title
+    assert_select "meta[name=description][content=?]", I18n.t("home.index.meta_description")
     assert_select "link[rel=canonical][href=?]", "#{HOST}/"
     assert_select "meta[property='og:type'][content=?]", "website"
     assert_select "meta[property='og:site_name'][content=?]", I18n.t("layouts.brand")
@@ -19,8 +21,16 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='og:image:height'][content=?]", "630"
     assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
     assert_select "meta[name='twitter:card'][content=?]", "summary_large_image"
-    assert_select "meta[name='twitter:title'][content=?]", I18n.t("layouts.brand")
-    assert_select "meta[name='twitter:description'][content=?]", I18n.t("home.index.description")
+    assert_select "meta[name='twitter:title'][content=?]", title
+    assert_select "meta[name='twitter:description'][content=?]", I18n.t("home.index.meta_description")
+  end
+
+  test "素の単語一覧と検索フォームはトップと異なる固有の description を持つ" do
+    get words_path
+    assert_select "meta[name=description][content=?]", I18n.t("words.index.description")
+
+    get search_path
+    assert_select "meta[name=description][content=?]", I18n.t("searches.description")
   end
 
   test "単語詳細の description はリード文、og:type は article、canonical は本番ホスト" do
