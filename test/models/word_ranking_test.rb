@@ -39,9 +39,19 @@ class WordRankingTest < ActiveSupport::TestCase
   end
 
   test "下限に満たない語しかない枠は空になる" do
-    # 小書きのかな(読みの文字数 - 拍数)はどちらの語も 0、語義はどちらも1つだけ。
+    # フィクスチャの読みはどちらも小書きのかなを含まず、語義はどちらも1つだけ。
     assert_empty board("small_kana_desc").top
     assert_empty board("sense_count_desc").top
+  end
+
+  test "拗音・促音は促音「ッ」も含めて小書きのかなを1字ずつ数える" do
+    # 「文字数 - 拍数」では促音・長音が独立した拍のため現れない。小書きを直接数えて
+    # ッ ョ ッ ゥ ャ の 5 個になることを担保する(退行防止)。
+    word = Word.create!(surface: "小書き検証語", annotated_at: Time.current)
+    word.word_senses.create!(reading: "イックションペカットゥーヂャ")
+
+    row = board("small_kana_desc").top.find { |candidate| candidate[:id] == word.id }
+    assert_equal 5, row[:value]
   end
 
   test "未注釈の語は載せない" do
