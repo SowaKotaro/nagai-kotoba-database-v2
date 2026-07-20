@@ -367,6 +367,64 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
   end
 
+  # ランキングの並び(WordSort::RANKING_KEYS)。ランキングページの「もっと見る」から辿り着く。
+  test "ランキングの並びはすべて一覧で使える" do
+    WordSort::RANKING_KEYS.each do |key|
+      get words_path(sort: key)
+      assert_response :success, "sort=#{key} が失敗した"
+      assert_select "select#sort option[selected][value=?]", key
+    end
+  end
+
+  test "sort=dakuten_desc で濁点の多い順になる" do
+    # さつじんじけん は「じ」2つ、カレー は 0。
+    get words_path(sort: "dakuten_desc")
+    assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
+  end
+
+  test "sort=surface_length_desc で表記の長い順になる" do
+    # ABC殺人事件(7字) > カレーライス(6字)。読みの長さの順位とは別軸。
+    get words_path(sort: "surface_length_desc")
+    assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
+  end
+
+  test "並び順のセレクタは全キーをひとまとめに並べ、シャッフルは含めない" do
+    get words_path
+    assert_select "select#sort optgroup", count: 0
+    assert_select "select#sort option", count: WordSort::SELECTABLE_KEYS.size
+    assert_select "select#sort option[value=shuffle]", count: 0
+    # 表示順は SELECTABLE_KEYS の順(先頭は既定の「登録が新しい順」)
+    labels = css_select("select#sort option").map(&:text)
+    assert_equal WordSort::SELECTABLE_KEYS.map { |key| I18n.t("words.index.sort.options.#{key}") }, labels
+  end
+
+  test "シャッフルは件数の隣のボタンから引き直せる" do
+    get words_path
+    assert_select ".entry-toolbar__shuffle", text: /#{Regexp.escape(I18n.t("words.index.shuffle"))}/
+    href = css_select(".entry-toolbar__shuffle").first["href"]
+    assert_match(/sort=shuffle/, href)
+    assert_match(/seed=\w+/, href)
+  end
+
+  test "シャッフルボタンは絞り込み条件を保ったまま新しいシードを振る" do
+    get words_path(part_of_speech_id: parts_of_speech(:noun).id)
+    href = css_select(".entry-toolbar__shuffle").first["href"]
+    assert_match(/part_of_speech_id=#{parts_of_speech(:noun).id}/, href)
+
+    seeds = 2.times.map do
+      get words_path
+      css_select(".entry-toolbar__shuffle").first["href"][/seed=(\w+)/, 1]
+    end
+    assert_not_equal seeds.first, seeds.last
+  end
+
+  test "同じ seed のシャッフルは順序が変わらず、seed が変わると並び直る" do
+    get words_path(sort: "shuffle", seed: "abc123")
+    first = [ body_position(words(:curry)), body_position(words(:abc_murder)) ]
+    get words_path(sort: "shuffle", seed: "abc123")
+    assert_equal first, [ body_position(words(:curry)), body_position(words(:abc_murder)) ]
+  end
+
   test "sort=created_asc / created_desc で登録日時順になる" do
     words(:abc_murder).update_column(:created_at, 2.days.ago)
     words(:curry).update_column(:created_at, 1.day.ago)

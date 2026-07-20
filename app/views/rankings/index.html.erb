@@ -1,0 +1,35 @@
+<% content_for :title, t("rankings.index.title") %>
+<% content_for :description, t("rankings.index.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("rankings.index.title"), nil ] ] %>
+
+<header class="page-header">
+  <h1 class="page-title"><%= t("rankings.index.title") %></h1>
+  <p class="page-lead"><%= t("rankings.index.lead") %></p>
+</header>
+
+<% if @boards.empty? %>
+  <p class="empty-note"><%= icon "binoculars" %><%= t("rankings.index.empty") %></p>
+<% else %>
+  <%# 種類が多いので、縦に積まず切替で1つずつ見せる(下のランキングまでスクロールしなくて済む)。
+      パネルは全部サーバ側で描画しておき、JS が繋がったときだけ初期表示へ畳む
+      (JS 無効なら全ランキングがそのまま縦に並ぶ)。 %>
+  <div data-controller="panel-switch" data-panel-switch-hide-on-connect-value="true">
+    <div class="rank-tabs" role="group" aria-label="<%= t("rankings.index.toc_label") %>">
+      <% @boards.each_with_index do |(ranking, _rows), index| %>
+        <button type="button" class="rank-tab" aria-pressed="<%= index.zero? %>"
+                data-panel-switch-target="button" data-panel-key="<%= ranking.key %>"
+                data-action="panel-switch#show"><%= ranking.title %></button>
+      <% end %>
+    </div>
+
+    <% @boards.each do |ranking, rows| %>
+      <div data-panel-switch-target="panel" data-panel-key="<%= ranking.key %>">
+        <%= render "board", ranking: ranking, rows: rows %>
+      </div>
+    <% end %>
+  </div>
+
+  <p class="rank-colophon"><%= t("rankings.index.colophon", count: WordRanking::TOP_LIMIT) %></p>
+<% end %>

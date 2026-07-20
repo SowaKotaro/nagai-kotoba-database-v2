@@ -106,6 +106,7 @@ ja:
       recent: "新着の単語"
       ranking: "最長ランキング"
       see_all: "すべて見る"
+      see_ranking: "ほかのランキングも見る"
       stats:
         words: "収録語数"
         words_unit: "語"
@@ -178,10 +179,12 @@ ja:
       senses_count: "%{count} 語義"
       char_count: "%{count} 字"
       clear_filter: "絞り込みを解除"
+      shuffle: "シャッフルする"
       edit_conditions: "条件を変更"
       sort:
         label: "並び順"
         apply: "並べ替え"
+        # 選択肢は WordSort::SELECTABLE_KEYS の順に並ぶ（登録順 → 五十音 → 読みの長さ → その他の観点）。
         options:
           kana_asc: "辞書順"
           kana_desc: "辞書の逆順"
@@ -190,7 +193,15 @@ ja:
           created_asc: "登録が古い順"
           created_desc: "登録が新しい順"
           reverse_kana: "逆引き（末尾からの辞書順）"
-          shuffle: "日替わりシャッフル"
+          mora_desc: "拍（モーラ）が多い順"
+          surface_length_desc: "表記が長い順"
+          reading_density_desc: "一字あたりの読みが長い順"
+          small_kana_desc: "拗音・促音が多い順"
+          chouon_desc: "長音符が多い順"
+          dakuten_desc: "濁点・半濁点が多い順"
+          sense_count_desc: "語義が多い順"
+          variant_count_desc: "別表記が多い順"
+          feature_count_desc: "言語学的特徴が多い順"
       facet_heading:
         default: "%{name}の長い言葉"
         first_char: "「%{char}」から始まる長い言葉"
@@ -593,6 +604,56 @@ ja:
       count_label: "%{char}：%{count}件"
       empty: "まだ公開されている語がありません。"
 
+  rankings:
+    index:
+      title: "ランキング"
+      description: "「長い言葉のデータベース」のランキング。読みの長さ・拍数・表記の長さ・一字あたりの読み・拗音や促音・長音符・濁点・語義や別表記の多さなど、さまざまな観点の上位を公開しています。"
+      lead: "収録語を色々な物差しで並べたランキングです。各ランキングの「もっと見る」から全順位を辿れます。"
+      toc_label: "ランキングの目次"
+      see_all: "もっと見る"
+      empty: "まだ公開されている語がありません。"
+      colophon: "各ランキングは上位%{count}件までを掲載しています。集計は1日ごとに更新されます。"
+    boards:
+      length_desc:
+        title: "読みが長い言葉"
+        lead: "読みの文字数がもっとも多い語。このデータベースの看板です。"
+        unit: "字"
+      mora_desc:
+        title: "拍（モーラ）が多い言葉"
+        lead: "口に出したときの拍数。拗音を1拍と数えるため、文字数の順位とは少しずれます。"
+        unit: "拍"
+      surface_length_desc:
+        title: "表記が長い言葉"
+        lead: "読みではなく字面の長さ。書くのに手間がかかる語です。"
+        unit: "字"
+      reading_density_desc:
+        title: "一字が重い言葉"
+        lead: "表記1字あたりの読みの長さ（読みの文字数が表記の何倍か）。短い字面に長い音が詰まった語ほど上位に来ます。"
+        unit: "倍"
+      small_kana_desc:
+        title: "拗音・促音が多い言葉"
+        lead: "小書きの「ャュョッ」の数。読みの文字数と拍数の差がそのまま個数になります。"
+        unit: "個"
+      chouon_desc:
+        title: "長音符が多い言葉"
+        lead: "読みに含まれる「ー」の数。伸ばし棒だらけの語です。"
+        unit: "本"
+      dakuten_desc:
+        title: "濁点・半濁点が多い言葉"
+        lead: "読みに含まれる濁音・半濁音の数。声に出すと濁りが続きます。"
+        unit: "個"
+      sense_count_desc:
+        title: "語義が多い言葉"
+        lead: "同じ読み・表記に複数の意味がある語。同音異義や多義の重なりです。"
+        unit: "語義"
+      variant_count_desc:
+        title: "別表記が多い言葉"
+        lead: "旧字・略式・送り仮名違いなど、表記のゆれが多い語です。"
+        unit: "通り"
+      feature_count_desc:
+        title: "言語学的特徴が多い言葉"
+        lead: "連濁・音韻添加などの特徴がいくつも重なった、盛りだくさんの語です。"
+        unit: "件"
   stats:
     index:
       title: "収録統計"
@@ -748,7 +809,7 @@ ja:
         - question: "どんな言葉が収録されていますか？"
           answer: "読みが10文字以上の日本語の言葉です。一般的な名詞に限らず、作品名・動植物名・専門用語などの固有名詞も含めて幅広く収録し、すべての語に読み・ジャンル・品詞・語種・言語学的特徴などの情報を付与しています。"
         - question: "読みがいちばん長い言葉は何ですか？"
-          answer: "最長ランキングのページで、読みの文字数が多い順にいつでも確認できます。収録語は随時増えているため、最新の順位はランキングをご覧ください。"
+          answer: "ランキングのページで、読みの文字数が多い順にいつでも確認できます。読みの長さのほか、拍数・表記の長さ・一字あたりの読み・拗音や促音・長音符・濁点の多さなど、さまざまな観点のランキングも掲載しています。収録語は随時増えているため、最新の順位はランキングをご覧ください。"
         - question: "データは自由に使えますか？"
           answer: "単語データは CC BY 4.0 ライセンスで提供しており、クレジットを明記すれば商用を含めて自由に利用できます。各ページの URL に .json を付けると、機械可読な JSON も取得できます。"
         - question: "誰がどのように運営していますか？"

@@ -44,20 +44,29 @@
   <p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>
 
   <% if @words.any? %>
-    <%# 並び順。絞り込み条件は hidden で引き継ぎ、select 変更で即送信(JS 無効時は noscript のボタン) %>
-    <%= form_with url: words_path, method: :get, class: "sort-form", data: { controller: "auto-submit" } do %>
-      <% request.query_parameters.except("page", "sort").each do |key, value| %>
-        <% Array(value).each do |item| %>
-          <%= hidden_field_tag(value.is_a?(Array) ? "#{key}[]" : key, item, id: nil) %>
-        <% end %>
+    <div class="entry-toolbar__controls">
+      <%# シャッフルは並び順ではなく「引き直す」操作なので、セレクタから外してボタンで置く。
+          押すたびに新しいシードが振られ、並びを引き直せる %>
+      <%= link_to shuffle_words_path, class: "btn btn--sm entry-toolbar__shuffle" do %>
+        <%= icon "shuffle" %><%= t("words.index.shuffle") %>
       <% end %>
-      <label class="sort-form__label" for="sort"><%= icon "arrows_down_up" %><%= t("words.index.sort.label") %></label>
-      <%= select_tag :sort,
-            options_for_select(WordSort::KEYS.map { |key| [ t("words.index.sort.options.#{key}"), key ] }, @sort.key),
-            class: "sort-form__select",
-            data: { action: "change->auto-submit#submit" } %>
-      <noscript><%= submit_tag t("words.index.sort.apply"), class: "btn btn--sm", name: nil %></noscript>
-    <% end %>
+
+      <%# 並び順。絞り込み条件は hidden で引き継ぎ、select 変更で即送信(JS 無効時は noscript のボタン) %>
+      <%= form_with url: words_path, method: :get, class: "sort-form", data: { controller: "auto-submit" } do %>
+        <% request.query_parameters.except("page", "sort", "seed").each do |key, value| %>
+          <% Array(value).each do |item| %>
+            <%= hidden_field_tag(value.is_a?(Array) ? "#{key}[]" : key, item, id: nil) %>
+          <% end %>
+        <% end %>
+        <label class="sort-form__label" for="sort"><%= icon "arrows_down_up" %><%= t("words.index.sort.label") %></label>
+        <%= select_tag :sort,
+              options_for_select(WordSort::SELECTABLE_KEYS.map { |key| [ t("words.index.sort.options.#{key}"), key ] },
+                                 @sort.key),
+              class: "sort-form__select",
+              data: { action: "change->auto-submit#submit" } %>
+        <noscript><%= submit_tag t("words.index.sort.apply"), class: "btn btn--sm", name: nil %></noscript>
+      <% end %>
+    </div>
   <% end %>
 </div>
 

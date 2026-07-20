@@ -82,7 +82,7 @@
         </div>
         <nav class="site-footer__nav" aria-label="<%= t("layouts.footer.nav_label") %>">
           <%= link_to t("layouts.nav.words"), words_path %>
-          <%= link_to t("layouts.nav.ranking"), words_path(sort: "length_desc") %>
+          <%= link_to t("layouts.nav.ranking"), rankings_path %>
           <%= link_to t("layouts.nav.genres"), genres_path %>
           <%= link_to t("layouts.nav.browse"), browse_path %>
           <%= link_to t("layouts.nav.stats"), stats_path %>

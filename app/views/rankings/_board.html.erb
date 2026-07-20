@@ -1,0 +1,29 @@
+<%# ランキング1枠。墨1px枠のパネルに、墨2px で仕切った見出し行 → 説明 → 順位表 の順で組む。
+    順位は等幅(上位3位は墨ベタの刻印)、語は明朝、右端に指標値。
+    「もっと見る」は同じ並びキーの単語一覧へ渡し、そこから先は通常のページ送りで全件辿れる。
+    locals: ranking(WordRanking), rows(#top の結果) %>
+<section class="rank-board" id="rank-<%= ranking.key.dasherize %>">
+  <div class="rank-board__header">
+    <h2 class="rank-board__title"><%= icon ranking.icon %><%= ranking.title %></h2>
+    <%= link_to words_path(sort: ranking.key), class: "rank-board__more icon-label" do %>
+      <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
+    <% end %>
+  </div>
+  <p class="rank-board__lead"><%= ranking.lead %></p>
+
+  <ol class="rank-list">
+    <% rows.each do |row| %>
+      <li class="rank-row">
+        <span class="rank-row__no <%= "rank-row__no--top" if row[:rank] <= 3 %>"><%= format("%02d", row[:rank]) %></span>
+        <span class="rank-row__main">
+          <span class="rank-row__reading"><%= row[:readings].join("、") %></span>
+          <%= link_to row[:surface], word_path(row[:id]), class: "rank-row__surface" %>
+        </span>
+        <span class="rank-row__value">
+          <span class="rank-row__number"><%= ranking.decimal? ? number_with_precision(row[:value], precision: 2) : number_with_delimiter(row[:value]) %></span>
+          <span class="rank-row__unit"><%= ranking.unit %></span>
+        </span>
+      </li>
+    <% end %>
+  </ol>
+</section>
