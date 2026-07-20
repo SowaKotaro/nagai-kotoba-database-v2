@@ -34,10 +34,17 @@ class WordSort
   READING_DENSITY =
     "((SELECT MAX(word_senses.reading_length) FROM word_senses WHERE word_senses.word_id = words.id) " \
     "/ NULLIF(CHAR_LENGTH(words.surface), 0))".freeze
-  # 小書きのかな(拗音・促音)の数。読みの文字数と拍数の差がそのまま個数になる。
+  # 小書きのかな(拗音・促音)の数。促音「ッ」と長音符は独立した1拍として数えられ、
+  # 「文字数 - 拍数」では促音が現れないため、小書きのかなを直接1文字ずつ数える。
+  # 濁点の数(下)と同じく、as_ci のままだと小書き⇔並字(ッ=ツ・ャ=ヤ)が畳まれかねないので
+  # utf8mb4_bin へ落として、列挙した小書きの字だけを厳密に数える。
+  SMALL_KANA =
+    "ぁぃぅぇぉっゃゅょゎゕゖ" \
+    "ァィゥェォッャュョヮヵヶ".freeze
   SMALL_KANA_MAX =
-    "(SELECT MAX(word_senses.reading_length - word_senses.mora_count) FROM word_senses " \
-    "WHERE word_senses.word_id = words.id)".freeze
+    "(SELECT MAX(CHAR_LENGTH(word_senses.reading) - CHAR_LENGTH(REGEXP_REPLACE(" \
+    "word_senses.reading COLLATE utf8mb4_bin, '[#{SMALL_KANA}]', ''))) " \
+    "FROM word_senses WHERE word_senses.word_id = words.id)".freeze
   # 長音符「ー」の数。
   # 濁点の数(下)と同じく、数えるときは必ず utf8mb4_bin へ落として清濁・かなの異同を潰さない。
   CHOUON_MAX =
