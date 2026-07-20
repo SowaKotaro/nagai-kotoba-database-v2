@@ -25,8 +25,8 @@
     <div class="site-header__right" data-nav-drawer-target="panel">
       <nav class="site-nav">
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
-        <%# 最長ランキング。一覧を「読みが長い順」で見せる導線(サイト最大のフック) %>
-        <%= link_to t("layouts.nav.ranking"), words_path(sort: "length_desc") %>
+        <%# ランキング。読みの長さをはじめ、さまざまな観点のランキングを束ねたハブ %>
+        <%= link_to t("layouts.nav.ranking"), rankings_path, class: ("is-current" if request.path == rankings_path) %>
         <%# 収録統計「蔵版目録」(Issue 34) %>
         <%= link_to t("layouts.nav.stats"), stats_path, class: ("is-current" if request.path == stats_path) %>
 

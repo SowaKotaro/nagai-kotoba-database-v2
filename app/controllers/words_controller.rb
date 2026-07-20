@@ -11,7 +11,8 @@ class WordsController < ApplicationController
   def index
     @page = [ params[:page].to_i, 1 ].max
     @search = WordSenseSearch.new(search_filter_params)
-    @sort = WordSort.new(params[:sort])
+    # seed はシャッフルの引き直し用(「シャッフルする」ボタンが毎回新しい値を振る)。
+    @sort = WordSort.new(params[:sort], seed: params[:seed])
     # 不正な正規表現(URL 直打ち等)は条件から外して検索されるので、外したことを伝える。
     flash.now[:alert] = t("searches.regexp_error.#{@search.regexp_error}") if @search.regexp_error
 

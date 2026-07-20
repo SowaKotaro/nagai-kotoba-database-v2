@@ -48,8 +48,9 @@
   <section>
     <div class="section-header">
       <h2 class="section-heading"><%= icon "ruler" %><%= t("home.index.ranking") %></h2>
-      <%= link_to words_path(sort: "length_desc"), class: "section-header__more icon-label" do %>
-        <%= t("home.index.see_all") %><%= icon "arrow_right" %>
+      <%# 最長以外のランキングも束ねたランキングページへ送る(全順位はその先の「もっと見る」から) %>
+      <%= link_to rankings_path, class: "section-header__more icon-label" do %>
+        <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
       <% end %>
     </div>
     <div class="entry-list">

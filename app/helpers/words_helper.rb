@@ -68,6 +68,13 @@ module WordsHelper
     end
   end
 
+  # 「シャッフルする」ボタンの遷移先。現在の絞り込みは保ったまま、毎回新しいシードを振る。
+  # 描画のたびにシードが変わるので、押すたびに並びを引き直せる(ページ送りは seed を引き継ぐ)。
+  def shuffle_words_path
+    words_path(request.query_parameters.except("page", "sort", "seed")
+                      .merge(sort: WordSort::SHUFFLE_KEY, seed: SecureRandom.hex(4)))
+  end
+
   # canonical に使う正規化済みのパス(Issue 17)。
   # 単一ファセットは実際のリンクと同じスカラ形、それ以外は条件をキー順に整列した自身。
   def canonical_index_path(search, page)

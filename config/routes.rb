@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   # 収録統計「蔵版目録」(Issue 34)。数字と分布でコレクションを見せる公開ページ。
   get "stats", to: "stats#index", as: :stats
 
+  # 各種ランキングのハブ。枠ごとの「もっと見る」は words#index?sort=... へ渡す。
+  get "rankings", to: "rankings#index", as: :rankings
+
   # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
 
