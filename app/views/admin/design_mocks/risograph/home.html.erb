@@ -1,0 +1,42 @@
+<% today = mock_words.first %>
+<div class="dm-risograph__wrap">
+  <%= render "admin/design_mocks/risograph/head" %>
+
+  <section class="dm-risograph__shout">
+    <div class="dm-risograph__num"><%= today.length %><em>もじ</em></div>
+    <h1 class="dm-risograph__word"><a href="#"><%= today.surface %></a></h1>
+    <div class="dm-risograph__yomi"><%= today.reading %></div>
+  </section>
+
+  <p class="dm-risograph__say">
+    ピン芸人・どくさいスイッチ企画による超短編集。2024年刊。<b>読むより言うほうが大変</b>な部類。
+  </p>
+
+  <div class="dm-risograph__label">引き方は3つ</div>
+  <div class="dm-risograph__entries" style="padding-top: 16px">
+    <% mock_entry_points.each do |entry| %>
+      <a class="dm-risograph__entry" href="#">
+        <span><%= entry[:meta] %></span>
+        <b><%= entry[:title] %></b>
+        <p><%= entry[:desc] %></p>
+      </a>
+    <% end %>
+  </div>
+
+  <div class="dm-risograph__label">ほかにも長いのがあります</div>
+  <div class="dm-risograph__rows">
+    <% mock_words[1, 5].each do |word| %>
+      <a href="#">
+        <span class="cnt"><%= word.length %></span>
+        <span class="tw"><%= word.surface %></span>
+        <span class="tr"><%= word.reading %></span>
+      </a>
+    <% end %>
+  </div>
+
+  <div class="dm-risograph__stats">
+    <div><b><%= mock_stats[:words] %></b><span>収録語</span></div>
+    <div><b><%= mock_stats[:senses] %></b><span>語義</span></div>
+    <div><b><%= mock_stats[:average] %></b><span>平均文字数</span></div>
+  </div>
+</div>

@@ -1,0 +1,830 @@
+/* 案4「ネオブルータリズム」— 黒の太枠、ぼかさないオフセット影、原色のベタ。 */
+
+.dm-neobrutalism {
+  --p: #fffcf2;
+  --k: #0b0b0b;
+  --k2: #5a5a5a;
+  --y: #ffe924;
+  --c: #00d9e8;
+  --m: #ff3ea5;
+
+  background: var(--p);
+  color: var(--k);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic, Meiryo, sans-serif;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.dm-neobrutalism__wrap {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 26px 26px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.dm-neobrutalism__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  border: 3px solid var(--k);
+  background: var(--y);
+  padding: 11px 18px;
+  box-shadow: 7px 7px 0 var(--k);
+}
+
+.dm-neobrutalism__brand {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.dm-neobrutalism__nav {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.dm-neobrutalism__nav a {
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid var(--k);
+  background: var(--p);
+  padding: 4px 12px;
+}
+
+.dm-neobrutalism__nav a:hover {
+  background: var(--k);
+  color: var(--y);
+}
+
+/* --- トップ ------------------------------------------------ */
+.dm-neobrutalism__hero {
+  border: 4px solid var(--k);
+  background: var(--c);
+  box-shadow: 11px 11px 0 var(--k);
+  padding: 28px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.dm-neobrutalism__tag {
+  display: inline-block;
+  align-self: flex-start;
+  background: var(--k);
+  color: var(--c);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 4px 11px;
+}
+
+.dm-neobrutalism__word {
+  font-size: clamp(27px, 5.8vw, 58px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.dm-neobrutalism__word a:hover {
+  color: var(--m);
+}
+
+.dm-neobrutalism__yomi {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.dm-neobrutalism__count {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.dm-neobrutalism__count b {
+  background: var(--m);
+  color: var(--p);
+  border: 3px solid var(--k);
+  box-shadow: 6px 6px 0 var(--k);
+  font-size: 32px;
+  font-weight: 800;
+  padding: 2px 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-neobrutalism__count span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dm-neobrutalism__cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+}
+
+.dm-neobrutalism__list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.dm-neobrutalism__list a {
+  border: 3px solid var(--k);
+  background: var(--p);
+  box-shadow: 6px 6px 0 var(--k);
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.dm-neobrutalism__list a:hover {
+  background: var(--y);
+  box-shadow: 9px 9px 0 var(--k);
+}
+
+.dm-neobrutalism__list .n {
+  border: 2px solid var(--k);
+  background: var(--m);
+  color: var(--p);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 1px 9px;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-neobrutalism__list .w {
+  font-size: 17px;
+  font-weight: 700;
+  min-width: 0;
+}
+
+.dm-neobrutalism__list .y {
+  margin-left: auto;
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__side {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.dm-neobrutalism__box {
+  border: 3px solid var(--k);
+  padding: 15px 17px 17px;
+  box-shadow: 7px 7px 0 var(--k);
+}
+
+.dm-neobrutalism__box--y {
+  background: var(--y);
+}
+
+.dm-neobrutalism__box--m {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-neobrutalism__box--c {
+  background: var(--c);
+}
+
+.dm-neobrutalism__box h3 {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding-bottom: 8px;
+}
+
+.dm-neobrutalism__box .v {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-neobrutalism__box .t {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding-top: 7px;
+  line-height: 1.6;
+}
+
+.dm-neobrutalism__btn {
+  display: block;
+  border: 3px solid var(--k);
+  background: var(--k);
+  color: var(--y);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 12px 16px;
+  text-align: center;
+  box-shadow: 7px 7px 0 var(--m);
+}
+
+.dm-neobrutalism__btn:hover {
+  background: var(--m);
+  color: var(--k);
+  box-shadow: 7px 7px 0 var(--k);
+}
+
+/* --- 単語詳細 ---------------------------------------------- */
+.dm-neobrutalism__crumb {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.dm-neobrutalism__crumb a {
+  border: 2px solid var(--k);
+  background: var(--y);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 10px;
+}
+
+.dm-neobrutalism__crumb a:hover {
+  background: var(--k);
+  color: var(--y);
+}
+
+.dm-neobrutalism__sense {
+  border: 4px solid var(--k);
+  background: var(--p);
+  box-shadow: 11px 11px 0 var(--k);
+  padding: 24px 24px 26px;
+}
+
+.dm-neobrutalism__sensetag {
+  display: inline-block;
+  background: var(--k);
+  color: var(--p);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 4px 11px;
+}
+
+.dm-neobrutalism__meaning {
+  font-size: 16px;
+  line-height: 1.95;
+  max-width: 44ch;
+  padding-top: 14px;
+}
+
+.dm-neobrutalism__chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+}
+
+.dm-neobrutalism__chips a {
+  border: 3px solid var(--k);
+  background: var(--c);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 4px 13px;
+  box-shadow: 4px 4px 0 var(--k);
+}
+
+.dm-neobrutalism__chips a:hover {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-neobrutalism__data {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.dm-neobrutalism__data div {
+  border: 3px solid var(--k);
+  background: var(--p);
+  box-shadow: 5px 5px 0 var(--k);
+  padding: 11px 14px 13px;
+}
+
+.dm-neobrutalism__data dt {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__data dd {
+  font-size: 17px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+/* 本文と要約ボックスの2カラム。節の間隔は 40px に統一。 */
+.dm-neobrutalism__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 296px;
+  gap: 24px;
+  align-items: start;
+}
+
+.dm-neobrutalism__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.dm-neobrutalism__toc {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dm-neobrutalism__toc span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__toc a {
+  font-size: 12.5px;
+  font-weight: 800;
+  border: 2px solid var(--k);
+  background: var(--p);
+  padding: 3px 11px;
+}
+
+.dm-neobrutalism__toc a:hover {
+  background: var(--k);
+  color: var(--y);
+}
+
+.dm-neobrutalism__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 16px;
+}
+
+.dm-neobrutalism__h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--k);
+  color: var(--p);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 8px 14px;
+}
+
+.dm-neobrutalism__h2 span {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--y);
+}
+
+.dm-neobrutalism__infobox {
+  border: 4px solid var(--k);
+  background: var(--p);
+  box-shadow: 9px 9px 0 var(--k);
+  position: sticky;
+  top: 16px;
+}
+
+.dm-neobrutalism__infobox h3 {
+  background: var(--y);
+  border-bottom: 4px solid var(--k);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 8px 14px;
+}
+
+.dm-neobrutalism__infobox div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 2px solid var(--k);
+}
+
+.dm-neobrutalism__infobox div:last-child {
+  border-bottom: 0;
+}
+
+.dm-neobrutalism__infobox dt {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--k2);
+  flex: none;
+}
+
+.dm-neobrutalism__infobox dd {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.dm-neobrutalism__props th {
+  width: 34%;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--k2);
+  padding: 10px 12px 10px 0;
+  border-bottom: 3px solid var(--k);
+  vertical-align: top;
+}
+
+.dm-neobrutalism__props td {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 0;
+  border-bottom: 3px solid var(--k);
+  word-break: break-all;
+}
+
+.dm-neobrutalism__relgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dm-neobrutalism__rellabel {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__rellist {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dm-neobrutalism__rellist a {
+  font-size: 15px;
+  font-weight: 700;
+  border: 3px solid var(--k);
+  background: var(--c);
+  box-shadow: 4px 4px 0 var(--k);
+  padding: 4px 12px;
+}
+
+.dm-neobrutalism__rellist a:hover {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-neobrutalism__note {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.9;
+  color: var(--k2);
+  max-width: 52em;
+}
+
+.dm-neobrutalism__note b {
+  color: var(--k);
+  background: var(--y);
+  padding: 0 4px;
+}
+
+/* トップの入口 */
+.dm-neobrutalism__entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 18px;
+}
+
+.dm-neobrutalism__entry {
+  border: 3px solid var(--k);
+  background: var(--p);
+  box-shadow: 6px 6px 0 var(--k);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.dm-neobrutalism__entry:nth-child(2) {
+  background: var(--c);
+}
+
+.dm-neobrutalism__entry:nth-child(3) {
+  background: var(--y);
+}
+
+.dm-neobrutalism__entry span {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__entry b {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.dm-neobrutalism__entry p {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.dm-neobrutalism__entry:hover {
+  box-shadow: 9px 9px 0 var(--k);
+}
+
+/* ランキングの並び順 */
+.dm-neobrutalism__kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dm-neobrutalism__kind {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  border: 3px solid var(--k);
+  background: var(--p);
+  box-shadow: 5px 5px 0 var(--k);
+  padding: 10px 14px;
+}
+
+.dm-neobrutalism__kind.is-on {
+  background: var(--y);
+}
+
+.dm-neobrutalism__kind:hover {
+  box-shadow: 8px 8px 0 var(--k);
+}
+
+.dm-neobrutalism__kind b {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.dm-neobrutalism__kind span {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__pager {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dm-neobrutalism__pager a {
+  flex: 1 1 220px;
+  border: 3px solid var(--k);
+  background: var(--y);
+  box-shadow: 6px 6px 0 var(--k);
+  padding: 12px 15px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.dm-neobrutalism__pager a:hover {
+  background: var(--c);
+}
+
+.dm-neobrutalism__pager span {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--k2);
+}
+
+/* --- ランキング -------------------------------------------- */
+.dm-neobrutalism__ranktitle {
+  border: 4px solid var(--k);
+  background: var(--m);
+  color: var(--p);
+  box-shadow: 11px 11px 0 var(--k);
+  padding: 22px 24px 24px;
+}
+
+.dm-neobrutalism__ranktitle h1 {
+  font-size: clamp(28px, 5.6vw, 52px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.dm-neobrutalism__ranktitle p {
+  font-size: 13px;
+  font-weight: 700;
+  padding-top: 12px;
+  max-width: 46ch;
+}
+
+.dm-neobrutalism__tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dm-neobrutalism__tabs a {
+  border: 3px solid var(--k);
+  background: var(--p);
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 6px 14px;
+  box-shadow: 5px 5px 0 var(--k);
+}
+
+.dm-neobrutalism__tabs a.is-on {
+  background: var(--k);
+  color: var(--y);
+}
+
+.dm-neobrutalism__seclabel {
+  display: inline-block;
+  align-self: flex-start;
+  background: var(--k);
+  color: var(--p);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 5px 13px;
+}
+
+.dm-neobrutalism__rank {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dm-neobrutalism__rankrow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 15px;
+  align-items: center;
+  border: 3px solid var(--k);
+  background: var(--p);
+  box-shadow: 6px 6px 0 var(--k);
+  padding: 11px 15px;
+}
+
+.dm-neobrutalism__rankrow:hover {
+  background: var(--y);
+  box-shadow: 9px 9px 0 var(--k);
+}
+
+.dm-neobrutalism__rankrow .rk {
+  border: 3px solid var(--k);
+  background: var(--c);
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+  padding: 2px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-neobrutalism__rankrow:first-child .rk {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-neobrutalism__rankrow .nm {
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.dm-neobrutalism__rankrow .nm small {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--k2);
+}
+
+.dm-neobrutalism__rankrow .vl {
+  font-size: 28px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-neobrutalism__dist {
+  border: 4px solid var(--k);
+  background: var(--p);
+  box-shadow: 9px 9px 0 var(--k);
+  padding: 18px 20px 20px;
+}
+
+.dm-neobrutalism__dist h3 {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding-bottom: 12px;
+}
+
+.dm-neobrutalism__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 170px;
+}
+
+.dm-neobrutalism__bars div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  height: 100%;
+}
+
+.dm-neobrutalism__bars i {
+  display: block;
+  width: 100%;
+  background: var(--c);
+  border: 3px solid var(--k);
+  border-bottom: 0;
+}
+
+.dm-neobrutalism__bars div.is-low i {
+  background: var(--m);
+}
+
+.dm-neobrutalism__bars b {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-neobrutalism__barsax {
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 3px solid var(--k);
+}
+
+.dm-neobrutalism__barsax span {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 940px) {
+  .dm-neobrutalism__layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .dm-neobrutalism__infobox {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .dm-neobrutalism__wrap {
+    padding: 22px 16px 48px;
+  }
+
+  .dm-neobrutalism__cols {
+    grid-template-columns: 1fr;
+  }
+
+  .dm-neobrutalism__kind {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

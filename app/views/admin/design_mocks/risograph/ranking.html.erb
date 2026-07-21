@@ -1,0 +1,55 @@
+<% max_count = mock_distribution.map(&:last).max %>
+<div class="dm-risograph__wrap">
+  <%= render "admin/design_mocks/risograph/head" %>
+
+  <h1 class="dm-risograph__ranktitle">長いぞ<br>ランキング</h1>
+  <p class="dm-risograph__ranksub">収録 <%= mock_stats[:words] %> 語を読みの長さ順に。16もじに届くのはたった6語しかない。</p>
+
+  <div class="dm-risograph__label">並び順をえらぶ</div>
+  <div class="dm-risograph__kinds" style="margin-top: 14px">
+    <% mock_ranking_kinds.each_with_index do |kind, index| %>
+      <a class="dm-risograph__kind<%= " is-on" if index.zero? %>" href="#">
+        <b><%= kind[:label] %></b>
+        <span><%= kind[:note] %></span>
+      </a>
+    <% end %>
+  </div>
+
+  <div class="dm-risograph__label">読みが長い順</div>
+  <% mock_words.take(6).each_with_index do |word, index| %>
+    <a class="dm-risograph__rankrow" href="#">
+      <span class="rk"><%= index + 1 %></span>
+      <span class="nm"><%= word.surface %><small><%= word.reading %></small></span>
+      <span class="vl"><%= word.length %></span>
+    </a>
+  <% end %>
+
+  <div class="dm-risograph__label">円環交差数が多い順</div>
+  <% mock_crossing_ranking.take(4).each_with_index do |word, index| %>
+    <a class="dm-risograph__rankrow" href="#">
+      <span class="rk"><%= index + 1 %></span>
+      <span class="nm"><%= word.surface %><small><%= word.reading %></small></span>
+      <span class="vl"><%= word.crossing %></span>
+    </a>
+  <% end %>
+
+  <div class="dm-risograph__label">もじ数ごとの収録数</div>
+  <div class="dm-risograph__dist">
+    <% mock_distribution.each do |_length, count| %>
+      <div class="<%= "is-low" if count < 50 %>">
+        <b><%= count %></b>
+        <i style="height: <%= (count.to_f / max_count * 84).round %>%"></i>
+      </div>
+    <% end %>
+  </div>
+  <div class="dm-risograph__distax">
+    <% mock_distribution.each do |length, _count| %>
+      <span><%= length %></span>
+    <% end %>
+  </div>
+
+  <div class="dm-risograph__label">計測のしかた</div>
+  <p class="dm-risograph__note" style="padding-top: 14px">
+    <b>読みのもじ数</b>はカタカナ表記の字数。長音符「ー」も小書き文字も1字とかぞえます。<b>円環交差数</b>は五十音を円環にならべ、読みの順に線でむすんだときの交差回数です。
+  </p>
+</div>

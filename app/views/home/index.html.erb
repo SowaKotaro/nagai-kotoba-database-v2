@@ -1,77 +1,105 @@
-<%# ホーム: 型見本の表紙。ステートメント → 今日の一語(巨大) → 探し方の導線 → 収録統計 → 新着
-    (キーワード検索はヘッダーに常設しているため、ここには置かない) %>
+<%# ホーム: 主役は検索。見出し → 短い説明 → ページ最大の検索バー → 統計 → 3カラム。
+    「今日の一語」は3カラムの1面に置き、検索より目立たせない。 %>
 <%# <title> はタグライン付き、meta description は長めの専用文言(ヒーロー見出しとは別管理) %>
 <% content_for :title, t("home.index.title_tagline") %>
 <% content_for :description, t("home.index.meta_description") %>
-<section class="hero">
-  <h1 class="hero__lead"><%= t("home.index.description") %></h1>
 
-  <% if @featured_word %>
-    <div class="hero-featured">
-      <p class="hero-featured__label"><%= icon "sparkle" %><%= t("home.index.featured") %></p>
-      <%= link_to @featured_word.surface, word_path(@featured_word), class: "hero-featured__word" %>
-      <p class="hero-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
-    </div>
+<section class="hero">
+  <h1 class="hero__title"><%= t("home.index.hero_title") %></h1>
+  <p class="hero__lead"><%= t("home.index.description") %></p>
+
+  <%= form_with url: words_path, method: :get, class: "hero-search" do %>
+    <%= icon "magnifying_glass" %>
+    <%= text_field_tag :q, nil, placeholder: t("home.index.search_placeholder"),
+          class: "hero-search__input", aria: { label: t("searches.q_label") } %>
+    <button type="submit" class="hero-search__submit"><%= t("layouts.search_submit") %></button>
   <% end %>
 
-  <%# 探し方の導線。墨1px枠のパネルを並べ、各検索ページへ誘う %>
-  <nav class="hero-entries" aria-label="<%= t("home.index.entries.label") %>">
-    <%= link_to genres_path, class: "hero-entry" do %>
-      <%= icon "tag" %><span><%= t("home.index.entries.genres") %></span><%= icon "arrow_right", "hero-entry__arrow" %>
-    <% end %>
-    <%= link_to browse_path, class: "hero-entry" do %>
-      <%= icon "grid_nine" %><span><%= t("home.index.entries.browse") %></span><%= icon "arrow_right", "hero-entry__arrow" %>
-    <% end %>
-    <%= link_to search_path, class: "hero-entry" do %>
-      <%= icon "funnel" %><span><%= t("home.index.entries.search") %></span><%= icon "arrow_right", "hero-entry__arrow" %>
-    <% end %>
-  </nav>
+  <p class="hero__sub">
+    <%= link_to search_path do %><%= t("home.index.advanced") %><%= icon "arrow_right" %><% end %>
+  </p>
 </section>
 
 <dl class="stats-grid">
   <div class="stats-grid__item">
-    <dt><%= icon "books" %><%= t("home.index.stats.words") %></dt>
+    <dt><%= t("home.index.stats.words") %></dt>
     <dd><%= number_with_delimiter(@word_count) %><span class="stats-grid__unit"><%= t("home.index.stats.words_unit") %></span></dd>
   </div>
   <div class="stats-grid__item">
-    <dt><%= icon "book_open" %><%= t("home.index.stats.senses") %></dt>
+    <dt><%= t("home.index.stats.senses") %></dt>
     <dd><%= number_with_delimiter(@sense_count) %><span class="stats-grid__unit"><%= t("home.index.stats.senses_unit") %></span></dd>
   </div>
   <div class="stats-grid__item">
-    <dt><%= icon "tag" %><%= t("home.index.stats.genres") %></dt>
+    <dt><%= t("home.index.stats.genres") %></dt>
     <dd><%= number_with_delimiter(@genre_count) %><span class="stats-grid__unit"><%= t("home.index.stats.genres_unit") %></span></dd>
   </div>
+  <%# 「長い言葉の」データベースであることが数字で分かる指標。語が無いうちは出さない %>
+  <% if @average_reading_length %>
+    <div class="stats-grid__item">
+      <dt><%= t("home.index.stats.average_reading") %></dt>
+      <dd><%= number_with_precision(@average_reading_length, precision: 1) %><span class="stats-grid__unit"><%= t("home.index.stats.average_reading_unit") %></span></dd>
+    </div>
+  <% end %>
 </dl>
 
-<% if @longest_words.any? %>
-  <%# 最長ランキング(読みが長い順)。「一番長い言葉は?」に一発で応える導線 %>
-  <section>
-    <div class="section-header">
-      <h2 class="section-heading"><%= icon "ruler" %><%= t("home.index.ranking") %></h2>
-      <%# 最長以外のランキングも束ねたランキングページへ送る(全順位はその先の「もっと見る」から) %>
-      <%= link_to rankings_path, class: "section-header__more icon-label" do %>
-        <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
+<%# 今日の一語は全幅の帯で1つだけ置く(3カラムに混ぜると中身が薄く縦に間延びするため)。
+    ただし検索より目立たせないよう、見出し語はヒーローよりずっと小さく組む。 %>
+<% if @featured_word %>
+  <% featured_sense = @featured_word.word_senses.first %>
+  <section class="home-featured">
+    <%# 見出し行は下の2カラムと同じ組み(左にラベル、右端に導線) %>
+    <div class="home-column__header">
+      <h2 class="home-column__title"><%= icon "sparkle" %><%= t("home.index.featured") %></h2>
+      <%= link_to word_path(@featured_word), class: "home-featured__more" do %>
+        <%= t("home.index.featured_more") %><%= icon "arrow_right" %>
       <% end %>
     </div>
-    <div class="entry-list">
-      <%= render partial: "words/entry_row", collection: @longest_words, as: :word %>
+    <div class="home-featured__body">
+      <div class="home-featured__headword">
+        <%= link_to @featured_word.surface, word_path(@featured_word), class: "home-featured__word" %>
+        <p class="home-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
+      </div>
+      <% if featured_sense&.meaning.present? %>
+        <p class="home-featured__meaning"><%= truncate(featured_sense.meaning, length: 120) %></p>
+      <% end %>
     </div>
   </section>
 <% end %>
 
-<section>
-  <div class="section-header">
-    <h2 class="section-heading"><%= icon "bell_ringing" %><%= t("home.index.recent") %></h2>
-    <%= link_to words_path, class: "section-header__more icon-label" do %>
-      <%= t("home.index.see_all") %><%= icon "arrow_right" %>
-    <% end %>
-  </div>
-
-  <% if @recent_words.empty? %>
-    <p class="empty-note"><%= icon "binoculars" %><%= t("words.index.empty") %></p>
-  <% else %>
-    <div class="entry-list">
-      <%= render partial: "words/entry_row", collection: @recent_words, as: :word %>
+<div class="home-columns">
+  <section class="home-column">
+    <div class="home-column__header">
+      <h2 class="home-column__title"><%= icon "bell_ringing" %><%= t("home.index.recent") %></h2>
+      <%= link_to t("home.index.see_all"), words_path, class: "home-column__more" %>
     </div>
-  <% end %>
-</section>
+    <% @recent_words.each do |word| %>
+      <%= link_to word_path(word), class: "home-column__item" do %>
+        <span class="home-column__mark home-column__mark--new"><%= t("home.index.new_badge") %></span>
+        <span class="home-column__body">
+          <span class="home-column__word"><%= word.surface %></span>
+          <span class="home-column__reading"><%= word.word_senses.first&.reading %></span>
+        </span>
+        <span class="home-column__meta"><%= l(word.created_at.to_date, format: :short) %></span>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="home-column">
+    <div class="home-column__header">
+      <h2 class="home-column__title"><%= icon "crown" %><%= t("home.index.ranking") %></h2>
+      <%= link_to t("home.index.see_ranking"), rankings_path, class: "home-column__more" %>
+    </div>
+    <% @longest_words.take(5).each_with_index do |word, index| %>
+      <%= link_to word_path(word), class: "home-column__item" do %>
+        <span class="home-column__mark"><%= index + 1 %></span>
+        <span class="home-column__body">
+          <span class="home-column__word"><%= word.surface %></span>
+          <span class="home-column__reading"><%= word.word_senses.first&.reading %></span>
+        </span>
+        <% if (length = word.word_senses.first&.reading_length) %>
+          <span class="home-column__meta"><%= t("words.index.char_count", count: length) %></span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </section>
+</div>

@@ -1,0 +1,60 @@
+<% max_crossing = mock_crossing_ranking.first.crossing %>
+<% max_count = mock_distribution.map(&:last).max %>
+<div class="dm-measure__wrap">
+  <%= render "admin/design_mocks/measure/head" %>
+
+  <div class="dm-measure__rankhead">
+    <h1>計測記録一覧</h1>
+    <p>収録している <%= mock_stats[:words] %> 語を、読みの長さと円環交差数で並べた記録。数値はすべて登録時に自動計測したもの。</p>
+  </div>
+
+  <div class="dm-measure__sectitle"><span>並び順を選ぶ</span><span>4 種</span></div>
+  <div class="dm-measure__kinds">
+    <% mock_ranking_kinds.each_with_index do |kind, index| %>
+      <a class="dm-measure__kind<%= " is-on" if index.zero? %>" href="#">
+        <b><%= kind[:label] %></b>
+        <span><%= kind[:note] %></span>
+      </a>
+    <% end %>
+  </div>
+
+  <div class="dm-measure__sectitle"><span>読みの文字数／上位</span><span>単位：字</span></div>
+  <% mock_words.take(7).each_with_index do |word, index| %>
+    <div class="dm-measure__rankrow">
+      <span class="rk"><%= format("%02d", index + 1) %></span>
+      <a class="nm" href="#"><%= word.surface %></a>
+      <span class="tr"><i style="width: <%= (word.length / 16.0 * 100).round %>%"></i></span>
+      <span class="vl"><%= word.length %></span>
+    </div>
+  <% end %>
+
+  <div class="dm-measure__sectitle"><span>円環交差数／上位</span><span>単位：回</span></div>
+  <% mock_crossing_ranking.each_with_index do |word, index| %>
+    <div class="dm-measure__rankrow">
+      <span class="rk"><%= format("%02d", index + 1) %></span>
+      <a class="nm" href="#"><%= word.surface %></a>
+      <span class="tr"><i style="width: <%= (word.crossing.to_f / max_crossing * 100).round %>%"></i></span>
+      <span class="vl"><%= word.crossing %></span>
+    </div>
+  <% end %>
+
+  <div class="dm-measure__sectitle"><span>読みの文字数／分布</span><span>単位：語</span></div>
+  <div class="dm-measure__hist">
+    <% mock_distribution.each do |_length, count| %>
+      <div class="<%= "is-low" if count < 50 %>">
+        <b><%= count %></b>
+        <i style="height: <%= (count.to_f / max_count * 88).round %>%"></i>
+      </div>
+    <% end %>
+  </div>
+  <div class="dm-measure__histax">
+    <% mock_distribution.each do |length, _count| %>
+      <span><%= length %></span>
+    <% end %>
+  </div>
+
+  <div class="dm-measure__sectitle"><span>計測方法</span></div>
+  <p class="dm-measure__note">
+    <b>読みの文字数</b>はカタカナ表記の字数で、長音符「ー」と小書き文字も1字として数えます。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数です。いずれも登録時に自動計測し、値の更新は表記の修正時のみ行います。
+  </p>
+</div>

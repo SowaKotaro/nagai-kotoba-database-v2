@@ -1,0 +1,109 @@
+/* モックの外枠。切替バーと、各案が影響を受けないための最小リセット。 */
+
+.dm-body {
+  margin: 0;
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dm-body *,
+.dm-body *::before,
+.dm-body *::after {
+  box-sizing: border-box;
+}
+
+/* 案・ページの切替バー。各案の様式には属さない中立の帯として黒で固定する。 */
+.dm-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: #16181c;
+  color: #e9ebee;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dm-bar a {
+  color: #e9ebee;
+  text-decoration: none;
+}
+
+.dm-bar__back {
+  border: 1px solid #4a4f57;
+  padding: 3px 9px;
+}
+
+.dm-bar__back:hover {
+  background: #e9ebee;
+  color: #16181c;
+}
+
+.dm-bar__now {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.dm-bar__group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dm-bar__group--styles {
+  margin-left: auto;
+  color: #8b929c;
+}
+
+.dm-bar__link {
+  padding: 3px 9px;
+  color: #a8aeb8;
+}
+
+.dm-bar__link:hover {
+  color: #fff;
+  background: #33373f;
+}
+
+.dm-bar__link.is-on {
+  background: #e9ebee;
+  color: #16181c;
+}
+
+/* 各案の共通土台。文字色・書体は各案が自分で決める。
+   リセットは :where() で包んで詳細度を 0 にする。素のセレクタ(.dm a など)にすると
+   各案のクラス1つのセレクタ(.dm-neobrutalism__btn 等)より強くなり、色指定を
+   打ち消してしまうため(黒地に黒文字などの事故になる)。 */
+.dm {
+  min-height: 90vh;
+}
+
+:where(.dm) :where(h1, h2, h3, h4, p, dl, dd, dt, ul, ol, figure) {
+  margin: 0;
+  padding: 0;
+}
+
+:where(.dm) :where(ul, ol) {
+  list-style: none;
+}
+
+:where(.dm) :where(a) {
+  text-decoration: none;
+  color: inherit;
+}
+
+:where(.dm) :where(table) {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+:where(.dm) :where(img) {
+  max-width: 100%;
+}
+
+.dm :focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}

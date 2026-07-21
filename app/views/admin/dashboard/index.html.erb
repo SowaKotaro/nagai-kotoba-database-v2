@@ -48,6 +48,12 @@
     <span class="admin-card__desc"><%= t("admin.dashboard.tags_desc") %></span>
     <span class="admin-card__tag"><%= t("admin.dashboard.tags_tag") %></span>
   <% end %>
+
+  <%= link_to admin_design_mocks_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= t("admin.dashboard.design_mocks_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.design_mocks_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.design_mocks_tag") %></span>
+  <% end %>
 </div>
 
 <p class="search-switch">

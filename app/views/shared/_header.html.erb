@@ -1,5 +1,6 @@
-<%# グローバルヘッダー(docs/design.md §5.1)。印章ロゴ + ナビ(現在地表示) + 常設のキーワード検索。
-    狭幅ではナビ+検索をハンバーガーで開閉するサイドパネルに格納する(nav-drawer コントローラ)。 %>
+<%# グローバルヘッダー(docs/design.md §5.1)。印章ロゴ + ナビ(現在地表示)。
+    キーワード検索はヘッダーに常設せず、トップページのヒーロー中央に置く(検索を主役にするため)。
+    狭幅ではナビをハンバーガーで開閉するサイドパネルに格納する(nav-drawer コントローラ)。 %>
 <header class="site-header" data-controller="nav-drawer"
         data-nav-drawer-open-label-value="<%= t("layouts.menu_open") %>"
         data-nav-drawer-close-label-value="<%= t("layouts.menu_close") %>">
@@ -60,13 +61,6 @@
           <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>
         <% end %>
       </nav>
-
-      <%# 常設のキーワード検索(下線1本。枠で囲わない)。Enter で単語一覧の絞り込みへ %>
-      <%= form_with url: words_path, method: :get, class: "header-search" do %>
-        <%= text_field_tag :q, nil, placeholder: t("layouts.search_placeholder"),
-              class: "header-search__input", aria: { label: t("searches.q_label") } %>
-        <button type="submit" class="header-search__submit" aria-label="<%= t("layouts.search_submit") %>"><%= icon "magnifying_glass" %></button>
-      <% end %>
     </div>
 
     <div class="nav-drawer__scrim" data-nav-drawer-target="scrim" data-action="click->nav-drawer#close"></div>

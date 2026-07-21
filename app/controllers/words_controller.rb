@@ -64,7 +64,7 @@ class WordsController < ApplicationController
     scope = filtered_words
     @total_count = scope.count
     @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
-    @words = scope.includes(word_senses: [ :entity_type, :part_of_speech ])
+    @words = scope.includes(word_senses: [ :entity_type, :part_of_speech, { genre: :parent } ])
                   .order(@sort.order_clause)
                   .limit(PER_PAGE)
                   .offset((@page - 1) * PER_PAGE)

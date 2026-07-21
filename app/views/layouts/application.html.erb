@@ -47,8 +47,8 @@
         JS 無効環境では noscript 側の通常読み込みにフォールバックする。 %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap"></noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho:wght@500;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho:wght@500;600&display=swap"></noscript>
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
@@ -74,27 +74,48 @@
       <%= yield %>
     </main>
 
+    <%# 奥付。紙の色のまま細罫で仕切り、リンクは細いタイポグラフィで静かに並べる %>
     <footer class="site-footer">
       <div class="site-footer__inner">
         <div class="site-footer__about">
           <p class="site-footer__brand"><%= t("layouts.brand") %></p>
           <p class="site-footer__desc"><%= t("layouts.footer.about") %></p>
+          <nav class="site-footer__nav">
+            <%= link_to about_path, class: "icon-label" do %><%= t("layouts.footer.more") %><%= icon "arrow_right" %><% end %>
+          </nav>
         </div>
-        <nav class="site-footer__nav" aria-label="<%= t("layouts.footer.nav_label") %>">
-          <%= link_to t("layouts.nav.words"), words_path %>
-          <%= link_to t("layouts.nav.ranking"), rankings_path %>
-          <%= link_to t("layouts.nav.genres"), genres_path %>
-          <%= link_to t("layouts.nav.browse"), browse_path %>
-          <%= link_to t("layouts.nav.stats"), stats_path %>
-          <%= link_to t("layouts.nav.search"), search_path %>
-          <%= link_to t("layouts.nav.about"), about_path %>
-          <%= link_to t("layouts.nav.privacy"), privacy_path %>
-          <% if authenticated? %>
-            <%= link_to t("layouts.nav.admin"), admin_words_path %>
-          <% else %>
-            <%= link_to t("layouts.footer.admin_login"), new_session_path %>
-          <% end %>
-        </nav>
+
+        <div>
+          <h2 class="site-footer__col-title"><%= t("layouts.footer.col_search") %></h2>
+          <nav class="site-footer__nav" aria-label="<%= t("layouts.footer.nav_label") %>">
+            <%= link_to t("layouts.nav.words"), words_path %>
+            <%= link_to t("layouts.nav.genres"), genres_path %>
+            <%= link_to t("layouts.nav.browse"), browse_path %>
+            <%= link_to t("layouts.nav.advanced_search"), search_path %>
+            <%= link_to t("layouts.footer.random"), random_words_path %>
+          </nav>
+        </div>
+
+        <div>
+          <h2 class="site-footer__col-title"><%= t("layouts.footer.col_data") %></h2>
+          <nav class="site-footer__nav">
+            <%= link_to t("layouts.nav.ranking"), rankings_path %>
+            <%= link_to t("layouts.nav.stats"), stats_path %>
+          </nav>
+        </div>
+
+        <div>
+          <h2 class="site-footer__col-title"><%= t("layouts.footer.col_site") %></h2>
+          <nav class="site-footer__nav">
+            <%= link_to t("layouts.nav.about"), about_path %>
+            <%= link_to t("layouts.nav.privacy"), privacy_path %>
+            <% if authenticated? %>
+              <%= link_to t("layouts.nav.admin"), admin_words_path %>
+            <% else %>
+              <%= link_to t("layouts.footer.admin_login"), new_session_path %>
+            <% end %>
+          </nav>
+        </div>
       </div>
       <div class="site-footer__bottom">
         <div class="site-footer__bottom-inner"><%= t("layouts.footer.copyright", year: Date.current.year) %></div>

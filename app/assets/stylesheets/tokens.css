@@ -1,36 +1,39 @@
-/* デザイントークン「活字見本帖」(docs/design.md)。
-   色・フォント・余白はここ以外で直書きしない。角丸・影のトークンは存在しない(使用禁止)。 */
+/* デザイントークン(docs/design.md)。色・フォント・余白はここ以外で直書きしない。
+   方針: 文字が主役、UI は文字を引き立てる額縁。図書館・辞書・学術書の静けさ。 */
 :root {
-  /* 紙と墨: 高コントラスト */
-  --bg: #FAF8F3;          /* 温かみのある白(紙) */
-  --ink: #191813;         /* ほぼ黒の墨 */
-  --ink-2: #5C5950;       /* 補足文 */
-  --ink-3: #7C7969;       /* メタ情報(最も弱い文字。これ以上薄くしない) */
-  --rule: #E4E1D5;        /* 細罫(ヘアライン) */
-  --rule-mid: #C9C5B4;    /* 中間の罫(入力の下線など) */
+  /* 紙と墨。コントラストは十分に、ただし黒すぎない */
+  --bg: #faf8f4;          /* 紙(温かみのある白) */
+  --bg-soft: #f3f0ea;     /* hover などのごく淡い面。単独の背景色としては使わない */
+  --paper: #ffffff;       /* 操作要素(入力・ボタン・チップ)だけを地から一段持ち上げる白 */
+  --ink: #202020;         /* 本文・見出し */
+  --ink-2: #575757;       /* 補足文 */
+  --ink-3: #777777;       /* メタ情報(最も弱い文字。これ以上薄くしない) */
+  --rule: #e5e2dc;        /* 細罫(ヘアライン) */
+  --rule-mid: #d3cfc6;    /* 中間の罫(入力の下線・枠など) */
 
-  /* 朱: ふりがな・注釈・現在地・ブランド印章。唯一のアクセント */
-  --shu: #C43A1E;
-  --shu-deep: #A62E15;    /* hover */
+  /* 朱: 唯一のアクセント。使用量はページ全体の 5% 以下に抑える。
+     見出し・本文には使わず、本当に強調したい箇所(現在地・ふりがな・印章)だけに使う */
+  --shu: #b94e2f;
+  --shu-deep: #9b3f25;    /* hover */
 
   /* 緑: 管理画面の「満たされている」状態表示だけに使う色(オーナー承認の例外)。
-     design.md の「朱一色」方針の外だが、即時判別のため限定導入。用途は以下に限る:
+     用途は以下に限る:
        - 一括登録 step2 の「読み一致」バッジ(一致=緑 / 不一致=朱)
        - アノテーション・コンソールで最低限の項目が揃った語義カードの枠 */
-  --midori: #2F7A45;
+  --midori: #2f7a45;
 
-  /* 墨ベタ面(フッター)の上で使う文字色 */
-  --on-ink: #FAF8F3;
-  --on-ink-dim: #B6B3A6;
-  --on-ink-rule: #3B3931;
+  /* 濃い面(管理画面の一部で使う)の上に載せる文字色 */
+  --on-ink: #faf8f4;
+  --on-ink-dim: #b6b3a6;
+  --on-ink-rule: #3b3931;
 
-  /* タイポグラフィ: 見出し語は明朝を巨大に、データラベルは極小の等幅 */
-  --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
-  --font-gothic: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
-                 "Noto Sans JP", system-ui, sans-serif;
+  /* タイポグラフィ: 見出しは明朝を大胆に、本文は読みやすいゴシックで長時間読めるように */
+  --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --font-gothic: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
+                 system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* 余白スケール */
+  /* 余白スケール。1〜7 は要素の内側、8〜9 はセクションどうしの間隔に使う */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -38,6 +41,16 @@
   --space-5: 24px;
   --space-6: 36px;
   --space-7: 56px;
+  --space-8: 80px;
+  --space-9: 120px;
 
+  /* 角丸は操作要素(ボタン・入力・チップ)だけに、この 1 段階のみ使う。
+     面やカードは角丸にしない(罫線で整理する) */
+  --radius: 4px;
+
+  /* 1200px まで広げたが間延びしたため、従来の 1040px に戻した(オーナー判断) */
   --content-width: 1040px;
+
+  /* 状態変化は 200ms のフェード相当に統一する(動きで飾らない) */
+  --transition: 200ms ease;
 }

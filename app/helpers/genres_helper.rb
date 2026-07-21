@@ -8,6 +8,14 @@ module GenresHelper
     children.sum { |child| genre_published_count(child, by_parent, counts) }
   end
 
+  # 一覧の1行に添える短いジャンル表記。末端(小分類)だけだと何の分野か伝わらないので、
+  # 直上(中分類)と中黒で繋いで「数学・論理学」の形にする。大分類まで並べると長すぎるので出さない。
+  GENRE_LINEAGE_SEPARATOR = "・".freeze
+
+  def genre_lineage_label(genre)
+    [ genre.parent&.name, genre.name ].compact.join(GENRE_LINEAGE_SEPARATOR)
+  end
+
   # 公開語義が1件以上ある子ジャンルだけを返す(空の分類・空リンクを載せない)。
   def genres_with_published(parent_id, by_parent, counts)
     (by_parent[parent_id] || []).select { |genre| genre_published_count(genre, by_parent, counts).positive? }

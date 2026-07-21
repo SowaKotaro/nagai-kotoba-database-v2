@@ -64,6 +64,10 @@ Rails.application.routes.draw do
       # 提案の「新設候補」マスタをワンタップ作成し、再反映して戻る(Issue 66)。
       post :create_master, on: :member
     end
+    # デザイン案モック(知人への意見募集用)。DB に触らない完全静的のモックで、
+    # docs/design.md のデザインルールは適用しない(この配下だけの例外)。
+    get "design_mocks",              to: "design_mocks#index", as: :design_mocks
+    get "design_mocks/:style/:page", to: "design_mocks#show",  as: :design_mock
     # タグ統括管理: マスタ(ジャンル/エンティティ/品詞/語種/特徴)の一覧・リネーム・削除・統合。
     # :kind は TagKind のホワイトリストで解決する(任意モデルを掴ませない)。
     resources :tags, only: :index
