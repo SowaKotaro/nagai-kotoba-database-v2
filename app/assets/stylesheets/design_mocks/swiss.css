@@ -1,0 +1,972 @@
+/* 案5「スイススタイル」— 12カラムのグリッド、Helvetica、赤と黒。
+   幾何学図形(円・半円・対角線・矩形)を構成要素として多めに使う。 */
+
+.dm-swiss {
+  --p: #fff;
+  --k: #0d0d0d;
+  --k2: #8a8a8a;
+  --ln: #dcdcdc;
+  --r: #e1000f;
+
+  background: var(--p);
+  color: var(--k);
+  font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.dm-swiss__grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 16px;
+}
+
+.dm-swiss__head {
+  border-bottom: 1px solid var(--k);
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dm-swiss__brand {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dm-swiss__nav {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k2);
+}
+
+.dm-swiss__nav a:hover {
+  color: var(--r);
+}
+
+.dm-swiss__nav a.is-on {
+  color: var(--r);
+}
+
+/* --- 図形を敷いたポスター面 -------------------------------- */
+.dm-swiss__poster {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--k);
+  padding: 52px 28px 44px;
+  min-height: 340px;
+}
+
+.dm-swiss__shapes span {
+  position: absolute;
+  display: block;
+}
+
+/* 赤い円板。文字数を円の中に白抜きで入れて、図形とデータを一体にする。 */
+.dm-swiss__disc {
+  position: absolute;
+  top: -66px;
+  right: 5%;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  background: var(--r);
+  color: var(--p);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 54px;
+  z-index: 0;
+}
+
+.dm-swiss__disc b {
+  font-size: clamp(48px, 8vw, 92px);
+  font-weight: 700;
+  line-height: 0.84;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__disc small {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding-top: 6px;
+}
+
+.dm-swiss__shapes .ring {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  border: 22px solid var(--k);
+  bottom: -80px;
+  right: 26%;
+}
+
+.dm-swiss__shapes .quarter {
+  width: 150px;
+  height: 150px;
+  background: var(--k);
+  border-radius: 150px 0 0 0;
+  bottom: 0;
+  left: 40%;
+}
+
+.dm-swiss__shapes .bar {
+  width: 46%;
+  height: 14px;
+  background: var(--r);
+  bottom: 62px;
+  left: 0;
+}
+
+/* 対角線は見出しの下（図形どうしが重なる帯）に置く。上部に置くと文字に線がかかる。 */
+.dm-swiss__shapes .diag {
+  width: 210px;
+  height: 1px;
+  background: var(--k);
+  bottom: 26px;
+  left: 10%;
+  transform: rotate(-28deg);
+  transform-origin: left center;
+}
+
+.dm-swiss__postertext {
+  position: relative;
+  z-index: 1;
+  max-width: 62%;
+}
+
+.dm-swiss__kicker {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--r);
+  border-top: 3px solid var(--r);
+  padding-top: 8px;
+  display: inline-block;
+}
+
+.dm-swiss__title {
+  font-size: clamp(30px, 6.4vw, 68px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.038em;
+  padding-top: 18px;
+}
+
+.dm-swiss__title a:hover {
+  color: var(--r);
+}
+
+.dm-swiss__yomi {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k2);
+  padding-top: 16px;
+}
+
+/* --- 本文ブロック ------------------------------------------ */
+.dm-swiss__body {
+  padding: 30px 28px 0;
+}
+
+.dm-swiss__lead {
+  grid-column: 3 / 8;
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 44ch;
+}
+
+.dm-swiss__lead b {
+  color: var(--r);
+  font-weight: 400;
+}
+
+.dm-swiss__vlabel {
+  grid-column: 1 / 3;
+  writing-mode: vertical-rl;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--k2);
+  border-left: 3px solid var(--r);
+  padding-left: 8px;
+  height: 100%;
+}
+
+.dm-swiss__figures {
+  grid-column: 9 / 13;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-swiss__figures div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--ln);
+  padding: 7px 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k2);
+}
+
+.dm-swiss__figures b {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--k);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 円グラフ(ハードストップの円錐グラデーション)と凡例 */
+.dm-swiss__donut {
+  grid-column: 1 / 5;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dm-swiss__donut .pie {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  flex: none;
+  background: conic-gradient(var(--r) 0 46%, var(--k) 46% 78%, var(--ln) 78% 100%);
+}
+
+.dm-swiss__donut ul {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dm-swiss__donut li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dm-swiss__donut i {
+  width: 11px;
+  height: 11px;
+  display: block;
+  flex: none;
+}
+
+.dm-swiss__donut i.is-r {
+  background: var(--r);
+}
+
+.dm-swiss__donut i.is-k {
+  background: var(--k);
+}
+
+.dm-swiss__donut i.is-l {
+  background: var(--ln);
+}
+
+.dm-swiss__cols {
+  grid-column: 6 / 13;
+}
+
+.dm-swiss__rule {
+  grid-column: 1 / 13;
+  height: 1px;
+  background: var(--k);
+  margin: 30px 0 22px;
+}
+
+/* --- 索引・一覧 -------------------------------------------- */
+.dm-swiss__index {
+  padding: 30px 28px 36px;
+}
+
+.dm-swiss__ixlabel {
+  grid-column: 1 / 3;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k2);
+  border-top: 1px solid var(--k);
+  padding-top: 8px;
+}
+
+.dm-swiss__ixlist {
+  grid-column: 3 / 13;
+  border-top: 1px solid var(--k);
+}
+
+.dm-swiss__ixrow {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto 30px;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--ln);
+  padding: 13px 0;
+}
+
+.dm-swiss__ixrow:hover {
+  color: var(--r);
+}
+
+.dm-swiss__ixrow .no {
+  font-size: 11px;
+  color: var(--k2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__ixrow:hover .no {
+  color: var(--r);
+}
+
+.dm-swiss__ixrow .w {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  min-width: 0;
+}
+
+.dm-swiss__ixrow .y {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--k2);
+  text-align: right;
+}
+
+.dm-swiss__ixrow .c {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- 単語詳細 ---------------------------------------------- */
+.dm-swiss__crumb {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k2);
+  padding-bottom: 4px;
+}
+
+.dm-swiss__crumb span {
+  color: var(--r);
+}
+
+.dm-swiss__crumb a:hover {
+  color: var(--r);
+}
+
+/* 読みを1字ずつ入れた方眼(長さを図形で示す) */
+.dm-swiss__cells {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 26px 0 0;
+}
+
+.dm-swiss__cells i {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--k);
+  border-right: 0;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  font-style: normal;
+}
+
+.dm-swiss__cells i:last-child {
+  border-right: 1px solid var(--k);
+}
+
+.dm-swiss__cells i:nth-child(4n + 1) {
+  background: var(--r);
+  color: var(--p);
+}
+
+.dm-swiss__cellcap {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k2);
+  padding-top: 10px;
+}
+
+.dm-swiss__sense {
+  grid-column: 3 / 9;
+}
+
+.dm-swiss__sensenum {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--r);
+  border-top: 3px solid var(--r);
+  padding-top: 8px;
+  display: inline-block;
+}
+
+.dm-swiss__meaning {
+  font-size: 15px;
+  line-height: 1.9;
+  max-width: 42ch;
+  padding-top: 14px;
+}
+
+.dm-swiss__tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+}
+
+.dm-swiss__tags a {
+  font-size: 11.5px;
+  border: 1px solid var(--k);
+  padding: 4px 12px;
+  letter-spacing: 0.02em;
+}
+
+.dm-swiss__tags a:hover {
+  background: var(--r);
+  border-color: var(--r);
+  color: var(--p);
+}
+
+.dm-swiss__specs {
+  grid-column: 10 / 13;
+}
+
+/* 目次 */
+.dm-swiss__toc {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-top: 1px solid var(--k);
+  padding-top: 9px;
+}
+
+.dm-swiss__toc b {
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k2);
+}
+
+.dm-swiss__toc a {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.dm-swiss__toc a span {
+  font-size: 11px;
+  color: var(--k2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__toc a:hover {
+  color: var(--r);
+}
+
+/* 節。間隔は 48px に統一する。 */
+.dm-swiss__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.dm-swiss__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 16px;
+}
+
+.dm-swiss__h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--k);
+  padding-bottom: 8px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.dm-swiss__h2 span {
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k2);
+}
+
+/* 要約ボックス */
+.dm-swiss__infobox {
+  border-top: 3px solid var(--r);
+  position: sticky;
+  top: 16px;
+}
+
+.dm-swiss__infobox h3 {
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--r);
+  padding: 8px 0 10px;
+}
+
+.dm-swiss__infobox div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
+.dm-swiss__infobox dt {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k2);
+  flex: none;
+}
+
+.dm-swiss__infobox dd {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  min-width: 0;
+  word-break: break-all;
+}
+
+/* プロパティ表 */
+.dm-swiss__props th {
+  width: 34%;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k2);
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--ln);
+  vertical-align: top;
+}
+
+.dm-swiss__props td {
+  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ln);
+  word-break: break-all;
+}
+
+/* 関連する語 */
+.dm-swiss__relgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dm-swiss__rellabel {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k2);
+}
+
+.dm-swiss__rellist {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dm-swiss__rellist a {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border-bottom: 2px solid var(--k);
+}
+
+.dm-swiss__rellist a:hover {
+  color: var(--r);
+  border-bottom-color: var(--r);
+}
+
+/* 注記 */
+.dm-swiss__note {
+  font-size: 12.5px;
+  line-height: 1.95;
+  color: var(--k2);
+  max-width: 54em;
+}
+
+.dm-swiss__note b {
+  color: var(--k);
+  font-weight: 400;
+}
+
+/* トップの入口 */
+.dm-swiss__entries {
+  grid-column: 3 / 13;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 26px;
+}
+
+.dm-swiss__entry {
+  border-top: 1px solid var(--k);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dm-swiss__entry span {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--r);
+}
+
+.dm-swiss__entry b {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+
+.dm-swiss__entry p {
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--k2);
+}
+
+.dm-swiss__entry:hover b {
+  color: var(--r);
+}
+
+/* ランキングの並び順 */
+.dm-swiss__kinds {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--k);
+}
+
+.dm-swiss__kind {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
+.dm-swiss__kind b {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.dm-swiss__kind.is-on b,
+.dm-swiss__kind:hover b {
+  color: var(--r);
+}
+
+.dm-swiss__kind span {
+  font-size: 12px;
+  color: var(--k2);
+}
+
+/* --- ランキング -------------------------------------------- */
+.dm-swiss__rankhead {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--k);
+  padding: 40px 28px 34px;
+}
+
+.dm-swiss__rankhead h1 {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(28px, 6vw, 62px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  max-width: 60%;
+}
+
+.dm-swiss__rankhead p {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  color: var(--k2);
+  padding-top: 16px;
+  max-width: 46ch;
+}
+
+.dm-swiss__rankhead .halfcircle {
+  position: absolute;
+  width: 260px;
+  height: 130px;
+  background: var(--r);
+  border-radius: 260px 260px 0 0;
+  right: 40px;
+  bottom: 0;
+}
+
+.dm-swiss__rankhead .dotline {
+  position: absolute;
+  top: 26px;
+  right: 28px;
+  width: 180px;
+  height: 8px;
+  background: repeating-linear-gradient(90deg, var(--k) 0 8px, transparent 8px 16px);
+}
+
+.dm-swiss__bars {
+  padding: 30px 28px 0;
+}
+
+.dm-swiss__barrow {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 220px) 1fr 46px;
+  gap: 16px;
+  align-items: center;
+  border-bottom: 1px solid var(--ln);
+  padding: 10px 0;
+}
+
+.dm-swiss__barrow:hover .nm {
+  color: var(--r);
+}
+
+.dm-swiss__barrow .rk {
+  font-size: 11px;
+  color: var(--k2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__barrow .nm {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dm-swiss__barrow .tr i {
+  display: block;
+  height: 16px;
+  background: var(--k);
+}
+
+.dm-swiss__barrow:first-child .tr i {
+  background: var(--r);
+}
+
+.dm-swiss__barrow .vl {
+  text-align: right;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__dist {
+  padding: 34px 28px 40px;
+}
+
+.dm-swiss__distchart {
+  grid-column: 3 / 13;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 180px;
+  border-bottom: 1px solid var(--k);
+}
+
+.dm-swiss__distchart div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  height: 100%;
+}
+
+.dm-swiss__distchart i {
+  display: block;
+  width: 100%;
+  background: var(--k);
+}
+
+.dm-swiss__distchart div.is-low i {
+  background: var(--r);
+}
+
+.dm-swiss__distchart b {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--k2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__distax {
+  grid-column: 3 / 13;
+  display: flex;
+  gap: 14px;
+  padding-top: 7px;
+}
+
+.dm-swiss__distax span {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: var(--k2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-swiss__foot {
+  background: var(--k);
+  color: var(--p);
+  padding: 16px 28px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dm-swiss__foot span {
+  color: var(--r);
+}
+
+@media (max-width: 860px) {
+  .dm-swiss__lead,
+  .dm-swiss__figures,
+  .dm-swiss__donut,
+  .dm-swiss__cols,
+  .dm-swiss__sense,
+  .dm-swiss__specs,
+  .dm-swiss__ixlabel,
+  .dm-swiss__ixlist,
+  .dm-swiss__distchart,
+  .dm-swiss__distax,
+  .dm-swiss__entries,
+  .dm-swiss__main,
+  .dm-swiss__aside {
+    grid-column: 1 / 13;
+  }
+
+  .dm-swiss__infobox {
+    position: static;
+  }
+
+  .dm-swiss__main {
+    padding-top: 22px;
+  }
+
+  .dm-swiss__aside {
+    padding-top: 34px;
+  }
+
+  .dm-swiss__kind {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .dm-swiss__vlabel {
+    grid-column: 1 / 13;
+    writing-mode: horizontal-tb;
+    border-left: 0;
+    border-top: 3px solid var(--r);
+    padding: 8px 0 14px;
+    height: auto;
+  }
+
+  .dm-swiss__figures,
+  .dm-swiss__specs,
+  .dm-swiss__cols {
+    padding-top: 22px;
+  }
+
+  .dm-swiss__postertext {
+    max-width: 100%;
+  }
+
+  .dm-swiss__disc {
+    width: 190px;
+    height: 190px;
+    top: -54px;
+    right: -34px;
+    padding-bottom: 26px;
+  }
+
+  .dm-swiss__rankhead h1 {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .dm-swiss__head,
+  .dm-swiss__poster,
+  .dm-swiss__body,
+  .dm-swiss__index,
+  .dm-swiss__bars,
+  .dm-swiss__dist,
+  .dm-swiss__rankhead,
+  .dm-swiss__foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .dm-swiss__ixrow {
+    grid-template-columns: 34px minmax(0, 1fr) 30px;
+  }
+
+  .dm-swiss__ixrow .y {
+    display: none;
+  }
+
+  .dm-swiss__barrow {
+    grid-template-columns: 26px minmax(0, 1fr) 40px;
+  }
+
+  .dm-swiss__barrow .tr {
+    display: none;
+  }
+}

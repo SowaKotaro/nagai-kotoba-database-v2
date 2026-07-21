@@ -1,0 +1,103 @@
+<% detail = mock_detail %>
+<div class="dm-measure__wrap">
+  <%= render "admin/design_mocks/measure/head" %>
+
+  <nav class="dm-measure__crumb">
+    <a href="#">測定台帳</a><span>/</span>
+    <% detail[:genres].each do |genre| %><a href="#"><%= genre %></a><span>/</span><% end %>
+    <span>No. 1408</span>
+  </nav>
+
+  <h1 class="dm-measure__title"><%= detail[:surface] %></h1>
+  <div class="dm-measure__subyomi"><%= detail[:reading] %></div>
+
+  <div class="dm-measure__ruler">
+    <% detail[:reading].each_char.with_index do |char, index| %>
+      <div class="dm-measure__tick">
+        <b><%= index + 1 %></b>
+        <span><%= char %></span>
+      </div>
+    <% end %>
+  </div>
+  <div class="dm-measure__rulercap">
+    <span>読みの全長</span>
+    <span><%= detail[:length] %> 字（最小目盛 1 字／収録下限 10 字）</span>
+  </div>
+
+  <div class="dm-measure__layout">
+    <div class="dm-measure__main">
+      <nav class="dm-measure__toc">
+        <b>このページの内容</b>
+        <% mock_toc.each_with_index do |(anchor, label), index| %>
+          <a href="#<%= anchor %>"><span><%= index + 1 %></span><%= label %></a>
+        <% end %>
+      </nav>
+
+      <section class="dm-measure__section" id="meaning">
+        <h2 class="dm-measure__h2">意味<span>語義 1 件</span></h2>
+        <p class="dm-measure__meaning"><%= detail[:summary] %></p>
+        <p class="dm-measure__meaning"><%= detail[:meaning] %></p>
+        <div class="dm-measure__tags">
+          <% detail[:features].each do |feature| %>
+            <a class="dm-measure__tag" href="#"><%= feature %></a>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="dm-measure__section" id="data">
+        <h2 class="dm-measure__h2">言語データ<span>自動計測</span></h2>
+        <table class="dm-measure__props">
+          <tbody>
+            <% mock_properties.each do |label, value| %>
+              <tr>
+                <th scope="row"><%= label %></th>
+                <td><%= value %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="dm-measure__section" id="related">
+        <h2 class="dm-measure__h2">関連する語<span>5 件</span></h2>
+        <% mock_related_groups.each do |group| %>
+          <div class="dm-measure__relgroup">
+            <div class="dm-measure__rellabel"><%= group[:label] %></div>
+            <div class="dm-measure__rellist">
+              <% group[:words].each do |word| %>
+                <a href="#"><%= word.surface %></a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </section>
+
+      <section class="dm-measure__section" id="source">
+        <h2 class="dm-measure__h2">出典・更新<span>No. 1408</span></h2>
+        <p class="dm-measure__note">
+          読みは辞書および出版社の表記に基づいて確認したもの。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数で、登録時に自動計測しています。<br>
+          最終更新 <%= detail[:updated_on] %>／このページのデータは CC BY 4.0 で利用できます。
+        </p>
+      </section>
+    </div>
+
+    <aside>
+      <div class="dm-measure__infobox">
+        <h3>測定票</h3>
+        <dl>
+          <% mock_infobox.each do |label, value| %>
+            <div>
+              <dt><%= label %></dt>
+              <dd><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="dm-measure__pager">
+    <a href="#"><span>前の記録</span>← 天上天下唯我独尊</a>
+    <a href="#"><span>次の記録</span>栴檀は双葉より芳し →</a>
+  </nav>
+</div>

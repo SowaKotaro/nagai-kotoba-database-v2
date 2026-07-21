@@ -11,12 +11,15 @@ class HomeController < ApplicationController
       {
         words: Word.annotated.count,
         senses: WordSense.published.count,
-        genres: Genre.small.count
+        genres: Genre.small.count,
+        # 「長い言葉のデータベース」の性格を一言で示す指標。小数第1位まで。
+        average_reading_length: WordSense.published.average(:reading_length)&.to_f&.round(1)
       }
     end
     @word_count = stats[:words]
     @sense_count = stats[:senses]
     @genre_count = stats[:genres]
+    @average_reading_length = stats[:average_reading_length]
     @recent_words = Word.annotated
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
                         .order(created_at: :desc, id: :desc)

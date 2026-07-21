@@ -1,0 +1,80 @@
+<% max_crossing = mock_crossing_ranking.first.crossing %>
+<% max_count = mock_distribution.map(&:last).max %>
+<div class="dm-refined__wrap">
+  <%= render "admin/design_mocks/refined/head", current: :ranking %>
+
+  <div class="dm-refined__block" style="gap: 0">
+    <div class="dm-refined__eyebrow">
+      <span>ランキング</span>
+      <span>収録 <%= mock_stats[:words] %> 語</span>
+    </div>
+    <h1 class="dm-refined__title" style="font-size: clamp(30px, 5.6vw, 56px)">読みが長い順</h1>
+    <div class="dm-refined__hr"></div>
+  </div>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">並び順<span>4 種</span></h2>
+    <div class="dm-refined__kinds">
+      <% mock_ranking_kinds.each_with_index do |kind, index| %>
+        <a class="dm-refined__kind<%= " is-on" if index.zero? %>" href="#">
+          <b><%= kind[:label] %></b>
+          <span><%= kind[:note] %></span>
+        </a>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">読みの文字数<span>単位：字</span></h2>
+    <div>
+      <% mock_words.take(7).each_with_index do |word, index| %>
+        <a class="dm-refined__rankrow" href="#">
+          <span class="rank"><%= format("%02d", index + 1) %></span>
+          <span class="name"><%= word.surface %></span>
+          <span class="track"><i style="width: <%= (word.length / 16.0 * 100).round %>%"></i></span>
+          <span class="value"><%= word.length %></span>
+        </a>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">円環交差数<span>単位：回</span></h2>
+    <div>
+      <% mock_crossing_ranking.take(5).each_with_index do |word, index| %>
+        <a class="dm-refined__rankrow" href="#">
+          <span class="rank"><%= format("%02d", index + 1) %></span>
+          <span class="name"><%= word.surface %></span>
+          <span class="track"><i style="width: <%= (word.crossing.to_f / max_crossing * 100).round %>%"></i></span>
+          <span class="value"><%= word.crossing %></span>
+        </a>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">読みの文字数の分布<span>単位：語</span></h2>
+    <div class="dm-refined__hist">
+      <% mock_distribution.each do |_length, count| %>
+        <div class="<%= "is-low" if count < 50 %>">
+          <b><%= count %></b>
+          <i style="height: <%= (count.to_f / max_count * 86).round %>%"></i>
+        </div>
+      <% end %>
+    </div>
+    <div class="dm-refined__histax">
+      <% mock_distribution.each do |length, _count| %>
+        <span><%= length %></span>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">計測方法<span>注記</span></h2>
+    <p class="dm-refined__note">
+      <b>読みの文字数</b>はカタカナ表記の字数で、長音符「ー」と小書き文字も1字として数えます。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数です。いずれも登録時に自動計測し、値の更新は表記の修正時のみ行います。
+    </p>
+  </section>
+</div>
+
+<%= render "admin/design_mocks/refined/foot" %>

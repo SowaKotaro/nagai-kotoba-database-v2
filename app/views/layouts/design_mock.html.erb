@@ -1,0 +1,38 @@
+<%# デザイン案モック専用のレイアウト。共通ヘッダー/フッターも application.css も読み込まず、
+    design_mocks.css だけを当てる(各案が既存デザインの影響を受けないようにするため)。 %>
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title><%= "#{Admin::DesignMocksHelper::STYLES.dig(@style, :name)}／#{Admin::DesignMocksHelper::PAGES[@page]}｜デザイン案モック" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%# 現行デザインをそのまま見せる案(活字見本帖 改)のために、公開側と同じ明朝を読む %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap">
+    <%= stylesheet_link_tag "design_mocks", "data-turbo-track": "reload" %>
+  </head>
+
+  <body class="dm-body">
+    <%# モックの外側に置く操作バー(案・ページの切替)。ここだけは各案の様式に属さない中立の帯 %>
+    <div class="dm-bar">
+      <a class="dm-bar__back" href="<%= admin_design_mocks_path %>">← 一覧</a>
+      <span class="dm-bar__now"><%= Admin::DesignMocksHelper::STYLES.dig(@style, :name) %></span>
+      <span class="dm-bar__group">
+        <% Admin::DesignMocksHelper::PAGES.each do |key, label| %>
+          <a class="dm-bar__link<%= " is-on" if key == @page %>" href="<%= admin_design_mock_path(style: @style, page: key) %>"><%= label %></a>
+        <% end %>
+      </span>
+      <span class="dm-bar__group dm-bar__group--styles">
+        <% mock_style_links.each do |key, name| %>
+          <a class="dm-bar__link<%= " is-on" if key == @style %>" href="<%= admin_design_mock_path(style: key, page: @page) %>"><%= name %></a>
+        <% end %>
+      </span>
+    </div>
+
+    <div class="dm dm-<%= @style %>"><%= yield %></div>
+  </body>
+</html>

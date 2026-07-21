@@ -1,5 +1,5 @@
-<%# ランキング1枠。墨1px枠のパネルに、墨2px で仕切った見出し行 → 説明 → 順位表 の順で組む。
-    順位は等幅(上位3位は墨ベタの刻印)、語は明朝、右端に指標値。
+<%# ランキング1枠。細罫のパネルに、見出し行 → 順位表 の順で組む。
+    順位は等幅(上位3位は朱ベタの刻印)、語は明朝、右端に指標値。
     「もっと見る」は同じ並びキーの単語一覧へ渡し、そこから先は通常のページ送りで全件辿れる。
     locals: ranking(WordRanking), rows(#top の結果) %>
 <section class="rank-board" id="rank-<%= ranking.key.dasherize %>">
@@ -9,12 +9,13 @@
       <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
     <% end %>
   </div>
-  <p class="rank-board__lead"><%= ranking.lead %></p>
 
   <ol class="rank-list">
     <% rows.each do |row| %>
       <li class="rank-row">
-        <span class="rank-row__no <%= "rank-row__no--top" if row[:rank] <= 3 %>"><%= format("%02d", row[:rank]) %></span>
+        <%# 1位は朱ベタ、2〜3位は朱枠、それ以外は素の等幅で段を作る %>
+        <% rank_modifiers = [ ("rank-row__no--top" if row[:rank] <= 3), ("rank-row__no--first" if row[:rank] == 1) ].compact %>
+        <span class="rank-row__no <%= rank_modifiers.join(" ") %>"><%= format("%02d", row[:rank]) %></span>
         <span class="rank-row__main">
           <span class="rank-row__reading"><%= row[:readings].join("、") %></span>
           <%= link_to row[:surface], word_path(row[:id]), class: "rank-row__surface" %>

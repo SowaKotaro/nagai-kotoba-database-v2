@@ -1,0 +1,99 @@
+<% detail = mock_detail %>
+<%= render "admin/design_mocks/broadside/head" %>
+
+<div class="dm-broadside__body">
+  <nav class="dm-broadside__crumb">
+    <% detail[:genres].each_with_index do |genre, index| %>
+      <% if index.positive? %><span>›</span><% end %>
+      <a href="#"><%= genre %></a>
+    <% end %>
+  </nav>
+
+  <h1 class="dm-broadside__big">殺す時間を<br>殺すための時間</h1>
+
+  <div class="dm-broadside__meta">
+    <span><%= detail[:reading] %></span>
+    <span>読み <b><%= detail[:length] %></b> 字</span>
+    <span>交差 <b><%= detail[:crossing] %></b> 回</span>
+    <span>初出 <b><%= detail[:published] %></b></span>
+  </div>
+
+  <div class="dm-broadside__rule"></div>
+
+  <div class="dm-broadside__layout">
+    <div class="dm-broadside__main">
+      <nav class="dm-broadside__toc">
+        <span>目次</span>
+        <% mock_toc.each do |anchor, label| %>
+          <a href="#<%= anchor %>"><%= label %></a>
+        <% end %>
+      </nav>
+
+      <section class="dm-broadside__section" id="meaning">
+        <h2 class="dm-broadside__h2">意味<span>語義 1 件</span></h2>
+        <p class="dm-broadside__meaning"><%= detail[:summary] %></p>
+        <p class="dm-broadside__meaning"><%= detail[:meaning] %></p>
+        <div class="dm-broadside__tags">
+          <% detail[:features].each do |feature| %>
+            <a href="#"><%= feature %></a>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="dm-broadside__section" id="data">
+        <h2 class="dm-broadside__h2">言語データ<span>自動計測</span></h2>
+        <table class="dm-broadside__props">
+          <tbody>
+            <% mock_properties.each do |label, value| %>
+              <tr>
+                <th scope="row"><%= label %></th>
+                <td><%= value %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="dm-broadside__section" id="related">
+        <h2 class="dm-broadside__h2">関連する語<span>5 件</span></h2>
+        <% mock_related_groups.each do |group| %>
+          <div class="dm-broadside__relgroup">
+            <div class="dm-broadside__rellabel"><%= group[:label] %></div>
+            <div class="dm-broadside__rellist">
+              <% group[:words].each do |word| %>
+                <a href="#"><%= word.surface %></a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </section>
+
+      <section class="dm-broadside__section" id="source">
+        <h2 class="dm-broadside__h2">出典・更新<span>No. 1408</span></h2>
+        <p class="dm-broadside__note">
+          読みは辞書および出版社の表記に基づいて確認したもの。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数で、登録時に自動計測しています。<br>
+          最終更新 <%= detail[:updated_on] %>／このページのデータは CC BY 4.0 で利用できます。
+        </p>
+      </section>
+    </div>
+
+    <aside>
+      <div class="dm-broadside__infobox">
+        <h3>データ</h3>
+        <dl>
+          <% mock_infobox.each do |label, value| %>
+            <div>
+              <dt><%= label %></dt>
+              <dd><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<nav class="dm-broadside__pager">
+  <a href="#"><span>← 前の語（15字）</span><b>天上天下唯我独尊</b></a>
+  <a href="#"><span>次の語（14字）→</span><b>栴檀は双葉より芳し</b></a>
+</nav>

@@ -1,0 +1,25 @@
+<%# デザイン案モックのカタログ。ここは管理画面なので既存のデザインシステムに従う
+    (治外法権なのはモック本体 = design_mock レイアウト配下だけ)。 %>
+<% content_for :title, t("admin.design_mocks.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.design_mocks.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.design_mocks.title") %></h1>
+
+<p class="page-lead"><%= t("admin.design_mocks.lead") %></p>
+
+<% Admin::DesignMocksHelper::STYLES.each do |style, meta| %>
+  <p class="section-label"><%= meta[:name] %>｜<%= meta[:tagline] %></p>
+  <div class="admin-dash-grid">
+    <% Admin::DesignMocksHelper::PAGES.each do |page, label| %>
+      <%= link_to admin_design_mock_path(style: style, page: page), class: "admin-card" do %>
+        <span class="admin-card__title"><%= label %></span>
+        <span class="admin-card__desc"><%= t("admin.design_mocks.pages.#{page}") %></span>
+        <span class="admin-card__tag"><%= meta[:name] %></span>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<p class="search-switch">
+  <%= link_to t("admin.design_mocks.back"), admin_root_path %>
+</p>

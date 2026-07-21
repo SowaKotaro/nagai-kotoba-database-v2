@@ -1,0 +1,123 @@
+<% detail = mock_detail %>
+<%= render "admin/design_mocks/swiss/head", current: :word %>
+
+<section class="dm-swiss__poster">
+  <div class="dm-swiss__disc"><b><%= detail[:length] %></b><small>Moji</small></div>
+  <div class="dm-swiss__shapes">
+    <span class="bar"></span>
+    <span class="diag"></span>
+  </div>
+  <div class="dm-swiss__postertext">
+    <nav class="dm-swiss__crumb">
+      <% detail[:genres].each_with_index do |genre, index| %>
+        <% if index.positive? %><span>›</span><% end %>
+        <a href="#"><%= genre %></a>
+      <% end %>
+    </nav>
+    <h1 class="dm-swiss__title"><%= detail[:surface] %></h1>
+    <div class="dm-swiss__yomi"><%= detail[:reading] %></div>
+  </div>
+</section>
+
+<div class="dm-swiss__body">
+  <div class="dm-swiss__cells">
+    <% detail[:reading].each_char do |char| %><i><%= char %></i><% end %>
+  </div>
+  <div class="dm-swiss__cellcap">
+    <span>Reading / 1 cell = 1 moji</span>
+    <span>Total <%= detail[:length] %></span>
+  </div>
+</div>
+
+<div class="dm-swiss__body dm-swiss__grid">
+  <div class="dm-swiss__rule"></div>
+
+  <nav class="dm-swiss__toc" style="grid-column: 1 / 3">
+    <b>Contents</b>
+    <% mock_toc.each_with_index do |(anchor, label), index| %>
+      <a href="#<%= anchor %>"><span><%= format("%02d", index + 1) %></span><%= label %></a>
+    <% end %>
+  </nav>
+
+  <div class="dm-swiss__main" style="grid-column: 3 / 10">
+    <section class="dm-swiss__section" id="meaning">
+      <h2 class="dm-swiss__h2">意味<span>1 sense</span></h2>
+      <p class="dm-swiss__meaning"><%= detail[:summary] %></p>
+      <p class="dm-swiss__meaning"><%= detail[:meaning] %></p>
+      <div class="dm-swiss__tags">
+        <% detail[:features].each do |feature| %>
+          <a href="#"><%= feature %></a>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="dm-swiss__section" id="data">
+      <h2 class="dm-swiss__h2">言語データ<span>Measured</span></h2>
+      <table class="dm-swiss__props">
+        <tbody>
+          <% mock_properties.each do |label, value| %>
+            <tr>
+              <th scope="row"><%= label %></th>
+              <td><%= value %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="dm-swiss__section" id="related">
+      <h2 class="dm-swiss__h2">関連する語<span>5 entries</span></h2>
+      <% mock_related_groups.each do |group| %>
+        <div class="dm-swiss__relgroup">
+          <div class="dm-swiss__rellabel"><%= group[:label] %></div>
+          <div class="dm-swiss__rellist">
+            <% group[:words].each do |word| %>
+              <a href="#"><%= word.surface %></a>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="dm-swiss__section" id="source">
+      <h2 class="dm-swiss__h2">出典・更新<span>No. 1408</span></h2>
+      <p class="dm-swiss__note">
+        読みは辞書および出版社の表記に基づいて確認したもの。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数で、登録時に自動計測しています。<br>
+        最終更新 <%= detail[:updated_on] %>／このページのデータは CC BY 4.0 で利用できます。
+      </p>
+    </section>
+  </div>
+
+  <aside class="dm-swiss__aside" style="grid-column: 11 / 13">
+    <div class="dm-swiss__infobox">
+      <h3>Summary</h3>
+      <dl>
+        <% mock_infobox.each do |label, value| %>
+          <div>
+            <dt><%= label %></dt>
+            <dd><%= value %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+  </aside>
+</div>
+
+<div class="dm-swiss__index dm-swiss__grid">
+  <div class="dm-swiss__ixlabel">Nearby<br>entries</div>
+  <div class="dm-swiss__ixlist">
+    <% mock_words[1, 3].each_with_index do |word, index| %>
+      <a class="dm-swiss__ixrow" href="#">
+        <span class="no"><%= format("%03d", index + 1) %></span>
+        <span class="w"><%= word.surface %></span>
+        <span class="y"><%= word.reading %></span>
+        <span class="c"><%= word.length %></span>
+      </a>
+    <% end %>
+  </div>
+</div>
+
+<footer class="dm-swiss__foot">
+  <div>長い言葉のデータベース</div>
+  <span>No. 1408</span>
+</footer>

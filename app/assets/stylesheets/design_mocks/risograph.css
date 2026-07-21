@@ -1,0 +1,788 @@
+/* 案3「二色刷り」— マゼンタ×シアンの版ズレ。中身の可笑しみに器を合わせる。 */
+
+.dm-risograph {
+  --p: #fbfaf7;
+  --k: #131313;
+  --k2: #6c6c68;
+  --m: #ff2e88;
+  --c: #00bcd9;
+  --ln: #b9b9b4;
+
+  background: var(--p);
+  color: var(--k);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic, Meiryo, sans-serif;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+.dm-risograph__wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 26px 28px 60px;
+}
+
+.dm-risograph__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dm-risograph__logo {
+  background: var(--k);
+  color: var(--p);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  transform: rotate(-1.4deg);
+}
+
+.dm-risograph__head small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--m);
+}
+
+.dm-risograph__nav {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dm-risograph__nav a {
+  border-bottom: 3px solid var(--c);
+}
+
+.dm-risograph__nav a:hover {
+  color: var(--m);
+  border-bottom-color: var(--m);
+}
+
+/* --- トップ ------------------------------------------------ */
+.dm-risograph__shout {
+  padding: 30px 0 6px;
+}
+
+.dm-risograph__num {
+  font-size: clamp(66px, 17vw, 176px);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: var(--m);
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-risograph__num em {
+  font-style: normal;
+  font-size: 0.24em;
+  letter-spacing: 0.04em;
+  color: var(--k);
+  padding-left: 10px;
+}
+
+.dm-risograph__word {
+  font-size: clamp(24px, 4.4vw, 44px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  padding-top: 14px;
+  text-shadow: 3px 3px 0 var(--c);
+}
+
+.dm-risograph__word a:hover {
+  color: var(--m);
+}
+
+.dm-risograph__yomi {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #5c5c5c;
+  padding-top: 12px;
+}
+
+.dm-risograph__say {
+  border: 3px solid var(--k);
+  background: var(--p);
+  padding: 14px 16px;
+  margin-top: 22px;
+  font-size: 14px;
+  line-height: 1.85;
+  max-width: 52ch;
+  transform: rotate(0.5deg);
+}
+
+.dm-risograph__say b {
+  background: var(--c);
+  padding: 0 5px;
+}
+
+.dm-risograph__label {
+  display: inline-block;
+  background: var(--k);
+  color: var(--p);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 4px 12px;
+  margin-top: 34px;
+  transform: rotate(-1deg);
+}
+
+.dm-risograph__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.dm-risograph__rows a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 2px dotted var(--ln);
+  padding-bottom: 8px;
+  min-width: 0;
+}
+
+.dm-risograph__rows .cnt {
+  flex: none;
+  width: 46px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: var(--k);
+  color: var(--p);
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-risograph__rows a:nth-child(2n) .cnt {
+  background: var(--m);
+}
+
+.dm-risograph__rows a:nth-child(3n) .cnt {
+  background: var(--c);
+  color: var(--k);
+}
+
+.dm-risograph__rows .tw {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.dm-risograph__rows .tr {
+  margin-left: auto;
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--k2);
+}
+
+.dm-risograph__rows a:hover .tw {
+  color: var(--m);
+}
+
+.dm-risograph__rows a:hover {
+  border-bottom-color: var(--m);
+}
+
+.dm-risograph__stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 34px;
+}
+
+.dm-risograph__stats div {
+  flex: 1 1 150px;
+  border: 3px solid var(--k);
+  padding: 12px 16px 14px;
+}
+
+.dm-risograph__stats div:nth-child(2n) {
+  background: var(--c);
+}
+
+.dm-risograph__stats div:nth-child(3n) {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-risograph__stats b {
+  display: block;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-risograph__stats span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* --- 単語詳細 ---------------------------------------------- */
+.dm-risograph__crumb {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 28px 0 0;
+}
+
+.dm-risograph__crumb a {
+  background: var(--c);
+  padding: 2px 8px;
+}
+
+.dm-risograph__crumb a:hover {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-risograph__title {
+  font-size: clamp(28px, 6.4vw, 62px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  padding: 18px 0 0;
+  text-shadow: 4px 4px 0 var(--c);
+}
+
+.dm-risograph__titleyomi {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--m);
+  padding: 16px 0 0;
+}
+
+.dm-risograph__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 20px 0 0;
+}
+
+.dm-risograph__chips span {
+  border: 2px solid var(--k);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 11px;
+}
+
+.dm-risograph__chips span.is-hot {
+  background: var(--m);
+  color: var(--p);
+  border-color: var(--m);
+}
+
+.dm-risograph__box {
+  border: 3px solid var(--k);
+  padding: 20px 22px 22px;
+  margin-top: 28px;
+  position: relative;
+}
+
+.dm-risograph__box::after {
+  content: "";
+  position: absolute;
+  inset: 6px -6px -6px 6px;
+  border: 3px solid var(--c);
+  z-index: -1;
+}
+
+.dm-risograph__boxnum {
+  display: inline-block;
+  background: var(--m);
+  color: var(--p);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 3px 10px;
+  transform: rotate(-1.5deg);
+}
+
+.dm-risograph__meaning {
+  font-size: 16px;
+  line-height: 1.95;
+  max-width: 44ch;
+  padding-top: 14px;
+}
+
+.dm-risograph__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  padding-top: 30px;
+}
+
+.dm-risograph__grid div {
+  border-bottom: 3px dotted var(--ln);
+  padding-bottom: 8px;
+}
+
+.dm-risograph__grid dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--m);
+}
+
+.dm-risograph__grid dd {
+  font-size: 15px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+/* 本文と要約ボックスの2カラム。節の間隔は 44px に統一。 */
+.dm-risograph__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 40px;
+  padding-top: 32px;
+}
+
+.dm-risograph__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+
+.dm-risograph__toc {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 3px dotted var(--ln);
+  border-bottom: 3px dotted var(--ln);
+  padding: 10px 0;
+}
+
+.dm-risograph__toc span {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--m);
+}
+
+.dm-risograph__toc a {
+  font-size: 13px;
+  font-weight: 700;
+  border-bottom: 3px solid var(--c);
+}
+
+.dm-risograph__toc a:hover {
+  color: var(--m);
+  border-bottom-color: var(--m);
+}
+
+.dm-risograph__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 16px;
+}
+
+.dm-risograph__h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border-bottom: 4px solid var(--k);
+  padding-bottom: 7px;
+}
+
+.dm-risograph__h2 span {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--k2);
+}
+
+.dm-risograph__infobox {
+  border: 3px solid var(--k);
+  position: sticky;
+  top: 16px;
+}
+
+.dm-risograph__infobox h3 {
+  background: var(--m);
+  color: var(--p);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 8px 14px;
+}
+
+.dm-risograph__infobox div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 2px dotted var(--ln);
+}
+
+.dm-risograph__infobox div:last-child {
+  border-bottom: 0;
+}
+
+.dm-risograph__infobox dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--k2);
+  flex: none;
+}
+
+.dm-risograph__infobox dd {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.dm-risograph__props th {
+  width: 34%;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--m);
+  padding: 10px 0;
+  border-bottom: 2px dotted var(--ln);
+  vertical-align: top;
+}
+
+.dm-risograph__props td {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 0;
+  border-bottom: 2px dotted var(--ln);
+  word-break: break-all;
+}
+
+.dm-risograph__relgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dm-risograph__rellabel {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--k2);
+}
+
+.dm-risograph__rellist {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.dm-risograph__rellist a {
+  font-size: 15px;
+  font-weight: 700;
+  border: 3px solid var(--k);
+  padding: 3px 11px;
+}
+
+.dm-risograph__rellist a:hover {
+  background: var(--c);
+}
+
+.dm-risograph__note {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.9;
+  color: var(--k2);
+  max-width: 52em;
+}
+
+.dm-risograph__note b {
+  color: var(--k);
+  background: var(--c);
+  padding: 0 4px;
+}
+
+/* トップの入口 */
+.dm-risograph__entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.dm-risograph__entry {
+  border: 3px solid var(--k);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.dm-risograph__entry:nth-child(2) {
+  background: var(--c);
+}
+
+.dm-risograph__entry:nth-child(3) {
+  background: var(--m);
+  color: var(--p);
+}
+
+.dm-risograph__entry span {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.dm-risograph__entry b {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.dm-risograph__entry p {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.dm-risograph__entry:hover {
+  background: var(--k);
+  color: var(--p);
+}
+
+/* ランキングの並び順 */
+.dm-risograph__kinds {
+  display: flex;
+  flex-direction: column;
+  border-top: 4px solid var(--k);
+}
+
+.dm-risograph__kind {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  padding: 11px 0;
+  border-bottom: 2px dotted var(--ln);
+}
+
+.dm-risograph__kind b {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.dm-risograph__kind.is-on b {
+  background: var(--m);
+  color: var(--p);
+  padding: 1px 8px;
+}
+
+.dm-risograph__kind:hover b {
+  color: var(--m);
+}
+
+.dm-risograph__kind.is-on:hover b {
+  color: var(--p);
+}
+
+.dm-risograph__kind span {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--k2);
+}
+
+.dm-risograph__pager {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 36px;
+}
+
+.dm-risograph__pager a {
+  flex: 1 1 220px;
+  border: 3px solid var(--k);
+  padding: 12px 14px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dm-risograph__pager a:hover {
+  background: var(--c);
+}
+
+.dm-risograph__pager span {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--k2);
+}
+
+/* --- ランキング -------------------------------------------- */
+.dm-risograph__ranktitle {
+  font-size: clamp(30px, 7vw, 72px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  padding-top: 26px;
+  text-shadow: 4px 4px 0 var(--m);
+}
+
+.dm-risograph__ranksub {
+  font-size: 13px;
+  font-weight: 700;
+  padding-top: 16px;
+  max-width: 46ch;
+}
+
+.dm-risograph__rankrow {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 2px dotted var(--ln);
+}
+
+.dm-risograph__rankrow .rk {
+  background: var(--k);
+  color: var(--p);
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  padding: 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-risograph__rankrow:nth-child(1) .rk {
+  background: var(--m);
+}
+
+.dm-risograph__rankrow:nth-child(2) .rk {
+  background: var(--c);
+  color: var(--k);
+}
+
+.dm-risograph__rankrow .nm {
+  font-size: 19px;
+  font-weight: 700;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.dm-risograph__rankrow .nm small {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--k2);
+}
+
+.dm-risograph__rankrow .vl {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-risograph__rankrow:hover .nm {
+  color: var(--m);
+}
+
+.dm-risograph__dist {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 190px;
+  padding-top: 22px;
+  border-bottom: 4px solid var(--k);
+}
+
+.dm-risograph__dist div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.dm-risograph__dist i {
+  display: block;
+  width: 100%;
+  background: var(--c);
+  border: 3px solid var(--k);
+  border-bottom: 0;
+}
+
+.dm-risograph__dist div.is-low i {
+  background: var(--m);
+}
+
+.dm-risograph__dist b {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-risograph__distax {
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.dm-risograph__distax span {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .dm-risograph__layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .dm-risograph__infobox {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .dm-risograph__wrap {
+    padding: 22px 18px 48px;
+  }
+
+  .dm-risograph__nav {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .dm-risograph__kind {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

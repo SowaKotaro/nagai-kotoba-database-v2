@@ -1,0 +1,50 @@
+<% today = mock_words.first %>
+<div class="dm-neobrutalism__wrap">
+  <%= render "admin/design_mocks/neobrutalism/head" %>
+
+  <section class="dm-neobrutalism__hero">
+    <span class="dm-neobrutalism__tag">本日の一語</span>
+    <h1 class="dm-neobrutalism__word"><a href="#"><%= today.surface %></a></h1>
+    <div class="dm-neobrutalism__yomi"><%= today.reading %></div>
+    <div class="dm-neobrutalism__count">
+      <b><%= today.length %></b>
+      <span>文字！ 収録語のうち上位1%の長さ</span>
+    </div>
+  </section>
+
+  <div class="dm-neobrutalism__entries">
+    <% mock_entry_points.each do |entry| %>
+      <a class="dm-neobrutalism__entry" href="#">
+        <span><%= entry[:meta] %></span>
+        <b><%= entry[:title] %></b>
+        <p><%= entry[:desc] %></p>
+      </a>
+    <% end %>
+  </div>
+
+  <div class="dm-neobrutalism__cols">
+    <div class="dm-neobrutalism__list">
+      <% mock_words[1, 5].each do |word| %>
+        <a href="#">
+          <span class="n"><%= word.length %></span>
+          <span class="w"><%= word.surface %></span>
+          <span class="y"><%= word.reading %></span>
+        </a>
+      <% end %>
+    </div>
+
+    <div class="dm-neobrutalism__side">
+      <div class="dm-neobrutalism__box dm-neobrutalism__box--y">
+        <h3>収録語</h3>
+        <div class="v"><%= mock_stats[:words] %></div>
+        <div class="t">語義は <%= mock_stats[:senses] %> 件</div>
+      </div>
+      <div class="dm-neobrutalism__box dm-neobrutalism__box--m">
+        <h3>最長記録</h3>
+        <div class="v"><%= mock_stats[:max] %></div>
+        <div class="t">16文字はたった6語しかない</div>
+      </div>
+      <a class="dm-neobrutalism__btn" href="#">ランダムに一語ひく</a>
+    </div>
+  </div>
+</div>

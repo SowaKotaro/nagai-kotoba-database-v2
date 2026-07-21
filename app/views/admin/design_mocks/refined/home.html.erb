@@ -1,0 +1,60 @@
+<% today = mock_words.first %>
+<div class="dm-refined__wrap">
+  <%= render "admin/design_mocks/refined/head", current: :home %>
+
+  <p class="dm-refined__statement">
+    読みが十文字を超える言葉だけを、一語ずつ組んで収める。
+  </p>
+
+  <section class="dm-refined__featured">
+    <div class="label">今日の一語</div>
+    <a class="word" href="#"><%= today.surface %></a>
+    <div class="dm-refined__reading"><%= today.reading %>／<%= today.length %> 字</div>
+  </section>
+
+  <div class="dm-refined__search">
+    <span>言葉・読み・意味から検索する</span>
+    <b>検索</b>
+  </div>
+
+  <dl class="dm-refined__stats">
+    <div><b><%= mock_stats[:words] %></b><span>収録語</span></div>
+    <div><b><%= mock_stats[:senses] %></b><span>語義</span></div>
+    <div><b><%= mock_stats[:average] %></b><span>平均文字数</span></div>
+    <div><b><%= mock_stats[:max] %></b><span>最長</span></div>
+  </dl>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">引き方<span>3 つの入口</span></h2>
+    <div class="dm-refined__entries">
+      <% mock_entry_points.each do |entry| %>
+        <a class="dm-refined__entry" href="#">
+          <span><%= entry[:meta] %></span>
+          <b><%= entry[:title] %></b>
+          <p><%= entry[:desc] %></p>
+        </a>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="dm-refined__block">
+    <h2 class="dm-refined__h2">新着の言葉<span>すべての語 →</span></h2>
+    <div class="dm-refined__list">
+      <% mock_words.take(5).each do |word| %>
+        <a class="dm-refined__row" href="#">
+          <span class="main">
+            <span class="yomi"><%= word.reading %></span>
+            <span class="surface"><%= word.surface %></span>
+          </span>
+          <span class="data">
+            <span class="tag"><%= word.genre %></span>
+            <span><%= word.length %> 字</span>
+            <span>語義 1</span>
+          </span>
+        </a>
+      <% end %>
+    </div>
+  </section>
+</div>
+
+<%= render "admin/design_mocks/refined/foot" %>

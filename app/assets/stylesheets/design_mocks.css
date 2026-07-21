@@ -1,0 +1,16 @@
+/*
+ * デザイン案モック(Admin::DesignMocksController)専用のスタイル。
+ * application.css からは独立していて、モック本体のレイアウト(design_mock)だけが読み込む。
+ *
+ * ※このファイル配下は docs/design.md の適用外(治外法権)。
+ *   角丸・影・グラデーション・第二のアクセント色を各案の様式どおりに使ってよい。
+ *   トークン(--bg/--ink/--shu 等)も参照しない。各案が自分の色を自分で持つ。
+ *
+ *= require design_mocks/shell
+ *= require design_mocks/measure
+ *= require design_mocks/broadside
+ *= require design_mocks/risograph
+ *= require design_mocks/neobrutalism
+ *= require design_mocks/swiss
+ *= require design_mocks/refined
+ */

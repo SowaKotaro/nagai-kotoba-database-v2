@@ -1,0 +1,49 @@
+<% today = mock_words.first %>
+<%= render "admin/design_mocks/broadside/head" %>
+
+<div class="dm-broadside__body">
+  <div class="dm-broadside__idx">本日の一語 — <%= today.length %>字</div>
+  <h1 class="dm-broadside__big"><a href="#">殺す時間を<br>殺すための時間</a></h1>
+  <div class="dm-broadside__rule"></div>
+
+  <div class="dm-broadside__cols">
+    <p class="dm-broadside__lead">
+      ピン芸人・どくさいスイッチ企画による超短編集。2024年にKADOKAWAから刊行された。読みは<em><%= today.reading %></em>の<%= today.length %>字で、収録語のうち上位1%に入る長さ。
+    </p>
+    <div class="dm-broadside__facts">
+      <div><span>読み文字数</span><b><%= today.length %></b></div>
+      <div><span>ジャンル</span><b><%= today.genre %></b></div>
+      <div><span>円環交差数</span><b><%= today.crossing %></b></div>
+      <div><span>収録番号</span><b>1408</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="dm-broadside__body">
+  <div class="dm-broadside__idx">引き方</div>
+  <div class="dm-broadside__entries" style="padding-top: 18px">
+    <% mock_entry_points.each do |entry| %>
+      <a class="dm-broadside__entry" href="#">
+        <span><%= entry[:meta] %></span>
+        <b><%= entry[:title] %></b>
+        <p><%= entry[:desc] %></p>
+      </a>
+    <% end %>
+  </div>
+</div>
+
+<div class="dm-broadside__strip">
+  <% mock_words[1, 4].each do |word| %>
+    <a href="#">
+      <span class="sy"><%= word.reading %></span>
+      <span class="sw"><%= word.surface %></span>
+    </a>
+  <% end %>
+</div>
+
+<div class="dm-broadside__counts">
+  <div><b><%= mock_stats[:words] %></b><span>収録語</span></div>
+  <div><b><%= mock_stats[:senses] %></b><span>語義</span></div>
+  <div><b><%= mock_stats[:average] %></b><span>平均文字数</span></div>
+  <div><b><%= mock_stats[:max] %></b><span>最長</span></div>
+</div>

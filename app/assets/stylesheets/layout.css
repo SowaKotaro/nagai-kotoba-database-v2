@@ -1,4 +1,4 @@
-/* ページ骨格(docs/design.md §5.1)。ヘッダーは墨の1本罫、フッターは墨のベタ面で締める。 */
+/* ページ骨格(docs/design.md §5.1)。ヘッダー・フッターとも細罫だけで区切り、面で主張しない。 */
 
 /* --- グローバルヘッダー --- */
 /* スクロールしても常に上部へ留める。ドロワー/スクリム(z-index 19〜21)は
@@ -8,13 +8,15 @@
   top: 0;
   z-index: 30;
   background: var(--bg);
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
 }
 
+/* 高さ 64px。情報密度を下げ、リンクどうしの間隔を広く取る */
 .site-header__inner {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 14px var(--space-5);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-5);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -102,7 +104,7 @@
 .site-nav {
   display: flex;
   align-items: baseline;
-  gap: var(--space-4);
+  gap: var(--space-6);
   font-size: 15px;
 }
 
@@ -234,54 +236,11 @@
   color: var(--bg);
 }
 
-/* 常設のキーワード検索(枠で囲わず下線1本 + 虫眼鏡アイコン) */
-.header-search {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 4px;
-  border-bottom: 1px solid var(--rule-mid);
-}
-
-.header-search:focus-within {
-  border-bottom-color: var(--shu);
-}
-
-.header-search__input {
-  border: none;
-  background: transparent;
-  padding: 4px 2px;
-  font-size: 15px;
-  width: 160px;
-  color: var(--ink);
-}
-
-.header-search__input:focus {
-  outline: none;
-}
-
-.header-search__submit {
-  border: none;
-  background: transparent;
-  color: var(--ink-3);
-  padding: 4px 2px;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.header-search__submit:hover {
-  color: var(--shu);
-}
-
-.header-search__input::placeholder {
-  color: var(--ink-3);
-}
-
 /* --- メインコンテナ --- */
 main.container {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: var(--space-6) var(--space-5) var(--space-7);
+  padding: var(--space-7) var(--space-5) var(--space-8);
   /* 想定外の広い子でもページ全体が横スクロールしないようにする backstop。
      clip なので内側の overflow-x:auto(50音表など)のスクロールには影響しない */
   overflow-x: clip;
@@ -347,71 +306,101 @@ main.container {
 }
 
 /* --- フッター: 墨のベタ面で締める --- */
+/* --- フッター(書籍の奥付) --------------------------------
+   ページと同じ紙の色のまま、細罫で仕切って静かに終える。ベタ面では締めない。 */
 .site-footer {
-  background: var(--ink);
-  color: var(--on-ink);
-  margin-top: var(--space-7);
+  background: var(--bg);
+  color: var(--ink);
+  border-top: 1px solid var(--rule);
+  margin-top: var(--space-9);
 }
 
 .site-footer__inner {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: var(--space-7) var(--space-5) var(--space-6);
-  display: flex;
-  justify-content: space-between;
+  padding: var(--space-8) var(--space-5) var(--space-7);
+  display: grid;
+  grid-template-columns: 1.6fr repeat(3, 1fr);
   gap: var(--space-6);
-  flex-wrap: wrap;
+  align-items: start;
 }
 
 .site-footer__about {
-  max-width: 480px;
+  max-width: 34em;
 }
 
 .site-footer__brand {
   font-family: var(--font-mincho);
   font-weight: 600;
-  font-size: clamp(18px, 2.5vw, 24px);
-  letter-spacing: 0.14em;
+  font-size: 17px;
+  letter-spacing: 0.1em;
   margin: 0 0 var(--space-3);
 }
 
 .site-footer__desc {
-  font-size: 15px;
-  line-height: 2;
-  color: var(--on-ink-dim);
-  margin: 0;
+  font-size: 14px;
+  line-height: 2.05;
+  color: var(--ink-2);
+  margin: 0 0 var(--space-4);
+}
+
+/* 列見出し(さがす／データ／その他)。小さく、太らせずに置く */
+.site-footer__col-title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-gothic);
 }
 
 .site-footer__nav {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .site-footer__nav a {
-  color: var(--on-ink-dim);
+  color: var(--ink-2);
   text-decoration: none;
+  width: fit-content;
 }
 
 .site-footer__nav a:hover {
-  color: var(--on-ink);
+  color: var(--ink);
   text-decoration: underline;
-  text-decoration-color: var(--shu);
+  text-decoration-color: var(--rule-mid);
 }
 
 .site-footer__bottom {
-  border-top: 1px solid var(--on-ink-rule);
+  border-top: 1px solid var(--rule);
 }
 
 .site-footer__bottom-inner {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: var(--space-3) var(--space-5);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--on-ink-dim);
+  padding: var(--space-4) var(--space-5) var(--space-6);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+@media (max-width: 860px) {
+  .site-footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6) var(--space-5);
+  }
+
+  .site-footer__about {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-footer__inner {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* --- フラッシュ(レイアウトで一元表示) --- */

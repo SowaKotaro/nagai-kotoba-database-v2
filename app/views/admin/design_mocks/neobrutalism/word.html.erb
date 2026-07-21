@@ -1,0 +1,100 @@
+<% detail = mock_detail %>
+<div class="dm-neobrutalism__wrap">
+  <%= render "admin/design_mocks/neobrutalism/head" %>
+
+  <nav class="dm-neobrutalism__crumb">
+    <% detail[:genres].each do |genre| %>
+      <a href="#"><%= genre %></a>
+    <% end %>
+  </nav>
+
+  <section class="dm-neobrutalism__hero">
+    <span class="dm-neobrutalism__tag">見出し語 No.1408</span>
+    <h1 class="dm-neobrutalism__word"><%= detail[:surface] %></h1>
+    <div class="dm-neobrutalism__yomi"><%= detail[:reading] %></div>
+    <div class="dm-neobrutalism__count">
+      <b><%= detail[:length] %></b>
+      <span>文字／円環交差数 <%= detail[:crossing] %> 回</span>
+    </div>
+  </section>
+
+  <div class="dm-neobrutalism__layout">
+    <div class="dm-neobrutalism__main">
+      <nav class="dm-neobrutalism__toc">
+        <span>目次</span>
+        <% mock_toc.each do |anchor, label| %>
+          <a href="#<%= anchor %>"><%= label %></a>
+        <% end %>
+      </nav>
+
+      <section class="dm-neobrutalism__section" id="meaning">
+        <h2 class="dm-neobrutalism__h2">意味<span>語義 1 件</span></h2>
+        <p class="dm-neobrutalism__meaning"><%= detail[:summary] %></p>
+        <div class="dm-neobrutalism__sense">
+          <span class="dm-neobrutalism__sensetag">語義 01</span>
+          <p class="dm-neobrutalism__meaning"><%= detail[:meaning] %></p>
+          <div class="dm-neobrutalism__chips">
+            <% detail[:features].each do |feature| %>
+              <a href="#"><%= feature %></a>
+            <% end %>
+          </div>
+        </div>
+      </section>
+
+      <section class="dm-neobrutalism__section" id="data">
+        <h2 class="dm-neobrutalism__h2">言語データ<span>自動計測</span></h2>
+        <table class="dm-neobrutalism__props">
+          <tbody>
+            <% mock_properties.each do |label, value| %>
+              <tr>
+                <th scope="row"><%= label %></th>
+                <td><%= value %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="dm-neobrutalism__section" id="related">
+        <h2 class="dm-neobrutalism__h2">関連する語<span>5 件</span></h2>
+        <% mock_related_groups.each do |group| %>
+          <div class="dm-neobrutalism__relgroup">
+            <div class="dm-neobrutalism__rellabel"><%= group[:label] %></div>
+            <div class="dm-neobrutalism__rellist">
+              <% group[:words].each do |word| %>
+                <a href="#"><%= word.surface %></a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </section>
+
+      <section class="dm-neobrutalism__section" id="source">
+        <h2 class="dm-neobrutalism__h2">出典・更新<span>No. 1408</span></h2>
+        <p class="dm-neobrutalism__note">
+          読みは辞書と出版社の表記で確認したもの。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数で、登録時に自動計測しています。<br>
+          最終更新 <%= detail[:updated_on] %>／データは CC BY 4.0。
+        </p>
+      </section>
+    </div>
+
+    <aside>
+      <div class="dm-neobrutalism__infobox">
+        <h3>この語のデータ</h3>
+        <dl>
+          <% mock_infobox.each do |label, value| %>
+            <div>
+              <dt><%= label %></dt>
+              <dd><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="dm-neobrutalism__pager">
+    <a href="#"><span>← 前の語（15字）</span>天上天下唯我独尊</a>
+    <a href="#"><span>次の語（14字）→</span>栴檀は双葉より芳し</a>
+  </nav>
+</div>

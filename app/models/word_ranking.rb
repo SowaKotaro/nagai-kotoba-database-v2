@@ -47,7 +47,6 @@ class WordRanking
   end
 
   def title = I18n.t("rankings.boards.#{key}.title")
-  def lead = I18n.t("rankings.boards.#{key}.lead")
   # 値に添える単位(「28字」の「字」)。
   def unit = I18n.t("rankings.boards.#{key}.unit")
   def decimal? = format == :decimal

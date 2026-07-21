@@ -1,0 +1,78 @@
+<% today = mock_words.first %>
+<%= render "admin/design_mocks/swiss/head", current: :home %>
+
+<section class="dm-swiss__poster">
+  <div class="dm-swiss__disc"><b><%= today.length %></b><small>Moji</small></div>
+  <div class="dm-swiss__shapes">
+    <span class="ring"></span>
+    <span class="quarter"></span>
+    <span class="bar"></span>
+    <span class="diag"></span>
+  </div>
+  <div class="dm-swiss__postertext">
+    <div class="dm-swiss__kicker">Word of the day / 2026.07.21</div>
+    <h1 class="dm-swiss__title"><a href="#"><%= today.surface %></a></h1>
+    <div class="dm-swiss__yomi"><%= today.reading %></div>
+  </div>
+</section>
+
+<div class="dm-swiss__body dm-swiss__grid">
+  <div class="dm-swiss__vlabel">Today</div>
+  <p class="dm-swiss__lead">
+    ピン芸人・どくさいスイッチ企画による超短編集。2024年にKADOKAWAから刊行された。読みは<b><%= today.length %>文字</b>で、収録 <%= mock_stats[:words] %> 語のうち16文字に達するのは6語しかない。
+  </p>
+  <div class="dm-swiss__figures">
+    <div><span>Entries</span><b><%= mock_stats[:words] %></b></div>
+    <div><span>Senses</span><b><%= mock_stats[:senses] %></b></div>
+    <div><span>Average</span><b><%= mock_stats[:average] %></b></div>
+    <div><span>Maximum</span><b><%= mock_stats[:max] %></b></div>
+  </div>
+
+  <div class="dm-swiss__rule"></div>
+
+  <div class="dm-swiss__donut">
+    <span class="pie"></span>
+    <ul>
+      <li><i class="is-r"></i>漢語 46%</li>
+      <li><i class="is-k"></i>和語 32%</li>
+      <li><i class="is-l"></i>外来語ほか 22%</li>
+    </ul>
+  </div>
+  <div class="dm-swiss__cols">
+    <p class="dm-swiss__lead" style="max-width: none">
+      読みが10文字以上の日本語だけを集めています。ジャンル・語種・品詞・言語的特徴をすべての語に付与し、長さや音の並びから引けるようにしています。
+    </p>
+  </div>
+</div>
+
+<div class="dm-swiss__index dm-swiss__grid">
+  <div class="dm-swiss__ixlabel">How to<br>look up</div>
+  <div class="dm-swiss__entries">
+    <% mock_entry_points.each do |entry| %>
+      <a class="dm-swiss__entry" href="#">
+        <span><%= entry[:meta] %></span>
+        <b><%= entry[:title] %></b>
+        <p><%= entry[:desc] %></p>
+      </a>
+    <% end %>
+  </div>
+</div>
+
+<div class="dm-swiss__index dm-swiss__grid">
+  <div class="dm-swiss__ixlabel">Index<br>by length</div>
+  <div class="dm-swiss__ixlist">
+    <% mock_words[1, 6].each_with_index do |word, index| %>
+      <a class="dm-swiss__ixrow" href="#">
+        <span class="no"><%= format("%03d", index + 1) %></span>
+        <span class="w"><%= word.surface %></span>
+        <span class="y"><%= word.reading %></span>
+        <span class="c"><%= word.length %></span>
+      </a>
+    <% end %>
+  </div>
+</div>
+
+<footer class="dm-swiss__foot">
+  <div>長い言葉のデータベース</div>
+  <span>CC BY 4.0</span>
+</footer>

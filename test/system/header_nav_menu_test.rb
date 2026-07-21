@@ -37,7 +37,8 @@ class HeaderNavMenuTest < ApplicationSystemTestCase
   test "メニューの外側をクリックするとプルダウンが閉じる" do
     open_nav_menu
 
-    find(".header-search__input").click
+    # メニュー外なら何でもよいが、遷移してしまうリンクは避ける(ヒーローの見出しを押す)
+    find("h1").click
     assert_selector ".nav-menu__trigger[aria-expanded='false']"
     assert_no_selector ".nav-menu__panel a", text: I18n.t("layouts.nav.advanced_search")
   end

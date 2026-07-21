@@ -1,0 +1,107 @@
+<% detail = mock_detail %>
+<div class="dm-refined__wrap">
+  <%= render "admin/design_mocks/refined/head", current: :word %>
+
+  <div class="dm-refined__block" style="gap: 0">
+    <nav class="dm-refined__crumb">
+      <% detail[:genres].each_with_index do |genre, index| %>
+        <% if index.positive? %><i>›</i><% end %>
+        <a class="<%= "is-last" if index == detail[:genres].size - 1 %>" href="#"><%= genre %></a>
+      <% end %>
+    </nav>
+
+    <div class="dm-refined__eyebrow" style="margin-top: 16px">
+      <span>見出し語</span>
+      <span>No. 1408</span>
+    </div>
+    <h1 class="dm-refined__title"><%= detail[:surface] %></h1>
+    <div class="dm-refined__reading"><%= detail[:reading] %>／<%= detail[:length] %> 字／<%= detail[:char_types] %></div>
+    <div class="dm-refined__hr"></div>
+  </div>
+
+  <div class="dm-refined__layout">
+    <div class="dm-refined__main">
+      <nav class="dm-refined__toc">
+        <b>このページの内容</b>
+        <% mock_toc.each_with_index do |(anchor, label), index| %>
+          <a href="#<%= anchor %>"><span><%= format("%02d", index + 1) %></span><%= label %></a>
+        <% end %>
+      </nav>
+
+      <section class="dm-refined__section" id="meaning">
+        <h2 class="dm-refined__h2">意味<span>語義 1 件</span></h2>
+        <p class="dm-refined__lead"><%= detail[:summary] %></p>
+
+        <div class="dm-refined__sense">
+          <span class="dm-refined__sensenum">語義 01</span>
+          <div class="dm-refined__ruby">
+            <ruby><%= detail[:surface] %><rt><%= detail[:reading] %></rt></ruby>
+          </div>
+          <p class="dm-refined__meaning"><%= detail[:meaning] %></p>
+          <div class="dm-refined__tags">
+            <% detail[:features].each do |feature| %>
+              <a href="#"><%= feature %></a>
+            <% end %>
+          </div>
+        </div>
+      </section>
+
+      <section class="dm-refined__section" id="data">
+        <h2 class="dm-refined__h2">言語データ<span>登録時に自動計測</span></h2>
+        <table class="dm-refined__props">
+          <tbody>
+            <% mock_properties.each do |label, value| %>
+              <tr>
+                <th scope="row"><%= label %></th>
+                <td><%= value %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="dm-refined__section" id="related">
+        <h2 class="dm-refined__h2">関連する語<span>5 件</span></h2>
+        <% mock_related_groups.each do |group| %>
+          <div class="dm-refined__relgroup">
+            <div class="dm-refined__rellabel"><%= group[:label] %></div>
+            <div class="dm-refined__rellist">
+              <% group[:words].each do |word| %>
+                <a href="#"><%= word.surface %></a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </section>
+
+      <section class="dm-refined__section" id="source">
+        <h2 class="dm-refined__h2">出典・更新<span>No. 1408</span></h2>
+        <p class="dm-refined__note">
+          読みは辞書および出版社の表記に基づいて確認したもの。<b>円環交差数</b>は五十音を円環に並べ、読みの順に線で結んだときの交差回数で、登録時に自動計測しています。<br>
+          最終更新 <%= detail[:updated_on] %>／このページのデータは CC BY 4.0 で利用できます。
+        </p>
+      </section>
+    </div>
+
+    <aside>
+      <div class="dm-refined__biblio">
+        <h3>書誌</h3>
+        <dl>
+          <% mock_infobox.each do |label, value| %>
+            <div>
+              <dt><%= label %></dt>
+              <dd><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="dm-refined__pager">
+    <a href="#"><span>前の語（15字）</span><b>天上天下唯我独尊</b></a>
+    <a href="#"><span>次の語（14字）</span><b>栴檀は双葉より芳し</b></a>
+  </nav>
+</div>
+
+<%= render "admin/design_mocks/refined/foot" %>
