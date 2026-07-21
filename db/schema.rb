@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_21_103000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -120,6 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_120000) do
     t.string "reading", limit: 768, null: false, collation: "utf8mb4_0900_as_ci", comment: "読み"
     t.virtual "reading_length", type: :integer, comment: "読みの文字数", as: "char_length(`reading`)", stored: true
     t.string "rhythm_pattern", limit: 2048, comment: "韻パターン(読みのローマ字表記)"
+    t.integer "ring_crossing_count", comment: "円環交差数(五十音円環で読みを結んだ線の交差回数)"
     t.datetime "updated_at", null: false
     t.string "vowel_pattern", limit: 1024, comment: "母音パターン(読みの母音のみ)"
     t.bigint "word_id", null: false
@@ -131,6 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_120000) do
     t.index ["part_of_speech_id"], name: "idx_word_senses_part_of_speech"
     t.index ["reading"], name: "idx_word_senses_reading", length: 191
     t.index ["reading_length"], name: "idx_word_senses_reading_length"
+    t.index ["ring_crossing_count"], name: "idx_word_senses_ring_crossing_count"
     t.index ["vowel_pattern"], name: "idx_word_senses_vowel_pattern", length: 191
     t.index ["word_id"], name: "idx_word_senses_word"
   end

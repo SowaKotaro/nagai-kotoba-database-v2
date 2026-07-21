@@ -98,6 +98,8 @@ class WordSense < ApplicationRecord
     self.rhythm_pattern = RhythmPattern.call(reading)
     self.vowel_pattern = VowelPattern.call(rhythm_pattern)
     self.mora_count = MoraCount.call(reading)
+    # 円環交差数は弦の総当たり判定で SQL では書けないため Ruby 側で計算する(KanaRing 参照)。
+    self.ring_crossing_count = KanaRing.crossing_count(reading)
     # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
     self.last_char = LastChar.call(reading)
   end

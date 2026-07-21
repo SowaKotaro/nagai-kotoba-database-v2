@@ -98,6 +98,8 @@ CREATE TABLE words (
 --   reading_length / first_char は読みからの派生 = 生成カラム(STORED)
 --     ※ CHAR_LENGTH なので「きゃ」= 2 文字としてカウントされる
 --   rhythm_pattern (ローマ字) は SQL で生成不可のため Ruby 側で設定
+--   ring_crossing_count(五十音円環で読みを結んだ線の交差回数)も弦の総当たり判定が
+--   必要で SQL では書けないため Ruby 側(KanaRing)で設定する
 --   last_char も読みからの派生だが、末尾の長音符「ー」を飛ばして直前の文字を
 --   取る必要があり、生成式にマルチバイト文字を含めると ActiveRecord の
 --   SchemaDumper(MySQL2 アダプタ)が schema.rb をダンプする際に文字化けする
@@ -115,6 +117,7 @@ CREATE TABLE word_senses (
   rhythm_pattern    VARCHAR(2048) NULL COMMENT '韻パターン(読みのローマ字表記)',
   mora_count        INT           NULL COMMENT 'モーラ数(拗音は1拍。Ruby 側で生成)',
   vowel_pattern     VARCHAR(1024) NULL COMMENT '母音パターン(rhythm_pattern から母音抽出。Ruby 側で生成)',
+  ring_crossing_count INT         NULL COMMENT '円環交差数(五十音円環で読みを結んだ線の交差回数。Ruby 側で生成)',
   meaning           TEXT          NULL COMMENT '意味',
   reading_length    INT           AS (CHAR_LENGTH(reading)) STORED COMMENT '読みの文字数',
   first_char        VARCHAR(8)    COLLATE utf8mb4_0900_as_ci AS (LEFT(reading, 1)) STORED COMMENT '先頭文字',
@@ -132,6 +135,7 @@ CREATE TABLE word_senses (
   KEY idx_word_senses_last_char      (last_char),
   KEY idx_word_senses_mora_count     (mora_count),
   KEY idx_word_senses_vowel_pattern  (vowel_pattern(191)),
+  KEY idx_word_senses_ring_crossing_count (ring_crossing_count),
   CONSTRAINT fk_word_senses_word
     FOREIGN KEY (word_id)           REFERENCES words (id),
   CONSTRAINT fk_word_senses_genre

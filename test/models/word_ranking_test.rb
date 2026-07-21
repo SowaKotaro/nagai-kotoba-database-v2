@@ -54,6 +54,23 @@ class WordRankingTest < ActiveSupport::TestCase
     assert_equal 5, row[:value]
   end
 
+  test "円環の交差が多い順は交差する語だけを載せる" do
+    rows = board("ring_crossing_desc").top
+    # さつじんじけん は 3 回交差する。カレー は弦が 1 本しかなく交差 0 回なので下限未満。
+    assert_equal [ [ "ABC殺人事件", 3 ] ], rows.map { |row| [ row[:surface], row[:value] ] }
+  end
+
+  test "円環の交差が少ない順は交差 0 回の語も載せ、同値なら読みが長い語を上位にする" do
+    zero_long = Word.create!(surface: "五十音順の長い語", annotated_at: Time.current)
+    zero_long.word_senses.create!(reading: "あいうえおかきくけこ")
+
+    rows = board("ring_crossing_asc").top
+    # 交差 0 回が2語(読み10字 と カレー3字)並び、長い方が先。次に交差 3 回の さつじんじけん。
+    assert_equal [ "五十音順の長い語", "カレーライス", "ABC殺人事件" ], rows.map { |row| row[:surface] }
+    assert_equal [ 0, 0, 3 ], rows.map { |row| row[:value] }
+    assert_equal [ 1, 1, 3 ], rows.map { |row| row[:rank] }
+  end
+
   test "未注釈の語は載せない" do
     surfaces = WordRanking.all.flat_map { |ranking| ranking.top.map { |row| row[:surface] } }
     assert_not_includes surfaces, "バミューダトライアングル"
