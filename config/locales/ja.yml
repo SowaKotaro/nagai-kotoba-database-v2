@@ -221,6 +221,13 @@ ja:
       first_char: "先頭文字"
       last_char: "末尾文字"
       vowel_pattern: "母音パターン"
+      kana_ring:
+        summary: "五十音円環を見る"
+        caption: "五十音を外周に並べ、読みを読み順に朱線で結ぶ"
+        aria: "読み「%{reading}」を五十音円環に描いた図"
+      crossings: "円環交差数"
+      crossings_count: "%{count}回"
+      crossings_hint: "五十音円環で読みを読み順に結んだとき、線どうしが交わる回数"
       origins: "語種"
       variants: "別表記"
       features: "言語学的特徴"

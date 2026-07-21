@@ -330,6 +330,121 @@
   line-height: 2.1;
 }
 
+/* --- 円環交差数(印章): 交差数のカウント + 五十音円環の折り畳み。genre-fold の文法を流用 --- */
+.kana-ring {
+  border: 1px solid var(--rule-mid);
+}
+
+.kana-ring[open] {
+  border-color: var(--ink);
+}
+
+.kana-ring__summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding: 6px 12px;
+  cursor: pointer;
+  /* 既定の三角マーカーは消し、朱のキャレットで示す */
+  list-style: none;
+}
+
+.kana-ring__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 交差数の値(常時表示) */
+.kana-ring__count {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+/* 円環を開く副次的な導線 */
+.kana-ring__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.kana-ring__summary:hover .kana-ring__toggle {
+  color: var(--ink);
+}
+
+.kana-ring__caret {
+  color: var(--shu);
+  transform: rotate(-90deg);
+  transition: transform 0.15s;
+}
+
+.kana-ring[open] > .kana-ring__summary .kana-ring__caret {
+  transform: rotate(0deg);
+}
+
+.kana-ring__body {
+  border-top: 1px solid var(--rule);
+  padding: var(--space-4);
+}
+
+.kana-ring__figure {
+  margin: 0 auto;
+  max-width: 320px;
+}
+
+.kana-ring__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 五十音を並べた外周円の薄いガイド */
+.kana-ring__guide {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 0.6;
+}
+
+/* 読み順に結ぶ朱の折れ線 */
+.kana-ring__stroke {
+  fill: none;
+  stroke: var(--shu);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* 始点の刻印 */
+.kana-ring__start {
+  fill: var(--shu);
+}
+
+/* 五十音の各字。既定は薄い墨、読みに登場する字は朱で点灯 */
+.kana-ring__kana {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  fill: var(--ink-3);
+  text-anchor: middle;
+}
+
+.kana-ring__kana.is-on {
+  font-size: 8.5px;
+  fill: var(--shu);
+}
+
+.kana-ring__caption {
+  margin-top: var(--space-3);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-align: center;
+}
+
 /* 小さなセクションラベル */
 .section-label {
   margin: var(--space-5) 0 var(--space-3);

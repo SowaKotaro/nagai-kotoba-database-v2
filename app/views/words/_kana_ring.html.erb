@@ -1,0 +1,39 @@
+<%# 円環交差数の中身: 交差数のカウントを常時見せ、折り畳みを開くと読みを結んだ
+    五十音円環(印章)を表示する。幅を取るので既定は畳む(details・JSなし)。 %>
+<% path = KanaRing.path(reading) %>
+<% if path.present? %>
+  <% visited = KanaRing.visited_chars(reading) %>
+  <% crossings = KanaRing.crossing_count(reading) %>
+  <details class="kana-ring">
+    <summary class="kana-ring__summary">
+      <span class="mono kana-ring__count"><%= t("words.show.crossings_count", count: crossings) %></span>
+      <span class="kana-ring__toggle">
+        <%= icon "caret_down", "kana-ring__caret" %><%= t("words.show.kana_ring.summary") %>
+      </span>
+    </summary>
+    <div class="kana-ring__body">
+      <figure class="kana-ring__figure">
+        <svg class="kana-ring__svg" viewBox="0 0 <%= KanaRing::VIEWBOX %> <%= KanaRing::VIEWBOX %>"
+             role="img" aria-label="<%= t('words.show.kana_ring.aria', reading: reading) %>">
+          <%# 五十音を並べた外周円の薄いガイド %>
+          <circle class="kana-ring__guide" cx="<%= KanaRing::CENTER %>" cy="<%= KanaRing::CENTER %>"
+                  r="<%= KanaRing::RADIUS %>"></circle>
+          <%# 読み順に結ぶ朱の折れ線。ラベルの下に敷く %>
+          <polyline class="kana-ring__stroke"
+                    points="<%= path.map { |node| "#{node.cx},#{node.cy}" }.join(" ") %>"></polyline>
+          <%# 始点の刻印(朱の小さな正方形) %>
+          <% start = path.first %>
+          <rect class="kana-ring__start" x="<%= start.cx - 3 %>" y="<%= start.cy - 3 %>" width="6" height="6"></rect>
+          <%# 五十音全字。読みに登場する字は朱で点灯 %>
+          <% KanaRing.nodes.each do |node| %>
+            <text class="kana-ring__kana<%= " is-on" if visited.include?(node.char) %>"
+                  x="<%= node.cx %>" y="<%= node.cy %>" dy="0.34em"><%= node.char %></text>
+          <% end %>
+        </svg>
+        <figcaption class="kana-ring__caption mono"><%= t("words.show.kana_ring.caption") %></figcaption>
+      </figure>
+    </div>
+  </details>
+<% else %>
+  <span class="sense-undefined"><%= t("words.show.undefined") %></span>
+<% end %>
