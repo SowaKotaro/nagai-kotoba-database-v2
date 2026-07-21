@@ -182,6 +182,12 @@
             <dd><%= link_to sense.last_char, words_path(last_char: sense.last_char), class: "tag" %></dd>
           </div>
 
+          <%# 円環交差数: 交差数のカウントと、読みを結んだ五十音円環の折り畳みを同居させる %>
+          <div class="sense-attrs__item sense-attrs__item--wide" title="<%= t('words.show.crossings_hint') %>">
+            <dt><%= icon "ring_crossings" %><%= t("words.show.crossings") %></dt>
+            <dd><%= render "words/kana_ring", reading: sense.reading %></dd>
+          </div>
+
           <div class="sense-attrs__item sense-attrs__item--wide">
             <dt><%= icon "variant" %><%= t("words.show.variants") %></dt>
             <dd>
