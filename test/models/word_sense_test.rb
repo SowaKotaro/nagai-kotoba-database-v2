@@ -37,6 +37,15 @@ class WordSenseTest < ActiveSupport::TestCase
     assert_equal 4, word_sense.mora_count
   end
 
+  test "保存時に reading から ring_crossing_count が自動生成され、変更にも追従する" do
+    # あいうえお = 五十音の並び順に沿って進むだけなので弦は交差しない。
+    word_sense = WordSense.create!(word: words(:abc_murder), reading: "あいうえお")
+    assert_equal 0, word_sense.ring_crossing_count
+
+    word_sense.update!(reading: "さつじんじけん")
+    assert_equal KanaRing.crossing_count("さつじんじけん"), word_sense.ring_crossing_count
+  end
+
   test "生成カラム(reading_length/first_char)が DB で計算される" do
     word_sense = WordSense.create!(word: words(:abc_murder), reading: "さくら")
     word_sense.reload

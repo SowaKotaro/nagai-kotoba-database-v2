@@ -25,6 +25,9 @@ class WordRanking
     { key: "small_kana_desc",       icon: "quote_ab",   minimum: 1 },
     { key: "chouon_desc",           icon: "music_notes", minimum: 1 },
     { key: "dakuten_desc",          icon: "quotes",     minimum: 1 },
+    { key: "ring_crossing_desc",    icon: "ring_crossings", minimum: 1 },
+    # 少ない順は 0 回の語こそが主役なので下限を設けない(同値の並びは WordSort が読みの長い順で解く)。
+    { key: "ring_crossing_asc",     icon: "ring_crossings", minimum: 0 },
     { key: "sense_count_desc",      icon: "book_open",  minimum: 2 },
     { key: "variant_count_desc",    icon: "variant",    minimum: 1 },
     { key: "feature_count_desc",    icon: "pen_nib",    minimum: 1 }

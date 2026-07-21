@@ -21,7 +21,7 @@ class WordSort
   READING_REVERSED_MIN =
     "(SELECT MIN(REVERSE(word_senses.reading)) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
 
-  # --- ランキングの指標(すべて「値が大きいほど上位」) ---
+  # --- ランキングの指標(既定は「値が大きいほど上位」。少ない順のランキングだけ例外的に昇順) ---
   # 読みの文字数。このサイトの看板。
   LENGTH_MAX =
     "(SELECT MAX(word_senses.reading_length) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
@@ -58,6 +58,12 @@ class WordSort
     "word_senses.reading COLLATE utf8mb4_bin, " \
     "'[ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽゔ]', ''))) " \
     "FROM word_senses WHERE word_senses.word_id = words.id)".freeze
+  # 円環交差数(五十音円環で読みを結んだ折れ線の交差回数)。多い順と少ない順の両方でランキングにするため、
+  # 降順は最大・昇順は最小を代表値にする。
+  RING_CROSSING_MAX =
+    "(SELECT MAX(word_senses.ring_crossing_count) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
+  RING_CROSSING_MIN =
+    "(SELECT MIN(word_senses.ring_crossing_count) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
   # 語義(同音異義・多義)の数。
   SENSE_COUNT = "(SELECT COUNT(*) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
   # 別表記の数。
@@ -90,6 +96,10 @@ class WordSort
     "small_kana_desc"      => Arel.sql("#{SMALL_KANA_MAX} DESC, words.id ASC"),
     "chouon_desc"          => Arel.sql("#{CHOUON_MAX} DESC, words.id ASC"),
     "dakuten_desc"         => Arel.sql("#{DAKUTEN_MAX} DESC, words.id ASC"),
+    "ring_crossing_desc"   => Arel.sql("#{RING_CROSSING_MAX} DESC, words.id ASC"),
+    # 少ない順は 0 回の語が大量に並ぶため、同値のときは読みが長い語を上位にする
+    # (「読みが長いのに交差しない」語が頭に来て、順位表として意味が出る)。
+    "ring_crossing_asc"    => Arel.sql("#{RING_CROSSING_MIN} ASC, #{LENGTH_MAX} DESC, words.id ASC"),
     "sense_count_desc"     => Arel.sql("#{SENSE_COUNT} DESC, words.id ASC"),
     "variant_count_desc"   => Arel.sql("#{VARIANT_COUNT} DESC, words.id ASC"),
     "feature_count_desc"   => Arel.sql("#{FEATURE_COUNT} DESC, words.id ASC")
@@ -105,6 +115,8 @@ class WordSort
     "small_kana_desc"      => Arel.sql("words.*, #{SMALL_KANA_MAX} AS ranking_metric"),
     "chouon_desc"          => Arel.sql("words.*, #{CHOUON_MAX} AS ranking_metric"),
     "dakuten_desc"         => Arel.sql("words.*, #{DAKUTEN_MAX} AS ranking_metric"),
+    "ring_crossing_desc"   => Arel.sql("words.*, #{RING_CROSSING_MAX} AS ranking_metric"),
+    "ring_crossing_asc"    => Arel.sql("words.*, #{RING_CROSSING_MIN} AS ranking_metric"),
     "sense_count_desc"     => Arel.sql("words.*, #{SENSE_COUNT} AS ranking_metric"),
     "variant_count_desc"   => Arel.sql("words.*, #{VARIANT_COUNT} AS ranking_metric"),
     "feature_count_desc"   => Arel.sql("words.*, #{FEATURE_COUNT} AS ranking_metric")
@@ -124,6 +136,7 @@ class WordSort
     length_desc length_asc
     mora_desc surface_length_desc reading_density_desc
     small_kana_desc chouon_desc dakuten_desc
+    ring_crossing_desc ring_crossing_asc
     sense_count_desc variant_count_desc feature_count_desc
   ].freeze
 
