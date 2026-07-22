@@ -12,6 +12,9 @@
 class ReadingExtractor
   require "open3"
 
+  # 読みとして残す文字(全角カタカナ＋長音符)。これ以外は落とす。
+  NON_KATAKANA = /[^ァ-ヶー]/
+
   # neologd の一般的なインストール先。環境変数が無いときの既定値。
   DEFAULT_NEOLOGD_PATHS = [
     "/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd",
@@ -30,7 +33,7 @@ class ReadingExtractor
     return [] if surfaces.empty?
     return Array.new(surfaces.size) unless mecab_available?
 
-    output, status = Open3.capture2(*command, stdin_data: surfaces.join("\n"))
+    output, status = Open3.capture2(*command, stdin_data: mecab_input(surfaces))
     return Array.new(surfaces.size) unless status.success?
 
     # -Oyomi は入力1行につき読み1行を出力する。並びを入力に合わせて対応付ける。
@@ -42,6 +45,12 @@ class ReadingExtractor
   end
 
   private
+
+  # 辞書は半角英数字で登録されている(例「Dr.スランプ」)。全角のままだと未知語になり
+  # 読みが取れないので、入力を NFKC で半角へ寄せてから渡す(表層形自体は変更しない)。
+  def mecab_input(surfaces)
+    surfaces.map { |surface| surface.to_s.unicode_normalize(:nfkc) }.join("\n")
+  end
 
   # 実行コマンド(配列)。辞書があれば -d で指定する。
   def command
@@ -64,8 +73,13 @@ class ReadingExtractor
     @mecab_available = system("mecab", "--version", out: File::NULL, err: File::NULL) || false
   end
 
+  # MeCab は「・」「＆」などの記号や未知語を読みに素通しする。
+  # 読みはカタカナのみで扱う仕様(検索・生成カラムの前提)なので、ここでカタカナ以外を落とす。
+  #   例: 「シャーロット・リンリン」→「シャーロットリンリン」
+  # NFKC で半角カナ(ｼｬｰﾛｯﾄ)を全角に寄せ、ひらがなはカタカナへ変換してから絞り込む。
   def normalize(line)
-    reading = line.to_s.strip
-    reading.presence
+    reading = line.to_s.strip.unicode_normalize(:nfkc)
+    reading = reading.tr("ぁ-んゔ", "ァ-ンヴ")
+    reading.gsub(NON_KATAKANA, "").presence
   end
 end
