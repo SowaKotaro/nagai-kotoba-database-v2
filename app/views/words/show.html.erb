@@ -184,7 +184,7 @@
 
           <%# 円環交差数: 交差数のカウントと、読みを結んだ五十音円環の折り畳みを同居させる %>
           <div class="sense-attrs__item sense-attrs__item--wide" title="<%= t('words.show.crossings_hint') %>">
-            <dt><%= icon "ring_crossings" %><%= t("words.show.crossings") %></dt>
+            <dt><%= icon "pentagram" %><%= t("words.show.crossings") %></dt>
             <dd><%= render "words/kana_ring", reading: sense.reading %></dd>
           </div>
 
@@ -228,12 +228,33 @@
   </section>
 <% end %>
 
+<%# しりとりの「次の一手」。末尾文字を先頭文字に持つ語へ繋ぐ回遊導線。
+    「ん」で終わる語・在庫が無い語では、その旨を静かに書いて手詰まりも見どころにする %>
+<% if @shiritori&.head_char.present? %>
+  <section class="related related--shiritori">
+    <h2 class="related__title"><%= icon "flow_arrow" %><%= t("words.show.shiritori.title") %></h2>
+    <% if @shiritori.dead_end? %>
+      <p class="empty-note"><%= t("words.show.shiritori.dead_end_html", char: @shiritori.head_char) %></p>
+    <% elsif @shiritori.words.any? %>
+      <div class="related__group">
+        <div class="related__group-header">
+          <p class="section-label"><%= t("words.show.shiritori.lead_html", char: @shiritori.head_char) %></p>
+          <%= link_to words_path(@shiritori.facet_params), class: "related__more icon-label" do %>
+            <%= t("words.show.related.more") %><%= icon "arrow_right" %>
+          <% end %>
+        </div>
+        <div class="entry-list">
+          <%= render partial: "words/entry_row", collection: @shiritori.words, as: :word %>
+        </div>
+      </div>
+    <% else %>
+      <p class="empty-note"><%= t("words.show.shiritori.none_html", char: @shiritori.head_char) %></p>
+    <% end %>
+  </section>
+<% end %>
+
 <nav class="word-footer-nav">
   <%= link_to words_path, class: "back-link icon-label" do %>
     <%= icon "arrow_left" %><%= t("words.show.back") %>
-  <% end %>
-  <%# 読み終えたら別の言葉へ跳べる。公開語からランダムに1語ジャンプ(発見の回遊) %>
-  <%= link_to random_words_path, class: "word-random btn" do %>
-    <%= icon "shuffle" %><span><%= t("words.show.random") %></span>
   <% end %>
 </nav>

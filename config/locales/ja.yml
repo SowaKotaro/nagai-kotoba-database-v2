@@ -262,8 +262,12 @@ ja:
         title: "関連する言葉"
         genre: "同じジャンルの言葉"
         reading_length: "同じ文字数の言葉"
-        first_char: "同じ先頭文字の言葉"
         more: "もっと見る"
+      shiritori:
+        title: "しりとり 〜次の一手〜"
+        lead_html: '末尾の「<span class="shiritori__char">%{char}</span>」から始まる言葉'
+        dead_end_html: '「<span class="shiritori__char">%{char}</span>」で終わるので、しりとりはここで終わり。次の一手はありません。'
+        none_html: '「<span class="shiritori__char">%{char}</span>」から始まる言葉は、まだ収録されていません。'
     lead:
       base: "「%{surface}」は、読み「%{reading}」（%{metrics}）の日本語の長い言葉。"
       # 語義ごとに読みが違う語(異読)は、字数・モーラが定まらないので読みだけを並べる
