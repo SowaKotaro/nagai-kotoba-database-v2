@@ -120,7 +120,7 @@ ja:
       recent: "最近追加された単語"
       ranking: "読みが長い言葉"
       see_all: "一覧へ"
-      see_ranking: "一覧へ"
+      see_ranking: "ランキングへ"
       new_badge: "NEW"
       stats:
         words: "収録語数"
@@ -129,8 +129,8 @@ ja:
         senses_unit: "件"
         genres: "ジャンル数"
         genres_unit: "分類"
-        average_reading: "平均読み字数"
-        average_reading_unit: "字"
+        monthly_new: "今月の新収録数"
+        monthly_new_unit: "語"
   searches:
     title: "検索・絞り込み"
     description: "日本語の長い言葉の詳細検索。読みの文字数・先頭と末尾の文字・文字種・ヘボン式ローマ字・母音の韻・正規表現など、多彩な条件で絞り込めます。"
@@ -683,9 +683,6 @@ ja:
       sense_count_desc:
         title: "語義が多い言葉"
         unit: "語義"
-      variant_count_desc:
-        title: "別表記が多い言葉"
-        unit: "通り"
       feature_count_desc:
         title: "言語学的特徴が多い言葉"
         unit: "件"
@@ -788,8 +785,10 @@ ja:
         waffle_aria: "語種構成のワッフルチャート"
         bar_count: "%{count}語義"
         entity_heading: "エンティティ型"
-        entity_lead: "エンティティ型ごとの語義数です。面積が語義数に比例します。押すとその型の語の一覧を表示します。"
+        entity_lead: "エンティティ型ごとの語義数です。面積が語義数に比例します。押すとその型の語の一覧を表示します。マスが小さくなりすぎる型は「その他」にまとめています。"
         cell_title: "%{name}: %{count}語義"
+        entity_other: "その他"
+        other_title: "その他 %{types}型: %{count}語義"
       sound:
         title: "母音と子音"
         spectrum_heading: "拍位置ごとの母音構成"

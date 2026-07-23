@@ -38,13 +38,7 @@
   <% max_count = @stats.entity_types.first[:count].to_f %>
   <div class="entity-treemap">
     <% stats_entity_treemap(@stats.entity_types).each do |rect| %>
-      <%= link_to words_path(entity_type_id: rect[:id]), class: "entity-treemap__cell",
-            style: "left: #{rect[:left]}%; top: #{rect[:top]}%; width: #{rect[:width]}%; height: #{rect[:height]}%; " \
-                   "--fill: #{(rect[:count] / max_count).round(3)}",
-            title: t("stats.index.origins.cell_title", name: rect[:name], count: rect[:count]) do %>
-        <span class="entity-treemap__name"><%= rect[:name] %></span>
-        <span class="entity-treemap__count"><%= number_with_delimiter(rect[:count]) %></span>
-      <% end %>
+      <%= render "entity_cell", rect: rect, max_count: max_count %>
     <% end %>
   </div>
   <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.entity_types.sum { |entity| entity[:count] })) %></p>

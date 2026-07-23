@@ -108,14 +108,19 @@ module StatsHelper
   # レイアウト計算に使う仮想キャンバス(横:縦 = 2:1。CSS の aspect-ratio と一致させる)。
   TREEMAP_WIDTH = 200.0
   TREEMAP_HEIGHT = 100.0
+  # 名前と件数が読めて、指でも押せる矩形の下限(全体に占める割合)。
+  # これを下回る型は末尾から「その他」へ畳む。
+  TREEMAP_MIN_SHARE = 0.03
 
   # [{ id:, name:, count: }](多い順) を、面積が件数に比例する矩形(squarified treemap)へ
   # 展開する。座標はコンテナに対する % (left/top/width/height)。
+  # 細かすぎる型は「その他」(id: nil)にまとめてから割り付ける。
   def stats_entity_treemap(entities)
     total = entities.sum { |entity| entity[:count] }.to_f
     return [] if total.zero?
 
-    items = entities.map { |entity| entity.merge(area: entity[:count] / total * TREEMAP_WIDTH * TREEMAP_HEIGHT) }
+    items = fold_small_entities(entities, total)
+             .map { |entity| entity.merge(area: entity[:count] / total * TREEMAP_WIDTH * TREEMAP_HEIGHT) }
     rects = []
     squarify(items, 0.0, 0.0, TREEMAP_WIDTH, TREEMAP_HEIGHT, rects)
     rects.map do |rect|
@@ -167,6 +172,23 @@ module StatsHelper
   end
 
   private
+
+  # 面積が下限(TREEMAP_MIN_SHARE)に満たない型を、件数の少ない方から「その他」へ畳む。
+  # 畳んだ「その他」自体が下限に届かないうちは、次に小さい型も巻き込む。
+  # 畳む相手が1つしか無いときは面積が変わらず名前が消えるだけなので、そのまま残す。
+  def fold_small_entities(entities, total)
+    floor = total * TREEMAP_MIN_SHARE
+    major = entities.sort_by { |entity| -entity[:count] }
+    minor = []
+    minor_count = 0
+    while major.size > 1 && (major.last[:count] < floor || (minor.any? && minor_count < floor))
+      minor_count += major.last[:count]
+      minor << major.pop
+    end
+    return entities if minor.size < 2
+
+    major + [ { id: nil, name: t("stats.index.origins.entity_other"), count: minor_count, folded: minor.size } ]
+  end
 
   # squarified treemap(Bruls らのアルゴリズム)。残り領域の短辺に沿って、
   # 矩形のアスペクト比が最も正方形に近づくところまで1列(row)に詰めては敷き詰める。

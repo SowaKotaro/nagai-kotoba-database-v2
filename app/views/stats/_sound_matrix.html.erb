@@ -31,7 +31,8 @@
       <tbody>
         <% rows.each do |row| %>
           <tr>
-            <th scope="row"><%= t("stats.index.sound_matrix.row_label", row: row) %></th>
+            <%# 行見出しも列と同じ1文字にし、マスに寄せて右端で揃える(「行」は見出し・ホバーで補う) %>
+            <th scope="row"><%= row %></th>
             <% cols.each do |col| %>
               <% count = matrix[:cells][[ row, col ]].to_i %>
               <td>

@@ -7,19 +7,20 @@ class HomeController < ApplicationController
 
   def index
     # 公開統計は毎リクエスト COUNT を3本発行していた。短TTLでキャッシュする(Issue 26)。
-    stats = Rails.cache.fetch("home/stats", expires_in: 1.hour) do
+    # 「今月の」を含むのでキー自体に年月を持たせ、月をまたいだ瞬間に作り直す。
+    stats = Rails.cache.fetch("home/stats/#{Date.current.strftime('%Y-%m')}", expires_in: 1.hour) do
       {
         words: Word.annotated.count,
         senses: WordSense.published.count,
         genres: Genre.small.count,
-        # 「長い言葉のデータベース」の性格を一言で示す指標。小数第1位まで。
-        average_reading_length: WordSense.published.average(:reading_length)&.to_f&.round(1)
+        # 更新が続いていることが一目で分かる指標(統計ページ「今月の新収録」と同じ定義)。
+        monthly_new: Word.annotated.where(created_at: Time.current.all_month).count
       }
     end
     @word_count = stats[:words]
     @sense_count = stats[:senses]
     @genre_count = stats[:genres]
-    @average_reading_length = stats[:average_reading_length]
+    @monthly_new_count = stats[:monthly_new]
     @recent_words = Word.annotated
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
                         .order(created_at: :desc, id: :desc)

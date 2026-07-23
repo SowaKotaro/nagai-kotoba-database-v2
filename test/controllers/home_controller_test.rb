@@ -6,6 +6,13 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "収録統計に今月の新収録数を出す" do
+    get root_path
+    # フィクスチャの公開語2語はどちらも読込時刻(=今月)に作られる。
+    assert_select ".stats-grid__item dt", text: I18n.t("home.index.stats.monthly_new")
+    assert_select ".stats-grid__item dd", text: /\A2/
+  end
+
   test "トップに最長ランキングと、ランキングページへの導線がある" do
     get root_path
     assert_response :success
