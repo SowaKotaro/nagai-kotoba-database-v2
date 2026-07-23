@@ -1,0 +1,17 @@
+<%# ツリーマップの1マス。畳んだ「その他」(id: nil)だけは絞り込み先が無いので
+    リンクにせず、墨チントの面として置く(名前・件数の組みは同じ)。 %>
+<% style = "left: #{rect[:left]}%; top: #{rect[:top]}%; width: #{rect[:width]}%; height: #{rect[:height]}%; " \
+           "--fill: #{(rect[:count] / max_count).round(3)}" %>
+<% if rect[:id] %>
+  <%= link_to words_path(entity_type_id: rect[:id]), class: "entity-treemap__cell", style: style,
+        title: t("stats.index.origins.cell_title", name: rect[:name], count: rect[:count]) do %>
+    <span class="entity-treemap__name"><%= rect[:name] %></span>
+    <span class="entity-treemap__count"><%= number_with_delimiter(rect[:count]) %></span>
+  <% end %>
+<% else %>
+  <span class="entity-treemap__cell entity-treemap__cell--other" style="<%= style %>"
+        title="<%= t('stats.index.origins.other_title', types: rect[:folded], count: rect[:count]) %>">
+    <span class="entity-treemap__name"><%= rect[:name] %></span>
+    <span class="entity-treemap__count"><%= number_with_delimiter(rect[:count]) %></span>
+  </span>
+<% end %>

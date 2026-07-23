@@ -1,6 +1,7 @@
 # 公開ランキングページ(/rankings)の1枠を表す値オブジェクト。
 #
-# ランキングは「WordSort のランキング用の並び(WordSort::RANKING_KEYS)」と1対1で対応する。
+# 各枠は「WordSort のランキング用の並び(WordSort::RANKING_KEYS)」のいずれかに対応する
+# (並びのうち、順位表として出さないものはこのカタログに載せない)。
 # ページ上では上位 TOP_LIMIT 件だけを見せ、「もっと見る」は同じキーで並べた
 # 単語一覧(words#index?sort=...)へ渡す。順位付けの規則を1か所に閉じるため、
 # 指標式・下限・表示書式はすべてこのカタログが持つ。
@@ -15,7 +16,7 @@ class WordRanking
   # icon          : 見出しに添えるインライン SVG 名
   # minimum       : この値未満の語はランキングに載せない(0本の長音符などを並べない)
   # format        : 値の表示書式(:integer / :decimal)
-  # 該当語が1つも無い枠(アノテーション待ちの特徴・別表記など)はページ側で丸ごと省く。
+  # 該当語が1つも無い枠(アノテーション待ちの特徴など)はページ側で丸ごと省く。
   DEFINITIONS = [
     { key: "length_desc",           icon: "ruler",      minimum: 1 },
     { key: "mora_desc",             icon: "metronome",  minimum: 1 },
@@ -29,7 +30,8 @@ class WordRanking
     # 少ない順は 0 回の語こそが主役なので下限を設けない(同値の並びは WordSort が読みの長い順で解く)。
     { key: "ring_crossing_asc",     icon: "ring_crossings", minimum: 0 },
     { key: "sense_count_desc",      icon: "book_open",  minimum: 2 },
-    { key: "variant_count_desc",    icon: "variant",    minimum: 1 },
+    # 別表記の多さ(variant_count_desc)は順位表としては出さない(オーナー判断)。
+    # 一覧の並び替え(WordSort::SELECTABLE_KEYS)としては残す。
     { key: "feature_count_desc",    icon: "pen_nib",    minimum: 1 }
   ].freeze
 

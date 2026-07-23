@@ -64,6 +64,21 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "g.wave-chart__bar--static", count: 1
   end
 
+  test "小さすぎるエンティティ型はその他へ畳み、リンクにしない" do
+    # 面積が下限(3%)を割る型は読めず押せないので、末尾から「その他」にまとめる。
+    word = Word.create!(surface: "ツリーマップ検証語", annotated_at: Time.current, annotation_status: :done)
+    major = EntityType.create!(name: "大きい型")
+    30.times { |index| word.word_senses.create!(reading: "ケンショウ#{index}", entity_type: major) }
+    3.times { |index| word.word_senses.create!(reading: "コマカイ#{index}", entity_type: EntityType.create!(name: "小さい型#{index}")) }
+
+    get stats_path
+    assert_select "span.entity-treemap__cell--other .entity-treemap__name",
+                  text: I18n.t("stats.index.origins.entity_other")
+    # 畳んだ型は個別のリンクを持たない(大きい型は残る)
+    assert_select "a[href=?]", words_path(entity_type_id: major.id)
+    assert_select "a[href=?]", words_path(entity_type_id: EntityType.find_by(name: "小さい型0").id), count: 0
+  end
+
   test "特徴ランキングの実例は該当部分に朱下線の span を持つ" do
     get stats_path
     assert_select ".feature-rank__target", text: "殺人"

@@ -33,13 +33,11 @@
     <dt><%= t("home.index.stats.genres") %></dt>
     <dd><%= number_with_delimiter(@genre_count) %><span class="stats-grid__unit"><%= t("home.index.stats.genres_unit") %></span></dd>
   </div>
-  <%# 「長い言葉の」データベースであることが数字で分かる指標。語が無いうちは出さない %>
-  <% if @average_reading_length %>
-    <div class="stats-grid__item">
-      <dt><%= t("home.index.stats.average_reading") %></dt>
-      <dd><%= number_with_precision(@average_reading_length, precision: 1) %><span class="stats-grid__unit"><%= t("home.index.stats.average_reading_unit") %></span></dd>
-    </div>
-  <% end %>
+  <%# 収録が今も続いていることが分かる指標。0 語の月もそのまま出す %>
+  <div class="stats-grid__item">
+    <dt><%= t("home.index.stats.monthly_new") %></dt>
+    <dd><%= number_with_delimiter(@monthly_new_count) %><span class="stats-grid__unit"><%= t("home.index.stats.monthly_new_unit") %></span></dd>
+  </div>
 </dl>
 
 <%# 今日の一語は全幅の帯で1つだけ置く(3カラムに混ぜると中身が薄く縦に間延びするため)。
@@ -70,7 +68,9 @@
   <section class="home-column">
     <div class="home-column__header">
       <h2 class="home-column__title"><%= icon "bell_ringing" %><%= t("home.index.recent") %></h2>
-      <%= link_to t("home.index.see_all"), words_path, class: "home-column__more" %>
+      <%= link_to words_path, class: "home-column__more" do %>
+        <%= t("home.index.see_all") %><%= icon "arrow_right" %>
+      <% end %>
     </div>
     <% @recent_words.each do |word| %>
       <%= link_to word_path(word), class: "home-column__item" do %>
@@ -87,7 +87,9 @@
   <section class="home-column">
     <div class="home-column__header">
       <h2 class="home-column__title"><%= icon "crown" %><%= t("home.index.ranking") %></h2>
-      <%= link_to t("home.index.see_ranking"), rankings_path, class: "home-column__more" %>
+      <%= link_to rankings_path, class: "home-column__more" do %>
+        <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
+      <% end %>
     </div>
     <% @longest_words.take(5).each_with_index do |word, index| %>
       <%= link_to word_path(word), class: "home-column__item" do %>

@@ -10,9 +10,9 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
 
   test "該当語のある枠だけを並べ、切替タブも同じ数になる" do
     get rankings_path
-    # フィクスチャでは拗音・促音と語義数の枠が空になるため、12枠中10枠だけ出る。
+    # フィクスチャでは拗音・促音と語義数の枠が空になるため、11枠中9枠だけ出る。
     expected = WordRanking.all.count { |ranking| ranking.top.any? }
-    assert_equal 10, expected
+    assert_equal 9, expected
     assert_select "section.rank-board", count: expected
     assert_select ".rank-tab", count: expected
     # 先頭のタブだけが押された状態で、パネルはサーバ側では隠さない(JS 無効でも全部読める)

@@ -7,7 +7,13 @@ class WordRankingTest < ActiveSupport::TestCase
   end
 
   test "すべての枠が WordSort のランキング用の並びと対応する" do
-    assert_equal WordSort::RANKING_KEYS.sort, WordRanking.all.map(&:key).sort
+    assert_empty WordRanking.all.map(&:key) - WordSort::RANKING_KEYS
+  end
+
+  test "順位表として出さない並びは枠にしない" do
+    # 別表記の多さは一覧の並び替えとしては残すが、ランキングページには出さない(オーナー判断)。
+    assert_includes WordSort::RANKING_KEYS, "variant_count_desc"
+    assert_nil board("variant_count_desc")
   end
 
   test "読みが長い順は最長の語が先頭で、値は読みの文字数" do
@@ -32,9 +38,8 @@ class WordRankingTest < ActiveSupport::TestCase
     assert_equal 2, rows.first[:value]
   end
 
-  test "長音符・別表記・特徴の枠は該当語だけを載せる" do
+  test "長音符・特徴の枠は該当語だけを載せる" do
     assert_equal [ [ "カレーライス", 1 ] ], board("chouon_desc").top.map { |row| [ row[:surface], row[:value] ] }
-    assert_equal [ [ "カレーライス", 1 ] ], board("variant_count_desc").top.map { |row| [ row[:surface], row[:value] ] }
     assert_equal [ [ "ABC殺人事件", 2 ] ], board("feature_count_desc").top.map { |row| [ row[:surface], row[:value] ] }
   end
 

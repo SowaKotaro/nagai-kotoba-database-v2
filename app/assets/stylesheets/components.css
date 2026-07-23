@@ -204,10 +204,10 @@
   letter-spacing: 0.1em;
 }
 
-/* 見出し語ブロック内の自己完結リード文(定義文)。本文体で読ませる(Issue 18) */
+/* 見出し語ブロック内の自己完結リード文(定義文)。本文体で読ませる(Issue 18)。
+   横幅は親(見出し語ブロック)いっぱいまで取る(オーナー判断で字送りの上限は設けない) */
 .page-header .page-lead {
   margin: var(--space-4) 0 0;
-  max-width: 46em;
   font-size: 16px;
   line-height: 1.9;
 }
@@ -1776,8 +1776,10 @@ a.tag:hover .genre-hub__count {
   margin-top: var(--space-5);
 }
 
+/* 地は今日の一語と同じ紙色にして、2カラムと帯をひと続きの面として見せる */
 .home-column {
   border: 1px solid var(--rule);
+  background: var(--paper);
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
@@ -1798,7 +1800,11 @@ a.tag:hover .genre-hub__count {
   letter-spacing: 0.06em;
 }
 
+/* 「一覧へ →」「ランキングへ →」。今日の一語の導線(.home-featured__more)と同じ重み */
 .home-column__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
   font-size: 13px;
   color: var(--ink-3);
   text-decoration: none;
@@ -1884,11 +1890,11 @@ a.tag:hover .genre-hub__count {
   padding: var(--space-5) var(--space-6) var(--space-6);
 }
 
-/* 左に見出し語+読み、右に意味。狭幅では縦に積む */
+/* 見出し語+読み → 意味の順に上下へ積む(オーナー判断。左右2段組みは不採用) */
 .home-featured__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
-  gap: var(--space-4) var(--space-6);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
   align-items: start;
   border-top: 1px solid var(--rule);
   padding-top: var(--space-4);
@@ -1939,12 +1945,6 @@ a.tag:hover .genre-hub__count {
 
 .home-featured__more:hover {
   color: var(--ink);
-}
-
-@media (max-width: 700px) {
-  .home-featured__body {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 700px) {
@@ -3624,9 +3624,10 @@ textarea {
   border-bottom: 1px solid var(--rule-mid);
 }
 
+/* 行見出しは1文字。マスの左端に寄せて読めるよう右揃えにする */
 .sound-matrix tbody th {
   padding: 0 8px 0 0;
-  text-align: left;
+  text-align: right;
 }
 
 .sound-matrix thead th.sound-matrix__corner {
@@ -3943,6 +3944,7 @@ a.sound-matrix__cell:hover {
   background: var(--bg);
 }
 
+/* マス同士の境目は細罫1本ぶんに留める(墨の枠だと隣り合う辺が二重になって重い) */
 .entity-treemap__cell {
   position: absolute;
   display: flex;
@@ -3951,16 +3953,23 @@ a.sound-matrix__cell:hover {
   gap: 2px;
   padding: 6px 8px;
   overflow: hidden;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--rule-mid);
   background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 50% + 6%), var(--bg));
   color: var(--ink);
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
 }
 
-.entity-treemap__cell:hover {
+a.entity-treemap__cell:hover {
+  border-color: var(--ink);
   background: var(--ink);
   color: var(--bg);
+}
+
+/* 小さすぎる型を畳んだ面。絞り込み先が無いのでリンクにせず、墨チントで区別する */
+.entity-treemap__cell--other {
+  background: var(--bg-soft);
+  color: var(--ink-3);
 }
 
 .entity-treemap__name {
