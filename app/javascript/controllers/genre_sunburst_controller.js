@@ -22,13 +22,41 @@ export default class extends Controller {
   async connect() {
     this.chartData = JSON.parse(this.dataTarget.textContent)
     this.plots = []
+    // ダークに切り替わったら区切り線の色を追従させる(theme コントローラが発火する)
+    this.themeChanged = () => this.restyleForTheme()
+    document.addEventListener("theme:change", this.themeChanged)
     await this.loadPlotly()
     this.renderSunburst()
     this.renderLargeBar()
   }
 
   disconnect() {
+    document.removeEventListener("theme:change", this.themeChanged)
     if (window.Plotly) this.plots.forEach((element) => window.Plotly.purge(element))
+  }
+
+  // グラフの色は JS に持たせず CSS のトークンから読む(ダークで地と墨が入れ替わるため)。
+  // 扇・棒を仕切る線は「地の色」で抜く。
+  get separatorColor() {
+    return this.token("--bg")
+  }
+
+  get inkColor() {
+    return this.token("--ink")
+  }
+
+  token(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  }
+
+  // 描き直さず色だけ差し替える(グラフの展開状態を保つため)
+  restyleForTheme() {
+    if (!window.Plotly) return
+
+    this.plots.forEach((element) => {
+      window.Plotly.restyle(element, { "marker.line.color": this.separatorColor })
+      window.Plotly.relayout(element, { "font.color": this.inkColor })
+    })
   }
 
   // Plotly はサイズが大きいので importmap には載せず、必要になったこのページで1度だけ挿入する。
@@ -50,7 +78,9 @@ export default class extends Controller {
     return {
       paper_bgcolor: "transparent",
       plot_bgcolor: "transparent",
-      font: { family: "'Shippori Mincho', 'Hiragino Mincho ProN', serif", size: 13 }
+      // 色は地の上に直に載る文字(サンバースト中心のルートラベルなど)のためのもの。
+      // 扇の中のラベルは塗りに対して Plotly が自動でコントラストを取るので影響しない。
+      font: { family: "'Shippori Mincho', 'Hiragino Mincho ProN', serif", size: 13, color: this.inkColor }
     }
   }
 
@@ -98,7 +128,7 @@ export default class extends Controller {
       // 常に「中心+2階層」だけ描画する。初期表示は大分類+中分類で、小分類は
       // 中分類を押したときだけ現れる(全小分類を一度に描くとラベルが潰れ、重い)。
       maxdepth: 2,
-      marker: { line: { width: 1, color: "#FAF8F3" } },
+      marker: { line: { width: 1, color: this.separatorColor } },
       textfont: { size: 12 },
       hovertemplate: `<b>%{label}</b><br>${this.countLabelValue}: %{value}<extra></extra>`
     } ], {
@@ -133,7 +163,7 @@ export default class extends Controller {
         type: "bar",
         marker: {
           color: this.constructor.palette[largeIds.indexOf(id) % this.constructor.palette.length],
-          line: { color: "#FAF8F3", width: 1.5 }
+          line: { color: this.separatorColor, width: 1.5 }
         },
         hovertemplate: this.hoverTemplate(node.label),
         customdata: [ id ]
@@ -175,7 +205,7 @@ export default class extends Controller {
         type: "bar",
         marker: {
           color: this.constructor.palette[(mediumIds.indexOf(id) * 2) % this.constructor.palette.length],
-          line: { color: "#FAF8F3", width: 1.5 }
+          line: { color: this.separatorColor, width: 1.5 }
         },
         hovertemplate: this.hoverTemplate(node.label),
         customdata: [ id ]

@@ -1176,7 +1176,7 @@ a.tag:hover .genre-hub__count {
   border-radius: var(--radius);
   background: var(--paper);
   padding: var(--space-7) var(--space-6);
-  box-shadow: 0 2px 12px rgba(25, 24, 19, 0.05);
+  box-shadow: var(--shadow-card);
 }
 
 /* 項目(fieldset / .field)同士の間隔。
@@ -2467,7 +2467,7 @@ a.tag:hover .genre-hub__count {
 }
 
 .data-table tbody tr:hover {
-  background: #F2EFE6; /* 紙が一段沈む程度 */
+  background: var(--bg-soft); /* 紙が一段沈む程度 */
 }
 
 .data-table td a {

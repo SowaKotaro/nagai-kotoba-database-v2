@@ -50,7 +50,33 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho:wght@500;600&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho:wght@500;600&display=swap"></noscript>
 
+    <%# モバイルのブラウザ UI の色。既定値はライトの --bg で、実際の値は
+        直後のスクリプトと theme コントローラが CSS のトークンから読んで上書きする %>
+    <meta name="theme-color" content="#faf8f4">
+
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+
+    <%# ダークモードの復元(docs/design.md §9)。手動で選んだテーマを body の描画前に
+        当てないと、一瞬ライトが見えてから暗転する。Stimulus の起動を待てないので
+        ここだけインラインで実行する。CSS 読み込みの後に置いてトークンを参照する %>
+    <%= javascript_tag nonce: true do %>
+      (function () {
+        try {
+          var stored = window.localStorage.getItem("theme");
+          if (stored === "dark" || stored === "light") {
+            document.documentElement.dataset.theme = stored;
+          }
+        } catch (error) {
+          // localStorage が使えない環境では OS 設定に従う
+        }
+        var themeColor = document.querySelector('meta[name="theme-color"]');
+        if (themeColor) {
+          themeColor.content =
+            getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+        }
+      })();
+    <% end %>
+
     <%= javascript_importmap_tags %>
 
     <%# サイト自身と検索アクションの構造化データ(Issue 16) %>
