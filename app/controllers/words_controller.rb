@@ -43,11 +43,15 @@ class WordsController < ApplicationController
     records = @word.cache_dependencies
     return unless stale?(etag: records, last_modified: records.map(&:updated_at).max, public: true)
 
-    # 単語間の内部リンク(関連語)。同ジャンル/同文字数/同先頭文字を各数件(Issue 23)。
+    # 単語間の内部リンク。関連語は同ジャンル/同文字数を各数件(Issue 23)、
+    # しりとりは末尾文字→先頭文字で次の一手を数件。
     # JSON(Issue 25)では不要なのでそれ以外(HTML)のときだけ組み立てる。
     # format.html? での判定は Accept: */*(curl・クローラ)が false になり、
     # HTML テンプレートだけ描画されて 500 になるため使わない。
-    @related_word_groups = RelatedWords.new(@word).groups unless request.format.json?
+    unless request.format.json?
+      @related_word_groups = RelatedWords.new(@word).groups
+      @shiritori = ShiritoriWords.new(@word)
+    end
   end
 
   # 「ランダムに1語」導線。公開(注釈済み)から等確率で1語選び、その詳細へ 302 で飛ばす。

@@ -189,10 +189,31 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.share__btn[data-action=?]", "clipboard#copy"
   end
 
-  test "詳細ページにランダムに別の言葉へ跳ぶボタンがある" do
+  test "ランダム導線は見出し語ストリップに集約し、ページ下部には置かない" do
     get word_path(words(:abc_murder))
     assert_response :success
-    assert_select "nav.word-footer-nav a.word-random[href=?]", random_words_path
+    assert_select ".page-eyebrow a.eyebrow-random[href=?]", random_words_path
+    assert_select "nav.word-footer-nav a.word-random", false
+  end
+
+  test "詳細にしりとりの次の一手が表示され末尾文字から始まる語へ繋がる" do
+    # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
+    next_word = Word.create!(surface: "レンタルビデオ店の閉店", annotated_at: Time.current)
+    next_word.word_senses.create!(reading: "レンタルビデオテンノヘイテン")
+
+    get word_path(words(:curry))
+    assert_response :success
+    assert_select "section.related--shiritori .related__title", text: I18n.t("words.show.shiritori.title")
+    assert_select "section.related--shiritori .shiritori__char", text: "レ"
+    assert_select "section.related--shiritori a.entry-row__surface[href=?]", word_path(next_word)
+    assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
+  end
+
+  test "「ん」で終わる語のしりとりは行き止まりとして表示する" do
+    get word_path(words(:abc_murder)) # 読み さつじんじけん
+    assert_response :success
+    assert_select "section.related--shiritori .empty-note", text: /しりとりはここで終わり/
+    assert_select "section.related--shiritori .entry-list", false
   end
 
   test "詳細に関連語セクションが表示され単語間リンクになる" do

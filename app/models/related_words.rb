@@ -1,7 +1,8 @@
 # 単語詳細の「関連語」を組み立てるクエリオブジェクト(Issue 23)。
-# 代表(最小id)の語義を起点に、同じ小分類ジャンル / 同じ読みの文字数 /
-# 同じ先頭文字 の語を各数件返す。自身は除外し、インデックス済みカラムのみ・
-# 決定的な順序で引く(N+1 を避けるため関連は includes 済み)。
+# 代表(最小id)の語義を起点に、同じ小分類ジャンル / 同じ読みの文字数 の語を
+# 各数件返す。自身は除外し、インデックス済みカラムのみ・決定的な順序で引く
+# (N+1 を避けるため関連は includes 済み)。
+# 「同じ先頭文字」は語義カードの末尾文字タグと ShiritoriWords が担うため持たない。
 class RelatedWords
   LIMIT = 6
 
@@ -16,7 +17,7 @@ class RelatedWords
   def groups
     return [] if @sense.nil?
 
-    [ genre_group, reading_length_group, first_char_group ].compact
+    [ genre_group, reading_length_group ].compact
   end
 
   private
@@ -30,12 +31,6 @@ class RelatedWords
   def reading_length_group
     build(:reading_length, { reading_length: @sense.reading_length },
           matching_senses.where(reading_length: @sense.reading_length))
-  end
-
-  def first_char_group
-    return nil if @sense.first_char.blank?
-
-    build(:first_char, { first_char: @sense.first_char }, matching_senses.where(first_char: @sense.first_char))
   end
 
   # 公開(注釈済み)で、自身を除いた語義。
