@@ -61,6 +61,19 @@
           <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>
         <% end %>
       </nav>
+
+      <%# ダークモードの切り替え(docs/design.md §9)。既定は OS 設定に追従し、
+          押したときだけ手動の指定として記憶する。JS 無効時は OS 設定のみで効くので、
+          動かないスイッチを見せないよう noscript で隠す %>
+      <div class="theme-toggle" data-controller="theme">
+        <button type="button" class="theme-toggle__button" role="switch" aria-checked="false"
+                aria-label="<%= t("layouts.theme.toggle") %>"
+                data-theme-target="button" data-action="theme#toggle">
+          <%= icon "moon", "theme-toggle__icon" %>
+          <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__thumb"></span></span>
+        </button>
+      </div>
+      <noscript><style>.theme-toggle { display: none; }</style></noscript>
     </div>
 
     <div class="nav-drawer__scrim" data-nav-drawer-target="scrim" data-action="click->nav-drawer#close"></div>

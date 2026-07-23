@@ -27,6 +27,11 @@
   --on-ink-dim: #b6b3a6;
   --on-ink-rule: #3b3931;
 
+  /* 影と幕。影は検索フォームのカードだけの例外(オーナー判断)、幕は狭幅のドロワー背後。
+     ダークでは意味が変わる(影は効かない/幕はより濃く)ので、色と同じくトークンで持つ */
+  --shadow-card: 0 2px 12px rgba(25, 24, 19, 0.05);
+  --scrim: rgba(25, 24, 19, 0.4);
+
   /* タイポグラフィ: 見出しは明朝を大胆に、本文は読みやすいゴシックで長時間読めるように */
   --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   --font-gothic: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
@@ -53,4 +58,77 @@
 
   /* 状態変化は 200ms のフェード相当に統一する(動きで飾らない) */
   --transition: 200ms ease;
+
+  /* フォームコントロールやスクロールバーの既定色をブラウザに伝える */
+  color-scheme: light;
+
+  /* ── ダークの値(定義はここだけ。適用は下の 2 つのセレクタが行う) ───────────────
+     思想は「紙と墨の反転」。真っ黒にはせず、紙 #faf8f4 の温かみを裏返した
+     わずかに黄みの残る濃墨を地にして、朱と地続きに見せる。
+     朱は #b94e2f のままだと濃墨の上でコントラストが足りないため明度を上げる
+     (#e0785a は地 #17150f に対して 6.6:1)。hover は「より暗く」ではなく「より明るく」。 */
+  --dark-bg: #17150f;
+  --dark-bg-soft: #211e17;    /* ダークでは hover は沈まずわずかに浮く */
+  --dark-paper: #1e1b14;
+  --dark-ink: #ede9e0;        /* 地に対して 15.1:1 */
+  --dark-ink-2: #b3ada0;      /* 8.3:1 */
+  --dark-ink-3: #8f897d;      /* 5.4:1(メタ情報の下限。これ以上暗くしない) */
+  --dark-rule: #33302a;
+  --dark-rule-mid: #4a463d;
+  --dark-shu: #e0785a;
+  --dark-shu-deep: #ef8d70;
+  --dark-midori: #5fae76;
+  /* 墨ベタ面(--ink 地)はダークでは自動的に「紙色のベタ」に反転するので、
+     その上に載る文字・罫は逆に暗くする */
+  --dark-on-ink: #17150f;
+  --dark-on-ink-dim: #4a463d;
+  --dark-on-ink-rule: #c9c3b6;
+  --dark-shadow-card: none;   /* 暗い地の上では影は見えない。枠だけで浮かせる */
+  --dark-scrim: rgba(0, 0, 0, 0.6);
+}
+
+/* ダークの適用。既定は OS 設定に追従し、ヘッダーのトグルで付く
+   data-theme("light" / "dark")がそれを上書きする。
+   ※トークンを 1 つ足したら、下の 2 ブロック両方に参照を追記すること
+   (CSS には mixin が無いため。値そのものは上の --dark-* だけを直せばよい) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: var(--dark-bg);
+    --bg-soft: var(--dark-bg-soft);
+    --paper: var(--dark-paper);
+    --ink: var(--dark-ink);
+    --ink-2: var(--dark-ink-2);
+    --ink-3: var(--dark-ink-3);
+    --rule: var(--dark-rule);
+    --rule-mid: var(--dark-rule-mid);
+    --shu: var(--dark-shu);
+    --shu-deep: var(--dark-shu-deep);
+    --midori: var(--dark-midori);
+    --on-ink: var(--dark-on-ink);
+    --on-ink-dim: var(--dark-on-ink-dim);
+    --on-ink-rule: var(--dark-on-ink-rule);
+    --shadow-card: var(--dark-shadow-card);
+    --scrim: var(--dark-scrim);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: var(--dark-bg);
+  --bg-soft: var(--dark-bg-soft);
+  --paper: var(--dark-paper);
+  --ink: var(--dark-ink);
+  --ink-2: var(--dark-ink-2);
+  --ink-3: var(--dark-ink-3);
+  --rule: var(--dark-rule);
+  --rule-mid: var(--dark-rule-mid);
+  --shu: var(--dark-shu);
+  --shu-deep: var(--dark-shu-deep);
+  --midori: var(--dark-midori);
+  --on-ink: var(--dark-on-ink);
+  --on-ink-dim: var(--dark-on-ink-dim);
+  --on-ink-rule: var(--dark-on-ink-rule);
+  --shadow-card: var(--dark-shadow-card);
+  --scrim: var(--dark-scrim);
 }
