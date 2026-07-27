@@ -32,6 +32,8 @@ Rails.application.routes.draw do
 
   # LLM(AI 検索・エージェント)向けのサイト案内。Issue 24。
   get "llms.txt", to: "llms#show", defaults: { format: "text" }, as: :llms
+  # その全文版(公開している全単語の内容を1ファイルに)。llms.txt の慣習に合わせた名前。Issue 73。
+  get "llms-full.txt", to: "llms#full", defaults: { format: "text" }, as: :llms_full
 
   # robots.txt(動的)。Sitemap 行のホストを canonical_host と連動させる。
   get "robots.txt", to: "robots#show", defaults: { format: "text" }, as: :robots

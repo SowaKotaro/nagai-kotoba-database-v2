@@ -87,6 +87,10 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # 読みの部分一致
     get admin_words_path(q: "さつじん")
     assert_select "td a", text: @word.surface
+    # 別表記の部分一致(公開検索と条件を共有する。Issue 72)
+    get admin_words_path(q: word_sense_variants(:curry_variant).surface)
+    assert_select "td a", text: words(:curry).surface
+    assert_select "td a", text: @word.surface, count: 0
   end
 
   test "一覧を注釈状態(未対応/保留/完了)で絞り込める" do

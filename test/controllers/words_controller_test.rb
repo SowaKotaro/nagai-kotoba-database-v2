@@ -315,6 +315,21 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), count: 0
   end
 
+  test "キーワード(q)は別表記でも当たり、一致した別表記を注記する" do
+    get words_path(q: word_sense_variants(:curry_variant).surface)
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "p.entry-row__match",
+                  text: I18n.t("words.index.variant_match", surface: word_sense_variants(:curry_variant).surface)
+  end
+
+  test "表層形・読みが直接一致した行には別表記の注記を出さない" do
+    get words_path(q: "カレー")
+    assert_response :success
+    assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
+    assert_select "p.entry-row__match", count: 0
+  end
+
   test "キーワード検索でも未注釈語は出ない" do
     get words_path(q: "涼宮ハルヒ")
     assert_response :success

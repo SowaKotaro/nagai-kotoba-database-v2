@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_21_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_28_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -101,8 +101,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_21_103000) do
   create_table "word_sense_variants", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "note", comment: "任意メモ(旧字/略式 など)"
-    t.string "reading", limit: 768, comment: "別表記の読み(変わる場合) 例: バタフライこうか"
-    t.string "surface", limit: 768, null: false, comment: "別表記の表層形 例: バタフライ効果"
+    t.string "reading", limit: 768, collation: "utf8mb4_0900_as_ci", comment: "別表記の読み(変わる場合) 例: バタフライこうか"
+    t.string "surface", limit: 768, null: false, collation: "utf8mb4_0900_as_ci", comment: "別表記の表層形 例: バタフライ効果"
     t.datetime "updated_at", null: false
     t.bigint "word_sense_id", null: false
     t.index ["word_sense_id", "surface"], name: "uq_wsv_sense_surface", unique: true, length: { surface: 191 }

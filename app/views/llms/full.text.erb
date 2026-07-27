@@ -1,0 +1,75 @@
+# <%= t("layouts.brand") %> — 全収録データ
+
+> <%= t("pages.about.lead") %>
+
+このファイルは <%= @host %>/llms.txt の全文版(llms-full.txt)です。
+公開している全 <%= @word_count %> 語の内容を、1ファイルにまとめています。
+
+- 生成日: <%= @generated_on.iso8601 %>
+- サイト案内(目次版): <%= @host %>/llms.txt
+- 機械可読な JSON: <%= @host %>/words.json ・ <%= @host %>/words/{id}.json
+  (ヘボン式ローマ字・母音パターンなど、このファイルに載せていない項目も返します)
+
+## 収録基準
+
+<%= t("pages.about.criteria_body") %>
+<%= t("pages.about.curation_body") %>
+
+## このファイルの読み方
+
+- 「### 見出し語」が1語ぶんの区切りです。
+- 「#### 語義N」は同音異義語・多義語のある語にだけ現れます(語義が1つの語は、見出し語の直下に属性が並びます)。
+- 読みはカタカナです。丸括弧の中は読みの文字数と拍(モーラ)数で、拗音は1拍として数えます。
+- 末尾文字は、末尾の長音符「ー」を飛ばして直前の文字を採ります(しりとりの慣習に合わせています)。
+- ジャンルは 大分類 › 中分類 › 小分類 の順です。
+- 文字種は、表層形を 漢=漢字 / あ=ひらがな / ア=カタカナ / A=英字 / 1=数字 / @=記号 に置き換えた並びです。
+- 言語学的特徴は「特徴名(該当部分 / その読み)」の形で、語のどの部分に現れるかまで示します。
+- 未登録の項目は行ごと省いています。
+
+## 引用・ライセンス
+
+単語データは <%= t("pages.about.license_name") %> の下で提供しています。
+引用・二次利用の際は、次のクレジットを明記してください。
+
+<%= t("pages.about.license_credit", url: @host) %>
+
+## 収録データ
+<% @words.find_each do |word| %>
+
+### <%= word.surface %>
+
+- URL: <%= @host %><%= word_path(word) %>
+- 文字種: <%= word.char_type_pattern %>
+- 定義: <%= word_lead_sentence(word) %>
+<% multiple_senses = word.word_senses.size > 1 %>
+<% word.word_senses.each_with_index do |sense, index| %>
+<% if multiple_senses %>
+
+#### 語義<%= index + 1 %>
+
+<% end %>
+- 読み: <%= sense.reading %>(<%= sense.reading_length %>字<%= " / #{sense.mora_count}拍" if sense.mora_count %>)
+- 先頭文字 / 末尾文字: <%= sense.first_char %> / <%= sense.last_char %>
+<% if sense.meaning.present? %>
+- 意味: <%= sense.meaning.squish %>
+<% end %>
+<% if sense.genre %>
+- ジャンル: <%= sense.genre.self_and_ancestors.map(&:name).join(" › ") %>
+<% end %>
+<% if sense.part_of_speech %>
+- 品詞: <%= sense.part_of_speech.name %>
+<% end %>
+<% if sense.entity_type %>
+- エンティティ: <%= sense.entity_type.name %>
+<% end %>
+<% if sense.word_origins.any? %>
+- 語種: <%= sense.word_origins.map(&:name).join("、") %>
+<% end %>
+<% if sense.word_sense_features.any? %>
+- 言語学的特徴: <%= sense.word_sense_features.map { |feature| "#{feature.linguistic_feature.name}(#{feature.target} / #{feature.target_reading})" }.join("、") %>
+<% end %>
+<% if sense.word_sense_variants.any? %>
+- 別表記: <%= sense.word_sense_variants.map { |variant| variant.reading.present? ? "#{variant.surface}(#{variant.reading})" : variant.surface }.join("、") %>
+<% end %>
+<% end %>
+<% end %>

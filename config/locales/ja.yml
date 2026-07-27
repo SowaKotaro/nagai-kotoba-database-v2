@@ -136,7 +136,7 @@ ja:
   searches:
     title: "検索・絞り込み"
     description: "日本語の長い言葉の詳細検索。読みの文字数・先頭と末尾の文字・文字種・ヘボン式ローマ字・母音の韻・正規表現など、多彩な条件で絞り込めます。"
-    q_label: "キーワード（表層形・読み）"
+    q_label: "キーワード（表層形・読み・別表記）"
     regexp: "正規表現（表層形・読み）"
     regexp_help:
       summary: "書き方"
@@ -197,6 +197,8 @@ ja:
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
       char_count: "%{count} 字"
+      # キーワード検索で、表層形・読みではなく別表記だけが一致した行に添える注記。
+      variant_match: "別表記〈%{surface}〉で一致"
       clear_filter: "絞り込みを解除"
       shuffle: "シャッフルする"
       edit_conditions: "条件を変更"
@@ -472,7 +474,7 @@ ja:
       senses_legend: "語義"
       senses_count: "語義数"
       index:
-        q_label: "表層形・読みで検索"
+        q_label: "表層形・読み・別表記で検索"
         q_placeholder: "表層形・読みで検索"
         search: "検索"
         status_label: "注釈状態の絞り込み"

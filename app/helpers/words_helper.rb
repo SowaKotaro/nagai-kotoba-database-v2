@@ -68,6 +68,23 @@ module WordsHelper
     end
   end
 
+  # キーワード検索の結果行で「別表記だけが一致した」ことを示すための、一致した別表記(Issue 72)。
+  # 表層形・読みが直接一致している語は、なぜ出たのかが自明なので空を返す(注記を出さない)。
+  # 突き合わせは MySQL の照合順序(utf8mb4_0900_as_ci)に寄せて、ひらがな⇔カタカナと
+  # 大文字小文字だけを畳む(清濁は畳まない)。畳み方が DB と完全一致しない場合でも、
+  # 注記が出ないだけで検索結果自体は変わらない。
+  def matched_variants(word, query)
+    needle = fold_for_keyword_match(query)
+    return [] if needle.blank?
+    return [] if fold_for_keyword_match(word.surface).include?(needle)
+    return [] if word.word_senses.any? { |sense| fold_for_keyword_match(sense.reading).include?(needle) }
+
+    word.word_senses.flat_map(&:word_sense_variants).select do |variant|
+      fold_for_keyword_match(variant.surface).include?(needle) ||
+        fold_for_keyword_match(variant.reading).include?(needle)
+    end.uniq(&:surface)
+  end
+
   # 「シャッフルする」ボタンの遷移先。現在の絞り込みは保ったまま、毎回新しいシードを振る。
   # 描画のたびにシードが変わるので、押すたびに並びを引き直せる(ページ送りは seed を引き継ぐ)。
   def shuffle_words_path
@@ -92,6 +109,16 @@ module WordsHelper
   end
 
   private
+
+  # キーワード突き合わせ用の畳み込み。ひらがな→カタカナ(同じ並びの2つの範囲)と、
+  # 欧字の大文字小文字だけを吸収する。
+  HIRAGANA_RANGE = "ぁ-ゖ".freeze
+  KATAKANA_RANGE = "ァ-ヶ".freeze
+  private_constant :HIRAGANA_RANGE, :KATAKANA_RANGE
+
+  def fold_for_keyword_match(text)
+    text.to_s.strip.tr(HIRAGANA_RANGE, KATAKANA_RANGE).downcase
+  end
 
   # 読みの文字数・モーラ数。モーラ数は未算出のことがある。
   def sense_metrics(sense)

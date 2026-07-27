@@ -32,6 +32,32 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [], ids(q: "%殺人%")
   end
 
+  # --- キーワード × 別表記(Issue 72) ---
+  # curry_variant … カレーライス(語義 curry)の別表記「カリー」(読みも カリー)
+  test "キーワードは別表記の表層形でも絞れる" do
+    assert_equal [ word_senses(:curry).id ], ids(q: "カリー")
+  end
+
+  test "キーワードは別表記の読みでも絞れる" do
+    word_senses(:curry).word_sense_variants.create!(surface: "咖喱", reading: "カリイ")
+
+    assert_equal [ word_senses(:curry).id ], ids(q: "カリイ")
+  end
+
+  test "別表記は清濁を区別して一致する" do
+    assert_equal [], ids(q: "ガリー")
+  end
+
+  test "別表記はひらがなで書いても一致する" do
+    assert_equal [ word_senses(:curry).id ], ids(q: "かりー")
+  end
+
+  test "未注釈語の別表記は検索結果に出ない" do
+    word_senses(:pending).word_sense_variants.create!(surface: "ハルヒの憂鬱", reading: "ハルヒノユウウツ")
+
+    assert_equal [], ids(q: "ハルヒの憂鬱")
+  end
+
   # --- 正規表現(表層形・読み) ---
   # フィクスチャの murder は読みがひらがなだが、実データの読みはカタカナで統一されている。
   # 読みへの一致はカタカナの curry で確かめる。

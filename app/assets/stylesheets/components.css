@@ -1011,6 +1011,18 @@ a.tag:hover .genre-hub__count {
   color: var(--ink-3);
 }
 
+/* 「別表記〈◯◯〉で一致」。検索結果に出た理由の注記なので、朱の縦罫で脇に添える */
+.entry-row__match {
+  margin-top: 4px;
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--shu);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
 @media (max-width: 600px) {
   .entry-row__data {
     gap: var(--space-2);
