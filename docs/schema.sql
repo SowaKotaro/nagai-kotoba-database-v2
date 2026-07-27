@@ -201,8 +201,9 @@ CREATE TABLE word_sense_origins (
 CREATE TABLE word_sense_variants (
   id            BIGINT       NOT NULL AUTO_INCREMENT,
   word_sense_id BIGINT       NOT NULL,
-  surface       VARCHAR(768) NOT NULL COMMENT '別表記の表層形 例: バタフライ効果',
-  reading       VARCHAR(768) NULL     COMMENT '別表記の読み(変わる場合) 例: バタフライこうか',
+  -- 表層形・読みはキーワード検索の対象(Issue 72)。清濁を区別するため本体と同じ as_ci
+  surface       VARCHAR(768) NOT NULL COLLATE utf8mb4_0900_as_ci COMMENT '別表記の表層形 例: バタフライ効果',
+  reading       VARCHAR(768) NULL     COLLATE utf8mb4_0900_as_ci COMMENT '別表記の読み(変わる場合) 例: バタフライこうか',
   note          VARCHAR(255) NULL     COMMENT '任意メモ(旧字/略式 など)',
   created_at    DATETIME(6)  NOT NULL,
   updated_at    DATETIME(6)  NOT NULL,

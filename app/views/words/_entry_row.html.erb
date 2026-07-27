@@ -29,4 +29,10 @@
   </div>
 
   <p class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></p>
+
+  <%# キーワード検索で別表記だけが当たった行は、なぜ出たのかを一言添える(Issue 72)。
+      query は単語一覧(検索結果)からのみ渡る。関連語・しりとりの行には出ない %>
+  <% matched_variants(word, local_assigns[:query]).each do |variant| %>
+    <p class="entry-row__match"><%= t("words.index.variant_match", surface: variant.surface) %></p>
+  <% end %>
 </article>

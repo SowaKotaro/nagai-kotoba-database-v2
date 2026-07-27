@@ -68,7 +68,7 @@ class WordsController < ApplicationController
     scope = filtered_words
     @total_count = scope.count
     @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
-    @words = scope.includes(word_senses: [ :entity_type, :part_of_speech, { genre: :parent } ])
+    @words = scope.includes(word_senses: entry_row_preloads)
                   .order(@sort.order_clause)
                   .limit(PER_PAGE)
                   .offset((@page - 1) * PER_PAGE)
@@ -82,6 +82,14 @@ class WordsController < ApplicationController
     @words = []
     @total_count = 0
     @total_pages = 1
+  end
+
+  # 一覧の1行(words/_entry_row)が使う関連。キーワード検索のときだけ、
+  # 「別表記だけが一致した」注記(Issue 72)の判定で参照する別表記も先読みする。
+  def entry_row_preloads
+    preloads = [ :entity_type, :part_of_speech, { genre: :parent } ]
+    preloads << :word_sense_variants if @search.q.present?
+    preloads
   end
 
   # 新着フィード(Atom 用)。注釈された順に新しいものから FEED_LIMIT 件。

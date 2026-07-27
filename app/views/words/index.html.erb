@@ -77,7 +77,8 @@
   <p class="empty-note"><%= icon "binoculars" %><%= @search.conditions? ? t("words.index.empty_filtered") : t("words.index.empty") %></p>
 <% else %>
   <div class="entry-list">
-    <%= render partial: "words/entry_row", collection: @words, as: :word %>
+    <%# query は「別表記だけが一致した」注記の判定に使う(Issue 72) %>
+    <%= render partial: "words/entry_row", collection: @words, as: :word, locals: { query: @search.q } %>
   </div>
 
   <%= render "pagination" %>

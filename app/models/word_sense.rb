@@ -27,14 +27,29 @@ class WordSense < ApplicationRecord
   validates :reading, presence: true
   validate :genre_must_be_small
 
+  # キーワード検索の一致条件。表層形・読みに加えて別表記(表層形・読み)も見る(Issue 72)。
+  # words と word_senses を両方参照するため、Word.keyword とこの WordSense.keyword で
+  # 同じ条件を共有する(片方だけ広げると公開検索と管理一覧で結果が食い違う)。
+  # プレースホルダ :pattern に LIKE のパターンを渡すこと。
+  KEYWORD_MATCH_CONDITION = <<~SQL.squish.freeze
+    words.surface LIKE :pattern
+    OR word_senses.reading LIKE :pattern
+    OR word_senses.id IN (
+      SELECT word_sense_id FROM word_sense_variants
+      WHERE word_sense_variants.surface LIKE :pattern OR word_sense_variants.reading LIKE :pattern
+    )
+  SQL
+
   # 公開対象。注釈済み(word.annotated_at あり)の語にぶら下がる語義だけ。
   scope :published, -> { joins(:word).where.not(words: { annotated_at: nil }) }
 
   # --- 検索・絞り込み用スコープ(生成カラム/インデックスを活用。Issue 9) ---
-  # キーワード(表層形・読みの部分一致)。ワイルドカードはエスケープする。
+  # キーワード(表層形・読み・別表記の部分一致)。ワイルドカードはエスケープする。
+  # 別表記(word_sense_variants)も対象にすることで、略称・旧字・正式名称で引いた人を
+  # 取りこぼさない(構造化データでは alternateName として既に外部へ出していた。Issue 72)。
   scope :keyword, lambda { |text|
     pattern = "%#{sanitize_sql_like(text)}%"
-    joins(:word).where("words.surface LIKE :pattern OR word_senses.reading LIKE :pattern", pattern: pattern)
+    joins(:word).where(KEYWORD_MATCH_CONDITION, pattern: pattern)
   }
   # 表層形・読みの正規表現一致(MySQL の REGEXP)。インデックスは効かず全表スキャンになる。
   # 読み用と表層形用でパターンが異なる理由は SearchRegexp を参照。

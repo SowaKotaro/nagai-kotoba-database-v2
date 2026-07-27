@@ -21,12 +21,12 @@ class Word < ApplicationRecord
   # 未承認の提案(Claude の下書き)が付いている語。コンソールの「提案あり」フィルタ用(Issue 38)。
   scope :with_pending_proposal, -> { joins(:annotation_proposal).merge(AnnotationProposal.pending) }
 
-  # 簡素検索(キーワードのみ): 表層形・読みの部分一致。ワイルドカードはエスケープする。
+  # 簡素検索(キーワードのみ): 表層形・読み・別表記の部分一致。ワイルドカードはエスケープする。
+  # 一致条件は公開検索(WordSense.keyword)と共有する。片方だけ広げると、管理一覧で
+  # 見つからない語が公開検索では出る(またはその逆)というズレが生まれるため。
   scope :keyword, lambda { |text|
     pattern = "%#{sanitize_sql_like(text)}%"
-    joins(:word_senses)
-      .where("words.surface LIKE :pattern OR word_senses.reading LIKE :pattern", pattern: pattern)
-      .distinct
+    joins(:word_senses).where(WordSense::KEYWORD_MATCH_CONDITION, pattern: pattern).distinct
   }
 
   # 注釈完了とみなす時刻と状態(完了)をセットする(保存は呼び出し側で行う)。
