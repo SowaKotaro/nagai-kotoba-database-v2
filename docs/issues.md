@@ -29,6 +29,32 @@
 
 # 未完了イシュー(優先度順)
 
+## Issue 72: 別表記(word_sense_variants)を検索の対象にする
+- 種別: improvement
+- 状態: 対応中
+- 優先度: P1 ／ Impact: High ／ Effort: Low
+- 依存: なし
+- 背景・現状: キーワード検索は表層形(`words.surface`)と読み(`word_senses.reading`)しか見ていない(`app/models/word_sense.rb` / `app/models/word.rb` の `keyword` スコープ)。一方で JSON-LD には別表記を `alternateName` として出しており(`app/helpers/structured_data_helper.rb`)、**検索エンジンには別名を伝えているのに自サイト検索では0件になる**という非対称が起きている。略称・旧字・正式名称で来た訪問者を取りこぼし、登録済みの別表記データが検索で1度も効いていない。
+- 内容:
+  - [ ] `keyword` スコープに別表記(表層形・読み)の部分一致を OR で追加する(公開検索 `WordSense.keyword` と管理一覧 `Word.keyword` の両方)
+  - [ ] 別表記だけで一致した行に「別表記〈◯◯〉で一致」を添える(なぜその語が出たのかを示す。表層形・読みが直接一致した語には出さない)
+  - [ ] `word_sense_variants.surface` / `reading` の照合順序を `utf8mb4_0900_as_ci` に揃える(CLAUDE.md「読み・表層形まわりは as_ci」に合わせ、清濁を区別する)。**本番はマイグレーション要**
+- 期待効果: 登録済みの別表記が初めて検索で効き、略称・別名クエリの取りこぼしが無くなる。
+
+## Issue 73: llms-full.txt(全収録データの全文版)
+- 種別: feature
+- 状態: 対応中
+- 優先度: P2 ／ Impact: Med ／ Effort: Low〜Med
+- 依存: Issue 24(llms.txt。実装済み)
+- 背景・現状: llms.txt はサイト案内(目次)で、中身を知るには各ページを個別に辿る必要がある。公開 JSON API はページング前提で、AI 検索・エージェントが「収録内容を全部読む」ための1ファイルが無い。llms.txt の慣習では、目次版の llms.txt に対して全文版の llms-full.txt を併置する。
+- 内容:
+  - [ ] `GET /llms-full.txt` で公開(注釈済み)の全語を1ファイルのテキストとして出力する
+  - [ ] 1語 = 見出し語 + URL + 定義文(既存のリード文を再利用) + 読み/字数/拍 + ジャンル階層 + 品詞・エンティティ・語種 + 言語学的特徴 + 別表記 + 文字種パターン
+  - [ ] 生成物を `Rails.cache`(語数と最終更新をキーに含める)に載せ、HTTP も `expires_in 1.day, public`
+  - [ ] llms.txt から全文版へリンクする
+  - [ ] 数万語規模になったら分割(ジャンル別・文字数上限)を検討する
+- 期待効果: AI 検索・エージェントがサイト全体を1リクエストで読める。引用時に定義文とライセンス表記がセットで渡る。
+
 ## Issue 70: アノテーション体験の小粒改善まとめ
 - 種別: improvement
 - 状態: 未着手(項目ごとに分割してよい)
