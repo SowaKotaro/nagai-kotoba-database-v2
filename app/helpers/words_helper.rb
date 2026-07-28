@@ -55,13 +55,17 @@ module WordsHelper
     entity_type_id: EntityType, word_origin_id: WordOrigin
   }.freeze
 
+  # マスタを持たず、値(かな1文字)をそのまま見出しに使うファセット。
+  CHAR_FACET_KEYS = %i[first_char last_char].freeze
+
   def facet_heading(search)
     facet = search.indexable_facet
     return nil unless facet
 
     key, value = facet
-    if key == :first_char
-      t("words.index.facet_heading.first_char", char: value)
+    # 文字の軸(先頭文字・末尾文字)はマスタを引かず、文字そのものを見出しに使う。
+    if CHAR_FACET_KEYS.include?(key)
+      t("words.index.facet_heading.#{key}", char: value)
     else
       name = FACET_MASTERS[key].where(id: value).pick(:name)
       name && t("words.index.facet_heading.default", name: name)
@@ -106,6 +110,14 @@ module WordsHelper
       end
     params[:page] = page if page > 1
     words_path(params)
+  end
+
+  # 文字の軸(先頭文字・末尾文字)で複数の文字を渡しうるリンクのパス。
+  # 1文字だけのときは配列形(`first_char[]=ア`)ではなくスカラ形(`first_char=ア`)にする。
+  # 配列形は canonical(スカラ形)と URL が食い違い、Search Console に
+  # 「代替ページ(適切な canonical タグあり)」として無駄に積み上がるため。
+  def char_facet_words_path(**chars)
+    words_path(chars.transform_values { |value| Array(value).size == 1 ? Array(value).first : value })
   end
 
   private

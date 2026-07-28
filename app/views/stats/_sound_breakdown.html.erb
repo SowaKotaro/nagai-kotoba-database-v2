@@ -35,7 +35,7 @@
     <% @stats.head_consonants.each do |group| %>
       <li class="stats-bars__row">
         <span class="stats-bars__label"><%= group[:consonant] || t("stats.index.sound.vowel_initial") %></span>
-        <%= link_to words_path(first_char: group[:chars]), class: "stats-bars__bar",
+        <%= link_to char_facet_words_path(first_char: group[:chars]), class: "stats-bars__bar",
               title: t("stats.index.sound.consonant_title", chars: group[:chars].join("・"), count: group[:count]) do %>
           <span class="stats-bars__fill" style="--w: <%= (group[:count] / max_count * 100).round(1) %>%"></span>
         <% end %>

@@ -31,7 +31,10 @@
         </li>
       <% end %>
     </ul>
-    <%= link_to search_path(request.query_parameters.except("page")), class: "active-facet__edit icon-label" do %>
+    <%# 条件を引き継ぐ /search?... はファセットの数だけ URL が増える(実測 500 超)。
+        クロールさせる価値が無いので nofollow を付ける(/search 自体はヘッダーから普通に辿れる) %>
+    <%= link_to search_path(request.query_parameters.except("page")),
+          class: "active-facet__edit icon-label", rel: "nofollow" do %>
       <%= icon "magnifying_glass" %><%= t("words.index.edit_conditions") %>
     <% end %>
     <%= link_to words_path, class: "active-facet__clear icon-label" do %>

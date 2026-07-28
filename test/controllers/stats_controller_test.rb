@@ -35,8 +35,14 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.kana-cell--heat[href=?]", words_path(last_char: "レ")
     # 波形バー → 読みの文字数(カレー = 3文字)
     assert_select "a[href=?]", words_path(reading_length: 3)
-    # 行×行ヒートマップ → 頭文字×末尾文字(サ→ン と カ→ラ の2セル)
+    # 行×行ヒートマップ → 頭文字×末尾文字(サ→ン と カ→ラ の2セル)。
+    # どれも複数条件で noindex になるため、クロールもさせない(nofollow)。
     assert_select "a.sound-matrix__cell", count: 2
+    assert_select "a.sound-matrix__cell[rel=nofollow]", count: 2
+    # 頭子音の棒 → 先頭文字。1文字だけの群は canonical と揃うスカラ形で出す
+    # (`first_char[]=サ` だと canonical(`first_char=サ`)と URL が食い違う)
+    assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "サ")
+    assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "カ")
     # エンティティ型・特徴チップ(ジャンルは Plotly サンバースト側で遷移する)
     assert_select "a[href=?]", words_path(entity_type_id: entity_types(:book_title).id)
     assert_select "a[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id)

@@ -26,7 +26,7 @@
 
 ## 3. sitemap 送信（解禁と同時）
 
-- [ ] Search Console に `https://nagai-kotoba-database.jp/sitemap.xml` を送信
+- [x] Search Console に `https://nagai-kotoba-database.jp/sitemap.xml` を送信
 - [ ] Bing Webmaster Tools にも同じ sitemap を送信
 - [x] robots.txt の `Sitemap:` 行が本番ホストを指していることを確認（動的生成済み）
 
