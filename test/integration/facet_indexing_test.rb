@@ -32,6 +32,14 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
     assert_select "link[rel=canonical][href=?]", "#{HOST}/words?first_char=%E3%82%AB"
   end
 
+  test "末尾文字の単一ファセットは index + 動的見出し" do
+    get words_path(last_char: "ン")
+    assert_response :success
+    assert_select "meta[name=robots]", count: 0
+    assert_select "h1.page-title", text: "「ン」で終わる長い言葉"
+    assert_select "link[rel=canonical][href=?]", "#{HOST}/words?last_char=%E3%83%B3"
+  end
+
   test "複数条件は noindex,follow で見出しは既定" do
     get words_path(genre_id: genres(:large_literature).id, first_char: "カ")
     assert_response :success
@@ -62,5 +70,12 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
     get search_path
     assert_response :success
     assert_select "meta[name=robots][content=?]", "noindex,follow"
+  end
+
+  # 条件を引き継ぐ /search?... はファセットの数だけ増えるので、クロールさせない。
+  test "「検索条件を編集」リンクは nofollow" do
+    get words_path(genre_id: genres(:large_literature).id)
+    assert_response :success
+    assert_select "a.active-facet__edit[rel=nofollow]", count: 1
   end
 end

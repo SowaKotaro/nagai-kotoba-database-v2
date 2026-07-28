@@ -8,13 +8,17 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/plain", response.media_type
   end
 
-  test "管理・認証・検索フォームを Disallow し sitemap の絶対URLを案内する" do
+  test "管理・認証を Disallow し sitemap の絶対URLを案内する" do
     get robots_path
     assert_includes response.body, "Disallow: /admin"
     assert_includes response.body, "Disallow: /session"
-    assert_includes response.body, "Disallow: /search"
     # ホストは config.x.canonical_host(テストでは既定値)に連動する
     host = Rails.application.config.x.canonical_host
     assert_includes response.body, "Sitemap: #{host}/sitemap.xml"
+  end
+
+  test "検索フォームは Disallow しない(noindex を読ませるためクロールは許可する)" do
+    get robots_path
+    assert_not_includes response.body, "Disallow: /search"
   end
 end

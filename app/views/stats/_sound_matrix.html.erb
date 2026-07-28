@@ -38,8 +38,10 @@
               <td>
                 <% if count.positive? %>
                   <% fill = (count.to_f / matrix[:max_count]).round(3) %>
-                  <%= link_to words_path(first_char: KanaRow::ROWS[row], last_char: KanaRow::ROWS[col]),
-                        class: "sound-matrix__cell", style: "--fill: #{fill}",
+                  <%# 行×行のマスは 100 以上の組み合わせを生む。どれも noindex(複数条件)で
+                      インデックスされないので、クロールもさせないよう nofollow を付ける %>
+                  <%= link_to char_facet_words_path(first_char: KanaRow::ROWS[row], last_char: KanaRow::ROWS[col]),
+                        class: "sound-matrix__cell", style: "--fill: #{fill}", rel: "nofollow",
                         title: t("stats.index.sound_matrix.cell_title", first: row, last: col_label.(col), count: count) do %>
                     <% if [ row, col ] == matrix[:max_pair] %>
                       <span class="sound-matrix__count"><%= count %></span>

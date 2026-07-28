@@ -1,8 +1,11 @@
 # See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
 User-agent: *
-# 管理・認証・検索フォームはインデックス不要(検索結果ページの重複を避ける。Issue 17)。
+# 管理・認証はクロール不要。
+# 検索フォーム(/search)は「robots.txt でブロック」せず、meta robots の noindex,follow に
+# 一本化する: ブロックすると Google が noindex を読めず「robots.txt によりブロックされました」
+# として残り続けるため(Google 公式の推奨も「noindex を効かせたいならブロックしない」)。
+# 条件を引き継ぐ /search?... へのリンク側は rel="nofollow" でクロールを抑える。
 Disallow: /admin
 Disallow: /session
-Disallow: /search
 
 Sitemap: <%= @host %><%= sitemap_path %>

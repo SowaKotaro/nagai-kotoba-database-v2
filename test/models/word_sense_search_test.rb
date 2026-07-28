@@ -104,6 +104,15 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_nil WordSenseSearch.new(regexp: "^ア").indexable_facet
   end
 
+  test "末尾文字の単一指定はインデックス許可ファセットになる(先頭文字と対)" do
+    assert_equal [ :last_char, "ン" ], WordSenseSearch.new(last_char: "ン").indexable_facet
+    assert_equal [ :first_char, "ア" ], WordSenseSearch.new(first_char: "ア").indexable_facet
+  end
+
+  test "末尾文字の複数指定はインデックス許可ファセットにならない" do
+    assert_nil WordSenseSearch.new(last_char: [ "ン", "ー" ]).indexable_facet
+  end
+
   test "読みの文字数の下限で絞れる" do
     result = ids(reading_length_min: "5")
     assert_includes result, word_senses(:murder).id
