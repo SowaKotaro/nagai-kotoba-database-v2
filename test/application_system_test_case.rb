@@ -7,7 +7,10 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # ヘッドレスで実行する(CI・WSL などディスプレイの無い環境でも動かすため)。
   # Chrome が PATH に無い環境(WSL 等)では CHROME_BIN で Chrome for Testing などの
   # バイナリを指定できる(CI は google-chrome-stable を使うので未指定のまま)。
-  driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ] do |options|
+  # ウィンドウ幅を変えるテスト(モバイル表示の確認)が元に戻すために参照する。
+  DEFAULT_SCREEN_SIZE = [ 1400, 1400 ].freeze
+
+  driven_by :selenium, using: :headless_chrome, screen_size: DEFAULT_SCREEN_SIZE do |options|
     options.binary = ENV["CHROME_BIN"] if ENV["CHROME_BIN"].present?
     # confirm ダイアログをドライバに自動で閉じさせない。既定の "dismiss and notify" だと
     # turbo_confirm の confirm() が false を返し、Turbo が送信をイベントも例外も出さずに

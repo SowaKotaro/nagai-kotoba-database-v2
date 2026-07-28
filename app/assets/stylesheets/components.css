@@ -288,6 +288,9 @@
   /* 紙地から一段持ち上げて、枠の中が「刷られた面」に見えるようにする */
   background: var(--paper);
   padding: var(--space-5) var(--space-6) var(--space-5);
+  /* グリッド項目の既定 min-width: auto だと、長いローマ字などの折り返せない
+     文字列が列幅を押し広げ、モバイルで枠ごと画面からはみ出す */
+  min-width: 0;
 }
 
 /* 左上の通し番号(01/02…)。朱の刻印 */
@@ -319,6 +322,14 @@
   font-size: 14px;
   letter-spacing: 0.06em;
   color: var(--ink-3);
+  /* 読みが長い語のローマ字・母音パターンは区切りの無い長大な英字列になるので、
+     どこでも折り返させる(既定では折り返せず横にはみ出す) */
+  overflow-wrap: anywhere;
+}
+
+/* flex 項目の min-width: auto も折り返しを妨げるので明示的に潰す */
+.sense-heading-meta > span {
+  min-width: 0;
 }
 
 /* 見出し語のふりがなは朱(教科書のルビの文法) */
