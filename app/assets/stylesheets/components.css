@@ -332,8 +332,26 @@
   min-width: 0;
 }
 
+/* 見出し語の読みは「ルビの配置」に頼らず、語の上の行に積む。
+   WebKit(iPhone Safari)は 1 つの <ruby>(見出し語まるごとに読み 1 つ)の途中では改行できず、
+   読みが長い語では見出しが 1 行のまま画面外へはみ出す。Blink は途中で改行できるので
+   PC の Chrome や開発者ツールのスマホ表示では再現しない。CSS で折り返させる手段は無い
+   (overflow-wrap / word-break / line-break / white-space いずれも効かない)ため、
+   ルビ配置そのものをやめて上下 2 段に積み、通常のテキストとして折り返させる。
+   マークアップは <ruby>/<rt> のままなので、読み上げ・読みとの対応付けは保たれる。 */
+.sense-heading ruby {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  row-gap: 2px;
+}
+
 /* 見出し語のふりがなは朱(教科書のルビの文法) */
 .sense-heading rt {
+  /* ルビ注釈のままだと折り返さないので、通常のブロックとして流す */
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: 14px;
   color: var(--shu);
 }
@@ -868,7 +886,19 @@ a.tag:hover .genre-hub__count {
   gap: var(--space-2) var(--space-4);
 }
 
+/* 別表記も見出しと同じ理由でルビ配置に頼らず積む(.sense-heading ruby のコメント参照)。
+   別表記は語まるごとの表記なので、長い語では読みも長くなり WebKit ではみ出す */
+.variant-list ruby {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  row-gap: 2px;
+}
+
 .variant-list rt {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: 14px;
   color: var(--shu);
 }
