@@ -78,6 +78,14 @@
   - 1語集中キュー（`words.annotated_at` で未注釈を管理）。Turbo Frame で「保存して次へ」
   - ドロップダウン全廃・チップ選択（`:has()`）／ジャンル段階表示／特徴は文字の範囲タップ（`feature-range`）／マスタその場追加（`inline-add`・`genre-picker`）／語義複製（`sense-cloner`）
 
+- ✅ Issue 75: **収録リクエスト**（公開 `/requests/new` → 管理 `/admin/requests`）
+  - **公開側で唯一の書き込み経路**。1通に最大10語（行追加式）、連絡先欄は持たない
+  - 送信前の任意操作として「重複チェック」（`WordRequestDuplicateCheck`。既存 `Levenshtein` を流用し、
+    読みがあれば読み・無ければ表層形に当てる。公開語一覧は `Rails.cache` に載せる）
+  - 防御: ハニーポット / 時間トラップ（`WordRequestFormToken`）/ 送信は `word_requests` の
+    IP+`created_at` の COUNT で制限 / 重複チェックのみ Rails 標準の `rate_limit`
+  - 受付は環境変数 `REQUESTS_ENABLED`（既定 ON）で止められる
+
 単語データは管理側の CRUD（`/admin/words`）・高速アノテーション（`/admin/annotations`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。マスタのその場追加はコンソールで実現済み（Issue 10 相当）。
 
 ## 6. 主要ファイル / ディレクトリ

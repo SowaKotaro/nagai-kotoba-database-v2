@@ -24,6 +24,10 @@ class WordSense < ApplicationRecord
   # ジャンルピッカーを大・中まで開いておくための祖先 id 配列(永続化しない)。
   attr_accessor :genre_preselect_ids
 
+  # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
+  # 一括登録の確認画面と公開の収録リクエスト・フォームで同じ基準を示すため、ここを単一の正とする。
+  MIN_READING_LENGTH = 10
+
   validates :reading, presence: true
   validate :genre_must_be_small
 

@@ -67,6 +67,10 @@
     <h2><%= icon "envelope_simple" %><%= t("pages.about.contact_title") %></h2>
     <p><%= t("pages.about.contact_body") %></p>
     <p><%= mail_to t("pages.about.contact_email") %></p>
+    <%# 「載っていない言葉を教えたい」はメールより専用フォームの方が早い(Issue 75) %>
+    <% if requests_open? %>
+      <p><%= link_to t("pages.about.request_link"), new_request_path, class: "icon-label" %></p>
+    <% end %>
   </section>
 </div>
 

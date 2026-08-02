@@ -5,5 +5,7 @@ class Admin::DashboardController < Admin::BaseController
     @annotated_count = Word.annotated.count
     @unannotated_count = Word.unannotated.count
     @sense_count = WordSense.count
+    # 公開側から届いた収録リクエストのうち、まだ手を付けていない件数(Issue 75)。
+    @pending_request_count = WordRequestItem.pending.count
   end
 end

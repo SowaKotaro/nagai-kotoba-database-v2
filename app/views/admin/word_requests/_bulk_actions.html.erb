@@ -1,0 +1,38 @@
+<%# 選択した語への一括操作(Issue 75)。フォームはテーブルの外に置き、行のチェックボックスは
+    form 属性でこのフォームに紐づける(一括適用パネル Issue 37 と同じ作法)。
+    行ごとにフォームを置くと選択用フォームと入れ子になってしまうため、操作はここに集約する。 %>
+<div class="bulk-requests">
+  <%= form_with url: bulk_admin_requests_path, method: :post, id: "bulk-request-form" do %>
+    <%# 操作後も絞り込み・ページ位置を保つ %>
+    <% { status: @status, ip: @ip_address, page: (@page if @page > 1) }.compact.each do |key, value| %>
+      <%= hidden_field_tag key, value %>
+    <% end %>
+
+    <div class="bulk-requests__fields">
+      <label class="bulk-requests__field">
+        <span class="bulk-requests__label"><%= t(".status_label") %></span>
+        <%= select_tag :status_to,
+              options_for_select(WordRequestItem.statuses.keys.map { |status|
+                [ t("admin.word_requests.statuses.#{status}"), status ]
+              }),
+              include_blank: t(".status_blank") %>
+      </label>
+
+      <label class="bulk-requests__field bulk-requests__field--memo">
+        <span class="bulk-requests__label"><%= t(".memo_label") %></span>
+        <%= text_field_tag :admin_memo, nil, placeholder: t(".memo_placeholder"),
+              maxlength: WordRequestItem::MAX_ADMIN_MEMO_LENGTH %>
+      </label>
+    </div>
+
+    <div class="actions actions--tight">
+      <%= button_tag t(".apply"), type: "submit", name: "commit", value: "apply", class: "btn btn--sm" %>
+      <%# 収録までの主動線: 選択した語を箇条書きにして一括登録の step1 へ渡す %>
+      <%= button_tag t(".to_bulk"), type: "submit", name: "commit", value: "to_bulk",
+            class: "btn btn--sm btn--primary" %>
+      <%= button_tag t(".destroy"), type: "submit", name: "commit", value: "destroy", class: "btn btn--sm",
+            data: { turbo_confirm: t(".confirm_destroy") } %>
+    </div>
+    <p class="bulk-requests__hint"><%= t(".hint", limit: Admin::WordRequestsController::BULK_HANDOFF_LIMIT) %></p>
+  <% end %>
+</div>

@@ -21,6 +21,8 @@ ja:
       linguistic_feature: "言語学的特徴"
       word_sense: "語義"
       word_sense_feature: "語義の言語学的特徴"
+      word_request: "収録リクエスト"
+      word_request_item: "リクエストされた言葉"
     attributes:
       genre:
         parent: "親ジャンル"
@@ -50,6 +52,12 @@ ja:
         linguistic_feature: "言語学的特徴"
         target: "該当部分"
         target_reading: "該当部分の読み"
+      word_request:
+        items: "リクエストする言葉"
+      word_request_item:
+        surface: "言葉"
+        reading: "読み"
+        admin_memo: "メモ"
     errors:
       models:
         genre:
@@ -68,6 +76,12 @@ ja:
               not_in_surface: "は単語の表層形に含まれる部分を指定してください"
             target_reading:
               not_in_reading: "は語義の読みに含まれる部分を指定してください"
+        word_request:
+          attributes:
+            base:
+              too_many_items: "一度に送れるのは %{count} 語までです。"
+            items:
+              blank: "を1つ以上入力してください"
   layouts:
     brand: "長い言葉のデータベース"
     search_placeholder: "単語を検索"
@@ -84,6 +98,7 @@ ja:
       search: "検索"
       advanced_search: "詳細検索"
       about: "サイトについて"
+      requests: "収録リクエスト"
       privacy: "プライバシーポリシー"
       admin: "管理"
       logout: "ログアウト"
@@ -194,6 +209,7 @@ ja:
       description: "収録している日本語の長い言葉(読み10文字以上)の一覧。読みの長さ・文字の構成・韻・ジャンル・品詞・語種などの条件で絞り込めます。"
       empty: "まだ単語が登録されていません。"
       empty_filtered: "条件に一致する言葉が見つかりませんでした。条件を変えるか、絞り込みを解除してください。"
+      request_link: "この言葉の収録をリクエストする"
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
       char_count: "%{count} 字"
@@ -290,6 +306,43 @@ ja:
       status: "%{page} / %{total} ページ"
     feed:
       title: "新着の長い言葉"
+  word_requests:
+    closed: "現在、収録リクエストの受付を止めています。ご意見・ご要望はサイト概要の連絡先までお願いします。"
+    fields:
+      no: "番号"
+      surface: "言葉"
+      reading: "読み（任意）"
+    reading_counter:
+      unit: "文字"
+      satisfied: "収録の目安（%{min}文字以上）を満たしています"
+      short: "収録の目安は %{min} 文字以上です"
+    new:
+      title: "収録リクエスト"
+      description: "「長い言葉のデータベース」に収録してほしい言葉を教えていただくページ。読みが10文字以上の言葉を集めています。"
+      lead: "「この言葉が載っていない」と気づいたら、教えてください。いただいた言葉は収録基準に照らして一つずつ確認したうえで、登録を検討します。"
+      surface_placeholder: "例: フェルマーの最終定理"
+      reading_placeholder: "例: フェルマーノサイシュウテイリ"
+      add_row: "行を追加"
+      remove_row: "この行を消す"
+      limit: "一度に %{max} 語まで"
+      check: "重複チェック"
+      checking: "収録済みの言葉と照合しています…"
+      submit: "この内容で送る"
+      honeypot: "この欄は入力しないでください"
+      notes_title: "お願い"
+      note_use: "いただいた内容は、収録の検討にのみ使わせていただきます。"
+      note_no_reply: "個別の返信はできません。収録をお約束するものでもありません。"
+      note_privacy_html: "個人情報の扱いに関しては、詳しくは %{link} をご覧ください。"
+      note_privacy_link: "プライバシーポリシー"
+    create:
+      created: "リクエストをお預かりしました。ありがとうございます。"
+      expired: "フォームを開いてから時間が経ちすぎたため、受け付けられませんでした。お手数ですが、もう一度送信してください。"
+      rate_limited: "短い時間に多くのリクエストをいただいたため、いまは受け付けられません。しばらく時間をおいてからお試しください。"
+    duplicates:
+      throttled: "重複チェックの回数が多すぎます。少し時間をおいてからお試しください。"
+      exact_title: "すでに収録されています"
+      similar_title: "似ている言葉があります"
+      none_title: "登録が確認されませんでした"
   admin:
     nav:
       aria: "管理メニュー"
@@ -298,9 +351,54 @@ ja:
       register: "単語を登録"
       annotations: "アノテーション"
       words: "単語の管理"
+      requests: "リクエスト"
       tags: "タグ管理"
       design_mocks: "デザイン案"
       view_site: "公開サイトへ"
+    word_requests:
+      title: "収録リクエスト"
+      statuses:
+        pending: "未着手"
+        accepted: "採用済み"
+        on_hold: "保留"
+        rejected: "却下"
+      index:
+        lead: "公開ページのフォームから届いた「収録してほしい言葉」。採用するものを選んで一括登録へ渡す。"
+        status_label: "状態で絞り込む"
+        status_all: "すべて"
+        total: "%{count} 件"
+        empty: "まだリクエストは届いていません。"
+        col_surface: "言葉"
+        col_reading: "読み"
+        col_sent: "送信"
+        col_status: "状態"
+        registered: "収録済み"
+        reading_length: "%{count}字"
+        select_all: "すべて選択"
+        select_item: "「%{surface}」を選択"
+        ip_filter: "この IP のリクエストだけを見る"
+        ip_filtered: "IP %{ip} のリクエストだけを表示しています。"
+        ip_filter_reset: "絞り込みを解除"
+        meta_summary: "送信情報"
+        meta_origin: "送信元"
+        meta_referer: "リファラー"
+        meta_ua: "ブラウザ"
+      bulk_actions:
+        status_label: "状態を変える"
+        status_blank: "変えない"
+        memo_label: "メモ"
+        memo_placeholder: "却下理由など（選択した語すべてに付く）"
+        apply: "状態を保存"
+        to_bulk: "一括登録へ渡す"
+        destroy: "削除"
+        confirm_destroy: "選択したリクエストを削除します。よろしいですか？"
+        hint: "「一括登録へ渡す」は、選択した言葉を箇条書きにして登録の step1 に流し込む（一度に %{limit} 語まで）。"
+      bulk:
+        no_selection: "言葉が選択されていません。"
+        no_status: "変更後の状態を選んでください。"
+        applied: "%{count} 件の状態を更新しました。"
+        destroyed: "%{count} 件を削除しました。"
+        limited: "一度に渡せるのは %{count} 件までのため、先頭から %{count} 件を渡しました。"
     dashboard:
       title: "管理コンソール"
       eyebrow: "オーナー用"
@@ -321,6 +419,9 @@ ja:
       manage_title: "単語の管理"
       manage_desc: "登録済みの単語の一覧・編集・削除。"
       manage_tag: "一覧・編集"
+      requests_title: "リクエストの管理"
+      requests_desc: "公開ページのフォームから届いた「収録してほしい言葉」を確認し、採用するものを一括登録へ渡します。"
+      requests_tag: "未着手 %{count} 件"
       tags_title: "タグ管理"
       tags_desc: "ジャンル・エンティティ・品詞・語種・特徴などのタグを一覧し、名前の変更・削除・統合を行います。"
       tags_tag: "マスタ整理"
@@ -881,6 +982,7 @@ ja:
       contact_title: "お問い合わせ"
       contact_body: "ご意見・誤りのご指摘などは、下記までお願いします。"
       contact_email: "specialnamahamu@gmail.com"
+      request_link: "収録してほしい言葉をリクエストする"
     privacy:
       title: "プライバシーポリシー"
       description: "「長い言葉のデータベース」のプライバシーポリシー。アクセス解析（GA4）による外部送信情報・Cookie・アクセスログの取り扱いについて。"
@@ -901,6 +1003,9 @@ ja:
       cookie_body: "GA4 は利用者のブラウザを識別するために Cookie（_ga など）を保存します。Cookie はブラウザの設定で拒否・削除できます。拒否しても本サイトの閲覧に支障はありません。"
       log_title: "アクセスログ"
       log_body: "本サイトのサーバーは、障害対応と不正アクセス対策のため、アクセスログ（IP アドレス・ブラウザの種類・閲覧日時・リクエスト URL）を一定期間保存します。これらの情報を上記の目的以外に利用することはありません。"
+      request_title: "収録リクエストで受け取る情報"
+      request_body: "収録リクエストのフォームから送信された内容（リクエストされた言葉・読み・ひとこと）とあわせて、送信時の IP アドレス・ブラウザの種類（User-Agent）・直前のページ（リファラー）・送信元のページを保存します。氏名・メールアドレスなど、送信者ご本人に連絡できる情報の入力欄は設けていません。"
+      request_purpose: "これらは、いたずらや自動投稿を防ぐことと、どの画面からリクエストが寄せられているかを調べてサイトを改善することに利用します。目的外の利用や第三者への提供は行いません。"
       changes_title: "本ポリシーの変更"
       changes_body: "本ポリシーの内容は、法令の改正やサイトの機能追加に応じて変更することがあります。変更した場合は本ページでお知らせします。"
       contact_title: "お問い合わせ"

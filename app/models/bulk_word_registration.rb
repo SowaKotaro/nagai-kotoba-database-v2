@@ -22,10 +22,11 @@ class BulkWordRegistration
   attr_reader :entries
 
   # 読みの正規化類似度がこの値以上なら「似ている」とみなして警告する。
-  SIMILARITY_THRESHOLD = 0.8
+  # 公開側の収録リクエスト(Issue 75)と基準を揃えるため Levenshtein 側を正とする。
+  SIMILARITY_THRESHOLD = Levenshtein::SIMILARITY_THRESHOLD
 
   # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
-  MIN_READING_LENGTH = 10
+  MIN_READING_LENGTH = WordSense::MIN_READING_LENGTH
 
   # 行頭の bullet: 「1.」「2)」「-」「*」「・」など。
   BULLET = /\A\s*(?:\d+[.)．、:：]|[-*・‣▪●○])\s*/
@@ -180,7 +181,7 @@ class BulkWordRegistration
   def attach_batch_matches(analyzed)
     analyzed.combination(2).each do |a, b|
       next if a.reading.blank? || b.reading.blank?
-      next if too_different?(a.reading, b.reading)
+      next if Levenshtein.far_apart?(a.reading, b.reading, SIMILARITY_THRESHOLD)
 
       sim = Levenshtein.similarity(a.reading, b.reading)
       next if sim < SIMILARITY_THRESHOLD
@@ -202,7 +203,7 @@ class BulkWordRegistration
 
   def db_matches_for(reading)
     existing_readings.filter_map do |existing_reading, existing_surface|
-      next if too_different?(reading, existing_reading)
+      next if Levenshtein.far_apart?(reading, existing_reading, SIMILARITY_THRESHOLD)
 
       sim = Levenshtein.similarity(reading, existing_reading)
       Match.new(surface: existing_surface, reading: existing_reading, similarity: sim) if sim >= SIMILARITY_THRESHOLD
@@ -212,15 +213,6 @@ class BulkWordRegistration
   # DB の既存 (読み, 表層形) 一覧。1回だけ読み込んでメモ化する。
   def existing_readings
     @existing_readings ||= WordSense.joins(:word).distinct.pluck("word_senses.reading", "words.surface")
-  end
-
-  # 長さの差が大きすぎて類似度が閾値に届かない組を、距離計算の前に安価に弾く。
-  # 編集距離は最低でも文字数の差だけかかるため、|差| が (1-閾値)×長い方 を超えたら閾値未満で確定。
-  def too_different?(a, b)
-    longest = [ a.length, b.length ].max
-    return false if longest.zero?
-
-    (a.length - b.length).abs > (1 - SIMILARITY_THRESHOLD) * longest
   end
 
   # 各行から bullet を除いた表層形の配列(空行はスキップ)。

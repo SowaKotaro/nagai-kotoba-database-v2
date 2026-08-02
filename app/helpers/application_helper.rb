@@ -37,6 +37,12 @@ module ApplicationHelper
     Rails.application.config.x.indexing_enabled ? content_for(:robots) : "noindex"
   end
 
+  # 収録リクエスト(Issue 75)を受け付けているか。荒らされたときは環境変数 REQUESTS_ENABLED で
+  # 止められるようにしてあり、停止中は公開側の導線そのものを出さない。
+  def requests_open?
+    Rails.application.config.x.requests_enabled
+  end
+
   # GA4 の測定ID(G-XXXXXXX)。本番の環境変数から読む。未設定なら計測タグを出さない(Issue 19)。
   def ga_measurement_id
     ENV["GA4_MEASUREMENT_ID"].presence

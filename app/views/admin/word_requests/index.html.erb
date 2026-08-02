@@ -1,0 +1,106 @@
+<% content_for :title, t("admin.word_requests.title") %>
+
+<h1 class="page-title"><%= t("admin.word_requests.title") %></h1>
+<p class="field-hint"><%= t(".lead") %></p>
+
+<nav class="admin-status-tabs" aria-label="<%= t(".status_label") %>">
+  <% [ [ nil, t(".status_all") ], *WordRequestItem.statuses.keys.map { |status|
+         [ status, t("admin.word_requests.statuses.#{status}") ] } ].each do |status, label| %>
+    <%= link_to label, admin_requests_path({ status: status, ip: @ip_address }.compact),
+          class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
+  <% end %>
+</nav>
+
+<% if @ip_address %>
+  <p class="admin-words-count">
+    <%= t(".ip_filtered", ip: @ip_address) %>
+    <%= link_to t(".ip_filter_reset"), admin_requests_path(status: @status) %>
+  </p>
+<% end %>
+
+<p class="admin-words-count"><%= t(".total", count: number_with_delimiter(@total_count)) %></p>
+
+<% if @items.any? %>
+  <%= render "bulk_actions" %>
+
+  <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
+  <div class="table-scroll" data-controller="check-all">
+    <table class="data-table admin-requests-table">
+      <thead>
+        <tr>
+          <th class="admin-words-table__check">
+            <input type="checkbox" aria-label="<%= t(".select_all") %>"
+                   data-check-all-target="toggle" data-action="check-all#toggle">
+          </th>
+          <th><%= t(".col_surface") %></th>
+          <th><%= t(".col_reading") %></th>
+          <th><%= t(".col_sent") %></th>
+          <th class="admin-words-table__status"><%= t(".col_status") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @items.each do |item| %>
+          <tr>
+            <td class="admin-words-table__check">
+              <%# フォームの外にあるため form 属性で一括操作フォームに紐づける %>
+              <input type="checkbox" name="item_ids[]" value="<%= item.id %>"
+                     form="bulk-request-form" aria-label="<%= t(".select_item", surface: item.surface) %>"
+                     data-check-all-target="item" data-action="check-all#sync">
+            </td>
+            <td>
+              <%= item.surface %>
+              <% if @registered_surfaces.include?(item.surface) %>
+                <%# 投稿後に収録された語を取りこぼさないための印 %>
+                <span class="admin-requests-table__registered"><%= t(".registered") %></span>
+              <% end %>
+            </td>
+            <td class="admin-words-table__reading">
+              <% if item.reading.present? %>
+                <%= item.reading %>
+                <span class="admin-requests-table__len"><%= t(".reading_length", count: item.reading.length) %></span>
+              <% end %>
+            </td>
+            <td class="admin-requests-table__sent">
+              <span class="admin-requests-table__at"><%= item.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+              <%= link_to item.word_request.ip_address,
+                    admin_requests_path(status: @status, ip: item.word_request.ip_address),
+                    class: "admin-requests-table__ip", title: t(".ip_filter") %>
+              <details class="admin-requests-table__meta">
+                <summary><%= t(".meta_summary") %></summary>
+                <dl>
+                  <dt><%= t(".meta_origin") %></dt><dd><%= item.word_request.origin_path.presence || "—" %></dd>
+                  <dt><%= t(".meta_referer") %></dt><dd><%= item.word_request.referer.presence || "—" %></dd>
+                  <dt><%= t(".meta_ua") %></dt><dd><%= item.word_request.user_agent.presence || "—" %></dd>
+                </dl>
+              </details>
+            </td>
+            <td class="admin-words-table__status">
+              <span class="admin-requests-table__status admin-requests-table__status--<%= item.status %>">
+                <%= t("admin.word_requests.statuses.#{item.status}") %>
+              </span>
+              <% if item.admin_memo.present? %>
+                <span class="admin-requests-table__memo"><%= item.admin_memo %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="pagination">
+    <%# 絞り込み条件を保持したままページ送りする %>
+    <% base = request.query_parameters.except("page") %>
+    <% if @page > 1 %>
+      <%= link_to t("words.pagination.prev"), admin_requests_path(base.merge(page: @page - 1)) %>
+    <% end %>
+
+    <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
+
+    <% if @page < @total_pages %>
+      <%= link_to t("words.pagination.next"), admin_requests_path(base.merge(page: @page + 1)) %>
+    <% end %>
+  </nav>
+<% else %>
+  <p class="empty-note"><%= t(".empty") %></p>
+<% end %>

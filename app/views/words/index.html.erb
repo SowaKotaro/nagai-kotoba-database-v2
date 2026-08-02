@@ -78,6 +78,17 @@
       条件を外す導線は上の active-facet(絞り込みを解除)が担う。
       text: の完全一致検証に余分な空白が入らないよう、あえて1行で組む。 %>
   <p class="empty-note"><%= icon "binoculars" %><%= @search.conditions? ? t("words.index.empty_filtered") : t("words.index.empty") %></p>
+
+  <%# 探して見つからなかった瞬間が収録リクエストの一番の動機なので、ここに導線を置く(Issue 75)。
+      キーワードはフォームへ引き継ぐ(条件だけの 0 件は語が特定できないので空のフォームへ)。
+      フォーム自体は埋め込まない: この一覧は public: true の HTTP キャッシュ配下にあり、
+      CSRF トークン入りのフォームを共有キャッシュに載せてしまうため。 %>
+  <% if requests_open? %>
+    <p class="empty-request">
+      <%= link_to t("words.index.request_link"), new_request_path(surface: @search.q.presence),
+            class: "icon-label" %>
+    </p>
+  <% end %>
 <% else %>
   <div class="entry-list">
     <%# query は「別表記だけが一致した」注記の判定に使う(Issue 72) %>

@@ -46,6 +46,14 @@
     <p><%= t("pages.privacy.log_body") %></p>
   </section>
 
+  <%# 収録リクエスト・フォーム(Issue 75)は、このサイトで唯一利用者から情報を受け取る経路。
+      何を保存し、何に使うかをアクセスログとは別項目として公表する %>
+  <section>
+    <h2><%= icon "pen_nib" %><%= t("pages.privacy.request_title") %></h2>
+    <p><%= t("pages.privacy.request_body") %></p>
+    <p><%= t("pages.privacy.request_purpose") %></p>
+  </section>
+
   <section>
     <h2><%= icon "pencil_simple" %><%= t("pages.privacy.changes_title") %></h2>
     <p><%= t("pages.privacy.changes_body") %></p>
