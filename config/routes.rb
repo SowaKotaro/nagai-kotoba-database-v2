@@ -65,6 +65,9 @@ Rails.application.routes.draw do
       patch :hold, on: :member
       # 提案の「新設候補」マスタをワンタップ作成し、再反映して戻る(Issue 66)。
       post :create_master, on: :member
+      # 「この注釈は微妙だ」と思った1語を Claude Code の /reannotation へ渡すための
+      # 再調査用 JSON(現在の内容 + マスタ)をコピーする画面。
+      get :reresearch, on: :member
     end
     # デザイン案モック(知人への意見募集用)。DB に触らない完全静的のモックで、
     # docs/design.md のデザインルールは適用しない(この配下だけの例外)。

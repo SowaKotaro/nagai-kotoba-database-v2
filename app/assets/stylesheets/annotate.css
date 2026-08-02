@@ -32,7 +32,10 @@
 .ann-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-3); display: flex; gap: 14px; align-items: center; }
 .ann-eyebrow .no { color: var(--shu); }
 .ann-word { font-family: var(--font-mincho); font-weight: 600; font-size: clamp(34px, 7vw, 76px); line-height: 1.06; margin: var(--space-1) 0 2px; letter-spacing: 0.01em; overflow-wrap: anywhere; }
-.ann-word-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding-bottom: var(--space-4); border-bottom: 2px solid var(--ink); }
+.ann-word-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding-bottom: var(--space-4); border-bottom: 2px solid var(--ink); display: flex; gap: 14px; align-items: baseline; }
+/* 1語の再調査用 JSON へ(Claude Code の /reannotation に渡す) */
+.ann-word-meta__reresearch { margin-left: auto; color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule-mid); padding-bottom: 1px; }
+.ann-word-meta__reresearch:hover { color: var(--shu); border-bottom-color: var(--shu); }
 
 /* 用語解説(Issue 39)。特徴選択の脇に置く控えめな開閉パネル(hover 限定にしない) */
 .ann-glossary { margin-bottom: var(--space-2); }

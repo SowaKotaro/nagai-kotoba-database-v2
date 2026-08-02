@@ -1,0 +1,30 @@
+<% content_for :title, t("admin.annotations.reresearch.title") %>
+<%# 1語の再調査用 JSON。コンソール(show)と同じ turbo フレームに入れて、コピーしたら
+    そのまま元の語へ戻れるようにする %>
+<%= turbo_frame_tag "annotation-console", data: { turbo_action: "advance" } do %>
+  <div class="ann">
+    <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.annotations.reresearch.eyebrow") %></span></p>
+    <h1 class="ann-word"><%= @word.surface %></h1>
+
+    <p class="proposal-lead"><%= t("admin.annotations.reresearch.lead") %></p>
+
+    <div class="proposal-json" data-controller="clipboard"
+         data-clipboard-text-value="<%= @reresearch_json %>"
+         data-clipboard-copied-label-value="<%= t("admin.annotations.reresearch.copied") %>">
+      <div class="proposal-json__bar">
+        <span class="proposal-json__hint"><%= t("admin.annotations.reresearch.hint") %></span>
+        <button type="button" class="btn btn--sm" data-action="clipboard#copy">
+          <span data-clipboard-target="label"><%= t("admin.annotations.reresearch.copy") %></span>
+        </button>
+      </div>
+      <%= text_area_tag :reresearch_json, @reresearch_json, readonly: true, rows: 12, class: "proposal-json__area" %>
+    </div>
+
+    <div class="ann-actionbar">
+      <%= link_to t("admin.annotations.reresearch.back"), admin_annotation_path(@word, nav_params), class: "btn" %>
+      <span class="spacer"></span>
+      <%= link_to t("admin.annotations.reresearch.to_import"), new_admin_annotation_proposal_path,
+            class: "btn", data: { turbo_frame: "_top" } %>
+    </div>
+  </div>
+<% end %>

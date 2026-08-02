@@ -4,6 +4,9 @@
 `.claude/skills/word-*-research` スキルを起動する）が、**入力ファイルを読んで出力ファイルを書き出す**
 という形で動く。その入出力を置く場所。
 
+6つ目の `/reannotation`（1語の再調査）だけは、**JSON を会話に貼って起動し、結果もチャットに返す**
+（スマートフォンから回すため）。ファイルは補助的に `outputs/reannotation.json` へ書くだけ。
+
 `inputs/` と `outputs/` の中身は実行のたびに上書きされる作業ファイルなので、`.gitignore`
 で除外している（ディレクトリだけ `.keep` で残す）。`harvest-seen.txt`（/harvest が過去に
 提案した語の累積リスト）もローカルの状態ファイルとして gitignore している。
@@ -17,6 +20,7 @@
 | `/notation` | `inputs/notation.txt` | `outputs/notation.txt` |
 | `/reading` | `inputs/reading.txt` | `outputs/reading.json` |
 | `/annotation` | `inputs/annotation.json` | `outputs/annotation.json` |
+| `/reannotation` | （会話に貼る再調査用JSON。無ければ `inputs/reannotation.json`） | チャットに提案JSON（＋`outputs/reannotation.json`） |
 
 いずれも引数で入力パスを渡せば、上の既定パス以外も読める。
 
@@ -44,5 +48,11 @@
 3. **注釈**: 管理画面の「調査用データの書き出し」で得た JSON を `inputs/annotation.json` に保存し、
    `/annotation`。`outputs/annotation.json` を「提案 JSON の取り込み」に貼ると DB に下書きとして入り、
    アノテーション・コンソールで人間が承認する。
+4. **再注釈（1語ずつ・随時）**: 3 の承認作業中に「この注釈は微妙だ」と思ったら、その語のコンソール
+   画面（`/admin/annotations/:id`）の「再調査用JSON →」でコピーし、`/reannotation` の後ろに貼って起動する。
+   調べ直す項目（意味・ジャンル・エンティティ・品詞・語種・言語的特徴・別表記・立項スコア）を
+   選択肢で聞かれるので選ぶと、その項目だけを調べ直した提案JSONがチャットに返る。それを
+   「提案 JSON の取り込み」に貼ると下書きが上書きされ、コンソールで承認し直せる。
+   スマートフォンの Claude アプリからも同じ流れで回せる。
 
 判断基準（立項の4原則・表記・読み・ジャンル選定）は [`docs/annotation-guidelines.md`](../docs/annotation-guidelines.md) が正。

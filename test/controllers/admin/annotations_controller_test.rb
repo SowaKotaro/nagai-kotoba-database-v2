@@ -595,6 +595,31 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input.js-genre-value[value=?]", murder_sense.genre_id.to_s
   end
 
+  # --- 1語の再調査(/reannotation へ渡す JSON) ---
+  test "未認証だと再調査用データを見られない" do
+    get reresearch_admin_annotation_path(@word)
+    assert_redirected_to new_session_path
+  end
+
+  test "再調査用データにコピー用の JSON が出る(現在の内容とマスタを含む)" do
+    sign_in_as(Admin.take)
+    get reresearch_admin_annotation_path(words(:abc_murder))
+
+    assert_response :success
+    json = JSON.parse(css_select("textarea#reresearch_json").first.text)
+    assert_equal words(:abc_murder).id, json["word_id"]
+    assert_equal "saved", json["current"]["source"]
+    assert_equal "人を殺す事件", json["current"]["senses"].first["meaning"]
+    assert_includes json["masters"]["entity_types"], "書籍名"
+  end
+
+  test "コンソールから再調査用データへの導線が出る" do
+    sign_in_as(Admin.take)
+    get admin_annotation_path(@word)
+
+    assert_select "a[href=?]", reresearch_admin_annotation_path(@word)
+  end
+
   # --- マスタのその場追加 ---
   test "語種をその場で追加できる(JSON)" do
     sign_in_as(Admin.take)

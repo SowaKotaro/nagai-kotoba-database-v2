@@ -34,7 +34,13 @@
 
     <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.annotations.eyebrow") %></span></p>
     <h1 class="ann-word"><%= @word.surface %></h1>
-    <p class="ann-word-meta"><%= t("admin.annotations.char_type") %>　<%= @word.char_type_pattern %></p>
+    <p class="ann-word-meta">
+      <span><%= t("admin.annotations.char_type") %>　<%= @word.char_type_pattern %></span>
+      <%# 「この注釈は微妙だ」と思ったら、この語だけの再調査用 JSON をコピーして
+          Claude Code の /reannotation に渡す(マスタ込みで重いので別画面) %>
+      <%= link_to t("admin.annotations.reresearch.link"), reresearch_admin_annotation_path(@word, nav_params),
+            class: "ann-word-meta__reresearch" %>
+    </p>
 
     <%# Claude の提案(Issue 38)。反映はリンク(GET)で行い、保存＝承認は下のフォームのみ %>
     <%= render "proposal", proposal: @proposal, word: @word if @proposal %>
