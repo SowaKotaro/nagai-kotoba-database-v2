@@ -4,7 +4,7 @@
 # キューから外れ、あとで単語一覧の「保留」フィルタから見直せる。
 # ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
-  before_action :set_word, only: %i[show update hold create_master]
+  before_action :set_word, only: %i[show update hold create_master reresearch]
 
   # ビューのリンク/フォームで、提案フィルタ(proposed)・並べ替え(sort)・要判断フィルタ(review)を
   # 保ったままキューを辿るためのパラメータ一式(Issue 38/67)。
@@ -74,6 +74,15 @@ class Admin::AnnotationsController < Admin::BaseController
   rescue ProposedMasterCreation::Error, ActiveRecord::RecordInvalid
     redirect_to admin_annotation_path(@word, nav_params.merge(apply_proposal: 1)),
                 alert: t("admin.annotations.create_master_failed")
+  end
+
+  # 1語の再調査用 JSON(現在の注釈内容 + マスタ一覧)をコピーする画面。
+  # ここでコピーした JSON を Claude Code の /reannotation に貼ると、項目を選んで
+  # 調べ直した提案 JSON が返り、それを「提案 JSON の取り込み」に貼って上書きする。
+  # マスタ込みで数十 KB になるためコンソール本体には埋め込まず、この画面に分ける。
+  def reresearch
+    @proposal = AnnotationProposal.find_by(word_id: @word.id)
+    @reresearch_json = ReannotationExport.new(@word, @proposal).to_json
   end
 
   private

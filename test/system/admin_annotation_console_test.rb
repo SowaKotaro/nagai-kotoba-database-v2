@@ -193,6 +193,24 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_equal "ビショ", saved.target_reading
   end
 
+  # 1語の再調査(/reannotation へ渡す JSON)。コンソールと同じ turbo フレームで
+  # 出入りするため、リンク → 表示 → 「この語に戻る」までブラウザで担保する。
+  test "「再調査用JSON」から1語ぶんの JSON を開き、コンソールへ戻れる" do
+    visit admin_annotation_path(@word)
+
+    click_expecting(expect_css: "textarea#reresearch_json") do
+      find("a.ann-word-meta__reresearch")
+    end
+    json = JSON.parse(find("textarea#reresearch_json", visible: :all).value)
+    assert_equal @word.id, json["word_id"]
+    assert_equal "proposal", json["current"]["source"] # 提案(下書き)が付いた語
+    assert_includes json["masters"]["parts_of_speech"], "名詞"
+
+    click_expecting(expect_css: "h1.ann-word", text: @word.surface) do
+      find("a", exact_text: I18n.t("admin.annotations.reresearch.back"))
+    end
+  end
+
   private
 
   # チップの input は視覚的に隠れているため、ネイティブクリックに頼らず
