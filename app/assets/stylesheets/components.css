@@ -4378,3 +4378,389 @@ a.entity-treemap__cell:hover {
   letter-spacing: 0.08em;
   color: var(--ink-3);
 }
+
+/* ============================================================
+   収録リクエスト(Issue 75)
+   公開側から「この言葉を入れてほしい」を受け取るフォーム。
+   入力欄と重複チェックの結果を1つの表に収め、送信ボタンの位置を動かさない。
+   ============================================================ */
+
+.request-frame {
+  display: block;
+}
+
+.request-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-3);
+}
+
+.request-table thead th {
+  text-align: left;
+  padding: 0 var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--rule-mid);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.request-table td {
+  padding: var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.request-table input[type="text"] {
+  width: 100%;
+}
+
+/* 行番号は CSS カウンタで振る(行の増減に JS 無しで追随する) */
+.request-rows {
+  counter-reset: request-row;
+}
+
+.request-row {
+  counter-increment: request-row;
+}
+
+.request-table__no {
+  width: 2.5em;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.request-row .request-table__no::before {
+  content: counter(request-row);
+}
+
+.request-table__remove {
+  width: 3em;
+  text-align: right;
+}
+
+/* 入力欄と読みの列で幅を分け合う(残りは番号列と削除列の固定幅) */
+.request-table__surface,
+.request-table__reading {
+  width: 50%;
+}
+
+/* 表に見出し行があるので、各セルのラベルは狭幅のときだけ見せる */
+.request-table__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 読みの字数カウンタ: 極小の等幅(データラベルの文法)。基準を満たしたときだけ朱 */
+.reading-counter {
+  margin: var(--space-1) 0 0;
+  min-height: 1.4em;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.reading-counter--ok {
+  color: var(--shu);
+}
+
+/* 重複チェックの判定。その語の入力欄の真下に置く。
+   既に載っている・似ている場合だけ朱枠で引き止め(design.md: エラーは朱テキスト＋朱枠、
+   背景は塗らない)、未収録は枠なしの薄墨で静かに伝える */
+.dup-note {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.dup-note--exact,
+.dup-note--similar {
+  border: 1px solid var(--shu);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  color: var(--shu);
+}
+
+.dup-note__verdict {
+  display: block;
+}
+
+.dup-note__link {
+  display: inline-block;
+  margin-top: 2px;
+  margin-right: var(--space-2);
+  font-family: var(--font-mincho);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+/* 照合中だけ出す(turbo が turbo-frame に busy を立てる) */
+.request-table__loading {
+  display: none;
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.request-frame[busy] .request-table__loading,
+.request-frame[aria-busy="true"] .request-table__loading {
+  display: block;
+}
+
+/* 照合中は前回の判定を沈め、表示が古いことを示す */
+.request-frame[busy] .request-table,
+.request-frame[aria-busy="true"] .request-table {
+  opacity: 0.5;
+}
+
+.request-table__notice {
+  margin: 0 0 var(--space-3);
+  font-size: 14px;
+  color: var(--shu);
+}
+
+.request-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.request-actions__limit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+/* 重複チェックは送信の手前に置く補助操作なので、主 CTA から離して右へ寄せる */
+.request-actions__check {
+  margin-left: auto;
+}
+
+/* ハニーポット: 人間には見えず、タブ移動でも触れない欄 */
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* 送信前のお願い(奥付のように静かに置く) */
+.request-notes {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.request-notes ul {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.2em;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-2);
+}
+
+/* 狭幅では表を組まず、1行 = 1枚の面に積む(横スクロールを作らない) */
+@media (max-width: 700px) {
+  .request-table thead {
+    display: none;
+  }
+
+  .request-table,
+  .request-table tbody,
+  .request-table tr,
+  .request-table td {
+    display: block;
+  }
+
+  .request-row {
+    position: relative;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .request-table td {
+    padding: 0 0 var(--space-3);
+    border-bottom: none;
+  }
+
+  .request-table__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .request-table__no,
+  .request-table__surface,
+  .request-table__reading {
+    width: auto;
+  }
+
+  .request-table__no {
+    padding-bottom: var(--space-2);
+  }
+
+  .request-table__remove {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    width: auto;
+    padding: 0;
+  }
+
+  .request-actions__check {
+    margin-left: 0;
+  }
+}
+
+/* --- 管理: 収録リクエスト一覧(Issue 75) --- */
+
+.admin-requests-table__registered {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 1px var(--space-1);
+  border: 1px solid currentcolor;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--shu);
+  white-space: nowrap;
+}
+
+.admin-requests-table__len,
+.admin-requests-table__at,
+.admin-requests-table__memo {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.admin-requests-table__len {
+  margin-left: var(--space-2);
+}
+
+.admin-requests-table__sent {
+  white-space: nowrap;
+}
+
+.admin-requests-table__ip {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.admin-requests-table__meta {
+  margin-top: var(--space-1);
+  font-size: 11px;
+}
+
+.admin-requests-table__meta summary {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.admin-requests-table__meta dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-2);
+  margin: var(--space-1) 0 0;
+  max-width: 32em;
+}
+
+.admin-requests-table__meta dt {
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.admin-requests-table__meta dd {
+  margin: 0;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.admin-requests-table__status {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+/* 未着手だけ朱で残件を目立たせる。処理済みの3状態は薄墨で沈める */
+.admin-requests-table__status--pending {
+  color: var(--shu);
+}
+
+.admin-requests-table__status--accepted,
+.admin-requests-table__status--on_hold,
+.admin-requests-table__status--rejected {
+  color: var(--ink-3);
+}
+
+.admin-requests-table__memo {
+  display: block;
+  margin-top: 2px;
+  white-space: normal;
+}
+
+/* 一括操作パネル */
+.bulk-requests {
+  border: 1px solid var(--ink);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.bulk-requests__fields {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.bulk-requests__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bulk-requests__field--memo {
+  flex: 1 1 320px;
+}
+
+.bulk-requests__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.bulk-requests__hint {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}

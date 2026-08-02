@@ -1,0 +1,72 @@
+<% content_for :title, t(".title") %>
+<% content_for :description, t(".description") %>
+<%# 薄いフォームページなので検索結果には出さない。リンクは辿らせる(Issue 75) %>
+<% content_for :robots, "noindex,follow" %>
+
+<%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t(".title"), nil ] ] %>
+
+<div class="page-header">
+  <h1 class="page-title"><%= t(".title") %></h1>
+  <p class="page-lead"><%= t(".lead") %></p>
+</div>
+
+<% if @word_request.errors.any? %>
+  <ul class="form-errors">
+    <% @word_request.errors.full_messages.each do |message| %>
+      <li><%= message %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= form_with model: @word_request, url: requests_path, method: :post, class: "request-form",
+      data: { controller: "nested-form", nested_form_max_value: WordRequest::MAX_ITEMS } do |form| %>
+  <%# 時間トラップ: フォームを開いた時刻を署名して持たせ、速すぎる送信を捨てる %>
+  <%= hidden_field_tag :form_token, WordRequestFormToken.issue %>
+  <%# どのページから来たかを解析用に残す(送信時の referer はこのページ自身になるため) %>
+  <%= hidden_field_tag :origin_path, @origin_path %>
+
+  <%# ハニーポット: 人間には見えず、触れない欄。埋まっていれば自動投稿として黙って捨てる %>
+  <div class="honeypot" aria-hidden="true">
+    <%= label_tag WordRequestsController::HONEYPOT_FIELD, t(".honeypot") %>
+    <%= text_field_tag WordRequestsController::HONEYPOT_FIELD, nil, tabindex: -1, autocomplete: "off" %>
+  </div>
+
+  <%= render "rows", form: form, results: {}, throttled: false %>
+
+  <%# 行の追加用テンプレート。NEW_RECORD は Stimulus 側で一意な値に置き換わる。
+      差し替わる turbo-frame の外に置き、チェックしても失われないようにする %>
+  <template data-nested-form-target="template">
+    <%= form.fields_for :items, WordRequestItem.new, child_index: "NEW_RECORD" do |item_form| %>
+      <%= render "row", form: item_form, result: nil %>
+    <% end %>
+  </template>
+
+  <div class="request-actions">
+    <button type="button" class="btn btn--sm" data-action="nested-form#add" data-nested-form-target="addButton">
+      <%= t(".add_row") %>
+    </button>
+    <span class="request-actions__limit"><%= t(".limit", max: WordRequest::MAX_ITEMS) %></span>
+
+    <%# 重複チェック: 送信とは独立した任意操作。結果がどうであれ送信は妨げない。
+        同じフォームの内容を formaction で別 URL へ投げ、表の turbo-frame だけを差し替える。
+        Enter キーでは(送信ではなく)このチェックが走る = 誤操作しても安全な側に倒れる。 %>
+    <button type="submit" class="btn btn--sm request-actions__check"
+            formaction="<%= duplicates_requests_path %>" formmethod="post" formnovalidate
+            data-turbo-frame="request-rows">
+      <%= icon "magnifying_glass" %><%= t(".check") %>
+    </button>
+  </div>
+
+  <div class="actions">
+    <%= form.submit t(".submit"), class: "btn btn--primary" %>
+  </div>
+
+  <div class="request-notes">
+    <p class="section-label"><%= t(".notes_title") %></p>
+    <ul>
+      <li><%= t(".note_use") %></li>
+      <li><%= t(".note_no_reply") %></li>
+      <li><%= t(".note_privacy_html", link: link_to(t(".note_privacy_link"), privacy_path)) %></li>
+    </ul>
+  </div>
+<% end %>

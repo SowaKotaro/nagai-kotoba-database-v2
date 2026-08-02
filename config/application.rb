@@ -37,6 +37,11 @@ module NagaiKotobaDatabaseV2
     # (手順は docs/launch-checklist.md)。テスト環境は解禁後の挙動を既定にする(test.rb)。
     config.x.indexing_enabled = ENV["INDEXING_ENABLED"].present?
 
+    # 収録リクエストの受付スイッチ(Issue 75)。荒らされたら本番の環境変数を "false" にして
+    # 即座に閉じられるようにする。未設定は受付ON(インデックス解禁と違い既定で有効)。
+    config.x.requests_enabled =
+      ActiveModel::Type::Boolean.new.cast(ENV.fetch("REQUESTS_ENABLED", "true")) || false
+
     # stylesheet_link_tag / javascript_include_tag が自動付与する
     # `Link: rel=preload` レスポンスヘッダー(HTTP/2 Server Push 向け)を無効化する。
     # 本番は HTTP/2 Push を使っておらず、ブラウザには preload ヒントとしてのみ解釈されるため、

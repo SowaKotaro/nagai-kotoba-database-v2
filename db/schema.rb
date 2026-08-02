@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_28_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -75,6 +75,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_100000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "uq_word_origins_name", unique: true
+  end
+
+  create_table "word_request_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "admin_memo", limit: 1000, comment: "管理者メモ(却下理由など)"
+    t.datetime "created_at", null: false
+    t.datetime "handled_at", comment: "ステータスを未着手から動かした時刻"
+    t.string "reading", collation: "utf8mb4_0900_as_ci", comment: "リクエスト者が任意で入れた読み(カタカナ想定)"
+    t.integer "status", default: 0, null: false, comment: "0:未着手 1:採用済み 2:保留 3:却下"
+    t.string "surface", null: false, collation: "utf8mb4_0900_as_ci", comment: "リクエストされた表層形"
+    t.datetime "updated_at", null: false
+    t.bigint "word_request_id", null: false
+    t.index ["status", "created_at"], name: "idx_word_request_items_status_created"
+    t.index ["surface"], name: "idx_word_request_items_surface", length: 191
+    t.index ["word_request_id"], name: "idx_word_request_items_request"
+  end
+
+  create_table "word_requests", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address", limit: 45, null: false, comment: "送信元IP(IPv6 も入る長さ)。レートリミットと解析に使う"
+    t.string "origin_path", limit: 1024, comment: "サイト内のどのページから来たか(検索0件 / About などの導線評価用)"
+    t.string "referer", limit: 1024, comment: "直前のページ(Referer ヘッダ)"
+    t.datetime "updated_at", null: false
+    t.string "user_agent", limit: 512, comment: "ブラウザの種類(User-Agent)"
+    t.index ["ip_address", "created_at"], name: "idx_word_requests_ip_created"
   end
 
   create_table "word_sense_features", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -153,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_100000) do
   add_foreign_key "annotation_proposals", "words", name: "fk_annotation_proposals_word"
   add_foreign_key "genres", "genres", column: "parent_id"
   add_foreign_key "sessions", "admins"
+  add_foreign_key "word_request_items", "word_requests", name: "fk_word_request_items_request"
   add_foreign_key "word_sense_features", "linguistic_features", name: "fk_wsf_linguistic_feature"
   add_foreign_key "word_sense_features", "word_senses", name: "fk_wsf_word_sense"
   add_foreign_key "word_sense_origins", "word_origins", name: "fk_wso_word_origin"

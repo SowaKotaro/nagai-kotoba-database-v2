@@ -12,6 +12,13 @@ Rails.application.routes.draw do
   # ジャンル階層のハブページ(全ジャンル面へのクロール導線)。Issue 21。
   resources :genres, only: :index
 
+  # 公開側からの収録リクエスト(Issue 75)。閲覧専用だった公開面に開ける唯一の書き込み経路。
+  # duplicates は送信前の任意チェック(レコードを作らない)。
+  # コントローラ名は `request` と紛らわしいため Requests ではなく WordRequests。
+  resources :requests, only: %i[new create], controller: "word_requests" do
+    post :duplicates, on: :collection
+  end
+
   # 50音・読みの文字数の索引(ブラウズ導線)。Issue 22。
   get "browse", to: "browse#index", as: :browse
 
@@ -53,6 +60,11 @@ Rails.application.routes.draw do
     end
     # 一覧で選択した語への共通属性の一括適用(Issue 37)。
     resource :bulk_annotation, only: :create
+    # 公開側から届いた収録リクエストの確認(Issue 75)。一覧は語単位。
+    # 操作は「選択 → 一括」に寄せているため、個別の update/destroy は持たない。
+    resources :requests, only: :index, controller: "word_requests" do
+      post :bulk, on: :collection
+    end
     # Claude Code 連携(Issue 38): 調査用データの書き出しと、提案 JSON の取り込み。
     resources :annotation_proposals, only: %i[new create] do
       get :export, on: :collection

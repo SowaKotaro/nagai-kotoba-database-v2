@@ -588,3 +588,17 @@ main.container {
     overflow: hidden;
   }
 }
+
+/* 管理サブナビの件数バッジ(収録リクエストの未着手。Issue 75)。
+   通知メールを持たない代わりに、管理画面に入った時点で残件に気づけるようにする */
+.admin-nav__badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--shu);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--shu);
+}

@@ -1,0 +1,7 @@
+<%# 重複チェックの結果。入力欄を含む表ごと turbo-frame を差し替える。
+    name 属性を元のフォームと同じに保つため、同じ form ビルダーで組み直す
+    (turbo は id の一致する turbo-frame だけを取り出すので、この form タグ自体は使われない)。
+    ここで保存や判定の記録は一切しない。 %>
+<%= form_with model: @word_request, url: requests_path, method: :post do |form| %>
+  <%= render "rows", form: form, results: @results || {}, throttled: @throttled %>
+<% end %>

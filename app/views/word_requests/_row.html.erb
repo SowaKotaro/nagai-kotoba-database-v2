@@ -1,0 +1,39 @@
+<%# リクエスト1語分の行。表層形だけが必須で、読みは任意。
+    すべて空の行は保存時に捨てられる(reject_if: :all_blank)ため required は付けない。
+    重複チェックの結果は別区画を開かず、この行の中に返す。 %>
+<%= tag.tr class: "request-row", data: reading_counter_data.merge(nested_form_item: true) do %>
+  <td class="request-table__no"></td>
+
+  <td class="request-table__surface">
+    <%= form.label :surface, t("word_requests.fields.surface"), class: "request-table__label" %>
+    <%= form.text_field :surface, maxlength: WordRequestItem::MAX_SURFACE_LENGTH, size: nil,
+          placeholder: t("word_requests.new.surface_placeholder"), autocomplete: "off" %>
+
+    <%# 重複チェックの結果は、その語の入力欄の真下に出す(専用の列や別区画を作らない)。
+        既に載っている・似ている場合だけ朱枠で引き止め、未収録は枠なしで静かに伝える。 %>
+    <% if result %>
+      <p class="dup-note dup-note--<%= result.kind %>">
+        <span class="dup-note__verdict"><%= t("word_requests.duplicates.#{result.kind}_title") %></span>
+        <% result.matches.first(2).each do |match| %>
+          <%= link_to match.surface, word_path(match.word_id), class: "dup-note__link" %>
+        <% end %>
+      </p>
+    <% end %>
+  </td>
+
+  <td class="request-table__reading">
+    <%= form.label :reading, t("word_requests.fields.reading"), class: "request-table__label" %>
+    <%= form.text_field :reading, maxlength: WordRequestItem::MAX_READING_LENGTH, size: nil,
+          placeholder: t("word_requests.new.reading_placeholder"), autocomplete: "off",
+          data: { reading_counter_target: "input", action: "input->reading-counter#update" } %>
+    <%# 収録基準を満たすかをその場で示す(満たさなくても送信は妨げない) %>
+    <p class="reading-counter" data-reading-counter-target="output" aria-live="polite"></p>
+  </td>
+
+  <td class="request-table__remove">
+    <button type="button" class="btn btn--icon" data-action="nested-form#remove"
+            aria-label="<%= t("word_requests.new.remove_row") %>" title="<%= t("word_requests.new.remove_row") %>">
+      <%= icon "x" %>
+    </button>
+  </td>
+<% end %>

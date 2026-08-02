@@ -16,9 +16,20 @@ module AdminHelper
     when "annotations" then :annotations
     when "tags" then :tags
     when "design_mocks" then :design_mocks
+    when "word_requests" then :requests
     when "words"
       ADMIN_REGISTER_ACTIONS.include?(action_name) ? :register : :words
     end
+  end
+
+  # 収録リクエスト(Issue 75)の共通ナビのラベル。未着手が溜まっていることに
+  # 管理画面へ来たときに気づけるよう、件数をバッジで添える(通知メールは持たない方針)。
+  def admin_requests_nav_label
+    count = WordRequestItem.pending.count
+    label = t("admin.nav.requests")
+    return label if count.zero?
+
+    safe_join([ label, tag.span(count, class: "admin-nav__badge") ])
   end
 
   # 現在地に aria-current="page" を付けた共通ナビのリンク。

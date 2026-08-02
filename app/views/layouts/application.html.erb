@@ -134,6 +134,10 @@
           <h2 class="site-footer__col-title"><%= t("layouts.footer.col_site") %></h2>
           <nav class="site-footer__nav">
             <%= link_to t("layouts.nav.about"), about_path %>
+            <%# 収録リクエストの常設導線(Issue 75)。受付を止めている間は出さない %>
+            <% if requests_open? %>
+              <%= link_to t("layouts.nav.requests"), new_request_path %>
+            <% end %>
             <%= link_to t("layouts.nav.privacy"), privacy_path %>
             <% if authenticated? %>
               <%= link_to t("layouts.nav.admin"), admin_words_path %>

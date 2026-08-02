@@ -56,6 +56,12 @@
           </div>
         </div>
 
+        <%# 収録リクエスト(Issue 75)。受付を止めている間は導線ごと隠す %>
+        <% if requests_open? %>
+          <%= link_to t("layouts.nav.requests"), new_request_path,
+                class: ("is-current" if request.path == new_request_path) %>
+        <% end %>
+
         <% if authenticated? %>
           <%= link_to t("layouts.nav.admin"), admin_root_path, class: ("is-current" if request.path.start_with?("/admin")) %>
           <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>

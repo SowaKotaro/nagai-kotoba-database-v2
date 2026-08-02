@@ -1,0 +1,27 @@
+<%# 入力欄と重複チェックの結果を1つの表に収める。
+    結果を別区画で開くと「この内容で送る」が下へ押し出されて遠くなるため、
+    turbo-frame で差し替えるのはこの表だけにして、ボタンの位置を動かさない。 %>
+<turbo-frame id="request-rows" class="request-frame">
+  <% if throttled %>
+    <p class="request-table__notice"><%= t("word_requests.duplicates.throttled") %></p>
+  <% end %>
+
+  <table class="request-table">
+    <thead>
+      <tr>
+        <th class="request-table__no"><span class="visually-hidden"><%= t("word_requests.fields.no") %></span></th>
+        <th class="request-table__surface"><%= t("word_requests.fields.surface") %></th>
+        <th class="request-table__reading"><%= t("word_requests.fields.reading") %></th>
+        <th class="request-table__remove"><span class="visually-hidden"><%= t("word_requests.new.remove_row") %></span></th>
+      </tr>
+    </thead>
+    <tbody class="request-rows" data-nested-form-target="container">
+      <%= form.fields_for :items do |item_form| %>
+        <%= render "row", form: item_form, result: results[item_form.object.surface] %>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%# 照合中だけ出す(turbo が turbo-frame に busy を立てる) %>
+  <p class="request-table__loading"><%= t("word_requests.new.checking") %></p>
+</turbo-frame>

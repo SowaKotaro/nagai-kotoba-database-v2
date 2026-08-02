@@ -30,8 +30,10 @@ class Admin::WordsController < Admin::BaseController
   end
 
   # step1: 表層形を箇条書きでまとめて貼り付ける。
+  # 収録リクエスト一覧(Issue 75)の「一括登録へ渡す」から来た場合は、
+  # 選択された言葉が箇条書きとして渡ってくるので初期値にする。
   def new
-    @registration = BulkWordRegistration.new
+    @registration = BulkWordRegistration.new(text: params.permit(:text)[:text])
   end
 
   # step2: 箇条書きから読みを自動取得し、確認・編集できる画面を出す(重複判定はしない)。
