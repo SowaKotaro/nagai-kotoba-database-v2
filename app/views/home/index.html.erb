@@ -79,7 +79,7 @@
           <span class="home-column__word"><%= word.surface %></span>
           <span class="home-column__reading"><%= word.word_senses.first&.reading %></span>
         </span>
-        <span class="home-column__meta"><%= l(word.created_at.to_date, format: :short) %></span>
+        <span class="home-column__meta"><%= l(word.annotated_at.to_date, format: :short) %></span>
       <% end %>
     <% end %>
   </section>

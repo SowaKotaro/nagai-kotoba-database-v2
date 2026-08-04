@@ -14,16 +14,20 @@ class HomeController < ApplicationController
         senses: WordSense.published.count,
         genres: Genre.small.count,
         # 更新が続いていることが一目で分かる指標(統計ページ「今月の新収録」と同じ定義)。
-        monthly_new: Word.annotated.where(created_at: Time.current.all_month).count
+        # 基準は annotated_at(公開日)。created_at は一括登録で下書きを作った日でしかなく、
+        # 注釈を終えて公開した月とは限らないため、公開面の「収録日」には使わない。
+        monthly_new: Word.annotated.where(annotated_at: Time.current.all_month).count
       }
     end
     @word_count = stats[:words]
     @sense_count = stats[:senses]
     @genre_count = stats[:genres]
     @monthly_new_count = stats[:monthly_new]
+    # 新着はサイトに出てきた順(annotated_at = 注釈完了 = 公開)で並べる。新着 Atom フィード
+    # (words#feed)と同じ基準。
     @recent_words = Word.annotated
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
-                        .order(created_at: :desc, id: :desc)
+                        .order(annotated_at: :desc, id: :desc)
                         .limit(RECENT_WORDS_LIMIT)
     # 最長ランキング(読みが長い順)。サイト最大のフックなので新着より上に置く。
     @longest_words = Word.annotated

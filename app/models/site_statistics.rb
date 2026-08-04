@@ -101,11 +101,13 @@ class SiteStatistics
   end
 
   # 分類と歩み: 今月の新収録・使用中ジャンル数・使用中特徴数・1日あたり平均・開帳からの日数。
+  # 「収録した日」は annotated_at(注釈完了 = 公開)で数える。created_at は一括登録で下書きを
+  # 作った日でしかなく、公開した日とは何日もずれ得るため、公開面の指標には使わない。
   def build_growth
-    first_day = Word.annotated.minimum(:created_at)&.to_date
+    first_day = Word.annotated.minimum(:annotated_at)&.to_date
     days_open = first_day ? (Date.current - first_day).to_i + 1 : 0
     {
-      this_month: Word.annotated.where(created_at: Time.current.all_month).count,
+      this_month: Word.annotated.where(annotated_at: Time.current.all_month).count,
       genre_count: WordSense.published.where.not(genre_id: nil).distinct.count(:genre_id),
       feature_count: WordSenseFeature.joins(word_sense: :word).merge(Word.annotated)
                                      .distinct.count(:linguistic_feature_id),
@@ -152,8 +154,9 @@ class SiteStatistics
   # ==== §4 収録の推移(週次) ========================================================
 
   # 開帳の週から今週までを 0 件の週も含めて並べた [{ start_on:, count:, cumulative: }]。
+  # 週の割り当ては build_growth と同じく annotated_at(公開日)を基準にする。
   def build_timeline
-    weekly = Word.annotated.pluck(:created_at).map { |time| time.to_date.beginning_of_week }.tally
+    weekly = Word.annotated.pluck(:annotated_at).map { |time| time.to_date.beginning_of_week }.tally
     return [] if weekly.empty?
 
     cumulative = 0
