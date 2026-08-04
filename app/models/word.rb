@@ -30,8 +30,13 @@ class Word < ApplicationRecord
   }
 
   # 注釈完了とみなす時刻と状態(完了)をセットする(保存は呼び出し側で行う)。
+  # annotated_at は「公開した日時」= 収録日として公開面の日付・並び順に使うため、既に立って
+  # いれば書き換えない。コンソールの update は保存のたびに呼ばれるので、上書きすると
+  # 見直し(再アノテーション)しただけの古い語が新着の先頭に来てしまう。
+  # 保留(mark_on_hold)でいったん未公開に戻した語は annotated_at が落ちるので、
+  # 次に完了したときの時刻が改めて収録日になる。
   def mark_annotated
-    self.annotated_at = Time.current
+    self.annotated_at ||= Time.current
     self.annotation_status = :done
   end
 

@@ -78,9 +78,12 @@ class WordSort
     "WHERE word_senses.word_id = words.id)".freeze
 
   # 基本の並び。並びはセレクタの表示順を兼ね、既定を先頭に置く。
+  # created_desc / created_asc は annotated_at(注釈完了 = 公開した日時)で並べる。created_at は
+  # 一括登録で下書きを作った日時でしかなく、公開した順とは何日もずれるため、公開面の「収録順」
+  # には使わない。キー名は既に URL(?sort=created_desc)として世に出ているので変えない。
   BASE_ORDERS = {
-    "created_desc" => Arel.sql("words.created_at DESC, words.id DESC"),
-    "created_asc"  => Arel.sql("words.created_at ASC, words.id ASC"),
+    "created_desc" => Arel.sql("words.annotated_at DESC, words.id DESC"),
+    "created_asc"  => Arel.sql("words.annotated_at ASC, words.id ASC"),
     "kana_asc"     => Arel.sql("#{READING_MIN} ASC, words.id ASC"),
     "kana_desc"    => Arel.sql("#{READING_MAX} DESC, words.id ASC"),
     "length_asc"   => Arel.sql("#{LENGTH_MIN} ASC, words.id ASC"),
@@ -128,7 +131,7 @@ class WordSort
   RANKING_KEYS = RANKING_ORDERS.keys.freeze
 
   # 並び順セレクタに出すキーと、その表示順。
-  # 「登録順 → 五十音 → 読みの長さ → その他のランキング」と、粗い順から細かい観点へ並べる。
+  # 「収録順 → 五十音 → 読みの長さ → その他のランキング」と、粗い順から細かい観点へ並べる。
   # シャッフルは並び順ではなく「引き直す」操作なので、セレクタには出さず一覧のボタンから使う。
   SELECTABLE_KEYS = %w[
     created_desc created_asc
@@ -142,7 +145,7 @@ class WordSort
 
   KEYS = (SELECTABLE_KEYS + [ SHUFFLE_KEY ]).freeze
   # ホームの「新着の単語 → すべて見る」から辿った一覧でも新着が先頭に来るよう、
-  # 既定は登録が新しい順にする。
+  # 既定は収録(公開)が新しい順にする。
   DEFAULT_KEY = "created_desc"
   # シャッフルのシード。URL から受けるので長さだけ抑える(SQL へはプレースホルダで渡す)。
   SEED_LIMIT = 16

@@ -65,6 +65,26 @@ class WordTest < ActiveSupport::TestCase
     assert word.annotation_done?
   end
 
+  # annotated_at は収録日(公開日)として公開面に出るので、見直しのたびに動いてはいけない。
+  test "mark_annotated は既にある annotated_at を書き換えない" do
+    word = words(:abc_murder)
+    first_time = word.annotated_at
+    travel_to 1.week.from_now do
+      word.mark_annotated
+      assert_equal first_time, word.annotated_at
+    end
+  end
+
+  # 保留でいったん未公開に戻した語は、次に完了した時刻が改めて収録日になる。
+  test "保留を挟むと mark_annotated が新しい annotated_at を立てる" do
+    word = words(:abc_murder)
+    word.mark_on_hold
+    travel_to 1.week.from_now do
+      word.mark_annotated
+      assert_equal Time.current.to_i, word.annotated_at.to_i
+    end
+  end
+
   test "mark_on_hold は状態を保留にし annotated_at を落とす" do
     word = words(:pending_haruhi)
     word.mark_on_hold

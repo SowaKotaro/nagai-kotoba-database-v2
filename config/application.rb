@@ -21,7 +21,11 @@ module NagaiKotobaDatabaseV2
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # 日本語話者向けのサイトなので、表示と「今日 / 今月」の判定を日本時間で行う。
+    # 未設定(既定の UTC)のままだと、日本時間の 0:00〜9:00 に収録した語の日付が
+    # 前日として表示され、「今月の新収録」の集計も月初・月末で1日ずれる。
+    # DB への保存は Rails 既定どおり UTC のままなので、既存データの変換は不要。
+    config.time_zone = "Tokyo"
     # config.eager_load_paths << Rails.root.join("extras")
 
     # 日本語アプリのため既定ロケールを日本語にする。

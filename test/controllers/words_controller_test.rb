@@ -374,13 +374,23 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 並び替え(sort) ---
   # フィクスチャの読みは カレー(3字) と さつじんじけん(7字)。辞書順では カ < さ。
-  test "一覧の既定は登録が新しい順" do
-    words(:abc_murder).update_column(:created_at, 2.days.ago)
-    words(:curry).update_column(:created_at, 1.day.ago)
+  test "一覧の既定は収録(公開)が新しい順" do
+    words(:abc_murder).update_column(:annotated_at, 2.days.ago)
+    words(:curry).update_column(:annotated_at, 1.day.ago)
 
     get words_path
     assert_response :success
     assert_operator body_position(words(:curry)), :<, body_position(words(:abc_murder))
+  end
+
+  # 一括登録で先に下書きだけ作り、あとから注釈を終えた語は created_at が古いまま公開される。
+  # 収録順は「サイトに出てきた順」でなければならないので annotated_at で並べる。
+  test "一覧の既定は下書きを作った順(created_at)ではなく公開順になる" do
+    words(:abc_murder).update_columns(created_at: 10.days.ago, annotated_at: 1.hour.ago)
+    words(:curry).update_columns(created_at: 1.day.ago, annotated_at: 2.days.ago)
+
+    get words_path
+    assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
   end
 
   test "sort=kana_asc で読みの辞書順になる" do
@@ -461,9 +471,9 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal first, [ body_position(words(:curry)), body_position(words(:abc_murder)) ]
   end
 
-  test "sort=created_asc / created_desc で登録日時順になる" do
-    words(:abc_murder).update_column(:created_at, 2.days.ago)
-    words(:curry).update_column(:created_at, 1.day.ago)
+  test "sort=created_asc / created_desc で収録(公開)日時順になる" do
+    words(:abc_murder).update_column(:annotated_at, 2.days.ago)
+    words(:curry).update_column(:annotated_at, 1.day.ago)
 
     get words_path(sort: "created_asc")
     assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
@@ -492,9 +502,9 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal first_order, body_position(words(:curry)) < body_position(words(:abc_murder))
   end
 
-  test "未知の sort は既定(登録が新しい順)に畳む" do
-    words(:abc_murder).update_column(:created_at, 2.days.ago)
-    words(:curry).update_column(:created_at, 1.day.ago)
+  test "未知の sort は既定(収録が新しい順)に畳む" do
+    words(:abc_murder).update_column(:annotated_at, 2.days.ago)
+    words(:curry).update_column(:annotated_at, 1.day.ago)
 
     get words_path(sort: "evil'); DROP TABLE words; --")
     assert_response :success
