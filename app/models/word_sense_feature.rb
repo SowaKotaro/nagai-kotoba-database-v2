@@ -4,6 +4,9 @@ class WordSenseFeature < ApplicationRecord
   # target_start は該当部分の出現位置(表層形の先頭からの文字オフセット・0始まり)で、
   # 同じ表層形に同じ target が繰り返し現れる語(例「びしょびしょ…びしょびしょ…」)に、
   # 同じ特徴を出現箇所ごとに複数付与できるようにする識別子。
+  # 特徴の付与数はランキング(feature_count_desc)の指標として words に非正規化してある。
+  include RefreshesWordMetrics
+
   belongs_to :word_sense
   belongs_to :linguistic_feature
 
@@ -20,6 +23,9 @@ class WordSenseFeature < ApplicationRecord
   validate :target_reading_within_reading
 
   private
+
+  # 代表値の焼き直し対象(RefreshesWordMetrics)。
+  def resolve_metrics_word_id = word_sense&.word_id
 
   # 出現位置が渡されなかったとき、表層形内の最初の出現位置を採る(見つからなければ0)。
   def derive_target_start

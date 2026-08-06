@@ -64,24 +64,28 @@ class WordRanking
   def build_top(limit)
     rows = words(limit).map do |word|
       { id: word.id, surface: word.surface,
-        readings: word.word_senses.map(&:reading), value: normalize(word.ranking_metric) }
+        readings: word.word_senses.map(&:reading), value: normalize(word.public_send(metric_column)) }
     end
     with_ranks(rows)
   end
 
-  # 指標を ranking_metric として持ち帰った公開語。SQL 片は WordSort の定数だけを使う。
-  # 下限の絞り込みは、同じ式を二度書かずに済むよう別名への HAVING で掛ける
-  # (MySQL は GROUP BY なしの HAVING と、そこでの別名参照を許す)。
+  # 指標が入っている words のカラム(WordSort::RANKING_METRICS のホワイトリスト)。
+  def metric_column
+    WordSort::RANKING_METRICS.fetch(key)
+  end
+
+  # 上位の公開語。指標は words のカラムなので、下限は素の WHERE で掛かり、
+  # 並べ替えとあわせて「指標 + id」の複合インデックスだけで解ける。
+  # 語義が1つも無い語は指標が NULL になり、この範囲条件で自然に落ちる。
   def words(limit)
     Word.annotated
-        .select(WordSort::RANKING_SELECTS.fetch(key))
-        .having("ranking_metric >= ?", minimum)
+        .where(metric_column => minimum..)
         .order(WordSort.new(key).order_clause)
         .limit(limit)
         .includes(:word_senses)
   end
 
-  # MySQL からは指標が BigDecimal(除算)や文字列で返るため、表示前に数値へ寄せる。
+  # 1字あたりの読みの長さ(reading_density)だけ DECIMAL で返るため、表示前に数値へ寄せる。
   def normalize(value)
     decimal? ? value.to_f.round(2) : value.to_i
   end

@@ -20,6 +20,14 @@ namespace :backfill do
     puts "reading 由来の派生値を再生成しました: #{updated} 件"
   end
 
+  desc "words のランキング指標(語義の代表値)を全件焼き直す"
+  task sense_metrics: :environment do
+    # 通常は word_senses / 別表記 / 特徴の after_commit(RefreshesWordMetrics)が
+    # 自動で追従する。update_all や直接 SQL で語義をいじった後の修復に使う。
+    WordSenseMetrics.refresh!
+    puts "words のランキング指標を焼き直しました: #{Word.count} 件"
+  end
+
   desc "Ruby 側派生カラムの現在値と再計算値の差分を報告する(読み取り専用)"
   task verify: :environment do
     # reading_length / first_char は SQL の STORED 生成カラムのため常に整合し、対象外。

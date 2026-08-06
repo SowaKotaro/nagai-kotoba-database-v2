@@ -106,7 +106,10 @@
 - `db/seeds.rb` … 管理者とマスタを冪等に投入。マスタの名前リストとリネーム追従マップは
   `app/models/seed_catalog.rb` が単一の正（タグ統括管理の「seed」印と共有。運用ルールも同ファイル参照）
 - `config/locales/ja.yml` … 既定ロケール `:ja`。表示文言はここに集約（ハードコードしない）
-- `docs/` … `overview.md`(本書) / `schema.sql` / `issues.md` / `genres.md`
+- `docs/` … `overview.md`(本書) / `schema.sql` / `issues.md` / `genres.md` /
+  [`performance-report.md`](performance-report.md)（速度のボトルネック調査と対処の記録。
+  並び替え・ランキングの指標を `words` に非正規化した経緯、全件出力のキャッシュ設計、
+  残課題。**速度の話に手を付ける前にこれを読む**）
 
 ## 7. ローカル開発環境の立ち上げ（重要・非自明）
 ローカルの MariaDB では `utf8mb4_0900_ai_ci` が使えないため、

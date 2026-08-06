@@ -30,6 +30,52 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "/sitemap.xml", sitemap_path
   end
 
+  # --- 条件付きGET(組み立てが重いので、変わっていなければ本文を作らない) ---
+
+  test "版が変わっていなければ 304 を返す" do
+    get "/sitemap.xml"
+    assert_response :success
+    etag = response.headers["ETag"]
+    assert etag.present?
+
+    get "/sitemap.xml", headers: { "If-None-Match" => etag }
+    assert_response :not_modified
+    assert_empty response.body
+  end
+
+  test "同じ日の語義の保存では版が変わらない(アノテーション中に再生成を誘発しない)" do
+    # 語義の保存は touch: true で words.updated_at を動かすが、指紋は日単位に畳んである。
+    # 畳んでいないと、1語アノテーションするたびに全件の再組み立てが走る。
+    travel_to Time.zone.local(2026, 8, 6, 10, 5) do
+      Word.update_all(updated_at: Time.current) # 版の基準をこの日に揃える
+      get "/sitemap.xml"
+      @etag = response.headers["ETag"]
+    end
+
+    travel_to Time.zone.local(2026, 8, 6, 18, 40) do
+      word_senses(:murder).update!(meaning: "更新した意味")
+
+      get "/sitemap.xml", headers: { "If-None-Match" => @etag }
+      assert_response :not_modified
+    end
+  end
+
+  test "日をまたいで公開されれば版が変わり、新しい語が載る" do
+    travel_to Time.zone.local(2026, 8, 6, 10, 5) do
+      Word.update_all(updated_at: Time.current)
+      get "/sitemap.xml"
+      @etag = response.headers["ETag"]
+    end
+
+    travel_to Time.zone.local(2026, 8, 7, 9, 30) do
+      word = Word.create!(surface: "新しく公開した語", annotated_at: Time.current)
+
+      get "/sitemap.xml", headers: { "If-None-Match" => @etag }
+      assert_response :success
+      assert_includes response.body, "<loc>#{HOST}/words/#{word.id}</loc>"
+    end
+  end
+
   private
 
   def assert_select_xml_has_lastmod
