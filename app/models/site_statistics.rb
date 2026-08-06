@@ -10,6 +10,9 @@ class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
   CACHE_KEY = "site_statistics/v2"
   CACHE_TTL = 1.day
+  # 集計は1万語規模で 0.8 秒かかる。期限切れの直後に複数リクエストが重なると全員が
+  # 集計を始めてしまい、Puma(1プロセス・GIL)がその間ずっと塞がる。再計算は1本だけに絞る。
+  RACE_CONDITION_TTL = 1.minute
 
   # 語義に複数の語種が付いた語(語種の多対多)を束ねる表示名。
   MIXED_ORIGIN = "混種語"
@@ -23,7 +26,7 @@ class SiteStatistics
   VOWELS = %w[a i u e o].freeze
 
   def self.fetch
-    Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) { new }
+    Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL, race_condition_ttl: RACE_CONDITION_TTL) { new }
   end
 
   attr_reader :computed_at,

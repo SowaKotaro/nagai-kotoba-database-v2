@@ -11,6 +11,12 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
+    # フィクスチャの読み込みはコールバックを通らないため、words のランキング指標
+    # (語義の代表値。WordSenseMetrics)が埋まらない。読み込み後に一度そろえておく。
+    # テストの中で作った語は after_commit(RefreshesWordMetrics)が追従するので、
+    # ここで必要なのはフィクスチャぶんだけ。テストのトランザクション内なので巻き戻る。
+    setup { WordSenseMetrics.refresh! }
+
     # クラス/シングルトンメソッドをブロックの間だけ差し替える。
     # minitest 6 は Object#stub を持たないため、テスト用に自前で用意する。
     def stub_method(object, method_name, replacement)

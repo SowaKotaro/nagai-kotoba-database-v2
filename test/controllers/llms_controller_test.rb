@@ -88,6 +88,56 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "/llms-full.txt", llms_full_path
   end
 
+  # --- 条件付きGET(全文の組み立ては語数に比例して重いので、変わっていなければ作らない) ---
+
+  test "llms-full.txt は版が変わっていなければ 304 を返す" do
+    get "/llms-full.txt"
+    assert_response :success
+    etag = response.headers["ETag"]
+    assert etag.present?
+
+    get "/llms-full.txt", headers: { "If-None-Match" => etag }
+    assert_response :not_modified
+    assert_empty response.body
+  end
+
+  test "同じ日の語義の保存では版が変わらない(アノテーション中に全文再生成を誘発しない)" do
+    # 語義の保存は touch: true で words.updated_at を動かすが、版の指紋は日単位に畳んである。
+    # 畳んでいないと、1語アノテーションするたびに全文の再組み立て(数秒)が走り、
+    # その間 Puma(1プロセス)が塞がって管理画面の操作まで待たされる。
+    travel_to Time.zone.local(2026, 8, 6, 10, 5) do
+      Word.update_all(updated_at: Time.current) # 版の基準をこの日に揃える
+      get "/llms-full.txt"
+      @etag = response.headers["ETag"]
+    end
+
+    # 同じ日の夕方にもう1語保存しても版は動かない
+    travel_to Time.zone.local(2026, 8, 6, 18, 40) do
+      word_senses(:murder).update!(meaning: "更新した意味")
+
+      get "/llms-full.txt", headers: { "If-None-Match" => @etag }
+      assert_response :not_modified
+    end
+  end
+
+  test "日をまたいで保存されれば版が変わって作り直す" do
+    # 版は「今日が何日か」ではなくデータの最終更新日で決まる。同じ日の保存は
+    # まとめて1版に畳まれ、翌日に保存があって初めて作り直す。
+    travel_to Time.zone.local(2026, 8, 6, 10, 5) do
+      Word.update_all(updated_at: Time.current)
+      get "/llms-full.txt"
+      @etag = response.headers["ETag"]
+    end
+
+    travel_to Time.zone.local(2026, 8, 7, 9, 30) do
+      word_senses(:murder).update!(meaning: "更新した意味")
+
+      get "/llms-full.txt", headers: { "If-None-Match" => @etag }
+      assert_response :success
+      assert_includes response.body, "更新した意味"
+    end
+  end
+
   private
 
   # 見出し語1語ぶんのブロック(次の「### 」の手前まで)を切り出す。

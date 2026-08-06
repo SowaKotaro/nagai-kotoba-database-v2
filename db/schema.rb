@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_06_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -166,12 +166,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
     t.integer "annotation_status", default: 0, null: false, comment: "アノテーション状態(0:未対応/1:保留/2:完了)"
     t.string "char_type_pattern", limit: 768, null: false, comment: "文字タイプ列 例: AAA漢漢漢漢"
     t.datetime "created_at", null: false
+    t.integer "feature_count", default: 0, null: false, comment: "言語学的特徴の付与数(feature_count_desc)"
+    t.integer "max_chouon_count", comment: "長音符の数の最大(chouon_desc)"
+    t.integer "max_dakuten_count", comment: "濁点・半濁点の数の最大(dakuten_desc)"
+    t.integer "max_mora_count", comment: "モーラ数の最大(mora_desc)"
+    t.string "max_reading", collation: "utf8mb4_0900_as_ci", comment: "五十音順の代表読み(kana_desc)。word_senses.reading の最大を255字まで"
+    t.integer "max_reading_length", comment: "読みの文字数の最大(length_desc)"
+    t.integer "max_ring_crossing_count", comment: "円環交差数の最大(ring_crossing_desc)"
+    t.integer "max_small_kana_count", comment: "小書きのかなの数の最大(small_kana_desc)"
+    t.string "min_reading", collation: "utf8mb4_0900_as_ci", comment: "五十音順の代表読み(kana_asc)。word_senses.reading の最小を255字まで"
+    t.integer "min_reading_length", comment: "読みの文字数の最小(length_asc)"
+    t.string "min_reversed_reading", collation: "utf8mb4_0900_as_ci", comment: "逆引き順の代表読み(reverse_kana)。読みを反転した最小を255字まで"
+    t.integer "min_ring_crossing_count", comment: "円環交差数の最小(ring_crossing_asc)"
+    t.virtual "reading_density", type: :decimal, precision: 10, scale: 4, comment: "1字あたりの読みの長さ(reading_density_desc)", as: "(`max_reading_length` / nullif(char_length(`surface`),0))", stored: true
+    t.integer "sense_count", default: 0, null: false, comment: "語義の数(sense_count_desc)"
     t.string "surface", limit: 768, null: false, collation: "utf8mb4_0900_as_ci", comment: "表層形 例: ABC殺人事件"
+    t.virtual "surface_length", type: :integer, comment: "表層形の文字数(surface_length_desc)", as: "char_length(`surface`)", stored: true
     t.datetime "updated_at", null: false
+    t.integer "variant_count", default: 0, null: false, comment: "別表記の数(variant_count_desc)"
     t.index ["annotated_at"], name: "idx_words_annotated_at"
     t.index ["annotation_status"], name: "idx_words_annotation_status"
     t.index ["char_type_pattern"], name: "idx_words_char_type_pattern", length: 191
+    t.index ["feature_count", "id"], name: "idx_words_sort_feature_count_desc", order: { feature_count: :desc }
+    t.index ["max_chouon_count", "id"], name: "idx_words_sort_chouon_desc", order: { max_chouon_count: :desc }
+    t.index ["max_dakuten_count", "id"], name: "idx_words_sort_dakuten_desc", order: { max_dakuten_count: :desc }
+    t.index ["max_mora_count", "id"], name: "idx_words_sort_mora_desc", order: { max_mora_count: :desc }
+    t.index ["max_reading", "id"], name: "idx_words_sort_kana_desc", order: { max_reading: :desc }
+    t.index ["max_reading_length", "id"], name: "idx_words_sort_length_desc", order: { max_reading_length: :desc }
+    t.index ["max_ring_crossing_count", "id"], name: "idx_words_sort_ring_crossing_desc", order: { max_ring_crossing_count: :desc }
+    t.index ["max_small_kana_count", "id"], name: "idx_words_sort_small_kana_desc", order: { max_small_kana_count: :desc }
+    t.index ["min_reading", "id"], name: "idx_words_sort_kana_asc"
+    t.index ["min_reading_length", "id"], name: "idx_words_sort_length_asc"
+    t.index ["min_reversed_reading", "id"], name: "idx_words_sort_reverse_kana"
+    t.index ["min_ring_crossing_count", "max_reading_length", "id"], name: "idx_words_sort_ring_crossing_asc", order: { max_reading_length: :desc }
+    t.index ["reading_density", "id"], name: "idx_words_sort_reading_density_desc", order: { reading_density: :desc }
+    t.index ["sense_count", "id"], name: "idx_words_sort_sense_count_desc", order: { sense_count: :desc }
     t.index ["surface"], name: "uq_words_surface", unique: true, length: 191
+    t.index ["surface_length", "id"], name: "idx_words_sort_surface_length_desc", order: { surface_length: :desc }
+    t.index ["variant_count", "id"], name: "idx_words_sort_variant_count_desc", order: { variant_count: :desc }
   end
 
   add_foreign_key "annotation_proposals", "words", name: "fk_annotation_proposals_word"

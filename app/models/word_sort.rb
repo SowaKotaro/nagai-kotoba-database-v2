@@ -1,7 +1,5 @@
 # 単語一覧(絞り込み結果を含む)の並び順を表す値オブジェクト。
 # キーはホワイトリストで管理し、未知の値は既定(登録が新しい順)へ畳む(生の SQL を外から掴ませない)。
-# 読み系の並びは、語義が複数ある語でも決定的になるよう相関サブクエリで代表値へ集約する。
-# 昇順は最小・降順は最大を代表にする(「読みが長い順」は最長の語義で並ぶ、が直感に合う)。
 # ページ送りが安定するよう、どの並びも末尾を id で結ぶ。
 #
 # 並びは2群ある。
@@ -9,120 +7,63 @@
 #   - ランキングの並び(RANKING_ORDERS): 「◯◯が多い順」。ランキングページ(WordRanking)と共有し、
 #     各ランキングの「もっと見る」は同じキーの一覧へ遷移する。
 #
+# 並びの指標はすべて words のカラムで、AddSenseMetricsToWords で「指標 + id」の複合インデックスが
+# 張ってある(降順の指標には降順インデックス)。かつては ORDER BY の中で語義への相関サブクエリを
+# 評価していたが、LIMIT に関わらず公開語の全件でサブクエリが走ったうえ filesort まで通るため、
+# 語数に正比例して重くなっていた。カラム化で ORDER BY ... LIMIT が索引走査だけで解ける。
+# 代表値(最小/最大)の焼き直しは WordSenseMetrics が担う。
+#
 # SQL 片はすべて定数の文字列リテラルで書き切る(メソッドやブロックで組み立てない)。
 # 外部入力が混ざらないことを静的解析でも追えるようにするため、重複を承知で並べている。
 class WordSort
-  # --- 基本の並びで使う代表値 ---
-  READING_MIN = "(SELECT MIN(word_senses.reading) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  READING_MAX = "(SELECT MAX(word_senses.reading) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  LENGTH_MIN =
-    "(SELECT MIN(word_senses.reading_length) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 逆引き(末尾からの五十音順)。REVERSE は utf8mb4 でも文字単位で反転する。
-  READING_REVERSED_MIN =
-    "(SELECT MIN(REVERSE(word_senses.reading)) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-
-  # --- ランキングの指標(既定は「値が大きいほど上位」。少ない順のランキングだけ例外的に昇順) ---
-  # 読みの文字数。このサイトの看板。
-  LENGTH_MAX =
-    "(SELECT MAX(word_senses.reading_length) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 拍(モーラ)の数。拗音を1拍と数えるため、文字数とは順位がずれる。
-  MORA_MAX =
-    "(SELECT MAX(word_senses.mora_count) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 表記(表層形)の文字数。読みではなく字面の長さ。
-  SURFACE_LENGTH = "CHAR_LENGTH(words.surface)".freeze
-  # 1字あたりの読みの長さ。字面が短いのに読みが長い「字の重い語」が上位に来る。
-  READING_DENSITY =
-    "((SELECT MAX(word_senses.reading_length) FROM word_senses WHERE word_senses.word_id = words.id) " \
-    "/ NULLIF(CHAR_LENGTH(words.surface), 0))".freeze
-  # 小書きのかな(拗音・促音)の数。促音「ッ」と長音符は独立した1拍として数えられ、
-  # 「文字数 - 拍数」では促音が現れないため、小書きのかなを直接1文字ずつ数える。
-  # 濁点の数(下)と同じく、as_ci のままだと小書き⇔並字(ッ=ツ・ャ=ヤ)が畳まれかねないので
-  # utf8mb4_bin へ落として、列挙した小書きの字だけを厳密に数える。
-  SMALL_KANA =
-    "ぁぃぅぇぉっゃゅょゎゕゖ" \
-    "ァィゥェォッャュョヮヵヶ".freeze
-  SMALL_KANA_MAX =
-    "(SELECT MAX(CHAR_LENGTH(word_senses.reading) - CHAR_LENGTH(REGEXP_REPLACE(" \
-    "word_senses.reading COLLATE utf8mb4_bin, '[#{SMALL_KANA}]', ''))) " \
-    "FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 長音符「ー」の数。
-  # 濁点の数(下)と同じく、数えるときは必ず utf8mb4_bin へ落として清濁・かなの異同を潰さない。
-  CHOUON_MAX =
-    "(SELECT MAX(CHAR_LENGTH(word_senses.reading) - " \
-    "CHAR_LENGTH(REPLACE(word_senses.reading COLLATE utf8mb4_bin, 'ー', ''))) " \
-    "FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 濁点・半濁点の数。REGEXP の照合は列の照合順序に従うため、
-  # 読み(as_ci)のままだと「カ=ガ」と畳まれて数えられない。
-  DAKUTEN_MAX =
-    "(SELECT MAX(CHAR_LENGTH(word_senses.reading) - CHAR_LENGTH(REGEXP_REPLACE(" \
-    "word_senses.reading COLLATE utf8mb4_bin, " \
-    "'[ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽゔ]', ''))) " \
-    "FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 円環交差数(五十音円環で読みを結んだ折れ線の交差回数)。多い順と少ない順の両方でランキングにするため、
-  # 降順は最大・昇順は最小を代表値にする。
-  RING_CROSSING_MAX =
-    "(SELECT MAX(word_senses.ring_crossing_count) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  RING_CROSSING_MIN =
-    "(SELECT MIN(word_senses.ring_crossing_count) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 語義(同音異義・多義)の数。
-  SENSE_COUNT = "(SELECT COUNT(*) FROM word_senses WHERE word_senses.word_id = words.id)".freeze
-  # 別表記の数。
-  VARIANT_COUNT =
-    "(SELECT COUNT(*) FROM word_sense_variants " \
-    "JOIN word_senses ON word_senses.id = word_sense_variants.word_sense_id " \
-    "WHERE word_senses.word_id = words.id)".freeze
-  # 言語学的特徴の付与数。
-  FEATURE_COUNT =
-    "(SELECT COUNT(*) FROM word_sense_features " \
-    "JOIN word_senses ON word_senses.id = word_sense_features.word_sense_id " \
-    "WHERE word_senses.word_id = words.id)".freeze
-
   # 基本の並び。並びはセレクタの表示順を兼ね、既定を先頭に置く。
   # created_desc / created_asc は annotated_at(注釈完了 = 公開した日時)で並べる。created_at は
   # 一括登録で下書きを作った日時でしかなく、公開した順とは何日もずれるため、公開面の「収録順」
   # には使わない。キー名は既に URL(?sort=created_desc)として世に出ているので変えない。
+  # 昇順は最小・降順は最大を代表にする(「読みが長い順」は最長の語義で並ぶ、が直感に合う)。
   BASE_ORDERS = {
     "created_desc" => Arel.sql("words.annotated_at DESC, words.id DESC"),
     "created_asc"  => Arel.sql("words.annotated_at ASC, words.id ASC"),
-    "kana_asc"     => Arel.sql("#{READING_MIN} ASC, words.id ASC"),
-    "kana_desc"    => Arel.sql("#{READING_MAX} DESC, words.id ASC"),
-    "length_asc"   => Arel.sql("#{LENGTH_MIN} ASC, words.id ASC"),
-    "reverse_kana" => Arel.sql("#{READING_REVERSED_MIN} ASC, words.id ASC")
+    "kana_asc"     => Arel.sql("words.min_reading ASC, words.id ASC"),
+    "kana_desc"    => Arel.sql("words.max_reading DESC, words.id ASC"),
+    "length_asc"   => Arel.sql("words.min_reading_length ASC, words.id ASC"),
+    # 逆引き(末尾からの五十音順)。読みを反転した代表値で並べる。
+    "reverse_kana" => Arel.sql("words.min_reversed_reading ASC, words.id ASC")
   }.freeze
 
   # ランキングの並び。指標の降順 + id で同値の順序を固定する。
   RANKING_ORDERS = {
-    "length_desc"          => Arel.sql("#{LENGTH_MAX} DESC, words.id ASC"),
-    "mora_desc"            => Arel.sql("#{MORA_MAX} DESC, words.id ASC"),
-    "surface_length_desc"  => Arel.sql("#{SURFACE_LENGTH} DESC, words.id ASC"),
-    "reading_density_desc" => Arel.sql("#{READING_DENSITY} DESC, words.id ASC"),
-    "small_kana_desc"      => Arel.sql("#{SMALL_KANA_MAX} DESC, words.id ASC"),
-    "chouon_desc"          => Arel.sql("#{CHOUON_MAX} DESC, words.id ASC"),
-    "dakuten_desc"         => Arel.sql("#{DAKUTEN_MAX} DESC, words.id ASC"),
-    "ring_crossing_desc"   => Arel.sql("#{RING_CROSSING_MAX} DESC, words.id ASC"),
+    "length_desc"          => Arel.sql("words.max_reading_length DESC, words.id ASC"),
+    "mora_desc"            => Arel.sql("words.max_mora_count DESC, words.id ASC"),
+    "surface_length_desc"  => Arel.sql("words.surface_length DESC, words.id ASC"),
+    "reading_density_desc" => Arel.sql("words.reading_density DESC, words.id ASC"),
+    "small_kana_desc"      => Arel.sql("words.max_small_kana_count DESC, words.id ASC"),
+    "chouon_desc"          => Arel.sql("words.max_chouon_count DESC, words.id ASC"),
+    "dakuten_desc"         => Arel.sql("words.max_dakuten_count DESC, words.id ASC"),
+    "ring_crossing_desc"   => Arel.sql("words.max_ring_crossing_count DESC, words.id ASC"),
     # 少ない順は 0 回の語が大量に並ぶため、同値のときは読みが長い語を上位にする
     # (「読みが長いのに交差しない」語が頭に来て、順位表として意味が出る)。
-    "ring_crossing_asc"    => Arel.sql("#{RING_CROSSING_MIN} ASC, #{LENGTH_MAX} DESC, words.id ASC"),
-    "sense_count_desc"     => Arel.sql("#{SENSE_COUNT} DESC, words.id ASC"),
-    "variant_count_desc"   => Arel.sql("#{VARIANT_COUNT} DESC, words.id ASC"),
-    "feature_count_desc"   => Arel.sql("#{FEATURE_COUNT} DESC, words.id ASC")
+    "ring_crossing_asc"    => Arel.sql("words.min_ring_crossing_count ASC, words.max_reading_length DESC, words.id ASC"),
+    "sense_count_desc"     => Arel.sql("words.sense_count DESC, words.id ASC"),
+    "variant_count_desc"   => Arel.sql("words.variant_count DESC, words.id ASC"),
+    "feature_count_desc"   => Arel.sql("words.feature_count DESC, words.id ASC")
   }.freeze
 
-  # ランキングページ用の SELECT。順位の根拠になる値を ranking_metric として持ち帰り、
-  # 絞り込み(下限)はその別名への HAVING で行う(WordRanking)。
-  RANKING_SELECTS = {
-    "length_desc"          => Arel.sql("words.*, #{LENGTH_MAX} AS ranking_metric"),
-    "mora_desc"            => Arel.sql("words.*, #{MORA_MAX} AS ranking_metric"),
-    "surface_length_desc"  => Arel.sql("words.*, #{SURFACE_LENGTH} AS ranking_metric"),
-    "reading_density_desc" => Arel.sql("words.*, #{READING_DENSITY} AS ranking_metric"),
-    "small_kana_desc"      => Arel.sql("words.*, #{SMALL_KANA_MAX} AS ranking_metric"),
-    "chouon_desc"          => Arel.sql("words.*, #{CHOUON_MAX} AS ranking_metric"),
-    "dakuten_desc"         => Arel.sql("words.*, #{DAKUTEN_MAX} AS ranking_metric"),
-    "ring_crossing_desc"   => Arel.sql("words.*, #{RING_CROSSING_MAX} AS ranking_metric"),
-    "ring_crossing_asc"    => Arel.sql("words.*, #{RING_CROSSING_MIN} AS ranking_metric"),
-    "sense_count_desc"     => Arel.sql("words.*, #{SENSE_COUNT} AS ranking_metric"),
-    "variant_count_desc"   => Arel.sql("words.*, #{VARIANT_COUNT} AS ranking_metric"),
-    "feature_count_desc"   => Arel.sql("words.*, #{FEATURE_COUNT} AS ranking_metric")
+  # 各ランキングの指標が入っている words のカラム。ランキングページ(WordRanking)が
+  # 順位の値の取り出しと下限の絞り込みに使う。ORDER BY の先頭カラムと必ず一致させること。
+  RANKING_METRICS = {
+    "length_desc"          => :max_reading_length,
+    "mora_desc"            => :max_mora_count,
+    "surface_length_desc"  => :surface_length,
+    "reading_density_desc" => :reading_density,
+    "small_kana_desc"      => :max_small_kana_count,
+    "chouon_desc"          => :max_chouon_count,
+    "dakuten_desc"         => :max_dakuten_count,
+    "ring_crossing_desc"   => :max_ring_crossing_count,
+    "ring_crossing_asc"    => :min_ring_crossing_count,
+    "sense_count_desc"     => :sense_count,
+    "variant_count_desc"   => :variant_count,
+    "feature_count_desc"   => :feature_count
   }.freeze
 
   ORDERS = BASE_ORDERS.merge(RANKING_ORDERS).freeze

@@ -1,4 +1,8 @@
 class WordSense < ApplicationRecord
+  # 読み由来の値は words 側にも代表値(最小/最大)として非正規化してあるため、
+  # 語義が変わったら焼き直す(一覧の並び替え・ランキングの指標)。
+  include RefreshesWordMetrics
+
   # 1つの表層形(word)に複数の語義がぶら下がる(同音異義語に対応)。
   # 語義の変更で word.updated_at を進め、詳細ページの fresh_when / sitemap の lastmod を正しくする(Issue 26)。
   belongs_to :word, touch: true
@@ -122,6 +126,9 @@ class WordSense < ApplicationRecord
     # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
     self.last_char = LastChar.call(reading)
   end
+
+  # 代表値の焼き直し対象(RefreshesWordMetrics)。
+  def resolve_metrics_word_id = word_id
 
   # genre は必ず小分類(末端)を指す運用。大・中分類は登録できない。
   def genre_must_be_small
