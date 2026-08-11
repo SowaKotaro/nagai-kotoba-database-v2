@@ -68,6 +68,9 @@ Rails.application.routes.draw do
     # Claude Code 連携(Issue 38): 調査用データの書き出しと、提案 JSON の取り込み。
     resources :annotation_proposals, only: %i[new create] do
       get :export, on: :collection
+      # 言語的特徴だけを対象にした再調査の書き出し(Issue 76)。
+      # 提案の取り込みは通常の new/create と共用する(特徴だけの提案でも他項目は書き換わらない)。
+      get :export_features, on: :collection
     end
     # 提案の一括承認(Issue 65): 厳格ゲートを満たす提案をプレビュー(show)→ まとめて承認・公開(create)。
     resource :bulk_proposal_approval, only: %i[show create]
@@ -75,6 +78,9 @@ Rails.application.routes.draw do
     # hold は現在の語を保留にしてキューから外し、次の未対応へ進む。
     resources :annotations, only: %i[index show update] do
       patch :hold, on: :member
+      # 言語的特徴を「調べたが該当なし」で確定する(Issue 76)。
+      # 未調査と区別を付けて、再調査の書き出しに何度も現れないようにする。
+      patch :review_features, on: :member
       # 提案の「新設候補」マスタをワンタップ作成し、再反映して戻る(Issue 66)。
       post :create_master, on: :member
       # 「この注釈は微妙だ」と思った1語を Claude Code の /reannotation へ渡すための

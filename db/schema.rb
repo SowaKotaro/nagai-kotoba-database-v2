@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_06_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_11_041734) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -135,6 +135,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_100000) do
   create_table "word_senses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "entity_type_id"
+    t.datetime "features_reviewed_at", comment: "言語的特徴を調査した日時(該当なしの確定を含む)"
     t.virtual "first_char", type: :string, limit: 8, collation: "utf8mb4_0900_as_ci", comment: "先頭文字", as: "left(`reading`,1)", stored: true
     t.bigint "genre_id", comment: "小分類(末端)を指す"
     t.string "last_char", limit: 8, collation: "utf8mb4_0900_as_ci", comment: "末尾文字(末尾の長音「ー」は除く。reading から Ruby 側で計算)"
@@ -149,6 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_100000) do
     t.string "vowel_pattern", limit: 1024, comment: "母音パターン(読みの母音のみ)"
     t.bigint "word_id", null: false
     t.index ["entity_type_id"], name: "idx_word_senses_entity_type"
+    t.index ["features_reviewed_at"], name: "idx_word_senses_features_reviewed_at"
     t.index ["first_char"], name: "idx_word_senses_first_char"
     t.index ["genre_id"], name: "idx_word_senses_genre"
     t.index ["last_char"], name: "idx_word_senses_last_char"
