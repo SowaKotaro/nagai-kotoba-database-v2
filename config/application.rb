@@ -8,8 +8,20 @@ Bundler.require(*Rails.groups)
 
 module NagaiKotobaDatabaseV2
   class Application < Rails::Application
-    # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.1
+    # フレームワークの既定値(Issue 55 で 7.1 から引き上げ)。
+    # 7.1 のままだと 7.2/8.0/8.1 の新既定が一切効かないため、Rails 8.1 の運用に揃えた。
+    # 本アプリに実際の影響があるのは次の4つ。いずれも導入時に動作を確認済み。
+    #   - action_dispatch.strict_freshness (8.0): 条件付き GET で ETag を
+    #     Last-Modified より優先する(RFC 7232 準拠)。sitemap.xml・llms-full.txt は
+    #     両方を送っているため挙動が変わるが、304 が返ることを確認済み。
+    #   - Regexp.timeout = 1 (8.0): Ruby 側の正規表現に1秒の上限。公開検索の
+    #     正規表現は MySQL 側で評価する(SearchRegexp)ので影響はなく、ReDoS への保険になる。
+    #   - action_view.render_tracker = :ruby (8.1): フラグメントキャッシュの
+    #     依存検出を正規表現から Ruby パーサへ。/search のジャンルフィルタが
+    #     _genre_chip の変更を拾えることを確認済み。
+    #   - yjit (8.1): 本番のみ有効。Rails 側が defined?(RubyVM::YJIT.enable) で
+    #     ガードしているため、YJIT 無しでビルドされた Ruby でも起動する。
+    config.load_defaults 8.1
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
