@@ -88,6 +88,22 @@
 
 単語データは管理側の CRUD（`/admin/words`）・高速アノテーション（`/admin/annotations`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。マスタのその場追加はコンソールで実現済み（Issue 10 相当）。
 
+### 公開側のその他のページ（2026-08-11 時点）
+上の Issue 番号つきの一覧に載っていないものも含めた、現在ある公開ページ。
+
+| パス | 内容 |
+|---|---|
+| `/stats` | 収録統計（Issue 34）。`SiteStatistics` が8章ぶんを集計し `Rails.cache` に1日保持。紙面の正は [`docs/stats.md`](stats.md)。**§1「級数見本」だけ未実装**（Issue 78） |
+| `/rankings` | 各種ランキング（読みの長さ・円環交差数など）。指標は `words` に非正規化済み（[`performance-report.md`](performance-report.md)） |
+| `/browse` | 50音・読みの文字数の索引（Issue 22）。件数は `PublishedSenseCounts` でキャッシュ |
+| `/genres` | ジャンル階層のハブ（Issue 21）。同上 |
+| `/words/random` | ランダムに1語へ飛ぶ（Issue 57 の一部） |
+| `/llms.txt` `/llms-full.txt` | サイト案内と全収録データ（Issue 24・73） |
+| `/about` `/privacy` | サイト情報・プライバシーポリシー（Issue 20・42） |
+
+単語詳細には、関連語（`RelatedWords`）・しりとりの次の一手（`ShiritoriWords`）・五十音円環と交差数（`KanaRing`）が入っている。
+公開側はダークモード（OS 設定追従＋ヘッダーのトグル）に対応済み。
+
 ## 6. 主要ファイル / ディレクトリ
 - `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
   `entity_type` / `part_of_speech` / `linguistic_feature` / `word_origin` / `word_sense_origin`（語種の多対多）/
