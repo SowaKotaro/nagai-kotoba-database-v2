@@ -67,6 +67,9 @@
 <%# Claude Code 連携(Issue 38): 調査用データの書き出し → スキルで調査 → 提案 JSON の取り込み %>
 <p class="admin-words-claude">
   <%= link_to t("admin.annotation_proposals.export.title"), export_admin_annotation_proposals_path %>
+  <span class="sep">/</span>
+  <%# 公開済みの語に特徴だけを足す再調査(Issue 76)。取り込み以降は上と同じ流れに合流する %>
+  <%= link_to t("admin.annotation_proposals.export_features.title"), export_features_admin_annotation_proposals_path %>
   <span class="sep">›</span>
   <%= link_to t("admin.annotation_proposals.new.title"), new_admin_annotation_proposal_path %>
   <span class="sep">›</span>

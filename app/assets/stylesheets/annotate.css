@@ -192,6 +192,10 @@
 .ann-addrow { align-self: flex-start; margin-top: var(--space-2); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; background: transparent; color: var(--ink); border: 1px solid var(--ink); padding: 6px 14px; cursor: pointer; min-height: 34px; }
 .ann-addrow:hover { background: var(--ink); color: var(--on-ink); }
 
+/* 「特徴なしで確定」(Issue 76)。特徴を足す導線より控えめに、下に添える */
+.ann-features__review { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--rule); }
+.ann-features__review-hint { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+
 /* 語義を追加 */
 .ann-add-sense { display: block; width: 100%; margin-top: var(--space-5); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.16em; background: transparent; color: var(--ink); border: 1px dashed var(--ink); padding: var(--space-3); cursor: pointer; }
 .ann-add-sense:hover { background: var(--ink); color: var(--on-ink); }

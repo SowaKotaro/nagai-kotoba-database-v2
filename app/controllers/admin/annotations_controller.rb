@@ -4,7 +4,7 @@
 # キューから外れ、あとで単語一覧の「保留」フィルタから見直せる。
 # ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
-  before_action :set_word, only: %i[show update hold create_master reresearch]
+  before_action :set_word, only: %i[show update hold create_master reresearch review_features]
 
   # ビューのリンク/フォームで、提案フィルタ(proposed)・並べ替え(sort)・要判断フィルタ(review)を
   # 保ったままキューを辿るためのパラメータ一式(Issue 38/67)。
@@ -61,6 +61,18 @@ class Admin::AnnotationsController < Admin::BaseController
     @word.mark_on_hold
     @word.save!
     redirect_to_next_word(t("admin.annotations.held"))
+  end
+
+  # 言語的特徴を「調べたが該当する現象は無かった」で確定する(Issue 76)。
+  #
+  # 特徴が0件の語義には「まだ調べていない」と「調べたうえで該当なし」が混ざる。
+  # 後者を記録しておかないと、特徴の再調査を掛けるたびに同じ語が対象に戻ってくる。
+  # 特徴が既に付いている語義は対象にしない(付いている時点で調査済みのため)。
+  def review_features
+    targets = @word.word_senses.reject { |sense| sense.word_sense_features.any? }
+    WordSense.where(id: targets.map(&:id)).update_all(features_reviewed_at: Time.current)
+    redirect_to admin_annotation_path(@word, nav_params),
+                notice: t("admin.annotations.features_reviewed")
   end
 
   # 提案の「新設候補」マスタをワンタップ作成し、提案を再反映して戻る(Issue 66)。

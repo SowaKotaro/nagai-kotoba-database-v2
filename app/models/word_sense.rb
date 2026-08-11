@@ -32,6 +32,10 @@ class WordSense < ApplicationRecord
   # 一括登録の確認画面と公開の収録リクエスト・フォームで同じ基準を示すため、ここを単一の正とする。
   MIN_READING_LENGTH = 10
 
+  # 語種マスタ(SeedCatalog::WORD_ORIGINS)の和語・漢語をまとめた名前。
+  # 特徴の調査対象を絞るスコープで参照する(Issue 76)。
+  JAPANESE_ORIGIN_NAME = "日本語".freeze
+
   validates :reading, presence: true
   validate :genre_must_be_small
 
@@ -102,6 +106,23 @@ class WordSense < ApplicationRecord
   # 指定した言語学的特徴を持つ語義。
   scope :with_linguistic_feature, lambda { |id|
     where(id: WordSenseFeature.where(linguistic_feature_id: id).select(:word_sense_id))
+  }
+
+  # 言語的特徴の調査がまだ済んでいない公開語義(Issue 76)。
+  #
+  # 特徴が0件の語義には「まだ調べていない」と「調べたが該当なしだった」の2種類が
+  # 混ざるため、後者(features_reviewed_at が立っている)を必ず除く。除かないと
+  # 再調査のたびに同じ語を突き返すことになる。
+  scope :features_unreviewed, lambda {
+    published.where.missing(:word_sense_features).where(features_reviewed_at: nil)
+  }
+
+  # 連濁・熟字訓・促音化といった現象は和語・漢語で起きるため、語種に「日本語」を
+  # 含む語義だけを見る。本番実データでは、日本語を含まない語の特徴付与率は 1% しかなく
+  # 調査しても空振りが濃厚だった(日本語を含む語は 21%)。
+  scope :with_japanese_origin, lambda {
+    where(id: WordSenseOrigin.where(word_origin: WordOrigin.where(name: JAPANESE_ORIGIN_NAME))
+                             .select(:word_sense_id))
   }
 
   # 読みは textarea 入力(折り返し表示)のため、混入した改行を先に除去する。

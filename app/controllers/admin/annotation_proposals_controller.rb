@@ -28,6 +28,23 @@ class Admin::AnnotationProposalsController < Admin::BaseController
     @export_json = AnnotationResearchExport.new(words).to_json
   end
 
+  # 言語的特徴だけを対象にした再調査の書き出し(Issue 76)。
+  # 対象は「公開済み・特徴0件・未調査」の語義。既定では語種に日本語を含むものに絞る。
+  def export_features
+    @limit = (params[:limit].presence || EXPORT_DEFAULT_LIMIT).to_i.clamp(1, EXPORT_MAX_LIMIT)
+    @japanese_only = params[:japanese_only] != "0"
+    @from_id = params[:from_id].presence&.to_i
+    @to_id = params[:to_id].presence&.to_i
+
+    senses = FeatureResearchExport.target_senses(
+      limit: @limit, japanese_only: @japanese_only, from_id: @from_id, to_id: @to_id
+    )
+    @sense_count = senses.size
+    @remaining_count = FeatureResearchExport
+      .target_senses(limit: nil, japanese_only: @japanese_only).count
+    @export_json = FeatureResearchExport.new(senses).to_json
+  end
+
   def new
   end
 

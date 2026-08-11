@@ -190,6 +190,21 @@
         <% end %>
       </template>
       <button type="button" class="ann-addrow" data-action="nested-form#add"><%= t("admin.annotations.add_feature") %></button>
+
+      <%# 「調べたうえで該当なし」の確定(Issue 76)。
+          特徴が0件の語義には「まだ調べていない」と「調べたが該当なし」が混ざり、
+          区別できないと特徴の再調査を掛けるたびに同じ語が対象へ戻ってくる。
+          同じフォームを review_features へ送る(formnovalidate で途中入力でも押せる)。
+          既に特徴が付いている語義は対象外なので、その場合はボタンを出さない。 %>
+      <% if @word.word_senses.none? { |sense| sense.word_sense_features.any? } %>
+        <div class="ann-features__review">
+          <%= form.submit t("admin.annotations.review_features"), name: nil,
+                formaction: review_features_admin_annotation_path(@word, nav_params),
+                formnovalidate: true, class: "btn btn--sm",
+                data: { publish_guard_skip: "" } %>
+          <span class="ann-features__review-hint"><%= t("admin.annotations.review_features_hint") %></span>
+        </div>
+      <% end %>
     </div>
   </div>
 
