@@ -9,6 +9,11 @@
   <% selected = @search.genre_id %>
   <% roots = @genres_by_parent[nil] || [] %>
   <div class="genre-filter" data-controller="genre-filter" data-action="change->genre-filter#sync">
+    <%# ジャンル1,131件のチップ描画がこのページの最大のコスト(実測 192ms)。
+        中身は「マスタの状態」と「選択中のジャンル」だけで決まるので、その2つを鍵にして
+        フラグメントキャッシュに載せる。条件なしで開く大多数の閲覧は同じ1本を引く。
+        マスタの改名・追加・削除は cache_key_with_version(件数と最終更新)が拾う。 %>
+    <% cache [ :search_genre_filter, Genre.all.cache_key_with_version, selected.sort ] do %>
     <% roots.each do |large| %>
       <% mediums = @genres_by_parent[large.id] || [] %>
       <% smalls_by_medium = mediums.to_h { |medium| [ medium, @genres_by_parent[medium.id] || [] ] } %>
@@ -26,9 +31,8 @@
             <%= render "genre_chip", genre: large, selected: selected,
                   label: t("searches.whole_genre", name: large.name) %>
             <%# 小分類を持たない中分類は折り畳みにせず、ここへチップで並べる %>
-            <% smalls_by_medium.each do |medium, smalls| %>
-              <%= render "genre_chip", genre: medium, selected: selected if smalls.empty? %>
-            <% end %>
+            <%= render partial: "genre_chip", as: :genre, locals: { selected: selected },
+                  collection: smalls_by_medium.select { |_, smalls| smalls.empty? }.keys %>
           </div>
 
           <% smalls_by_medium.each do |medium, smalls| %>
@@ -46,15 +50,15 @@
                 <div class="genre-filter__level">
                   <%= render "genre_chip", genre: medium, selected: selected,
                         label: t("searches.whole_genre", name: medium.name) %>
-                  <% smalls.each do |small| %>
-                    <%= render "genre_chip", genre: small, selected: selected %>
-                  <% end %>
+                  <%= render partial: "genre_chip", collection: smalls, as: :genre,
+                        locals: { selected: selected } %>
                 </div>
               </div>
             </details>
           <% end %>
         </div>
       </details>
+    <% end %>
     <% end %>
   </div>
 </fieldset>
