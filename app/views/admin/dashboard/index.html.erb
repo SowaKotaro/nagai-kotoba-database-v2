@@ -37,6 +37,12 @@
     <span class="admin-card__tag"><%= t("admin.dashboard.annotate_tag", count: @unannotated_count) %></span>
   <% end %>
 
+  <%= link_to admin_annotation_deck_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= t("admin.dashboard.deck_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.deck_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.deck_tag") %></span>
+  <% end %>
+
   <%= link_to admin_words_path, class: "admin-card" do %>
     <span class="admin-card__title"><%= t("admin.dashboard.manage_title") %></span>
     <span class="admin-card__desc"><%= t("admin.dashboard.manage_desc") %></span>

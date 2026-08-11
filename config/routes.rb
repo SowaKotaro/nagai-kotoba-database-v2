@@ -74,6 +74,9 @@ Rails.application.routes.draw do
     end
     # 提案の一括承認(Issue 65): 厳格ゲートを満たす提案をプレビュー(show)→ まとめて承認・公開(create)。
     resource :bulk_proposal_approval, only: %i[show create]
+    # アノテーション・デッキ(まとめてアノテーション)。キューの先頭から既定10件を
+    # まとめて読み込み(show)、1回の送信でまとめて保存する(update)。
+    resource :annotation_deck, only: %i[show update]
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未対応へ誘導。
     # hold は現在の語を保留にしてキューから外し、次の未対応へ進む。
     resources :annotations, only: %i[index show update] do

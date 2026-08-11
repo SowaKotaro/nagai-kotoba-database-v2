@@ -1,0 +1,113 @@
+<% content_for :title, t("admin.annotation_decks.title") %>
+
+<% if @words.empty? %>
+  <%# キューが空。1語コンソールの完了画面と同じ導線に寄せる(下調べの補充 or 単語一覧) %>
+  <div class="ann-done">
+    <p class="ann-eyebrow"><span><%= t("admin.annotation_decks.title") %></span></p>
+    <p class="ann-done__lead"><%= t("admin.annotation_decks.empty") %></p>
+    <p><%= t("admin.annotation_decks.empty_lead") %></p>
+    <p>
+      <%= link_to t("admin.annotation_decks.to_console"), admin_annotations_path(nav_params), class: "btn" %>
+      <%= link_to t("admin.annotations.to_export"), export_admin_annotation_proposals_path, class: "btn" %>
+    </p>
+  </div>
+<% else %>
+  <%# デッキ全体で1つのフォーム。deck[<語id>][...] で語ごとに束ねて送り、
+      サーバ側は語ごとに保存する(通った語だけ公開・落ちた語はカードに残る)。
+      publish-guard は未完了のまま公開しようとしたときの確認(1語コンソールと共通)。 %>
+  <%= form_with url: admin_annotation_deck_path, method: :patch, class: "deck",
+                data: { controller: "deck publish-guard",
+                        action: "submit->publish-guard#guard " \
+                                "sense-completeness:changed->deck#recount click->deck#recount",
+                        publish_guard_message_value: t("admin.annotation_decks.publish_incomplete_confirm") } do %>
+    <%# 絞り込み・並べ替え・枚数を保存後のリダイレクトでも保つ %>
+    <% nav_params.merge(params[:size].present? ? { size: params[:size] } : {}).each do |key, value| %>
+      <%= hidden_field_tag key, value %>
+    <% end %>
+
+    <div class="ann-bar">
+      <span class="ann-bar__counter">
+        <%= t("admin.annotations.remaining") %>
+        <span class="rest"><%= @remaining %></span> <%= t("admin.annotations.unit_word") %>
+      </span>
+      <span class="ann-bar__legend" aria-hidden="true">
+        <span><key>&larr;</key><key>&rarr;</key><%= t("admin.annotation_decks.legend_move") %></span>
+      </span>
+      <span class="spacer"></span>
+      <%= link_to t("admin.annotation_decks.to_console"), admin_annotations_path(nav_params),
+                  class: "deck-bar__link" %>
+    </div>
+
+    <p class="deck-lead"><%= t("admin.annotation_decks.lead", count: @words.size) %></p>
+
+    <%# 提案キューのときだけ絞り込み・並べ替え(1語コンソールと同じ規則。デッキを組み直す) %>
+    <% if params[:proposed].present? %>
+      <nav class="ann-queue-filter">
+        <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.filter") %></span>
+        <%= link_to t("admin.annotations.queue.all"), admin_annotation_deck_path(nav_params.except(:review)),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:review].blank?) %>
+        <%= link_to t("admin.annotations.queue.review"), admin_annotation_deck_path(nav_params.merge(review: "1")),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:review] == "1") %>
+        <span class="ann-queue-filter__sep" aria-hidden="true">|</span>
+        <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.sort") %></span>
+        <%= link_to t("admin.annotations.queue.sort_default"), admin_annotation_deck_path(nav_params.except(:sort)),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:sort].blank?) %>
+        <%= link_to t("admin.annotations.queue.sort_easy"), admin_annotation_deck_path(nav_params.merge(sort: "easy")),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "easy") %>
+        <%= link_to t("admin.annotations.queue.sort_review"), admin_annotation_deck_path(nav_params.merge(sort: "review")),
+              class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "review") %>
+      </nav>
+    <% end %>
+
+    <%# カードの現在地。ドットはタップでそのカードへ飛ぶ(スワイプの補助) %>
+    <nav class="deck-nav" aria-label="<%= t("admin.annotation_decks.nav_aria") %>">
+      <button type="button" class="deck-nav__arrow" data-action="deck#prev"
+              data-deck-target="prev" aria-label="<%= t("admin.annotation_decks.prev") %>">&larr;</button>
+      <span class="deck-nav__position">
+        <span data-deck-target="position">1</span> / <%= @words.size %>
+      </span>
+      <div class="deck-nav__dots">
+        <% @words.each_with_index do |word, index| %>
+          <button type="button" class="deck-dot" data-deck-target="dot" data-index="<%= index %>"
+                  data-action="deck#jump" title="<%= word.surface %>">
+            <span class="deck-dot__no"><%= index + 1 %></span>
+          </button>
+        <% end %>
+      </div>
+      <button type="button" class="deck-nav__arrow" data-action="deck#next"
+              data-deck-target="next" aria-label="<%= t("admin.annotation_decks.next") %>">&rarr;</button>
+    </nav>
+
+    <%# 用語解説はカードごとに繰り返すと重いので、デッキに1つだけ置く(Issue 39) %>
+    <details class="ann-glossary deck-glossary">
+      <summary class="ann-glossary__summary"><%= t("admin.annotations.glossary.summary") %></summary>
+      <dl class="ann-glossary__list">
+        <% LinguisticFeatureGlossary.all.each do |entry| %>
+          <div class="ann-glossary__item">
+            <dt><%= entry.name %></dt>
+            <dd>
+              <%= entry.description %>
+              <span class="ann-glossary__examples"><%= entry.examples.join("　／　") %></span>
+            </dd>
+          </div>
+        <% end %>
+      </dl>
+    </details>
+
+    <%# 横スクロール + scroll-snap。スマホは横スワイプ、PC は矢印ボタン/キーで送る %>
+    <div class="deck-track" data-deck-target="track">
+      <% @words.each_with_index do |word, index| %>
+        <%= render "card", word: word, index: index, total: @words.size, proposal: @proposals[word.id] %>
+      <% end %>
+    </div>
+
+    <div class="ann-actionbar">
+      <span class="deck-progress">
+        <span data-deck-target="complete">0</span> / <%= @words.size %>
+        <%= t("admin.annotation_decks.complete_unit") %>
+      </span>
+      <span class="spacer"></span>
+      <%= submit_tag t("admin.annotation_decks.save_all", count: @words.size), class: "btn btn--primary" %>
+    </div>
+  <% end %>
+<% end %>

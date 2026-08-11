@@ -20,7 +20,7 @@
       <% end %>
       <%# 小分類だけ未登録でも、中分類まで既存の木で解決していればワンタップ作成できる %>
       <% unless sense.resolved_genre %>
-        <%= render "new_master", field: "genre", word: word,
+        <%= render "admin/annotations/new_master", field: "genre", word: word,
               creatable: creatable && sense.resolved_genre_chain.last&.medium?,
               label: t("admin.annotations.proposal.create_master") %>
       <% end %>
@@ -32,7 +32,7 @@
     <dd>
       <%= sense.entity_type_name %>
       <% unless sense.resolved_entity_type %>
-        <%= render "new_master", field: "entity_type", word: word, creatable: creatable,
+        <%= render "admin/annotations/new_master", field: "entity_type", word: word, creatable: creatable,
               label: t("admin.annotations.proposal.create_master") %>
       <% end %>
     </dd>
@@ -43,7 +43,7 @@
     <dd>
       <%= sense.part_of_speech_name %>
       <% unless sense.resolved_part_of_speech %>
-        <%= render "new_master", field: "part_of_speech", word: word, creatable: creatable,
+        <%= render "admin/annotations/new_master", field: "part_of_speech", word: word, creatable: creatable,
               label: t("admin.annotations.proposal.create_master") %>
       <% end %>
     </dd>
@@ -55,7 +55,7 @@
       <%= sense.resolved_word_origins.map(&:name).join("・") %>
       <% sense.unknown_word_origin_names.each do |name| %>
         <% if creatable %>
-          <%= render "new_master", field: "word_origin", word: word, creatable: true,
+          <%= render "admin/annotations/new_master", field: "word_origin", word: word, creatable: true,
                 label: t("admin.annotations.proposal.create_named_master", name: name), name: name %>
         <% else %>
           <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>

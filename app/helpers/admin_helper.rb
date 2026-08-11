@@ -13,7 +13,7 @@ module AdminHelper
   def admin_nav_current
     case controller_name
     when "dashboard" then :dashboard
-    when "annotations" then :annotations
+    when "annotations", "annotation_decks" then :annotations
     when "tags" then :tags
     when "design_mocks" then :design_mocks
     when "word_requests" then :requests

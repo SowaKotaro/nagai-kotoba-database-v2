@@ -1,6 +1,7 @@
-<%# 1つの言語学的特徴。該当部分は単語/読みの文字を範囲タップで指定する。local: form %>
+<%# 1つの言語学的特徴。該当部分は単語/読みの文字を範囲タップで指定する。
+    local: form / word(該当部分を選ぶ元になる語。デッキでは1画面に複数語が並ぶため受け取る) %>
 <div class="ann-feature js-feature" data-nested-form-item data-controller="feature-range"
-     data-feature-range-surface-value="<%= @word.surface %>">
+     data-feature-range-surface-value="<%= word.surface %>">
   <div class="ann-feature__head">
     <span class="t"><%= t("admin.annotations.feature_no") %></span>
     <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>

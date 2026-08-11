@@ -167,6 +167,9 @@
 .ann-genre__change { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
 .ann-genre__change:hover { color: var(--shu); }
 .ann-genre__level { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 5px 0; }
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
+   (ジャンルが確定済みの語では大・中・小の選択肢を出さず、「変更」で選び直しに入る) */
+.ann-genre__level[hidden] { display: none; }
 .ann-genre__tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--shu); min-width: 1.4em; }
 .ann-genre__level .ann-chips { flex: 1; }
 
@@ -232,6 +235,64 @@
   .bulk-approval thead { display: none; }
   .bulk-approval tr { border: 1px solid var(--rule-mid); padding: 6px 4px; margin-bottom: var(--space-2); }
   .bulk-approval td { border: 0; padding: 3px 8px; }
+}
+
+/* =====================================================================
+   アノテーション・デッキ(まとめてアノテーション)
+   10件を横一列に並べ、スマホは横スワイプ(scroll-snap)、PC は矢印/ドット/←→キーで送る。
+   見た目は1語コンソールの部品(ann-*)をそのまま使い、ここは並べ方と現在地の表示だけ。
+   ===================================================================== */
+.deck { position: relative; touch-action: manipulation; }
+.deck .ann-bar .spacer { flex: 1; }
+.deck-bar__link { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule-mid); padding-bottom: 1px; }
+.deck-bar__link:hover { color: var(--shu); border-bottom-color: var(--shu); }
+
+/* カード送り(現在地・ドット・矢印) */
+.deck-nav { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-2) 0 var(--space-3); border-bottom: 1px solid var(--rule); }
+.deck-nav__arrow { font-family: var(--font-mono); font-size: 13px; line-height: 1; background: transparent; border: 1px solid var(--ink); color: var(--ink); min-width: 40px; height: 34px; cursor: pointer; }
+.deck-nav__arrow:hover:not(:disabled) { background: var(--ink); color: var(--on-ink); }
+.deck-nav__arrow:disabled { border-color: var(--rule-mid); color: var(--ink-3); cursor: default; }
+.deck-nav__position { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.deck-nav__dots { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中は朱枠 */
+.deck-dot { font-family: var(--font-mono); font-size: 10px; line-height: 1; min-width: 26px; height: 26px; padding: 0; background: transparent; border: 1px solid var(--rule-mid); color: var(--ink-3); cursor: pointer; }
+.deck-dot:hover { border-color: var(--ink); color: var(--ink); }
+.deck-dot.is-done { background: var(--midori); border-color: var(--midori); color: var(--on-ink); }
+.deck-dot.is-on { border-color: var(--shu); color: var(--shu); box-shadow: inset 0 0 0 1px var(--shu); }
+.deck-dot.is-on.is-done { color: var(--on-ink); }
+
+.deck-lead { font-size: 13px; line-height: 1.8; color: var(--ink-2); margin: 0 0 var(--space-3); }
+.deck-glossary { margin: var(--space-3) 0 0; }
+
+/* カードの並び。トラックだけが横スクロールし、ページ本体は横に流れない。
+   カードは高さを揃えない(align-items: flex-start)ので、トラックの縦スクロールは出ず、
+   長いカードはページごと縦にスクロールする。 */
+.deck-track {
+  position: relative; display: flex; align-items: flex-start; gap: var(--space-6);
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  padding: var(--space-4) 0 var(--space-2);
+}
+.deck-track::-webkit-scrollbar { display: none; }
+.deck-card { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
+/* 見出し語は1語コンソールより一段小さく(カード内で完結させるため) */
+.deck-card .ann-word { font-size: clamp(28px, 6vw, 54px); }
+.deck-card__count { margin-left: auto; color: var(--ink-2); }
+
+/* 提案の要約(既定は畳む)。反映は読み込み時に済んでいるので、ここは根拠の確認用 */
+.deck-proposal { margin-top: var(--space-3); }
+.deck-proposal__summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; padding: 4px 0; }
+.deck-proposal__summary:hover .deck-proposal__title { text-decoration: underline; }
+.deck-proposal__title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; color: var(--shu); }
+.deck-proposal .ann-proposal { margin-top: var(--space-2); }
+
+/* まとめ保存バーの進捗(n / m 完了)。全部そろったら緑にする */
+.deck-progress { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.deck.is-all-complete .deck-progress { color: var(--midori); }
+
+@media (max-width: 560px) {
+  .deck-track { gap: var(--space-5); }
+  .deck-nav__dots { order: 3; flex-basis: 100%; }
 }
 
 /* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。

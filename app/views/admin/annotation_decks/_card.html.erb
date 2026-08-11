@@ -1,0 +1,87 @@
+<%# デッキの1枚(= 1語)。locals: word / index / total / proposal(無ければ nil)。
+    入力欄は1語コンソールと同じ部分テンプレートを使い(compact: true で用語解説などを省く)、
+    名前だけ deck[<語id>][...] に束ねる。 %>
+<article class="deck-card" data-deck-target="card" data-index="<%= index %>">
+  <p class="ann-eyebrow">
+    <span class="no">NO. <%= word.id %></span>
+    <span class="deck-card__count"><%= index + 1 %> / <%= total %></span>
+  </p>
+  <h2 class="ann-word"><%= word.surface %></h2>
+  <p class="ann-word-meta">
+    <span><%= t("admin.annotations.char_type") %>　<%= word.char_type_pattern %></span>
+    <%# 迷う語はデッキで抱えず、1語コンソールへ送る(そちらに再調査JSON・保留・特徴確定がある)。
+        未保存の入力は持ち越せないので、その旨は confirm で断る %>
+    <%= link_to t("admin.annotation_decks.open_single"), admin_annotation_path(word, nav_params),
+          class: "ann-word-meta__reresearch",
+          data: { turbo_confirm: t("admin.annotation_decks.open_single_confirm") } %>
+  </p>
+
+  <% if word.errors.any? %>
+    <div class="error-explanation">
+      <h3><%= t("admin.annotations.error_header") %></h3>
+      <ul>
+        <% word.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# 提案の要約(反映済みの中身の根拠)。反映・新設候補の作成ボタンは置かない
+      (どちらも画面遷移を伴い、他カードの未保存の入力が消えるため)。
+      マスタに無い名前は各行の「＋ 追加」でその場に作れる %>
+  <% if proposal %>
+    <details class="deck-proposal">
+      <summary class="deck-proposal__summary">
+        <span class="deck-proposal__title"><%= t("admin.annotations.proposal.title") %></span>
+        <% if proposal.confidence %>
+          <span class="ann-proposal__confidence ann-proposal__confidence--<%= proposal.confidence %>">
+            <%= t("admin.annotations.proposal.confidence.#{proposal.confidence}", default: proposal.confidence) %>
+          </span>
+        <% end %>
+        <% if proposal.entry_score %>
+          <span class="ann-proposal__entry <%= "ann-proposal__entry--concern" if proposal.entry_concern? %>">
+            <%= t("admin.annotations.proposal.entry_score", score: proposal.entry_score) %>
+          </span>
+        <% end %>
+      </summary>
+      <div class="ann-proposal">
+        <% proposal.senses.each_with_index do |sense, i| %>
+          <div class="ann-proposal__sense">
+            <% if proposal.multiple_senses? %>
+              <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= format("%02d", i + 1) %></span>
+            <% end %>
+            <%= render "admin/annotations/proposal_sense", sense: sense, word: word, creatable: false %>
+          </div>
+        <% end %>
+        <% if proposal.entry_notes %>
+          <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>
+        <% end %>
+        <% if proposal.notes %>
+          <p class="ann-proposal__notes"><%= t("admin.annotations.proposal.notes") %>　<%= proposal.notes %></p>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <%# 語ごとの入力。fields_for に "deck[<id>]" を渡し、名前を語単位に束ねる %>
+  <%= fields_for "deck[#{word.id}]", word do |form| %>
+    <div class="ann-surface">
+      <label class="ann-surface__label" for="deck_<%= word.id %>_surface"><%= t("admin.annotations.surface") %></label>
+      <%= form.text_area :surface, rows: 1, class: "ann-surface__input", id: "deck_#{word.id}_surface" %>
+    </div>
+
+    <div class="ann-senses" data-controller="sense-cloner">
+      <div data-sense-cloner-target="container">
+        <%= form.fields_for :word_senses do |sense_form| %>
+          <%= render "admin/annotations/sense_fields", form: sense_form, word: word, compact: true %>
+        <% end %>
+      </div>
+
+      <button type="button" class="ann-add-sense" data-action="sense-cloner#add">
+        <%= t("admin.annotations.add_sense") %>
+        <small><%= t("admin.annotations.add_sense_hint") %></small>
+      </button>
+    </div>
+  <% end %>
+</article>
