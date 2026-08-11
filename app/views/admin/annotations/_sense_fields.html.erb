@@ -1,7 +1,12 @@
-<%# 1つの語義の入力欄。local: form(語義のフォームビルダ)。マスタは @word_origins 等を参照。
+<%# 1つの語義の入力欄。local: form(語義のフォームビルダ) / word(語義が属する語) /
+    compact(既定 false。デッキのカードでは true にして、1画面に何枚も並べても重くならない
+    ように用語解説と「特徴なしで確定」を省く)。マスタは @word_origins 等を参照。
     最低限の項目が揃うと枠が緑になる(sense-completeness)。ジャンルとマスタのその場追加は
-    DOM を直接書き換えるので、素の input/change ではなく専用イベントで拾う。 %>
+    DOM を直接書き換えるので、素の input/change ではなく専用イベントで拾う。
+    この部分テンプレートはデッキ(admin/annotation_decks)からも描画するため、
+    入れ子の render はコントローラに依らないよう完全なパスで指定する。 %>
 <% sense = form.object %>
+<% compact = local_assigns.fetch(:compact, false) %>
 <div class="ann-sense js-sense" data-index="<%= form.index %>"
      data-controller="sense-completeness"
      data-action="input->sense-completeness#check change->sense-completeness#check
@@ -164,29 +169,32 @@
     <div class="ann-row__label"><%= t("admin.annotations.features") %></div>
     <div class="ann-features" data-controller="nested-form" data-nested-form-placeholder-value="NEW_FEATURE">
       <%# 用語解説(Issue 39): 「音韻添加ってなに?」に作業中そのまま答える控えめなパネル。
-          定義は config/linguistic_features_glossary.yml が単一ソース(docs/annotation-guidelines.md §7) %>
-      <details class="ann-glossary">
-        <summary class="ann-glossary__summary"><%= t("admin.annotations.glossary.summary") %></summary>
-        <dl class="ann-glossary__list">
-          <% LinguisticFeatureGlossary.all.each do |entry| %>
-            <div class="ann-glossary__item">
-              <dt><%= entry.name %></dt>
-              <dd>
-                <%= entry.description %>
-                <span class="ann-glossary__examples"><%= entry.examples.join("　／　") %></span>
-              </dd>
-            </div>
-          <% end %>
-        </dl>
-      </details>
+          定義は config/linguistic_features_glossary.yml が単一ソース(docs/annotation-guidelines.md §7)。
+          デッキ(compact)では語義の数だけ重複するので、画面上部に1つだけ置く %>
+      <% unless compact %>
+        <details class="ann-glossary">
+          <summary class="ann-glossary__summary"><%= t("admin.annotations.glossary.summary") %></summary>
+          <dl class="ann-glossary__list">
+            <% LinguisticFeatureGlossary.all.each do |entry| %>
+              <div class="ann-glossary__item">
+                <dt><%= entry.name %></dt>
+                <dd>
+                  <%= entry.description %>
+                  <span class="ann-glossary__examples"><%= entry.examples.join("　／　") %></span>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </details>
+      <% end %>
       <div data-nested-form-target="container">
         <%= form.fields_for :word_sense_features do |feature_form| %>
-          <%= render "feature_fields", form: feature_form %>
+          <%= render "admin/annotations/feature_fields", form: feature_form, word: word %>
         <% end %>
       </div>
       <template data-nested-form-target="template">
         <%= form.fields_for :word_sense_features, WordSenseFeature.new, child_index: "NEW_FEATURE" do |feature_form| %>
-          <%= render "feature_fields", form: feature_form %>
+          <%= render "admin/annotations/feature_fields", form: feature_form, word: word %>
         <% end %>
       </template>
       <button type="button" class="ann-addrow" data-action="nested-form#add"><%= t("admin.annotations.add_feature") %></button>
@@ -195,11 +203,13 @@
           特徴が0件の語義には「まだ調べていない」と「調べたが該当なし」が混ざり、
           区別できないと特徴の再調査を掛けるたびに同じ語が対象へ戻ってくる。
           同じフォームを review_features へ送る(formnovalidate で途中入力でも押せる)。
-          既に特徴が付いている語義は対象外なので、その場合はボタンを出さない。 %>
-      <% if @word.word_senses.none? { |sense| sense.word_sense_features.any? } %>
+          既に特徴が付いている語義は対象外なので、その場合はボタンを出さない。
+          デッキ(compact)は複数語を1フォームで送るため、この語だけを別アクションへ送れない。
+          「該当なし」の確定は1語コンソールで行う %>
+      <% if !compact && word.word_senses.none? { |sense| sense.word_sense_features.any? } %>
         <div class="ann-features__review">
           <%= form.submit t("admin.annotations.review_features"), name: nil,
-                formaction: review_features_admin_annotation_path(@word, nav_params),
+                formaction: review_features_admin_annotation_path(word, nav_params),
                 formnovalidate: true, class: "btn btn--sm",
                 data: { publish_guard_skip: "" } %>
           <span class="ann-features__review-hint"><%= t("admin.annotations.review_features_hint") %></span>
@@ -214,12 +224,12 @@
     <div class="ann-variants" data-controller="nested-form" data-nested-form-placeholder-value="NEW_VARIANT">
       <div class="js-variants" data-nested-form-target="container">
         <%= form.fields_for :word_sense_variants do |variant_form| %>
-          <%= render "variant_fields", form: variant_form %>
+          <%= render "admin/annotations/variant_fields", form: variant_form %>
         <% end %>
       </div>
       <template data-nested-form-target="template">
         <%= form.fields_for :word_sense_variants, WordSenseVariant.new, child_index: "NEW_VARIANT" do |variant_form| %>
-          <%= render "variant_fields", form: variant_form %>
+          <%= render "admin/annotations/variant_fields", form: variant_form %>
         <% end %>
       </template>
       <button type="button" class="ann-addrow" data-action="nested-form#add"><%= t("admin.annotations.add_variant") %></button>

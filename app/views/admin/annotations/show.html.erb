@@ -11,6 +11,9 @@
         <span><key>&rarr;</key><%= t("admin.annotations.skip") %></span>
         <span><key>&larr;</key><%= t("admin.annotations.back") %></span>
       </span>
+      <%# 同質な語が続くときは、まとめて読み込んで1回で保存するデッキへ移れる %>
+      <%= link_to t("admin.annotations.to_deck"), admin_annotation_deck_path(nav_params),
+                  class: "deck-bar__link", data: { turbo_frame: "_top" } %>
     </div>
 
     <%# 提案キューの絞り込み・並べ替え(Issue 67)。index へ飛んで新しい順序の先頭から辿り直す %>
@@ -75,7 +78,7 @@
       <div class="ann-senses" data-controller="sense-cloner">
         <div data-sense-cloner-target="container">
           <%= form.fields_for :word_senses do |sense_form| %>
-            <%= render "sense_fields", form: sense_form %>
+            <%= render "sense_fields", form: sense_form, word: @word %>
           <% end %>
         </div>
 

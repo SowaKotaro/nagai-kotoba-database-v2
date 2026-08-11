@@ -12,6 +12,10 @@ export default class extends Controller {
 
   check() {
     this.element.classList.toggle("is-complete", this.complete)
+    // まとめて注釈(デッキ)が「n / m 完了」を数え直すための合図。判定はここだけが持ち、
+    // 数える側は is-complete を数えるだけにする。connect 時にも飛ぶので、親(デッキ)が
+    // 先に接続していても取りこぼさない。
+    this.dispatch("changed")
   }
 
   get complete() {

@@ -77,6 +77,11 @@
 - ✅ Issue 12: **高速アノテーション・コンソール**（`/admin/annotations`）… 既存 `/admin/words` と併存
   - 1語集中キュー（`words.annotated_at` で未注釈を管理）。Turbo Frame で「保存して次へ」
   - ドロップダウン全廃・チップ選択（`:has()`）／ジャンル段階表示／特徴は文字の範囲タップ（`feature-range`）／マスタその場追加（`inline-add`・`genre-picker`）／語義複製（`sense-cloner`）
+- ✅ Issue 79: **アノテーション・デッキ**（`/admin/annotation_deck`）… 1語コンソールと併存
+  - キューの先頭から既定10件をまとめて読み込み、**1回の送信でまとめて保存**（読み込みと保存の往復を 10 回 → 1 回に）
+  - カードは横一列（CSS の `scroll-snap`）。スマホは横スワイプ、PC は矢印・ドット・← → キーで送る（`deck`）
+  - 提案は開いた時点で全カードに反映済み。保存は語ごとに独立で、**通った語だけ公開**し、落ちた語はエラー付きでデッキに残る（`AnnotationDeckSave`）
+  - キューの規則（`?proposed` / `sort` / `review`）とマスタ読み込みは `Admin::AnnotationQueue`（concern）で1語コンソールと共有
 
 - ✅ Issue 75: **収録リクエスト**（公開 `/requests/new` → 管理 `/admin/requests`）
   - **公開側で唯一の書き込み経路**。1通に最大10語（行追加式）、連絡先欄は持たない
@@ -86,7 +91,7 @@
     IP+`created_at` の COUNT で制限 / 重複チェックのみ Rails 標準の `rate_limit`
   - 受付は環境変数 `REQUESTS_ENABLED`（既定 ON）で止められる
 
-単語データは管理側の CRUD（`/admin/words`）・高速アノテーション（`/admin/annotations`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。マスタのその場追加はコンソールで実現済み（Issue 10 相当）。
+単語データは管理側の CRUD（`/admin/words`）・高速アノテーション（`/admin/annotations`・`/admin/annotation_deck`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。マスタのその場追加はコンソールで実現済み（Issue 10 相当）。
 
 ### 公開側のその他のページ（2026-08-11 時点）
 上の Issue 番号つきの一覧に載っていないものも含めた、現在ある公開ページ。
@@ -117,7 +122,8 @@
   `concerns/authentication.rb`（認証。閲覧公開は `allow_unauthenticated_access` で開放）
 - `app/javascript/controllers/` … Stimulus。`nested_form`（行の動的追加/削除）/ `genre_cascade`（大中小の依存選択）/
   アノテーション用: `queue_nav`（キーボード送り）/ `inline_add`（マスタその場追加）/ `feature_range`（特徴の範囲タップ）/
-  `genre_picker`（ジャンル段階表示＋その場追加）/ `sense_cloner`（語義の複製追加）
+  `genre_picker`（ジャンル段階表示＋その場追加）/ `sense_cloner`（語義の複製追加）/
+  `deck`（まとめて注釈のカード送りと完了数の集計）
 - `db/schema.rb` … スキーマの正（直接編集せずマイグレーション経由で更新）
 - `db/seeds.rb` … 管理者とマスタを冪等に投入。マスタの名前リストとリネーム追従マップは
   `app/models/seed_catalog.rb` が単一の正（タグ統括管理の「seed」印と共有。運用ルールも同ファイル参照）
