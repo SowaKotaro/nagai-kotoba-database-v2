@@ -10,9 +10,16 @@ html {
   scroll-padding-top: 88px;
 }
 
+/* 地は 32px の方眼(docs/design.md §3)。「データを記録する紙」の含みを地に持たせる。
+   画像も JS も使わず、繰り返しグラデーション 2 本(縦罫・横罫)だけで描く。
+   ヘッダー・フッター・パネルは --bg / --paper のベタを持つので、
+   方眼は本文の地にだけ現れる。 */
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px 32px);
   color: var(--ink);
   font-family: var(--font-gothic);
   font-size: 16px;

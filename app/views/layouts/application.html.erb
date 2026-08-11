@@ -83,7 +83,7 @@
     <%= website_json_ld %>
   </head>
 
-  <body class="<%= body_class %>">
+  <body>
     <%= render "shared/header" %>
     <%# 管理画面だけに出す共通サブナビ(Issue 35) %>
     <%= render "admin/nav" if admin_page? %>
