@@ -4766,74 +4766,51 @@ a.entity-treemap__cell:hover {
 }
 
 /* ===== 統計 §1 級数見本(Issue 78) =====
-   よく現れる形態素を「活字の大きさ＝頻度」で組む。渦巻き配置のワードクラウドにはせず、
-   活字見本帳の級数表のようにベースライン揃えで流す(docs/stats.md §1)。 */
+   よく現れる形態素を「活字の大きさ＝頻度」で組む。大きい語をばらばらに置き、
+   空いた隙間へ小さい語を詰める(オーナー指示 2026-08-11)。
+   配置は MorphemeCloud が仮想平面で決め、viewBox 付き SVG で拡縮する。 */
 .scale-specimen {
   border: 1px solid var(--ink);
-  padding: var(--space-5) var(--space-4) var(--space-4);
+  padding: var(--space-4);
 }
 
-.scale-specimen__list {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-4);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.scale-specimen__svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.scale-specimen__item {
-  margin: 0;
-}
-
-.scale-specimen__link {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
-  color: var(--ink);
-  text-decoration: none;
-  /* --weight は 0.0(最少)〜1.0(最頻)。級数はここで決める */
-  font-size: calc(15px + (var(--weight, 0) * 30px));
+.scale-specimen__text {
+  fill: var(--ink);
   font-family: var(--font-mincho);
   font-weight: 600;
-  line-height: 1.25;
+  /* 隙間に詰めた小さい語まで拾えるよう、字面の当たりを広めに取る */
+  paint-order: stroke;
+}
+
+/* 大域の a に付く下線は図の中では邪魔なので消す(押せることは大きさと hover で伝える) */
+.scale-specimen__link {
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .scale-specimen__link:hover .scale-specimen__text,
 .scale-specimen__link:focus-visible .scale-specimen__text {
-  background: var(--ink);
-  color: var(--on-ink);
+  fill: var(--shu);
 }
 
 /* 最頻の1語だけ朱(design.md「朱は『最』にだけ」) */
-.scale-specimen__link.is-top {
-  color: var(--shu);
+.scale-specimen__link.is-top .scale-specimen__text {
+  fill: var(--shu);
 }
 
-/* 朱を敷いたときの文字色は --bg。明暗どちらのテーマでも地と朱が反転するため、
-   これだけでコントラストが保てる(--paper は暗テーマで暗色になるので使わない) */
 .scale-specimen__link.is-top:hover .scale-specimen__text,
 .scale-specimen__link.is-top:focus-visible .scale-specimen__text {
-  background: var(--shu);
-  color: var(--bg);
-}
-
-/* 出現数は肩に小さく等幅で添える */
-.scale-specimen__count {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--ink-3);
-  align-self: flex-start;
-}
-
-.scale-specimen__link.is-top .scale-specimen__count {
-  color: var(--shu);
+  fill: var(--ink);
 }
 
 .scale-specimen__note {
-  margin: var(--space-5) 0 0;
+  margin: var(--space-4) 0 0;
   padding-top: var(--space-3);
   border-top: 1px solid var(--rule);
   font-family: var(--font-mono);
