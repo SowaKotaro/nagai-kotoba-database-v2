@@ -865,6 +865,11 @@ ja:
         genres: "分類"
         features: "種"
         days: "日"
+      scale_specimen:
+        title: "級数見本"
+        lead: "収録語を形態素に分け、よく現れる部品を活字の大きさで組みました。大きいほど多くの語に現れます。押すとその部品を含む語を検索します。"
+        item_title: "%{text}（%{count} 語に出現）"
+        note: "%{words} 語を解析し、2回以上現れた部品のうち上位 %{count} 件を並べています。"
       sound_matrix:
         title: "頭文字と末尾文字"
         first_heading: "先頭文字(50音)"
