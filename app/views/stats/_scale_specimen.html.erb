@@ -1,25 +1,26 @@
 <%# §1 看板「級数見本」(Issue 78 / docs/stats.md §1)。
     収録語を形態素に割り、よく現れる部品を「活字の大きさ＝頻度」で組む。
-    渦巻き配置のワードクラウドにはせず、活字見本帳の級数表のようにベースライン揃えで流す。
-    頻度は MeCab の事前集計(db/morpheme_frequencies.json)で、本番は読むだけ。
-    語を押すとその部品を含む語の検索へ(design.md §5.5「関連データは絞り込みへの導線にする」)。 %>
+    大きい語をばらばらに置き、空いた隙間へ小さい語を詰める(オーナー指示 2026-08-11)。
+    配置は MorphemeCloud が仮想平面で決め、ここは viewBox 付きの SVG に流すだけ。
+    SVG なので幅に応じて素直に拡縮し、モバイルでも字の大小の比が保たれる。
+    語を押すとその部品を含む語の検索へ(design.md §5.5)。 %>
 <div class="scale-specimen">
   <% entries = MorphemeFrequencies.entries %>
-  <ul class="scale-specimen__list">
-    <% entries.each do |entry| %>
-      <li class="scale-specimen__item">
-        <%# --weight は 0.0(最少)〜1.0(最頻)。CSS 側で級数に変換する %>
-        <%= link_to words_path(q: entry.text),
-              class: "scale-specimen__link#{' is-top' if entry.top?}",
-              style: "--weight: #{entry.weight.round(3)}",
-              title: t("stats.index.scale_specimen.item_title", text: entry.text, count: entry.count) do %>
-          <span class="scale-specimen__text"><%= entry.text %></span><span class="scale-specimen__count"><%= entry.count %></span>
-        <% end %>
-      </li>
+  <% layout = MorphemeCloud.place(entries) %>
+  <svg class="scale-specimen__svg"
+       viewBox="0 0 <%= MorphemeCloud::VIEWBOX_WIDTH %> <%= layout.height %>"
+       aria-label="<%= t("stats.index.scale_specimen.aria") %>">
+    <% layout.items.each do |item| %>
+      <%= link_to words_path(q: item.text),
+            class: "scale-specimen__link#{' is-top' if item.top?}" do %>
+        <title><%= t("stats.index.scale_specimen.item_title", text: item.text, count: item.count) %></title>
+        <text class="scale-specimen__text" x="<%= item.x %>" y="<%= item.y %>"
+              font-size="<%= item.font_size %>"><%= item.text %></text>
+      <% end %>
     <% end %>
-  </ul>
+  </svg>
   <p class="scale-specimen__note">
     <%= t("stats.index.scale_specimen.note",
-          count: entries.size, words: MorphemeFrequencies.metadata["word_count"]) %>
+          count: layout.items.size, words: MorphemeFrequencies.metadata["word_count"]) %>
   </p>
 </div>
