@@ -27,7 +27,7 @@
   --on-ink-dim: #b6b3a6;
   --on-ink-rule: #3b3931;
 
-  /* トップページの地に敷く方眼の罫(components.css の .is-home)。
+  /* 地に敷く方眼の罫(base.css の body)。
      地との差はごく僅かにして、文字の可読性を落とさない */
   --grid-line: rgba(32, 32, 32, 0.035);
 
