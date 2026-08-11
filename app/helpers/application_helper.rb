@@ -1,4 +1,10 @@
 module ApplicationHelper
+  # body に付けるページ固有のクラス。今はトップページの方眼の地(components.css の
+  # .is-home)だけに使う。増やすときは「ページ全体の地の扱いが変わる」場合に限る。
+  def body_class
+    "is-home" if controller_name == "home" && action_name == "index"
+  end
+
   # <title> と og:title に使う共通のページタイトル。
   # ページ側が content_for(:title) を設定していればブランド名と連結する。
   def page_title

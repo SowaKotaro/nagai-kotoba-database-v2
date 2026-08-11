@@ -1075,6 +1075,16 @@ a.tag:hover .genre-hub__count {
   }
 }
 
+/* --- トップページの地: 方眼 -------------------------------------------
+   「データを記録する紙」の含みを地に持たせる。画像もJSも使わず、
+   繰り返しグラデーション 2 本(縦罫・横罫)だけで描く。
+   ヘッダーとフッターは --bg のベタを持つので、方眼は本文の範囲にだけ現れる。 */
+body.is-home {
+  background-image:
+    repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px 32px);
+}
+
 /* --- ホーム: 検索を主役にしたヒーロー ---------------------------------
    ページで最も大きい UI は検索バー。見出しはその上に静かに置く。 */
 .hero {
