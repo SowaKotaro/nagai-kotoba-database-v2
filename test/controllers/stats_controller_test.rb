@@ -114,4 +114,32 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     get llms_path
     assert_includes response.body, "/stats"
   end
+
+  # --- §1 級数見本(Issue 78) ---
+
+  test "級数見本が出て、最頻の1件だけ朱になる" do
+    get stats_path
+    assert_response :success
+    assert_select "section.stats-section--specimen"
+    assert_select ".scale-specimen__link", count: MorphemeFrequencies.entries.size
+    assert_select ".scale-specimen__link.is-top", count: 1
+  end
+
+  test "級数見本の各項目はその部品を含む語の検索へのリンクになる" do
+    get stats_path
+    top = MorphemeFrequencies.entries.first
+    assert_select "a.scale-specimen__link[href=?]", words_path(q: top.text)
+  end
+
+  test "集計ファイルが無ければ級数見本の区画ごと出さない" do
+    MorphemeFrequencies.path = Rails.root.join("db/does_not_exist.json")
+
+    get stats_path
+    assert_response :success
+    assert_select "section.stats-section--specimen", count: 0
+    # 他の章は通常どおり出る
+    assert_select ".stats-wall__list"
+  ensure
+    MorphemeFrequencies.path = nil
+  end
 end
