@@ -99,21 +99,31 @@ class WordRequestDuplicateCheck
   end
 
   # 読みが入力されていれば読み同士、無ければ表層形同士で類似度を測る。
+  #
+  # 照合のたびに String#chars を呼ぶとそれ自体が支配的なコストになるため、
+  # クエリ側もコーパス側も分割済みの配列を使う(コーパスは1回の判定で使い回す)。
   def similar_matches(query)
     by_reading = query.reading_key.present?
-    value = by_reading ? query.reading_key : query.surface_key
+    value_chars = (by_reading ? query.reading_key : query.surface_key).chars
 
-    matches = corpus.filter_map do |word_id, surface, reading, surface_key, reading_key|
-      target = by_reading ? reading_key : surface_key
-      next if target.blank?
-      next if Levenshtein.far_apart?(value, target)
+    matches = split_corpus.filter_map do |word_id, surface, reading, surface_chars, reading_chars|
+      target_chars = by_reading ? reading_chars : surface_chars
+      next if target_chars.empty?
 
-      similarity = Levenshtein.similarity(value, target)
-      next if similarity < Levenshtein::SIMILARITY_THRESHOLD
+      similarity = Levenshtein.similarity_at_least_chars(value_chars, target_chars)
+      next unless similarity
 
       Match.new(word_id: word_id, surface: surface, reading: reading, similarity: similarity)
     end
     dedupe(matches)
+  end
+
+  # 比較用キーを分割した [word_id, 表層形, 読み, 表層形の文字配列, 読みの文字配列]。
+  # 1回の #call(最大10語)で使い回すため、語数×クエリ数ぶんの分割をしない。
+  def split_corpus
+    @split_corpus ||= corpus.map do |word_id, surface, reading, surface_key, reading_key|
+      [ word_id, surface, reading, surface_key.chars, reading_key.chars ]
+    end
   end
 
   # 同じ語に複数の語義がぶら下がると同じ word_id が並ぶため、語単位に畳んでから上位を採る。
