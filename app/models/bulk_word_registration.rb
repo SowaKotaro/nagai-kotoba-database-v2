@@ -181,10 +181,9 @@ class BulkWordRegistration
   def attach_batch_matches(analyzed)
     analyzed.combination(2).each do |a, b|
       next if a.reading.blank? || b.reading.blank?
-      next if Levenshtein.far_apart?(a.reading, b.reading, SIMILARITY_THRESHOLD)
 
-      sim = Levenshtein.similarity(a.reading, b.reading)
-      next if sim < SIMILARITY_THRESHOLD
+      sim = Levenshtein.similarity_at_least(a.reading, b.reading, SIMILARITY_THRESHOLD)
+      next unless sim
 
       a.batch_matches << Match.new(surface: b.surface, reading: b.reading, similarity: sim)
       b.batch_matches << Match.new(surface: a.surface, reading: a.reading, similarity: sim)
@@ -202,17 +201,19 @@ class BulkWordRegistration
   end
 
   def db_matches_for(reading)
-    existing_readings.filter_map do |existing_reading, existing_surface|
-      next if Levenshtein.far_apart?(reading, existing_reading, SIMILARITY_THRESHOLD)
-
-      sim = Levenshtein.similarity(reading, existing_reading)
-      Match.new(surface: existing_surface, reading: existing_reading, similarity: sim) if sim >= SIMILARITY_THRESHOLD
+    reading_chars = reading.chars
+    existing_readings.filter_map do |existing_reading, existing_surface, existing_chars|
+      sim = Levenshtein.similarity_at_least_chars(reading_chars, existing_chars, SIMILARITY_THRESHOLD)
+      Match.new(surface: existing_surface, reading: existing_reading, similarity: sim) if sim
     end.sort_by { |m| -m.similarity }
   end
 
-  # DB の既存 (読み, 表層形) 一覧。1回だけ読み込んでメモ化する。
+  # DB の既存 (読み, 表層形, 読みの文字配列) 一覧。1回だけ読み込んでメモ化する。
+  # 文字配列を持たせるのは、貼られた行ごとに読みを分割し直さないため。
   def existing_readings
-    @existing_readings ||= WordSense.joins(:word).distinct.pluck("word_senses.reading", "words.surface")
+    @existing_readings ||= WordSense.joins(:word).distinct
+      .pluck("word_senses.reading", "words.surface")
+      .map { |reading, surface| [ reading, surface, reading.to_s.chars ] }
   end
 
   # 各行から bullet を除いた表層形の配列(空行はスキップ)。
