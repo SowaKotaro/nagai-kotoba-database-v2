@@ -30,14 +30,28 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "article.sense-card"
   end
 
-  test "一覧の各行に読みの文字数と品詞タグが表示される" do
+  test "一覧の各行に読みの文字数とエンティティタグが表示される" do
     get words_path
     assert_response :success
     # 文字数は読みの文字数(さつじんじけん=7字)。
     assert_select ".entry-row__len", text: I18n.t("words.index.char_count", count: word_senses(:murder).reading.length)
-    # 品詞タグはファセット絞り込み(単語一覧)への実リンク。
-    assert_select "a.entry-row__tag[href=?]", words_path(part_of_speech_id: parts_of_speech(:noun).id),
-      text: parts_of_speech(:noun).name
+    # エンティティタグはファセット絞り込み(単語一覧)への実リンク。
+    assert_select "a.entry-row__tag[href=?]", words_path(entity_type_id: entity_types(:book_title).id),
+      text: entity_types(:book_title).name
+    # 品詞は幅を食うわりに語の見分けに効かないので一覧には出さない。
+    assert_select "a.entry-row__tag[href='#{words_path(part_of_speech_id: parts_of_speech(:noun).id)}']", count: 0
+  end
+
+  test "一覧の各行のジャンルは大→中→小のパンくずで、各階層が絞り込みリンクになる" do
+    get words_path
+    assert_response :success
+
+    assert_select ".entry-row__data .genre-path" do
+      assert_select "a[href=?]", words_path(genre_id: genres(:large_literature).id), text: "文学"
+      assert_select "a[href=?]", words_path(genre_id: genres(:medium_japanese).id), text: "日本文学"
+      # 末端(小分類)は強調するので専用クラスが付く。
+      assert_select "a.genre-path__current[href=?]", words_path(genre_id: genres(:small_novel).id), text: "小説"
+    end
   end
 
   test "詳細は ETag を返し If-None-Match で 304 になる(Issue 26)" do

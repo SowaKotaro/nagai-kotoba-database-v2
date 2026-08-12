@@ -620,6 +620,18 @@ a.chip:hover {
   font-size: 14px;
 }
 
+/* 一覧の行に添える小さいパンくず。詳細と同じ文法のまま級数と間隔だけ落とす */
+.genre-path--sm {
+  gap: 5px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+
+.genre-path--sm .genre-path__sep {
+  font-size: 12px;
+}
+
 /* 品詞・エンティティタイプなどのタグ(検索リンク)。墨枠、hover で反転 */
 .tag {
   display: inline-block;
@@ -944,16 +956,24 @@ a.tag:hover .genre-hub__count {
 }
 
 /* --- 一覧: リストUI(カードにせず 1px の細罫だけで仕切る) ---------------
-   1件 = 言葉 / 読み / 説明 / 文字数・ジャンル・タグ / 登録日。
+   1件 = 言葉 / 読み / 文字数・ジャンル・タグ。
+   1画面に並ぶ語数を稼ぐため、見出しと読みは 1 行に組んで縦を詰める。
    hover は背景がほんのり変わる程度に留め、行そのものを目立たせない。 */
 .entry-list {
   border-top: 1px solid var(--rule);
 }
 
-/* 行全体を詳細リンクに(surface のストレッチで実現)。タグは上に載る実リンク。 */
+/* 行全体を詳細リンクに(surface のストレッチで実現)。タグは上に載る実リンク。
+   見出し+読み / ジャンル・タグ / 文字数 の 3 列グリッド。flex の折り返しだと語の長さで
+   データの位置がずれて一覧性を損なうので、列に分けて右端を必ず揃える。 */
 .entry-row {
   position: relative;
-  padding: var(--space-4) var(--space-3);
+  display: grid;
+  /* 左列には最低限の幅を確保し、分類が長い語でも見出しが痩せないようにする */
+  grid-template-columns: minmax(min(100%, 300px), 1fr) auto max-content;
+  align-items: baseline;
+  column-gap: var(--space-4);
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--rule);
   transition: background-color var(--transition);
 }
@@ -962,20 +982,20 @@ a.tag:hover .genre-hub__count {
   background: var(--bg-soft);
 }
 
-/* 見出し語(左)とデータ群(右)を1行に組む。狭幅ではデータが下へ回り込む */
+/* 見出し語と読み。読みが長い語では読みだけが下へ回り込む */
 .entry-row__head {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-4);
+  gap: 2px var(--space-3);
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .entry-row__surface {
   font-family: var(--font-mincho);
   font-weight: 600;
-  font-size: clamp(21px, 2.6vw, 26px);
-  line-height: 1.45;
+  font-size: clamp(19px, 2vw, 22px);
+  line-height: 1.5;
   letter-spacing: 0.03em;
   color: var(--ink);
   text-decoration: none;
@@ -989,12 +1009,31 @@ a.tag:hover .genre-hub__count {
   inset: 0;
 }
 
-/* 右側のデータ群(文字数・ジャンル/品詞/種別タグ・登録日) */
+/* 右側のデータ群(ジャンルのパンくず・種別タグ)。右端に揃える。
+   ここは折り返さない: 分類が長い語でタグだけが 1 行下に取り残されるのを避け、
+   はみ出しはパンくずの内部(下記)で吸収させる。 */
 .entry-row__data {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  align-items: baseline;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 2px var(--space-3);
+}
+
+/* ジャンルのパンくずは行リンクの上に載せる(各階層が絞り込みリンク)。
+   長い分類はこの中だけで折り返す。 */
+.entry-row__data .genre-path {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+/* 右端の文字数(+矢印)。全行で同じ幅・同じ位置に来る「目盛り」の列 */
+.entry-row__meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
 .entry-row__len {
@@ -1044,16 +1083,17 @@ a.tag:hover .genre-hub__count {
 }
 
 .entry-row__reading {
-  margin-top: 4px;
   font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   line-height: 1.6;
   color: var(--ink-3);
 }
 
-/* 「別表記〈◯◯〉で一致」。検索結果に出た理由の注記なので、朱の縦罫で脇に添える */
+/* 「別表記〈◯◯〉で一致」。検索結果に出た理由の注記なので、朱の縦罫で脇に添える。
+   行の下に全幅で敷きたいので、グリッドの全列にまたがらせる */
 .entry-row__match {
+  grid-column: 1 / -1;
   margin-top: 4px;
   padding-left: var(--space-2);
   border-left: 2px solid var(--shu);
@@ -1064,9 +1104,36 @@ a.tag:hover .genre-hub__count {
   color: var(--ink-2);
 }
 
+/* 大分類まで並べられるのは紙幅に余裕がある画面だけ。それ以下では 1 行に収まらず
+   分類とタグが 2〜3 行に膨らんで密度を損なうので、中 › 小 に畳む
+   (大分類への導線はジャンル一覧と単語詳細が担う) */
+@media (max-width: 980px) {
+  .entry-row__data .genre-path a:first-child,
+  .entry-row__data .genre-path a:first-child + .genre-path__sep {
+    display: none;
+  }
+}
+
 @media (max-width: 600px) {
+  /* 狭幅では列に割ると語もデータも潰れるので、素直に縦へ積む
+     (文字数だけは分類と同じ行に並べて 1 行ぶん節約する) */
+  .entry-row {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    padding: var(--space-2) 0;
+  }
+
+  .entry-row__head {
+    grid-column: 1 / -1;
+  }
+
   .entry-row__data {
-    gap: var(--space-2);
+    justify-content: flex-start;
+    gap: 2px var(--space-2);
+  }
+
+  /* 縦積みでは行の左端から始めたいので、パンくずの右寄せも解く */
+  .entry-row__data .genre-path {
+    justify-content: flex-start;
   }
 
   /* 狭幅では矢印は場所を食うだけなので落とす(行全体が押せることは変わらない) */

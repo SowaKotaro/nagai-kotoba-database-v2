@@ -1,34 +1,35 @@
 <%# 一覧の1行(リストUI)。カードにせず 1px の細罫だけで仕切る。
-    1件 = 言葉 / 読み / 文字数・ジャンル・品詞などのタグ。
-    行全体は詳細へのリンク(surface をストレッチ)。タグは各ファセットの
+    1件 = 言葉 / 読み / 文字数・ジャンル・エンティティ。
+    一画面に並ぶ語数を稼ぐため、見出しと読みは同じ行に組んで縦を詰める(2026-08-12)。
+    品詞は一覧では出さない(語の見分けに効かないわりに幅を食うため。詳細と検索には残す)。
+    行全体は詳細へのリンク(surface をストレッチ)。ジャンル・タグは各ファセットの
     単語一覧(絞り込み)への実リンクなので、行リンクの上に載せる。local: word %>
 <% primary = word.word_senses.first %>
 <%# 1行 = 自己完結した見出し語エントリなので article(SEO/LLMO のセマンティクス) %>
 <article class="entry-row">
   <div class="entry-row__head">
     <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
-
-    <div class="entry-row__data">
-      <% if primary&.reading_length %>
-        <span class="entry-row__len"><%= t("words.index.char_count", count: primary.reading_length) %></span>
-      <% end %>
-      <% if primary&.genre %>
-        <%= link_to genre_lineage_label(primary.genre), words_path(genre_id: primary.genre_id),
-              class: "entry-row__tag" %>
-      <% end %>
-      <% if primary&.part_of_speech %>
-        <%= link_to primary.part_of_speech.name,
-              words_path(part_of_speech_id: primary.part_of_speech_id), class: "entry-row__tag" %>
-      <% end %>
-      <% if primary&.entity_type %>
-        <%= link_to primary.entity_type.name,
-              words_path(entity_type_id: primary.entity_type_id), class: "entry-row__tag" %>
-      <% end %>
-      <%= icon "arrow_right", "entry-row__go" %>
-    </div>
+    <p class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></p>
   </div>
 
-  <p class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></p>
+  <div class="entry-row__data">
+    <% if primary&.genre %>
+      <%# ジャンルは大 › 中 › 小 のパンくず。どの階層からでも絞り込みへ飛べる %>
+      <%= render "shared/genre_path", genre: primary.genre, modifier: "genre-path--sm" %>
+    <% end %>
+    <% if primary&.entity_type %>
+      <%= link_to primary.entity_type.name,
+            words_path(entity_type_id: primary.entity_type_id), class: "entry-row__tag" %>
+    <% end %>
+  </div>
+
+  <%# 文字数は全行で桁が揃うので、右端の独立した列に固定して縦に揃える %>
+  <div class="entry-row__meta">
+    <% if primary&.reading_length %>
+      <span class="entry-row__len"><%= t("words.index.char_count", count: primary.reading_length) %></span>
+    <% end %>
+    <%= icon "arrow_right", "entry-row__go" %>
+  </div>
 
   <%# キーワード検索で別表記だけが当たった行は、なぜ出たのかを一言添える(Issue 72)。
       query は単語一覧(検索結果)からのみ渡る。関連語・しりとりの行には出ない %>

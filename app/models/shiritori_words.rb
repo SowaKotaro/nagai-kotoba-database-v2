@@ -46,9 +46,9 @@ class ShiritoriWords
                         .order(:word_id).distinct.limit(LIMIT).pluck(:word_id)
     return Word.none if word_ids.empty?
 
-    # 一覧行(words/_entry_row)がジャンル・品詞・エンティティも出すので先読みする
+    # 一覧行(words/_entry_row)がジャンルのパンくず・エンティティも出すので先読みする
     Word.where(id: word_ids)
-        .includes(word_senses: [ :part_of_speech, :entity_type, { genre: :parent } ])
+        .includes(word_senses: [ :entity_type, { genre: { parent: :parent } } ])
         .order(:surface)
   end
 end

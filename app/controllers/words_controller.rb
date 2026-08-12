@@ -84,10 +84,11 @@ class WordsController < ApplicationController
     @total_pages = 1
   end
 
-  # 一覧の1行(words/_entry_row)が使う関連。キーワード検索のときだけ、
+  # 一覧の1行(words/_entry_row)が使う関連。ジャンルは大→中→小のパンくずを出すので
+  # 祖先まで先読みする。キーワード検索のときだけ、
   # 「別表記だけが一致した」注記(Issue 72)の判定で参照する別表記も先読みする。
   def entry_row_preloads
-    preloads = [ :entity_type, :part_of_speech, { genre: :parent } ]
+    preloads = [ :entity_type, { genre: { parent: :parent } } ]
     preloads << :word_sense_variants if @search.q.present?
     preloads
   end
