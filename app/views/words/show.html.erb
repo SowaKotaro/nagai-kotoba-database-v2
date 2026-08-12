@@ -104,15 +104,7 @@
             <dd>
               <% if sense.genre %>
                 <%# 各階層から単語一覧の絞り込みへ飛べるパンくず。末端は少し強調 %>
-                <nav class="genre-path">
-                  <% hierarchy = sense.genre.self_and_ancestors %>
-                  <% hierarchy.each.with_index(1) do |genre, depth| %>
-                    <% current = depth == hierarchy.size %>
-                    <%= link_to genre.name, words_path(genre_id: genre.id),
-                          class: ("genre-path__current" if current) %>
-                    <% unless current %><span class="genre-path__sep">›</span><% end %>
-                  <% end %>
-                </nav>
+                <%= render "shared/genre_path", genre: sense.genre %>
               <% else %>
                 <span class="sense-undefined"><%= t("words.show.undefined") %></span>
               <% end %>

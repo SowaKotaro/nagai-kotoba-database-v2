@@ -43,8 +43,8 @@ class RelatedWords
     return nil if word_ids.empty?
 
     words = Word.where(id: word_ids)
-                # 一覧行(words/_entry_row)がジャンルも出すので、親まで含めて先読みする
-                .includes(word_senses: [ :part_of_speech, :entity_type, { genre: :parent } ])
+                # 一覧行(words/_entry_row)がジャンルのパンくずを出すので、祖先まで先読みする
+                .includes(word_senses: [ :entity_type, { genre: { parent: :parent } } ])
                 .order(:surface)
     Group.new(key, facet_params, words)
   end

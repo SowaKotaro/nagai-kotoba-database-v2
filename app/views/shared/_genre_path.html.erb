@@ -1,0 +1,13 @@
+<%# ジャンルの階層パンくず(大 › 中 › 小)。各階層が単語一覧の絞り込みへの実リンクで、
+    区切りは朱、末端(小分類)だけ下線で強調する(docs/design.md §5.5)。
+    行リンクの上に載る場所でも押せるよう、重なりの制御は呼び出し側の CSS に任せる。
+    local: genre / modifier(任意の修飾クラス。一覧の行では genre-path--sm) %>
+<nav class="genre-path <%= local_assigns[:modifier] %>">
+  <% hierarchy = genre.self_and_ancestors %>
+  <% hierarchy.each.with_index(1) do |node, depth| %>
+    <% current = depth == hierarchy.size %>
+    <%= link_to node.name, words_path(genre_id: node.id),
+          class: ("genre-path__current" if current) %>
+    <% unless current %><span class="genre-path__sep">›</span><% end %>
+  <% end %>
+</nav>
