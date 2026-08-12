@@ -31,7 +31,8 @@
       (どちらも画面遷移を伴い、他カードの未保存の入力が消えるため)。
       マスタに無い名前は各行の「＋ 追加」でその場に作れる %>
   <% if proposal %>
-    <details class="deck-proposal">
+    <%# 提案を見ながら入力するため、既定で開いた状態にする(畳むことはできる) %>
+    <details class="deck-proposal" open>
       <summary class="deck-proposal__summary">
         <span class="deck-proposal__title"><%= t("admin.annotations.proposal.title") %></span>
         <% if proposal.confidence %>
