@@ -620,16 +620,35 @@ a.chip:hover {
   font-size: 14px;
 }
 
-/* 一覧の行に添える小さいパンくず。詳細と同じ文法のまま級数と間隔だけ落とす */
+/* 一覧の行に添える小さいパンくず。一覧の主役はあくまで見出し語なので、詳細と同じ
+   文法のまま級数・色を落として静かに添える。末端の下線と太字、区切りの朱は取り、
+   hover したときだけ朱を出す(押せることは失わない)。 */
 .genre-path--sm {
   gap: 5px;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.02em;
   line-height: 1.7;
 }
 
+.genre-path--sm a {
+  color: var(--ink-3);
+}
+
+/* 末端(小分類)は最も具体的な情報なので、下線ではなく色差だけで一段立てる */
+.genre-path--sm a.genre-path__current {
+  color: var(--ink-2);
+  font-weight: 400;
+  border-bottom: 0;
+}
+
+.genre-path--sm a:hover,
+.genre-path--sm a.genre-path__current:hover {
+  color: var(--shu);
+}
+
 .genre-path--sm .genre-path__sep {
-  font-size: 12px;
+  font-size: 11px;
+  color: var(--rule-mid);
 }
 
 /* 品詞・エンティティタイプなどのタグ(検索リンク)。墨枠、hover で反転 */
