@@ -15,7 +15,8 @@
       <div class="ann-row__label"><%= t("admin.bulk_annotations.genre") %></div>
       <div class="ann-genre" data-controller="genre-picker"
            data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
-           data-genre-picker-create-url-value="<%= admin_genres_path %>">
+           data-genre-picker-create-url-value="<%= admin_genres_path %>"
+           data-genre-picker-labels-value="<%= inline_add_labels_json %>">
         <%= hidden_field_tag "bulk_annotation[genre_id]", nil, id: nil,
               class: "js-genre-value", data: { genre_picker_target: "value" } %>
         <div class="ann-genre__level js-genre-large" data-genre-picker-target="largeLevel">

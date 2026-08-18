@@ -630,6 +630,18 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "タミル語", response.parsed_body["name"]
   end
 
+  test "同名の語種が既にあれば、二重に作らず既存を返す" do
+    sign_in_as(Admin.take)
+    existing = word_origins(:wago)
+    assert_no_difference -> { WordOrigin.count } do
+      post admin_word_origins_path, params: { name: existing.name }, as: :json
+    end
+
+    assert_response :success
+    assert_equal existing.id, response.parsed_body["id"]
+    assert response.parsed_body["existing"]
+  end
+
   test "小分類ジャンルをその場で追加できる(親の下に作成)" do
     sign_in_as(Admin.take)
     assert_difference -> { Genre.count } => 1 do

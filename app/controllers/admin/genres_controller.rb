@@ -1,5 +1,7 @@
 # ジャンルの大→中→小 依存選択用のエンドポイント。
 class Admin::GenresController < Admin::BaseController
+  include InlineMasterCreatable
+
   # 指定した親ジャンルの直下の子を JSON で返す(親未指定なら空)。
   # parent_id を省くと where(parent_id: nil) が大分類を返してしまうため明示的にガードする。
   def children
@@ -10,14 +12,10 @@ class Admin::GenresController < Admin::BaseController
   end
 
   # ジャンルのその場追加。親未指定なら大分類、親が大なら中分類、親が中なら小分類として作る。
+  # 同じ親の下に同名が既にあれば作らずにそれを返す(UI 側はそのまま選択する)。
   def create
     parent = Genre.find(params[:parent_id]) if params[:parent_id].present?
     level = if parent.nil? then :large elsif parent.large? then :medium else :small end
-    genre = Genre.new(name: params[:name], parent: parent, level: level)
-    if genre.save
-      render json: { id: genre.id, name: genre.name }
-    else
-      render json: { errors: genre.errors.full_messages }, status: :unprocessable_entity
-    end
+    create_inline_master(Genre.where(parent_id: parent&.id), level: level)
   end
 end

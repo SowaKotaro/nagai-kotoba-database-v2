@@ -193,6 +193,54 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_equal "ビショ", saved.target_reading
   end
 
+  # ジャンルの「その場追加」。入力して Enter を押したのに何も起きない(入力欄が残る)
+  # 状態を作らないことを担保する。
+  #   - 既にある名前を入れたら、二重に作らず既存のチップを選ぶ
+  #   - 失敗したら理由が出る(黙って握りつぶさない)
+  test "ジャンルのその場追加で既にある名前を入れると、既存が選ばれて入力欄が閉じる" do
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "genre-picker"
+
+    within ".ann-genre" do
+      click_expecting(expect_css: ".ann-chip", text: "日本文学") { find("button.ann-chip", exact_text: "文学") }
+
+      # 中分類の「＋追加」に、既にある「日本文学」を入れる
+      within ".js-genre-medium" do
+        click_expecting(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
+        assert_no_difference -> { Genre.count } do
+          find(".ann-add__input").send_keys("日本文学", :enter)
+          assert_selector ".ann-add__msg", text: I18n.t("admin.inline_add.client.selected_existing")
+        end
+        # 入力欄は閉じ、既存のチップが選ばれている(＝小分類が開く)
+        assert_no_selector ".ann-add__input:not([hidden])"
+      end
+      assert_selector ".js-genre-medium .ann-chip.is-on", exact_text: "日本文学"
+      assert_selector ".js-genre-small .ann-chip", text: "小説"
+    end
+  end
+
+  # 語義の複製は DOM を outerHTML で写すため、JS で結び付けたハンドラが付いてこない。
+  # 複製された語義でも「その場追加」が動くこと(押しても何も起きない状態にならないこと)。
+  test "語義を複製しても、ジャンルの大分類の「その場追加」が使える" do
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "sense-cloner"
+    wait_for_stimulus "genre-picker"
+
+    click_expecting(expect_css: ".js-sense", count: 2) { find("button.ann-add-sense") }
+
+    within all(".js-sense").last do
+      within ".js-genre-large" do
+        click_expecting(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
+        assert_difference -> { Genre.large.count } => 1 do
+          find(".ann-add__input").send_keys("架空の大分類", :enter)
+          assert_selector ".ann-chip.is-on", exact_text: "架空の大分類"
+        end
+      end
+      # 追加した大分類が選ばれ、中分類の選択肢が開く
+      assert_selector ".js-genre-medium .ann-add__btn"
+    end
+  end
+
   # 1語の再調査(/reannotation へ渡す JSON)。コンソールと同じ turbo フレームで
   # 出入りするため、リンク → 表示 → 「この語に戻る」までブラウザで担保する。
   test "「再調査用JSON」から1語ぶんの JSON を開き、コンソールへ戻れる" do

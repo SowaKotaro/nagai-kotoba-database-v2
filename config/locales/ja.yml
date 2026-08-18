@@ -663,6 +663,17 @@ ja:
       select_word: "%{surface} を選択"
       applied: "%{applied} 語に適用しました。"
       applied_with_skipped: "%{applied} 語に適用しました（複数語義のためスキップ %{skipped} 語）。"
+    inline_add:
+      blank_name: "名前を入力してください。"
+      conflict: "「%{existing}」が既にあるため「%{name}」は追加できません（濁点・半濁点、ひらがな／カタカナ、大文字／小文字の違いは同じものとして扱われます）。既存のものを選ぶか、別の名前にしてください。"
+      retry: "追加できませんでした。もう一度お試しください。"
+      client:
+        add: "＋ 追加"
+        genre_placeholder: "新しいジャンル"
+        failed: "追加できませんでした（%{status}）。もう一度お試しください。"
+        network_error: "通信に失敗しました。接続を確認してもう一度お試しください。"
+        unexpected_response: "追加できませんでした。ログインが切れている可能性があります。ページを再読み込みしてください。"
+        selected_existing: "同じ名前が既にあったので、それを選びました。"
     annotations:
       title: "アノテーション"
       nav: "アノテーション"

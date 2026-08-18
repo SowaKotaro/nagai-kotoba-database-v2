@@ -156,10 +156,13 @@
 .ann-chip.is-on { background: var(--ink); color: var(--on-ink); }
 
 /* その場追加 */
-.ann-add { display: inline-flex; align-items: center; gap: 6px; }
+.ann-add { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ann-add__btn { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-2); background: transparent; border: 1px dashed var(--rule-mid); padding: 5px 10px; cursor: pointer; min-height: 34px; }
 .ann-add__btn:hover { border-color: var(--ink); color: var(--ink); }
 .ann-add__input { width: 8em; font-size: 14px; border: 0; border-bottom: 1px solid var(--shu); padding: 4px 2px; }
+/* その場追加の結果(失敗の理由 / 既存を選んだ旨)。黙って何も起きないのが一番困るので必ず出す */
+.ann-add__msg { font-family: var(--font-mono); font-size: 10.5px; line-height: 1.6; letter-spacing: 0.02em; color: var(--ink-3); max-width: 26em; }
+.ann-add__msg.is-error { color: var(--shu); }
 
 /* ジャンル 段階表示 */
 .ann-genre__current { font-family: var(--font-gothic); font-size: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
