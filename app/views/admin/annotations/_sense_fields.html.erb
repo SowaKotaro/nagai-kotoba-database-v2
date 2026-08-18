@@ -7,6 +7,8 @@
     入れ子の render はコントローラに依らないよう完全なパスで指定する。 %>
 <% sense = form.object %>
 <% compact = local_assigns.fetch(:compact, false) %>
+<%# その場追加(ジャンル・マスタ)が JS 側で出す文言。ハードコードせず i18n から渡す %>
+<% inline_add_labels = inline_add_labels_json %>
 <div class="ann-sense js-sense" data-index="<%= form.index %>"
      data-controller="sense-completeness"
      data-action="input->sense-completeness#check change->sense-completeness#check
@@ -49,7 +51,8 @@
           <%= origin.name %>
         </label>
       <% end %>
-      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_word_origins_path %>">
+      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_word_origins_path %>"
+            data-inline-add-labels-value="<%= inline_add_labels %>">
         <button type="button" class="ann-add__btn" data-action="inline-add#open"><%= t("admin.annotations.add_master") %></button>
         <span class="ann-add__field" data-inline-add-target="field" hidden>
           <input type="text" class="ann-add__input" data-inline-add-target="input"
@@ -73,6 +76,7 @@
     <div class="ann-genre" data-controller="genre-picker"
          data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
          data-genre-picker-create-url-value="<%= admin_genres_path %>"
+         data-genre-picker-labels-value="<%= inline_add_labels %>"
          <% if sense.genre_id.blank? && sense.genre_preselect_ids.present? %>data-genre-picker-preselect-value="<%= sense.genre_preselect_ids.to_json %>"<% end %>>
       <%= form.hidden_field :genre_id, class: "js-genre-value",
             data: { genre_picker_target: "value", sense_completeness_target: "genre" } %>
@@ -118,7 +122,8 @@
           <%= pos.name %>
         </label>
       <% end %>
-      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_parts_of_speech_path %>">
+      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_parts_of_speech_path %>"
+            data-inline-add-labels-value="<%= inline_add_labels %>">
         <button type="button" class="ann-add__btn" data-action="inline-add#open"><%= t("admin.annotations.add_master") %></button>
         <span class="ann-add__field" data-inline-add-target="field" hidden>
           <input type="text" class="ann-add__input" data-inline-add-target="input"
@@ -148,7 +153,8 @@
           <%= entity.name %>
         </label>
       <% end %>
-      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_entity_types_path %>">
+      <span class="ann-add" data-controller="inline-add" data-inline-add-url-value="<%= admin_entity_types_path %>"
+            data-inline-add-labels-value="<%= inline_add_labels %>">
         <button type="button" class="ann-add__btn" data-action="inline-add#open"><%= t("admin.annotations.add_master") %></button>
         <span class="ann-add__field" data-inline-add-target="field" hidden>
           <input type="text" class="ann-add__input" data-inline-add-target="input"

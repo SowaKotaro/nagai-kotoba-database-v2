@@ -39,6 +39,13 @@ module AdminHelper
     link_to label, path, options
   end
 
+  # その場追加(ジャンル・語種・品詞・エンティティ)の Stimulus に渡す文言。
+  # 追加は JS が DOM を書き換えるため、成否のメッセージも JS 側で出す必要がある。
+  # ハードコードせず i18n から一括で渡す(genre-picker / inline-add で共通)。
+  def inline_add_labels_json
+    t("admin.inline_add.client").to_json
+  end
+
   # 単語一覧のジャンル絞り込みセレクトの選択肢([表示名, id] の配列)。
   # 大→中→小の階層順に、全角空白の字下げで階層が分かるように並べる。
   def admin_genre_filter_options(genres)

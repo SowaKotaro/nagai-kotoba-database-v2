@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { post } from "controllers/inline_add_controller"
 
 // ジャンルの段階表示ピッカー(ドロップダウンを使わない)。
 //   最初は大分類のみ。大を選ぶと中が出現、中を選ぶと小が出現(選ぶことで隠れた選択肢が登場)。
@@ -10,15 +11,17 @@ export default class extends Controller {
     "value", "current", "largeLevel", "largeChips",
     "mediumLevel", "mediumChips", "smallLevel", "smallChips"
   ]
-  static values = { childrenUrl: String, createUrl: String, preselect: Array }
+  static values = { childrenUrl: String, createUrl: String, preselect: Array, labels: Object }
 
   connect() {
     this.largeId = null
     this.mediumId = null
-    // 大分類にも「その場追加」を用意する(複製時の二重付与を防ぐため既存を確認)。
-    if (!this.largeChipsTarget.querySelector(".ann-add")) {
-      this.largeChipsTarget.appendChild(this.addControl(this.largeChipsTarget, null, "pickLarge"))
-    }
+    // 大分類にも「その場追加」を用意する。イベントは JS で結び付けているため、
+    // 語義の複製(outerHTML のコピー)や Turbo のキャッシュ復元で DOM だけが写された
+    // 分にはハンドラが付いていない(押しても入力欄が開かない/Enter が効かない)。
+    // 使い回さず毎回作り直して、複製された語義でも必ず動くようにする。
+    this.largeChipsTarget.querySelectorAll(":scope > .ann-add").forEach((el) => el.remove())
+    this.largeChipsTarget.appendChild(this.addControl(this.largeChipsTarget, null, "pickLarge"))
     // 小分類が確定済み(genre_id あり)なら現在パス表示のまま。未確定でも、提案の反映で
     // 大・中まで一致していれば(preselect)そこまで自動で開く。何も無ければ大分類から。
     if (this.valueTarget.value) return
@@ -123,38 +126,81 @@ export default class extends Controller {
     const wrap = document.createElement("span")
     wrap.className = "ann-add"
     const btn = document.createElement("button")
-    btn.type = "button"; btn.className = "ann-add__btn"; btn.textContent = "＋ 追加"
+    btn.type = "button"; btn.className = "ann-add__btn"; btn.textContent = this.labelsValue.add
     const input = document.createElement("input")
-    input.type = "text"; input.className = "ann-add__input"; input.placeholder = "新しいジャンル"; input.hidden = true
-    btn.addEventListener("click", () => { input.hidden = false; input.focus() })
-    input.addEventListener("keydown", async (e) => {
-      if (e.key === "Escape") { input.hidden = true; input.value = ""; return }
-      if (e.key !== "Enter") return
-      e.preventDefault()
-      const name = input.value.trim()
-      if (!name) return
-      const created = await this.create(name, parentId)
-      if (!created) return
-      const c = this.chip(created.id, created.name, action)
-      container.insertBefore(c, wrap)
-      input.hidden = true; input.value = ""
-      c.click() // 追加してすぐ選択(＝下の階層を開く / 末端なら genre_id セット)
-    })
-    wrap.appendChild(btn); wrap.appendChild(input)
+    input.type = "text"; input.className = "ann-add__input"
+    input.placeholder = this.labelsValue.genre_placeholder; input.hidden = true
+    const msg = document.createElement("span")
+    msg.className = "ann-add__msg"; msg.hidden = true
+
+    const context = { container, parentId, action, wrap, input, msg }
+    btn.addEventListener("click", () => { input.hidden = false; msg.hidden = true; input.focus() })
+    input.addEventListener("keydown", (event) => this.addKey(event, context))
+    wrap.append(btn, input, msg)
     return wrap
   }
 
-  async create(name, parentId) {
+  async addKey(event, context) {
+    const { input, msg } = context
+    // 日本語入力(IME)の変換を確定する Enter は送信に使わない。ここで拾うと変換途中の
+    // 文字列を登録してしまう。確定後にもう一度押された Enter だけを送信に使う。
+    if (event.isComposing || event.keyCode === 229) return
+
+    if (event.key === "Escape") {
+      input.hidden = true
+      input.value = ""
+      msg.hidden = true
+      return
+    }
+    if (event.key !== "Enter") return
+
+    event.preventDefault()
+    const name = input.value.trim()
+    if (!name) return
+    if (input.dataset.busy) return // 連打による二重登録(と、その結果の重複エラー)を防ぐ
+
+    input.dataset.busy = "1"
+    msg.hidden = true
     try {
-      const body = parentId ? { name, parent_id: parentId } : { name }
-      const response = await fetch(this.createUrlValue, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": this.csrf() },
-        body: JSON.stringify(body)
-      })
-      if (!response.ok) return null
-      return await response.json()
-    } catch { return null }
+      const result = await this.create(name, context.parentId)
+      if (result.error) {
+        // 失敗を黙って握りつぶすと「Enter を押しても何も起きない」ようにしか見えない。
+        msg.textContent = result.error
+        msg.classList.add("is-error")
+        msg.hidden = false
+        input.focus()
+        return
+      }
+
+      input.hidden = true
+      input.value = ""
+      if (result.existing) {
+        msg.textContent = this.labelsValue.selected_existing
+        msg.classList.remove("is-error")
+        msg.hidden = false
+      }
+      await this.selectAdded(result.record, context)
+    } finally {
+      delete input.dataset.busy
+    }
+  }
+
+  // 追加したジャンルをその場で選ぶ(＝下の階層を開く / 末端なら genre_id セット)。
+  // Stimulus の data-action は MutationObserver 経由で後から結び付くため、挿入直後の
+  // chip.click() では拾われないことがある。ここでは同じ処理を直接呼ぶ。
+  selectAdded(record, context) {
+    const { container, action, wrap } = context
+    let chip = container.querySelector(`.ann-chip[data-id="${record.id}"]`)
+    if (!chip) {
+      chip = this.chip(record.id, record.name, action)
+      container.insertBefore(chip, wrap)
+    }
+    return this[action]({ currentTarget: chip })
+  }
+
+  async create(name, parentId) {
+    const body = parentId ? { name, parent_id: parentId } : { name }
+    return await post(this.createUrlValue, body, this.labelsValue)
   }
 
   activate(container, chip) {
@@ -164,10 +210,5 @@ export default class extends Controller {
 
   deactivate(container) {
     container.querySelectorAll(".ann-chip.is-on").forEach((c) => c.classList.remove("is-on"))
-  }
-
-  csrf() {
-    const meta = document.querySelector('meta[name="csrf-token"]')
-    return meta ? meta.content : ""
   }
 }
