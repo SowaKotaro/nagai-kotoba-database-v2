@@ -21,4 +21,11 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     get robots_path
     assert_not_includes response.body, "Disallow: /search"
   end
+
+  # シャッフルのシード付き URL は無限に増やせてしまうので、クロールごと止める。
+  # /search と違い元から実在しないページなので、noindex を読ませる必要がない。
+  test "シャッフルのシード付き URL は Disallow する" do
+    get robots_path
+    assert_includes response.body, "Disallow: /*seed="
+  end
 end

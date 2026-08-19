@@ -93,11 +93,20 @@ class WordSort
 
   attr_reader :key
 
-  # seed はシャッフル専用。指定が無ければ日付をシードにして、その日のうちは順序を固定する。
+  # seed はシャッフル専用。URL に無ければリクエストごとに新しく振る(開くたびに引き直す)。
+  #
+  # かつては「シャッフルする」リンクの href 側で毎回シードを振っていたが、それだと
+  # 一覧を描画するたびに未知の URL が生まれ、クローラが辿った先でもまた新しい URL が
+  # 生まれる無限ループになっていた(2026-08 の Search Console で「noindex により除外」が
+  # 3,186 件まで単調増加した原因。本物のページのクロールが後回しにされていた)。
+  # href は seed 無しの1本に固定し、シードはサーバ側だけで持つ。
   def initialize(param, seed: nil)
     @key = KEYS.include?(param.to_s) ? param.to_s : DEFAULT_KEY
-    @seed = seed.to_s.presence&.slice(0, SEED_LIMIT)
+    @seed = (seed.to_s.presence&.slice(0, SEED_LIMIT) || SecureRandom.hex(4)) if shuffle?
   end
+
+  # 実際に使ったシャッフルのシード。ページ送りが引き継いで並びを保つ。シャッフル以外は nil。
+  attr_reader :seed
 
   def default? = key == DEFAULT_KEY
   def shuffle? = key == SHUFFLE_KEY
@@ -110,10 +119,9 @@ class WordSort
   private
 
   # シードから決まる擬似乱数順。同じシードのうちはページ送りしても順序が変わらない。
-  # シード無し(日付シード)なら1日で並び直り、「シャッフルする」ボタンから来たときは
-  # その都度新しいシードが振られるので、押すたびに引き直せる。
+  # シードは初期化時に必ず決まる(URL 指定が無ければ新規に振る)ので、
+  # 「シャッフルする」を押すたび・開き直すたびに並びが引き直される。
   def shuffle_clause
-    seed = @seed || Date.current.strftime("%Y%m%d")
-    Arel.sql(ApplicationRecord.sanitize_sql_array([ "MD5(CONCAT(words.id, ?)) ASC, words.id ASC", seed ]))
+    Arel.sql(ApplicationRecord.sanitize_sql_array([ "MD5(CONCAT(words.id, ?)) ASC, words.id ASC", @seed ]))
   end
 end

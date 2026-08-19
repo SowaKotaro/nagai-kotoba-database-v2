@@ -15,7 +15,9 @@
           <% bar_title = t("#{title_key}#{"_overflow" if bar[:overflow]}", value: bar[:value], count: bar[:count]) %>
           <% href = bar[:overflow] ? (overflow_param && words_path(overflow_param => bar[:value])) : words_path(param => bar[:value]) %>
           <% if href %>
-            <a href="<%= href %>"
+            <%# 「◯以上」の棒だけは範囲指定(reading_length_min)でインデックス対象外なので
+                クロールさせない。ちょうどの値の棒は単一ファセットとしてインデックスされる %>
+            <a href="<%= href %>" <%= tag.attributes(rel: ("nofollow" if bar[:overflow])) %>
                class="wave-chart__bar<%= " wave-chart__bar--mode" if bar[:mode] %>">
               <title><%= bar_title %></title>
               <path d="<%= bar[:path] %>" />

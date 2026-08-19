@@ -245,6 +245,8 @@ ja:
         default: "%{name}の長い言葉"
         first_char: "「%{char}」から始まる長い言葉"
         last_char: "「%{char}」で終わる長い言葉"
+        reading_length: "読みが%{count}文字の長い言葉"
+        mora_count: "%{count}モーラの長い言葉"
       facet_description: "%{label}の一覧。日本語の長い言葉を、読みの長さ・文字の構成・韻・ジャンルなどから絞り込めます。"
     show:
       headword: "見出し語"

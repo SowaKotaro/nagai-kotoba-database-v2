@@ -49,8 +49,9 @@
   <% if @words.any? %>
     <div class="entry-toolbar__controls">
       <%# シャッフルは並び順ではなく「引き直す」操作なので、セレクタから外してボタンで置く。
-          押すたびに新しいシードが振られ、並びを引き直せる %>
-      <%= link_to shuffle_words_path, class: "btn btn--sm entry-toolbar__shuffle" do %>
+          押すたびにサーバ側で新しいシードが振られ、並びを引き直せる。
+          結果は必ず noindex(並び違いの重複)なので、クロールもさせない %>
+      <%= link_to shuffle_words_path, class: "btn btn--sm entry-toolbar__shuffle", rel: "nofollow" do %>
         <%= icon "shuffle" %><%= t("words.index.shuffle") %>
       <% end %>
 

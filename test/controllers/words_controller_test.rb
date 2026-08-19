@@ -463,19 +463,24 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".entry-toolbar__shuffle", text: /#{Regexp.escape(I18n.t("words.index.shuffle"))}/
     href = css_select(".entry-toolbar__shuffle").first["href"]
     assert_match(/sort=shuffle/, href)
-    assert_match(/seed=\w+/, href)
+    # シードは URL に載せない。載せると描画のたびに未知の URL が生まれ、
+    # クローラが無限に新しい URL を辿れてしまう(シードはサーバ側で振る。WordSort)。
+    assert_no_match(/seed=/, href)
+    # 結果は必ず noindex(並び違いの重複)なのでクロールもさせない
+    assert_select ".entry-toolbar__shuffle[rel=nofollow]", count: 1
   end
 
-  test "シャッフルボタンは絞り込み条件を保ったまま新しいシードを振る" do
+  test "シャッフルボタンは絞り込み条件を保ち、URL は何度描画しても同じ1本になる" do
     get words_path(part_of_speech_id: parts_of_speech(:noun).id)
     href = css_select(".entry-toolbar__shuffle").first["href"]
     assert_match(/part_of_speech_id=#{parts_of_speech(:noun).id}/, href)
+    assert_no_match(/seed=/, href)
 
-    seeds = 2.times.map do
+    hrefs = 2.times.map do
       get words_path
-      css_select(".entry-toolbar__shuffle").first["href"][/seed=(\w+)/, 1]
+      css_select(".entry-toolbar__shuffle").first["href"]
     end
-    assert_not_equal seeds.first, seeds.last
+    assert_equal hrefs.first, hrefs.last, "描画のたびに URL が変わるとクローラの無限ループになる"
   end
 
   test "同じ seed のシャッフルは順序が変わらず、seed が変わると並び直る" do
@@ -507,13 +512,13 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_operator body_position(early), :<, body_position(late)
   end
 
-  test "sort=shuffle は同じ日のうちは順序が安定している" do
+  # シードはサーバ側でリクエストごとに振られる(URL には現れない)。
+  # 「開くたびに引き直す」こと自体は WordSortTest で検証する。
+  test "シード無しの sort=shuffle も普通に開けて noindex になる" do
     get words_path(sort: "shuffle")
     assert_response :success
-    first_order = body_position(words(:curry)) < body_position(words(:abc_murder))
-
-    get words_path(sort: "shuffle")
-    assert_equal first_order, body_position(words(:curry)) < body_position(words(:abc_murder))
+    assert_select "meta[name=robots][content=?]", "noindex,follow"
+    assert_select "link[rel=canonical][href=?]", "#{Rails.application.config.x.canonical_host}/words"
   end
 
   test "未知の sort は既定(収録が新しい順)に畳む" do
