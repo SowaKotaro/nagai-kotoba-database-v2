@@ -1,8 +1,12 @@
 <nav class="pagination">
-  <%# 絞り込み条件(ファセット)を保持したままページ送りする %>
+  <%# 絞り込み条件(ファセット)を保持したままページ送りする。
+      シャッフル中はサーバ側で振ったシードを引き継いで並びを保つ。ただしシードは
+      その場限りの値で、辿らせると未知の URL が無限に増えるためクローラには渡さない %>
   <% base = request.query_parameters.except("page") %>
+  <% base = base.merge("seed" => @sort.seed) if @sort.shuffle? %>
+  <% crawl_rel = ("nofollow" if @sort.shuffle?) %>
   <% if @page > 1 %>
-    <%= link_to words_path(base.merge(page: @page - 1)) do %>
+    <%= link_to words_path(base.merge(page: @page - 1)), rel: crawl_rel do %>
       <%= icon "arrow_left" %><span><%= t("words.pagination.prev") %></span>
     <% end %>
   <% end %>
@@ -10,7 +14,7 @@
   <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
 
   <% if @page < @total_pages %>
-    <%= link_to words_path(base.merge(page: @page + 1)) do %>
+    <%= link_to words_path(base.merge(page: @page + 1)), rel: crawl_rel do %>
       <span><%= t("words.pagination.next") %></span><%= icon "arrow_right" %>
     <% end %>
   <% end %>

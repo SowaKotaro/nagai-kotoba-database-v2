@@ -11,7 +11,8 @@
        viewBox="0 0 <%= MorphemeCloud::VIEWBOX_WIDTH %> <%= layout.height %>"
        aria-label="<%= t("stats.index.scale_specimen.aria") %>">
     <% layout.items.each do |item| %>
-      <%= link_to words_path(q: item.text),
+      <%# キーワード検索(q=)は重複コンテンツなので必ず noindex。クロールもさせない %>
+      <%= link_to words_path(q: item.text), rel: "nofollow",
             class: "scale-specimen__link#{' is-top' if item.top?}" do %>
         <title><%= t("stats.index.scale_specimen.item_title", text: item.text, count: item.count) %></title>
         <text class="scale-specimen__text" x="<%= item.x %>" y="<%= item.y %>"

@@ -52,11 +52,15 @@ module WordsHelper
   # インデックス対象の単一ファセットでなければ nil を返す(=素の「単語一覧」を使う)。
   FACET_MASTERS = {
     genre_id: Genre, part_of_speech_id: PartOfSpeech,
-    entity_type_id: EntityType, word_origin_id: WordOrigin
+    entity_type_id: EntityType, word_origin_id: WordOrigin,
+    linguistic_feature_id: LinguisticFeature
   }.freeze
 
   # マスタを持たず、値(かな1文字)をそのまま見出しに使うファセット。
   CHAR_FACET_KEYS = %i[first_char last_char].freeze
+
+  # マスタを持たず、値(数値)をそのまま見出しに使うファセット。
+  NUMERIC_FACET_KEYS = %i[reading_length mora_count].freeze
 
   def facet_heading(search)
     facet = search.indexable_facet
@@ -66,6 +70,9 @@ module WordsHelper
     # 文字の軸(先頭文字・末尾文字)はマスタを引かず、文字そのものを見出しに使う。
     if CHAR_FACET_KEYS.include?(key)
       t("words.index.facet_heading.#{key}", char: value)
+    # 数の軸(読みの文字数・モーラ数)も同じくマスタを引かない。
+    elsif NUMERIC_FACET_KEYS.include?(key)
+      t("words.index.facet_heading.#{key}", count: value.to_i)
     else
       name = FACET_MASTERS[key].where(id: value).pick(:name)
       name && t("words.index.facet_heading.default", name: name)
@@ -89,11 +96,13 @@ module WordsHelper
     end.uniq(&:surface)
   end
 
-  # 「シャッフルする」ボタンの遷移先。現在の絞り込みは保ったまま、毎回新しいシードを振る。
-  # 描画のたびにシードが変わるので、押すたびに並びを引き直せる(ページ送りは seed を引き継ぐ)。
+  # 「シャッフルする」ボタンの遷移先。現在の絞り込みは保ったまま、シャッフルの一覧へ渡す。
+  # シードは URL に載せない(サーバ側でリクエストごとに振る。WordSort)。href にシードを
+  # 載せると描画のたびに未知の URL が生まれ、クローラの無限ループになるため。
+  # これで絞り込み1つにつきシャッフルの URL はちょうど1本に収まる。
   def shuffle_words_path
     words_path(request.query_parameters.except("page", "sort", "seed")
-                      .merge(sort: WordSort::SHUFFLE_KEY, seed: SecureRandom.hex(4)))
+                      .merge(sort: WordSort::SHUFFLE_KEY))
   end
 
   # canonical に使う正規化済みのパス(Issue 17)。

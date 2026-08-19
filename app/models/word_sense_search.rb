@@ -96,12 +96,19 @@ class WordSenseSearch
   # 何かひとつでも絞り込み条件が指定されているか。
   def conditions? = to_query_params.any?
 
-  # インデックス(検索エンジン登録)を許可するファセット。単一値のカテゴリ的条件のみ(Issue 17)。
-  # 読みの長さ・モーラ・キーワード等は組合せ爆発・重複コンテンツになるため含めない。
+  # インデックス(検索エンジン登録)を許可するファセット。単一値の条件のみ(Issue 17)。
+  # キーワード・正規表現・韻・範囲指定などは組合せ爆発・重複コンテンツになるため含めない。
+  #
   # last_char は first_char と対になる軸(「〜で終わる長い言葉」)で、値域も 50 音程度と
   # 同規模。しりとり導線の受け皿にもなるため first_char と同じくインデックスを許可する。
+  #
+  # reading_length / mora_count / linguistic_feature_id は、当初「カテゴリ的でない」として
+  # 除外していたが、いずれも値域が 20 程度で有限、かつ「読みが15文字の長い言葉」「回文の
+  # 長い言葉」のように本サイトの検索需要そのものを表す面になる。統計・索引ページから
+  # 常時リンクしているのに noindex のままクロールだけさせていたので、インデックスを許可する。
   INDEXABLE_FACET_KEYS = %i[
     genre_id part_of_speech_id entity_type_id word_origin_id first_char last_char
+    reading_length mora_count linguistic_feature_id
   ].freeze
 
   # 条件がちょうど1つで、それが単一値のインデックス許可ファセットなら [key, value] を返す。

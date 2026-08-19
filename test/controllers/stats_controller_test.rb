@@ -40,12 +40,30 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.sound-matrix__cell", count: 2
     assert_select "a.sound-matrix__cell[rel=nofollow]", count: 2
     # 頭子音の棒 → 先頭文字。1文字だけの群は canonical と揃うスカラ形で出す
-    # (`first_char[]=サ` だと canonical(`first_char=サ`)と URL が食い違う)
+    # (`first_char[]=サ` だと canonical(`first_char=サ`)と URL が食い違う)。
+    # スカラ形は単一ファセット = index されるので nofollow は付けない。
     assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "サ")
     assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "カ")
+    assert_select "a.stats-bars__bar[rel=nofollow]", count: 0
     # エンティティ型・特徴チップ(ジャンルは Plotly サンバースト側で遷移する)
     assert_select "a[href=?]", words_path(entity_type_id: entity_types(:book_title).id)
     assert_select "a[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id)
+  end
+
+  # インデックスされない面へ辿らせるとクロール予算を食うだけなので nofollow を付ける。
+  test "index されない面(キーワード検索・範囲指定)へのリンクは nofollow" do
+    # 「◯文字以上」の棒は読みが DISTRIBUTION_OVERFLOW_MIN 以上の語があって初めて出る
+    long = Word.create!(surface: "とても長い見出し語", annotated_at: Time.current)
+    long.word_senses.create!(reading: "ア" * SiteStatistics::DISTRIBUTION_OVERFLOW_MIN)
+
+    get stats_path
+    # 級数見本の形態素チップ → キーワード検索(q=)は重複コンテンツで必ず noindex
+    assert_select "a.scale-specimen__link", minimum: 1
+    assert_select "a.scale-specimen__link:not([rel=nofollow])", count: 0
+    # 波形バーの「◯以上」だけは範囲指定(reading_length_min)なので noindex
+    assert_select "a.wave-chart__bar[href*=?][rel=nofollow]", "reading_length_min"
+    # ちょうどの値の棒は単一ファセットとして index されるので辿らせる
+    assert_select "a.wave-chart__bar[href=?]:not([rel=nofollow])", words_path(reading_length: 3)
   end
 
   test "ジャンルのサンバーストは大→中→小の階層データ(Plotly 形式)を埋め込む" do

@@ -60,10 +60,46 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
     assert_select "link[rel=canonical][href=?]", "#{HOST}/words?page=2"
   end
 
-  test "読みの長さ単独はインデックス対象ファセットではなく noindex,follow" do
+  # 読みの文字数・モーラ数・言語的特徴は、値域が有限で「読みが15文字の長い言葉」のように
+  # 本サイトの検索需要そのものになる面。統計・索引から常時リンクしているので index する。
+  test "読みの文字数の単一ファセットは index + 動的見出し" do
     get words_path(reading_length: 7)
     assert_response :success
+    assert_select "meta[name=robots]", count: 0
+    assert_select "h1.page-title", text: "読みが7文字の長い言葉"
+    assert_select "link[rel=canonical][href=?]", "#{HOST}/words?reading_length=7"
+  end
+
+  test "モーラ数の単一ファセットは index + 動的見出し" do
+    get words_path(mora_count: 12)
+    assert_response :success
+    assert_select "meta[name=robots]", count: 0
+    assert_select "h1.page-title", text: "12モーラの長い言葉"
+    assert_select "link[rel=canonical][href=?]", "#{HOST}/words?mora_count=12"
+  end
+
+  test "言語的特徴の単一ファセットは index + 動的見出し" do
+    feature = linguistic_features(:rendaku)
+    get words_path(linguistic_feature_id: feature.id)
+    assert_response :success
+    assert_select "meta[name=robots]", count: 0
+    assert_select "h1.page-title", text: "#{feature.name}の長い言葉"
+    assert_select "link[rel=canonical][href=?]", "#{HOST}/words?linguistic_feature_id=#{feature.id}"
+  end
+
+  # 範囲指定は値の取り方が無限にあり、内容も他の面と重なるためインデックスしない。
+  test "読みの長さの範囲指定は noindex,follow" do
+    get words_path(reading_length_min: 7)
+    assert_response :success
     assert_select "meta[name=robots][content=?]", "noindex,follow"
+  end
+
+  # シャッフルは並び違いの重複でしかないので index せず、クロールもさせない。
+  test "シャッフルは noindex,follow で、ボタンにも nofollow が付く" do
+    get words_path(sort: "shuffle")
+    assert_response :success
+    assert_select "meta[name=robots][content=?]", "noindex,follow"
+    assert_select ".entry-toolbar__shuffle[rel=nofollow]", count: 1
   end
 
   test "検索フォーム(/search)は noindex,follow" do

@@ -118,7 +118,8 @@
             <%= link_to t("layouts.nav.genres"), genres_path %>
             <%= link_to t("layouts.nav.browse"), browse_path %>
             <%= link_to t("layouts.nav.advanced_search"), search_path %>
-            <%= link_to t("layouts.footer.random"), random_words_path %>
+            <%# 毎回別の語へ 302 する導線。クロールしても意味がないので nofollow %>
+            <%= link_to t("layouts.footer.random"), random_words_path, rel: "nofollow" %>
           </nav>
         </div>
 
