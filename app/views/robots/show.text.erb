@@ -5,11 +5,13 @@ User-agent: *
 # 一本化する: ブロックすると Google が noindex を読めず「robots.txt によりブロックされました」
 # として残り続けるため(Google 公式の推奨も「noindex を効かせたいならブロックしない」)。
 # 条件を引き継ぐ /search?... へのリンク側は rel="nofollow" でクロールを抑える。
-# シャッフルのシード付き URL は「その場限りの並び」でしかなく、辿らせると URL が
-# 無限に増える(2026-08 の Search Console で noindex 除外 3,186 件の主因)。
-# 生成元は絶ったが、既に知られている分の再クロールも止めたいのでここで遮断する。
-# /search と違い、こちらは元から実在しないページなので noindex を読ませる必要がない。
-Disallow: /*seed=
+#
+# シャッフルのシード付き URL(?seed=)も、同じ理由でここではブロックしない。Issue 80 で
+# 一度 `Disallow: /*seed=` を入れたが、既知の 3,186 件は当時「noindex + canonical は
+# /words」を宣言済みで、ブロックすると Google がその訂正を読めなくなる(宣言が凍結され、
+# サイトのハブである /words へ noindex が伝播したままになる)。canonical を自身へ向ける
+# 修正と併せて撤去し、再クロールさせて宣言を上書きさせる。生成元は既に絶ってあるので
+# 新しい ?seed= が増えることはなく、既知の分は noindex で落ちる。
 Disallow: /admin
 Disallow: /session
 

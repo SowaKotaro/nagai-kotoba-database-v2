@@ -11,6 +11,10 @@ class WordsController < ApplicationController
   def index
     @page = [ params[:page].to_i, 1 ].max
     @search = WordSenseSearch.new(search_filter_params)
+    # 実在しないマスタ id を指すファセット面は、元から存在しないページなので 404 にする。
+    # 黙って無視すると /words の複製や空の面が任意の数値ぶん作れてしまう(WordSenseSearch)。
+    raise ActiveRecord::RecordNotFound if @search.unknown_master_ids?
+
     # seed はシャッフルの引き直し用(「シャッフルする」ボタンが毎回新しい値を振る)。
     @sort = WordSort.new(params[:sort], seed: params[:seed])
     # 不正な正規表現(URL 直打ち等)は条件から外して検索されるので、外したことを伝える。

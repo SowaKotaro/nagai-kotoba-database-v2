@@ -50,11 +50,9 @@ module WordsHelper
 
   # 単一ファセット(Issue 17)の一覧に付ける動的見出し(title/h1 兼用)。
   # インデックス対象の単一ファセットでなければ nil を返す(=素の「単語一覧」を使う)。
-  FACET_MASTERS = {
-    genre_id: Genre, part_of_speech_id: PartOfSpeech,
-    entity_type_id: EntityType, word_origin_id: WordOrigin,
-    linguistic_feature_id: LinguisticFeature
-  }.freeze
+  # マスタを引いて名前を見出しにする軸。実在しない id の検出と同じ対応表を使う
+  # (片方だけ軸が増えると、見出しの出ない面や 404 にならない面が生まれるため)。
+  FACET_MASTERS = WordSenseSearch::MASTER_FACETS
 
   # マスタを持たず、値(かな1文字)をそのまま見出しに使うファセット。
   CHAR_FACET_KEYS = %i[first_char last_char].freeze
@@ -107,7 +105,14 @@ module WordsHelper
 
   # canonical に使う正規化済みのパス(Issue 17)。
   # 単一ファセットは実際のリンクと同じスカラ形、それ以外は条件をキー順に整列した自身。
-  def canonical_index_path(search, page)
+  #
+  # 並び順(sort)も canonical に含める。既定以外の並びは「同じ集合の順列違い」なので
+  # noindex になるが、noindex のページが**他の URL** を canonical に指すと、その指し先へ
+  # noindex が伝播しうる(Google の公式ガイダンス)。含めないと /words?sort=… が揃って
+  # /words を正規版に指名してしまい、サイトのハブごと巻き添えになる。自身を指させて断つ。
+  # シャッフルの seed は URL に載せない値なので、canonical も seed 抜きの1本に寄せる
+  # (指し先も noindex なので伝播しても害が無く、既知の seed 付き URL を1本に集約できる)。
+  def canonical_index_path(search, page, sort = nil)
     facet = search.indexable_facet
     params =
       if facet
@@ -117,6 +122,7 @@ module WordsHelper
       else
         {}
       end
+    params[:sort] = sort.key if sort && !sort.default?
     params[:page] = page if page > 1
     words_path(params)
   end

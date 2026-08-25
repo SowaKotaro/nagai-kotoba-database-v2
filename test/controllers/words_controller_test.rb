@@ -514,11 +514,14 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   # シードはサーバ側でリクエストごとに振られる(URL には現れない)。
   # 「開くたびに引き直す」こと自体は WordSortTest で検証する。
+  # canonical は自身(seed 抜きの ?sort=shuffle)を指す。noindex のページが他の URL を
+  # canonical に指名すると、その指し先へ noindex が伝播しうるため。
   test "シード無しの sort=shuffle も普通に開けて noindex になる" do
     get words_path(sort: "shuffle")
     assert_response :success
     assert_select "meta[name=robots][content=?]", "noindex,follow"
-    assert_select "link[rel=canonical][href=?]", "#{Rails.application.config.x.canonical_host}/words"
+    assert_select "link[rel=canonical][href=?]",
+                  "#{Rails.application.config.x.canonical_host}/words?sort=shuffle"
   end
 
   test "未知の sort は既定(収録が新しい順)に畳む" do

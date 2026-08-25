@@ -26,6 +26,13 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".rank-board__more[href=?]", words_path(sort: "dakuten_desc")
   end
 
+  # 遷移先は必ず noindex(同じ集合の順列違い)なので、クロールさせる価値が無い。
+  test "「もっと見る」は nofollow(遷移先が必ず noindex のため)" do
+    get rankings_path
+    boards = css_select("section.rank-board").size
+    assert_select ".rank-board__more[rel=nofollow]", count: boards
+  end
+
   test "行は順位・見出し語・指標値を持ち、上位3位は刻印になる" do
     get rankings_path
     assert_select "#rank-length-desc .rank-row", count: 2
