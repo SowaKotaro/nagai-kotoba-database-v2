@@ -13,10 +13,18 @@ module ApplicationHelper
   end
 
   # canonical と og:url。既定は本番ホスト + 現在のパス(クエリは含めない)。
-  # ファセット等でパスを差し替えたいページは content_for(:canonical_path) を設定する(Issue 17)。
+  # ファセット等でパスを差し替えたいページは canonical_path(...) で設定する(Issue 17)。
   def canonical_url
-    path = content_for?(:canonical_path) ? content_for(:canonical_path).to_s : request.path
-    absolute_site_url(path)
+    absolute_site_url(@canonical_path.presence || request.path)
+  end
+
+  # canonical のパスをページ側から指定する。
+  # ここだけ content_for を使わないのは二重エスケープを避けるため。content_for は値を
+  # HTML エスケープして貯めるので、クエリの & が &amp; になり、レイアウトの <%= %> で
+  # もう一度エスケープされて ?a=1&amp;amp;b=2 になる。ブラウザ/クローラから見ると
+  # 「amp;b」という実在しないパラメータ名の URL が canonical に出てしまう。
+  def canonical_path(path)
+    @canonical_path = path
   end
 
   # og:image の絶対URL。ページ側の content_for(:og_image) を優先し、無ければ既定カード。

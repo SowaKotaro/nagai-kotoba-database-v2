@@ -22,10 +22,21 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Disallow: /search"
   end
 
-  # シャッフルのシード付き URL は無限に増やせてしまうので、クロールごと止める。
-  # /search と違い元から実在しないページなので、noindex を読ませる必要がない。
-  test "シャッフルのシード付き URL は Disallow する" do
+  # シード付き URL も Disallow しない。既知の分は「noindex + canonical は /words」を
+  # 宣言済みで、ブロックすると Google がその訂正(canonical を自身へ向けた修正)を
+  # 読めなくなり、サイトのハブへ noindex が伝播したまま凍結されるため。
+  # 生成元は絶ってあるので、新しいシード付き URL が増えることはない。
+  test "シャッフルのシード付き URL は Disallow しない(noindex と canonical を読ませる)" do
     get robots_path
-    assert_includes response.body, "Disallow: /*seed="
+    # 撤去の経緯をコメントに残してあり本文には文字列として現れるので、
+    # 実際に効くディレクティブ行(コメント以外)だけを見る。
+    assert_not_includes robots_directives, "Disallow: /*seed="
+  end
+
+  private
+
+  # コメント・空行を除いた、クローラが実際に読むディレクティブ行。
+  def robots_directives
+    response.body.lines.map(&:strip).grep_v(/\A(#|\z)/)
   end
 end

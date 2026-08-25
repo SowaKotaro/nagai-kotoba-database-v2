@@ -111,6 +111,29 @@ class WordSenseSearch
     reading_length mora_count linguistic_feature_id
   ].freeze
 
+  # マスタの id で絞り込むファセットと、その id が属するモデル。
+  # 見出しの解決(WordsHelper)と、実在しない id の検出(下記)で共有する。
+  MASTER_FACETS = {
+    genre_id: Genre, part_of_speech_id: PartOfSpeech, entity_type_id: EntityType,
+    word_origin_id: WordOrigin, linguistic_feature_id: LinguisticFeature
+  }.freeze
+
+  # マスタの id を指定していて、そのうち1つでも実在しないか。
+  #
+  # 実在しない id を黙って無視すると、面が2通りの形で無限に湧く:
+  #   - genre_id は絞り込みごと落ちるため、/words の完全な複製が任意の数値ぶん作れる
+  #     (しかも index 可能・自己 canonical)
+  #   - 他の軸は 0 件になるため、中身の無い面が同じく任意の数値ぶん作れる
+  # どちらも「元から存在しないページ」なので、コントローラで 404 にして URL 空間を閉じる。
+  def unknown_master_ids?
+    MASTER_FACETS.any? do |key, model|
+      ids = public_send(key)
+      next false if ids.empty?
+
+      model.where(id: ids).count != ids.map(&:to_i).uniq.size
+    end
+  end
+
   # 条件がちょうど1つで、それが単一値のインデックス許可ファセットなら [key, value] を返す。
   # それ以外(複数条件・キーワード・複数選択・非対象の軸)は nil。
   def indexable_facet

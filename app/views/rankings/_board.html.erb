@@ -5,7 +5,9 @@
 <section class="rank-board" id="rank-<%= ranking.key.dasherize %>">
   <div class="rank-board__header">
     <h2 class="rank-board__title"><%= icon ranking.icon %><%= ranking.title %></h2>
-    <%= link_to words_path(sort: ranking.key), class: "rank-board__more icon-label" do %>
+    <%# 遷移先は「同じ集合の順列違い」で必ず noindex になる。クロールさせる価値が無いので
+        nofollow を付ける(全語は sitemap と素の一覧のページ送りから辿れる)。 %>
+    <%= link_to words_path(sort: ranking.key), class: "rank-board__more icon-label", rel: "nofollow" do %>
       <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
     <% end %>
   </div>

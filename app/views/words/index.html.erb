@@ -7,10 +7,15 @@
 %>
 <% heading = facet_heading(@search) %>
 <% page_heading = heading || t("words.index.title") %>
-<%# 並び替え(sort)はコンテンツが同じ順列違いなので、既定順のときだけインデックスを許可する %>
-<% indexable = @page == 1 && @sort.default? && (@search.indexable_facet.present? || !@search.conditions?) %>
+<%# 並び替え(sort)はコンテンツが同じ順列違いなので、既定順のときだけインデックスを許可する。
+    結果が0件のファセット面も index させない: 実在する軸でも公開語がまだ無いもの
+    (例: 連声・音韻添加)や、reading_length=99 のように値だけが無いものがあり、
+    中身の無い面をクロールさせても「クロール済み - インデックス未登録」が増えるだけのため。
+    実在しないマスタ id は、そもそもコントローラで 404 にしている。 %>
+<% indexable = @page == 1 && @sort.default? &&
+                 (@search.conditions? ? @search.indexable_facet.present? && @total_count.positive? : true) %>
 <% content_for :robots, "noindex,follow" unless indexable %>
-<% content_for :canonical_path, canonical_index_path(@search, @page) %>
+<% canonical_path canonical_index_path(@search, @page, @sort) %>
 <% content_for :title, page_heading %>
 <% content_for :description,
      heading ? t("words.index.facet_description", label: heading) : t("words.index.description") %>
