@@ -163,6 +163,8 @@ bin/rails server              # 起動
   に置く（中身は gitignore 済み）。3つの流れは [`research/README.md`](../research/README.md) を参照。
 - 1語だけ注釈をやり直す `/reannotation` は例外で、**JSON を会話に貼って起動し、結果もチャットに返す**
   （携帯から回すため）。入力はアノテーション・コンソールの「再調査用JSON →」（`ReannotationExport`）でコピーする。
+  claude.ai（スマホアプリ含む）の素のチャットで使うバンドルは `bash tools/claude-ai-skill/build.sh` で
+  リポジトリの原本から生成する（出力は `tmp/nagai-kotoba-reannotation.zip`。原本を直したら再実行して差し替える）。
 - step2 の「調査結果（JSON）を反映」欄にその JSON を貼ると、MeCab の暫定読みと突き合わせて行ごとに
   一致／不一致／調査のみを表示し、候補チップ（Stimulus `reading-choice`）で読みを確定できる。
 - 管理者は seed が credentials / 環境変数から作成する。ローカルで任意の値にするには:
