@@ -36,10 +36,23 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stats-grid__item dd", text: /\A0/
   end
 
+  # 看板の「最長の読み」は、下の「読みが長い言葉」の1位と同じ値でなければならない
+  # (別々に数えると、片方だけ古い値が出て食い違う)。
+  test "看板の最長の読みは、読みが長い言葉の1位と同じ字数になる" do
+    get root_path
+    assert_response :success
+
+    longest = css_select(".home-column").last.css(".home-column__meta").first.text
+    figure = css_select(".stats-grid--rows .stats-grid__item")
+             .find { |item| item.css("dt").text == I18n.t("home.index.stats.longest") }
+    assert_not_nil figure, "看板に「最長の読み」の行がある"
+    assert_equal longest.gsub(/[^0-9]/, ""), figure.css("dd").text.gsub(/[^0-9]/, "")
+  end
+
   test "トップに最長ランキングと、ランキングページへの導線がある" do
     get root_path
     assert_response :success
-    assert_select "h2.home-column__title", text: /#{Regexp.escape(I18n.t("home.index.ranking"))}/
+    assert_select "h2.section-title .section-title__ja", text: I18n.t("home.index.ranking")
     # 最長以外の番付も束ねたランキングページへ送る(全順位はその先の「もっと見る」から)
     assert_select "a[href=?]", rankings_path
     # 公開(注釈済み)の語がランキングに並ぶ

@@ -1,29 +1,41 @@
 <%# ランキング1枠。細罫のパネルに、見出し行 → 順位表 の順で組む。
-    順位は等幅(上位3位は朱ベタの刻印)、語は明朝、右端に指標値。
+    順位は等幅(上位3位だけ色を付ける)、語は太字、右端に指標値。
     「もっと見る」は同じ並びキーの単語一覧へ渡し、そこから先は通常のページ送りで全件辿れる。
     locals: ranking(WordRanking), rows(#top の結果) %>
 <section class="rank-board" id="rank-<%= ranking.key.dasherize %>">
   <div class="rank-board__header">
-    <h2 class="rank-board__title"><%= icon ranking.icon %><%= ranking.title %></h2>
-    <%# 遷移先は「同じ集合の順列違い」で必ず noindex になる。クロールさせる価値が無いので
-        nofollow を付ける(全語は sitemap と素の一覧のページ送りから辿れる)。 %>
-    <%= link_to words_path(sort: ranking.key), class: "rank-board__more icon-label", rel: "nofollow" do %>
-      <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
+    <div class="rank-board__head-main">
+      <h2 class="rank-board__title"><%= icon ranking.icon %><%= ranking.title %></h2>
+      <%# 遷移先は「同じ集合の順列違い」で必ず noindex になる。クロールさせる価値が無いので
+          nofollow を付ける(全語は sitemap と素の一覧のページ送りから辿れる)。 %>
+      <%= link_to words_path(sort: ranking.key), class: "rank-board__more icon-label", rel: "nofollow" do %>
+        <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
+      <% end %>
+    </div>
+
+    <%# この板の性格を一言で表す数(1位の値)を、線だけの数字で置く(docs/design.md §5.9)。
+        切替タブで板が入れ替わると数字も入れ替わる。画面に出るのは常に1つだけ %>
+    <% if (top_row = rows.first) %>
+      <div class="rank-board__figure">
+        <span class="figure-number figure-number--sm"><%= ranking.decimal? ? number_with_precision(top_row[:value], precision: 2) : number_with_delimiter(top_row[:value]) %></span>
+        <span class="figure-caption"><%= t("labels.en.max", unit: ranking.unit) %></span>
+      </div>
     <% end %>
   </div>
 
   <ol class="rank-list">
     <% rows.each do |row| %>
       <li class="rank-row">
-        <%# 1位は朱ベタ、2〜3位は朱枠、それ以外は素の等幅で段を作る %>
+        <%# 順位は等幅で淡々と置き、上位だけ文字色を一段濃くして段を作る(面では塗らない)。
+            同率1位が複数あるとベタ塗りが連続して誤読を招くため、塗りはやめた %>
         <% rank_modifiers = [ ("rank-row__no--top" if row[:rank] <= 3), ("rank-row__no--first" if row[:rank] == 1) ].compact %>
-        <span class="rank-row__no <%= rank_modifiers.join(" ") %>"><%= format("%02d", row[:rank]) %></span>
+        <span class="rank-row__no <%= rank_modifiers.join(" ") %>"><%= row[:rank] %></span>
         <span class="rank-row__main">
           <span class="rank-row__reading"><%= row[:readings].join("、") %></span>
           <%= link_to row[:surface], word_path(row[:id]), class: "rank-row__surface" %>
         </span>
         <span class="rank-row__value">
-          <span class="rank-row__number"><%= ranking.decimal? ? number_with_precision(row[:value], precision: 2) : number_with_delimiter(row[:value]) %></span>
+          <span class="rank-row__number <%= "rank-row__number--first" if row[:rank] == 1 %>"><%= ranking.decimal? ? number_with_precision(row[:value], precision: 2) : number_with_delimiter(row[:value]) %></span>
           <span class="rank-row__unit"><%= ranking.unit %></span>
         </span>
       </li>

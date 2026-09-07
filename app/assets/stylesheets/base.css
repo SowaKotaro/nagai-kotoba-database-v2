@@ -1,86 +1,92 @@
-/* 素のタグへの基本設定(docs/design.md)。構造は罫線と余白で作り、面や影では作らない。 */
+/* 素のタグへの基本設定(docs/design.md)。
+   手本(しずかなインターネット)の骨格:
+   - 太字を使わない。強さは「級数」と「文字の濃さ」だけで作る
+   - 字間をわずかに開け、行間を広く取る
+   - リンクは色を変えず、細い下線で示す */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* 固定ヘッダーの下にアンカー/フォーカス先が隠れないよう、スクロール位置を上げる */
 html {
-  scroll-padding-top: 88px;
+  scroll-padding-top: var(--space-5);
+  -webkit-text-size-adjust: 100%;
 }
 
-/* 地は 32px の方眼(docs/design.md §3)。「データを記録する紙」の含みを地に持たせる。
-   画像も JS も使わず、繰り返しグラデーション 2 本(縦罫・横罫)だけで描く。
-   ヘッダー・フッター・パネルは --bg / --paper のベタを持つので、
-   方眼は本文の地にだけ現れる。 */
+/* 地はコンテンツの面と同じ白。色を持つのはヘッダー(--bg)とフッター(--bg-soft)だけで、
+   その 2 つと色が変わることで、罫も影も引かずに上下の境目が出る
+   (2026-09-04 オーナー指示「ヘッダーとの境目が現在だとわからない」) */
 body {
   margin: 0;
-  background-color: var(--bg);
-  background-image:
-    repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px 32px),
-    repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px 32px);
-  color: var(--ink);
-  font-family: var(--font-gothic);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.95;
+  line-height: 1.9;
+  letter-spacing: var(--tracking);
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
-/* 見出しは明朝。本文より字間をわずかに開け、行間は詰めて塊に見せる */
+/* 見出しも本文と同じ書体・同じ太さ(400)。大きさと余白だけで段を作る */
 h1, h2, h3, h4 {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  line-height: 1.45;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.75;
   margin: 0;
-  letter-spacing: 0.03em;
 }
 
 p {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
 }
 
+/* リンクは本文と同じ色。細い下線だけで「押せる」ことを示す(青くしない) */
 a {
-  color: var(--ink);
+  color: inherit;
   text-decoration: underline;
-  text-decoration-color: var(--rule-mid);
-  text-underline-offset: 4px;
-  transition: color var(--transition), text-decoration-color var(--transition),
-              background var(--transition), border-color var(--transition);
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 5px;
+  transition: text-decoration-color var(--transition), color var(--transition),
+              background-color var(--transition), border-color var(--transition);
 }
 
 a:hover {
-  text-decoration-color: var(--ink);
+  text-decoration-color: var(--text-muted);
 }
 
-/* テキスト選択は朱(細部の作り込み) */
 ::selection {
-  background: var(--shu);
-  color: var(--bg);
+  background: var(--bg-tint);
+  color: var(--text);
 }
 
-/* フォーカスリングは消さず、朱で明示的に再定義する */
+/* フォーカスリングは消さない。色を持たせず、文字色の細いリングにする */
 :focus-visible {
-  outline: 2px solid var(--shu);
+  outline: 2px solid var(--text-muted);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 button {
   font-family: inherit;
+  letter-spacing: inherit;
+}
+
+/* 太字は使わない方針なので、b / strong もごく僅かな差にとどめる */
+b, strong {
+  font-weight: 500;
 }
 
 img {
   max-width: 100%;
 }
 
-/* 読み仮名。必ず <ruby> を使う(疑似ルビ禁止)。既定は弱い墨、見出し語では朱 */
+/* 読み仮名。必ず <ruby> を使う(疑似ルビ禁止) */
 rt {
-  font-family: var(--font-gothic);
+  font-family: inherit;
   font-weight: 400;
-  font-size: 13px;
-  color: var(--ink-3);
-  letter-spacing: 0.14em;
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 table {
@@ -88,7 +94,9 @@ table {
   width: 100%;
 }
 
+/* ローマ字・パターン・ID など「機械が読む値」だけを等幅にする */
 .mono {
   font-family: var(--font-mono);
-  letter-spacing: 0.06em;
+  font-size: 0.92em;
+  letter-spacing: 0;
 }

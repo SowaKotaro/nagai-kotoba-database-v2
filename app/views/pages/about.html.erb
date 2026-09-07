@@ -5,10 +5,14 @@
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("pages.about.title"), nil ] ] %>
 
 <header class="page-header">
-  <p class="page-eyebrow"><span><%= t("pages.about.title") %></span></p>
+  <p class="label-en"><%= t("labels.en.about") %></p>
   <h1 class="page-title"><%= t("layouts.brand") %></h1>
   <p class="page-lead"><%= t("pages.about.lead") %></p>
 </header>
+
+<%# サイトの成り立ちを表す一枚。実素材が入ったらこの枠ごと <img> に差し替える %>
+<%= render "shared/image_slot", label: t("pages.about.image"),
+      hint: t("pages.about.image_hint"), modifier: "image-slot--banner" %>
 
 <div class="prose">
   <section>

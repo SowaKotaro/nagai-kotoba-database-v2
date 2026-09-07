@@ -1,4 +1,4 @@
-# 五十音を単一の「円環」に配置し、ある読みを一筆書きの朱線(印章)として描くための値オブジェクト。
+# 五十音を単一の「円環」に配置し、ある読みを一筆書きの線として描くための値オブジェクト。
 #
 # 配置:
 #   - 基本46字(ア〜ン)を五十音順で外周の円上に等間隔で並べる(頂点=ア、時計回りにン)。
@@ -36,6 +36,13 @@ class KanaRing
   # 基本46字に載らない文字(長音符など)は経路から除く。
   def self.path(reading)
     reading.to_s.each_char.filter_map { |char| node_for(char) }
+  end
+
+  # 一筆書きの折れ線の全長(viewBox の単位)。
+  # 線を1本ずつ描き足すアニメーション(stroke-dasharray / dashoffset)に渡す長さで、
+  # ブラウザの getTotalLength() を使わずに済ませるためサーバ側で出しておく。
+  def self.stroke_length(reading)
+    path(reading).each_cons(2).sum { |from, to| Math.hypot(to.cx - from.cx, to.cy - from.cy) }.round(2)
   end
 
   # 経路が通った基本字の集合(点灯させる字の判定に使う)。

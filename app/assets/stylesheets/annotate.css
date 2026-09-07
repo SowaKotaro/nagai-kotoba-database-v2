@@ -1,305 +1,297 @@
 /* =====================================================================
-   アノテーション・コンソール(管理者専用)。docs/design.md 準拠。
-   紙×墨＋朱一色 / 角丸・影・ピルなし / 巨大明朝 × 等幅ラベル。
-   チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
-   ===================================================================== */
+ アノテーション・コンソール(管理者専用)。docs/design.md 準拠。
+ 本編と同じ器(白い面・細罫・角丸・アクセントは青一色)のまま、
+ 1画面で多くを捌けるよう級数と余白だけを詰めた高密度レイアウト。
+ チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
+ ===================================================================== */
 
 /* スマホ・タブレットでのダブルタップ拡大を無効化し、連続タップでサクサク
-   アノテーションを流せるようにする。ピンチ操作での拡大は残す(アクセシビリティ配慮)。 */
+ アノテーションを流せるようにする。ピンチ操作での拡大は残す(アクセシビリティ配慮)。 */
 .ann { position: relative; touch-action: manipulation; }
 
-/* 上部ステータス(墨2px下端) */
+/* 上部ステータス */
 .ann-bar {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: var(--space-2); margin-bottom: var(--space-4);
+ display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+ border-bottom: 1px solid var(--border);
+ padding-bottom: var(--space-2); margin-bottom: var(--space-4);
 }
-.ann-bar__counter { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-2); }
-.ann-bar__counter b { color: var(--ink); font-weight: 600; }
-.ann-bar__counter .rest { color: var(--shu); }
-.ann-bar__legend { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); }
-.ann-bar__legend key { color: var(--shu); border: 1px solid var(--rule-mid); padding: 1px 5px; margin-right: 6px; }
+.ann-bar__counter { font-size: 13px; color: var(--text-muted); }
+.ann-bar__counter b { color: var(--text); font-weight: 400; }
+.ann-bar__counter .rest { color: var(--text); }
+.ann-bar__legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-subtle); }
+.ann-bar__legend key { font-family: var(--font-mono); color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 1px 5px; margin-right: 6px; }
 
-/* 提案キューの絞り込み・並べ替え(Issue 67)。極小の等幅リンク、選択中は朱 */
-.ann-queue-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; margin-bottom: var(--space-4); }
-.ann-queue-filter__label { color: var(--ink-3); }
-.ann-queue-filter__link { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; }
-.ann-queue-filter__link:hover { color: var(--ink); border-bottom-color: var(--rule-mid); }
-.ann-queue-filter__link.is-on { color: var(--shu); border-bottom-color: var(--shu); }
-.ann-queue-filter__sep { color: var(--rule-mid); }
+/* 提案キューの絞り込み・並べ替え(Issue 67)。小さなリンク、選択中はアクセント色 */
+.ann-queue-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; margin-bottom: var(--space-4); }
+.ann-queue-filter__label { color: var(--text-subtle); }
+.ann-queue-filter__link { color: var(--text-muted); text-decoration: none; }
+.ann-queue-filter__link:hover { color: var(--text); text-decoration: underline; }
+.ann-queue-filter__link.is-on { color: var(--text); font-weight: 400; }
+.ann-queue-filter__sep { color: var(--border-strong); }
 
-/* 見本語 */
-.ann-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-3); display: flex; gap: 14px; align-items: center; }
-.ann-eyebrow .no { color: var(--shu); }
-.ann-word { font-family: var(--font-mincho); font-weight: 600; font-size: clamp(34px, 7vw, 76px); line-height: 1.06; margin: var(--space-1) 0 2px; letter-spacing: 0.01em; overflow-wrap: anywhere; }
-.ann-word-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding-bottom: var(--space-4); border-bottom: 2px solid var(--ink); display: flex; gap: 14px; align-items: baseline; }
+/* 対象語 */
+.ann-eyebrow { font-size: 12px; color: var(--text-subtle); display: flex; gap: 12px; align-items: center; }
+.ann-eyebrow .no { font-family: var(--font-mono); color: var(--text-muted); }
+.ann-word { font-weight: 400; font-size: clamp(24px, 4vw, 34px); line-height: 1.3; margin: var(--space-1) 0 2px; overflow-wrap: anywhere; }
+.ann-word-meta { font-size: 12px; color: var(--text-subtle); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: baseline; }
 /* 1語の再調査用 JSON へ(Claude Code の /reannotation に渡す) */
-.ann-word-meta__reresearch { margin-left: auto; color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule-mid); padding-bottom: 1px; }
-.ann-word-meta__reresearch:hover { color: var(--shu); border-bottom-color: var(--shu); }
+.ann-word-meta__reresearch { margin-left: auto; color: var(--text); text-decoration: none; }
+.ann-word-meta__reresearch:hover { text-decoration: underline; }
 
 /* 用語解説(Issue 39)。特徴選択の脇に置く控えめな開閉パネル(hover 限定にしない) */
 .ann-glossary { margin-bottom: var(--space-2); }
-.ann-glossary__summary { cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); padding: 2px 0; }
-.ann-glossary__summary:hover { color: var(--shu); }
-.ann-glossary[open] .ann-glossary__summary { color: var(--ink); }
-.ann-glossary__list { margin: var(--space-2) 0 0; border: 1px solid var(--rule-mid); padding: var(--space-3); max-height: 320px; overflow-y: auto; }
-.ann-glossary__item { display: grid; grid-template-columns: 120px 1fr; gap: 2px 14px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
+.ann-glossary__summary { cursor: pointer; font-size: 12px; color: var(--text-subtle); padding: 2px 0; }
+.ann-glossary__summary:hover { color: var(--text); }
+.ann-glossary[open] .ann-glossary__summary { color: var(--text); }
+.ann-glossary__list { margin: var(--space-2) 0 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); padding: var(--space-3); max-height: 320px; overflow-y: auto; }
+.ann-glossary__item { display: grid; grid-template-columns: 120px 1fr; gap: 2px 14px; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .ann-glossary__item:last-child { border-bottom: 0; }
-.ann-glossary__item dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink); padding-top: 2px; }
-.ann-glossary__item dd { margin: 0; font-size: 12px; line-height: 1.7; color: var(--ink-2); }
-.ann-glossary__examples { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.02em; color: var(--ink-3); margin-top: 2px; }
+.ann-glossary__item dt { font-size: 12px; font-weight: 400; color: var(--text); padding-top: 2px; }
+.ann-glossary__item dd { margin: 0; font-size: 12px; line-height: 1.7; color: var(--text-muted); }
+.ann-glossary__examples { display: block; font-size: 11px; color: var(--text-subtle); margin-top: 2px; }
 @media (max-width: 560px) {
-  .ann-glossary__item { grid-template-columns: 1fr; }
+ .ann-glossary__item { grid-template-columns: 1fr; }
 }
 
-/* Claude の提案パネル(Issue 38)。朱の1px枠で「機械の下書き」であることを示す */
-.ann-proposal { border: 1px solid var(--shu); padding: var(--space-3) var(--space-4); margin-top: var(--space-4); }
+/* Claude の提案パネル(Issue 38)。左罫のアクセントで「機械の下書き」であることを示す */
+.ann-proposal { border: 1px solid var(--border); border-left: 3px solid var(--text); border-radius: var(--radius); background: var(--bg-soft); padding: var(--space-3) var(--space-4); margin-top: var(--space-4); }
 .ann-proposal__head { display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-2); }
 .ann-proposal__head .spacer { flex: 1; }
-.ann-proposal__title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; color: var(--shu); }
-.ann-proposal__confidence { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--rule-mid); padding: 1px 8px; color: var(--ink-2); }
-.ann-proposal__confidence--low { color: var(--shu); border-color: var(--shu); }
+.ann-proposal__title { font-size: 12px; font-weight: 400; color: var(--text); }
+.ann-proposal__confidence { font-size: 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--text-muted); }
+.ann-proposal__confidence--low { color: var(--danger); border-color: var(--danger); }
 /* 反映済み/見送りの状態バッジ(注釈済みの語を見直しているとき) */
-.ann-proposal__status { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--ink); padding: 1px 8px; color: var(--on-ink); background: var(--ink); }
-.ann-proposal__status--dismissed { color: var(--ink-2); background: transparent; border-color: var(--rule-mid); }
-/* 立項スコア(Issue 39)。3以下は朱でオーナー判断を促す */
-.ann-proposal__entry { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; border: 1px solid var(--rule-mid); padding: 1px 8px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.ann-proposal__entry--concern { color: var(--shu); border-color: var(--shu); }
-.ann-proposal__notes--entry { color: var(--shu); }
-/* 複数語義(同音異義語・Issue 41)。語義ごとに細罫で区切り、極小の等幅で語義番号を打つ */
-.ann-proposal__senses-note { font-size: 12px; color: var(--ink-2); margin: 0 0 var(--space-2); }
-.ann-proposal__sense { border-top: 1px solid var(--rule); padding-top: var(--space-2); margin-top: var(--space-2); }
+.ann-proposal__status { font-size: 11px; border: 1px solid var(--success); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--success); }
+.ann-proposal__status--dismissed { color: var(--text-subtle); border-color: var(--border-strong); }
+/* 立項スコア(Issue 39)。3以下は赤でオーナー判断を促す */
+.ann-proposal__entry { font-size: 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ann-proposal__entry--concern { color: var(--danger); border-color: var(--danger); }
+.ann-proposal__notes--entry { color: var(--danger); }
+/* 複数語義(同音異義語・Issue 41)。語義ごとに細罫で区切り、小さく語義番号を打つ */
+.ann-proposal__senses-note { font-size: 12px; color: var(--text-muted); margin: 0 0 var(--space-2); }
+.ann-proposal__sense { border-top: 1px solid var(--border); padding-top: var(--space-2); margin-top: var(--space-2); }
 .ann-proposal__sense:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
-.ann-proposal__sense-no { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--shu); margin-bottom: 4px; }
+.ann-proposal__sense-no { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted); margin-bottom: 4px; }
 .ann-proposal__grid { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; margin: 0; }
-.ann-proposal__grid dt { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); padding-top: 3px; }
+.ann-proposal__grid dt { font-size: 12px; color: var(--text-subtle); padding-top: 3px; }
 .ann-proposal__grid dd { margin: 0; font-size: 14px; }
-.ann-proposal__grid .sep { color: var(--shu); margin: 0 4px; }
-.ann-proposal__new { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--shu); border: 1px solid var(--shu); padding: 0 6px; margin-left: 6px; }
-/* 新設候補のワンタップ作成ボタン(Issue 66)。バッジと同じ見た目で、hover で朱反転 */
+.ann-proposal__grid .sep { color: var(--text-subtle); margin: 0 4px; }
+.ann-proposal__new { font-size: 11px; color: var(--text); border: 1px solid var(--text); border-radius: var(--radius-pill); padding: 0 8px; margin-left: 6px; }
+/* 新設候補のワンタップ作成ボタン(Issue 66)。バッジと同じ見た目で、hover で塗る */
 .ann-proposal__new-form { display: inline; margin: 0; }
-.ann-proposal__new--btn { background: transparent; cursor: pointer; line-height: 1.5; }
-.ann-proposal__new--btn:hover { background: var(--shu); color: var(--on-ink); }
-/* 提案パネルの特徴(該当部分つき)。1件ずつ縦に積み、該当部分は極小の等幅で添える */
+.ann-proposal__new--btn { background: transparent; cursor: pointer; line-height: 1.6; }
+.ann-proposal__new--btn:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
+/* 提案パネルの特徴(該当部分つき)。1件ずつ縦に積み、該当部分は小さく添える */
 .ann-proposal__feature { display: block; margin: 2px 0; }
-.ann-proposal__feature b { font-weight: 600; }
-.ann-proposal__feature-target { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-3); margin-left: 8px; }
-.ann-proposal__notes { font-size: 13px; color: var(--ink-2); margin: var(--space-2) 0 0; }
+.ann-proposal__feature b { font-weight: 400; }
+.ann-proposal__feature-target { font-size: 12px; color: var(--text-subtle); margin-left: 8px; }
+.ann-proposal__notes { font-size: 13px; color: var(--text-muted); margin: var(--space-2) 0 0; }
 
 /* スティッキー引き継ぎ(Issue 37)。アクションバー左端の小さなトグル */
-.ann-sticky { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-2); cursor: pointer; }
-.ann-sticky:has(.ann-sticky__input:checked) { color: var(--shu); }
+.ann-sticky { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); cursor: pointer; }
+.ann-sticky:has(.ann-sticky__input:checked) { color: var(--text); }
 
 /* 表層形の訂正(Issue 36: 編集画面をコンソールへ統合)。誤字直し用の控えめな1行 */
-.ann-surface { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: var(--space-3) 0 0; }
-.ann-surface__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); }
-/* 表層形は textarea。長い語(例: 50字超)も折り返して全文が見えるよう全幅・自動高。下線1本の見た目は維持 */
+.ann-surface { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: var(--space-3) 0 0; }
+.ann-surface__label { font-size: 12px; color: var(--text-subtle); }
+/* 表層形は textarea。長い語(例: 50字超)も折り返して全文が見えるよう全幅・自動高 */
 .ann-surface__input {
-  flex: 1 1 100%; width: 100%; box-sizing: border-box;
-  font-family: var(--font-mincho); font-weight: 500; font-size: 17px; line-height: 1.5;
-  border: 0; border-bottom: 1px solid var(--rule-mid); background: transparent;
-  padding: 4px 2px; margin: 0; resize: none; field-sizing: content;
-  min-height: 1.7em; white-space: pre-wrap; overflow-wrap: anywhere;
+ flex: 1 1 100%; width: 100%; box-sizing: border-box;
+ font-weight: 400; font-size: 16px; line-height: 1.5;
+ padding: 6px 10px; margin: 0; resize: none; field-sizing: content;
+ min-height: 2em; white-space: pre-wrap; overflow-wrap: anywhere;
 }
-.ann-surface__input:focus { border-bottom-color: var(--shu); }
-.ann-surface__note { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-3); }
+.ann-surface__note { font-size: 12px; color: var(--text-subtle); }
 
-/* 語義パネル(墨1px枠・番号刻印) */
-.ann-sense { border: 1px solid var(--ink); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
+/* 語義パネル */
+.ann-sense { border-radius: var(--radius-lg); background: var(--surface); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
 /* 最低限の項目(読み・語種・ジャンル・品詞・エンティティ)が揃った語義。
-   保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
-   枠の色替えだけでは気付きにくいので、枠を二重にし、番号の刻印も緑のベタ面にする。
-   inset の box-shadow は枠を太らせるだけでレイアウトを動かさない(影は落とさない)。 */
-.ann-sense.is-complete {
-  border-color: var(--midori);
-  box-shadow: inset 0 0 0 1px var(--midori);
-}
-.ann-sense.is-complete .ann-sense__stamp { background: var(--midori); }
-.ann-sense__head { display: flex; align-items: center; justify-content: space-between; margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5)) var(--space-3); }
-.ann-sense__stamp { background: var(--ink); color: var(--on-ink); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; padding: 5px 12px; }
-.ann-sense__del { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; padding: 6px 12px; }
-.ann-sense__del:hover { color: var(--shu); }
+ 保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
+ 枠を緑に替え、番号のバッジも緑のベタにする。 */
+.ann-sense.is-complete { border-color: var(--success); }
+.ann-sense.is-complete .ann-sense__stamp { background: var(--success); color: var(--bg); }
+.ann-sense__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-3); }
+.ann-sense__stamp { background: var(--bg-soft); color: var(--text-muted); border-radius: var(--radius-pill); font-size: 12px; font-weight: 400; padding: 3px 12px; }
+.ann-sense__del { font-size: 12px; color: var(--text-subtle); background: transparent; border: 0; cursor: pointer; padding: 6px 8px; }
+.ann-sense__del:hover { color: var(--danger); }
 
 /* ラベル列 + 値列 */
-.ann-row { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; align-items: start; padding: var(--space-3) 0; border-bottom: 1px solid var(--rule); }
+.ann-row { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; align-items: start; padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
 .ann-row:last-child { border-bottom: 0; }
-.ann-row__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); padding-top: 6px; }
+.ann-row__label { font-size: 12px; color: var(--text-subtle); padding-top: 8px; }
 
-/* 読みも textarea。長い読み(例: 70字超)を折り返して全文表示。下線1本の見た目は維持 */
+/* 読みも textarea。長い読み(例: 70字超)を折り返して全文表示 */
 .ann-reading {
-  width: 100%; box-sizing: border-box; display: block;
-  font-size: 17px; letter-spacing: 0.04em; line-height: 1.5;
-  border: 0; border-bottom: 1px solid var(--rule-mid); background: transparent;
-  padding: 4px 2px; margin: 0; resize: none; field-sizing: content;
-  min-height: 1.7em; white-space: pre-wrap; overflow-wrap: anywhere;
+ width: 100%; box-sizing: border-box; display: block;
+ font-size: 16px; line-height: 1.5;
+ padding: 6px 10px; margin: 0; resize: none; field-sizing: content;
+ min-height: 2em; white-space: pre-wrap; overflow-wrap: anywhere;
 }
-.ann-reading:focus { border-bottom-color: var(--shu); }
-.ann-derived { display: flex; gap: 16px; flex-wrap: wrap; margin-top: var(--space-2); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-3); }
-.ann-derived b { color: var(--ink); font-weight: 400; }
+.ann-derived { display: flex; gap: 14px; flex-wrap: wrap; margin-top: var(--space-2); font-size: 12px; color: var(--text-subtle); }
+.ann-derived b { font-family: var(--font-mono); color: var(--text); font-weight: 400; }
 
 /* チップ(隠し input + :has) */
 .ann-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .ann-chip {
-  position: relative; display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--ink); color: var(--ink); background: transparent;
-  font-family: var(--font-gothic); font-size: 13.5px; line-height: 1.3;
-  padding: 6px 12px; min-height: 34px; cursor: pointer; user-select: none;
-  transition: background 0.15s, color 0.15s;
+ position: relative; display: inline-flex; align-items: center; gap: 6px;
+ border: none; border-radius: var(--radius-pill);
+ color: var(--text-muted); background: var(--surface); border: 1px solid var(--border-strong);
+ font-family: inherit; font-size: 13.5px; line-height: 1.3;
+ padding: 6px 14px; min-height: 32px; cursor: pointer; user-select: none;
+ transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
-.ann-chip:hover { background: var(--ink); color: var(--on-ink); }
+.ann-chip:hover { background: var(--bg-soft); border-color: var(--text-subtle); color: var(--text); }
 .ann-chip__input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
-.ann-chip:has(.ann-chip__input:checked) { background: var(--ink); color: var(--on-ink); }
-.ann-chip:has(input[type="radio"].ann-chip__input:checked)::before { content: "\25CF"; font-size: 8px; color: var(--shu); }
-.ann-chip:has(input[type="radio"].ann-chip__input:checked):hover::before { color: var(--on-ink-dim); }
-.ann-chip:has(.ann-chip__input:focus-visible) { outline: 2px solid var(--shu); outline-offset: 2px; }
+.ann-chip:has(.ann-chip__input:checked) { background: var(--text); border-color: var(--text); color: var(--bg); }
+.ann-chip:has(input[type="radio"].ann-chip__input:checked)::before { content: "\25CF"; font-size: 8px; color: currentColor; }
+.ann-chip:has(.ann-chip__input:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
 /* ジャンルのボタン型チップ(JS で is-on を付与) */
-.ann-chip.is-on { background: var(--ink); color: var(--on-ink); }
+.ann-chip.is-on { background: var(--text); border-color: var(--text); color: var(--bg); }
 
 /* その場追加 */
 .ann-add { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ann-add__btn { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-2); background: transparent; border: 1px dashed var(--rule-mid); padding: 5px 10px; cursor: pointer; min-height: 34px; }
-.ann-add__btn:hover { border-color: var(--ink); color: var(--ink); }
-.ann-add__input { width: 8em; font-size: 14px; border: 0; border-bottom: 1px solid var(--shu); padding: 4px 2px; }
+.ann-add__btn { font-size: 12px; color: var(--text-muted); background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; min-height: 32px; }
+.ann-add__btn:hover { border-color: var(--text); color: var(--text); }
+.ann-add__input { width: 9em; font-size: 14px; padding: 4px 8px; }
 /* その場追加の結果(失敗の理由 / 既存を選んだ旨)。黙って何も起きないのが一番困るので必ず出す */
-.ann-add__msg { font-family: var(--font-mono); font-size: 10.5px; line-height: 1.6; letter-spacing: 0.02em; color: var(--ink-3); max-width: 26em; }
-.ann-add__msg.is-error { color: var(--shu); }
+.ann-add__msg { font-size: 12px; line-height: 1.6; color: var(--text-subtle); max-width: 26em; }
+.ann-add__msg.is-error { color: var(--danger); }
 
 /* ジャンル 段階表示 */
-.ann-genre__current { font-family: var(--font-gothic); font-size: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.ann-genre__current .sep { color: var(--shu); }
-.ann-genre__change { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
-.ann-genre__change:hover { color: var(--shu); }
+.ann-genre__current { font-size: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ann-genre__current .sep { color: var(--text-subtle); }
+.ann-genre__change { font-size: 12px; color: var(--text); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
+.ann-genre__change:hover { color: var(--text); }
 .ann-genre__level { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 5px 0; }
 /* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
-   (ジャンルが確定済みの語では大・中・小の選択肢を出さず、「変更」で選び直しに入る) */
+ (ジャンルが確定済みの語では大・中・小の選択肢を出さず、「変更」で選び直しに入る) */
 .ann-genre__level[hidden] { display: none; }
-.ann-genre__tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--shu); min-width: 1.4em; }
+.ann-genre__tag { font-size: 12px; color: var(--text-subtle); min-width: 1.4em; }
 .ann-genre__level .ann-chips { flex: 1; }
 
 /* 特徴: 範囲タップ */
-.ann-feature { border: 1px solid var(--ink); padding: var(--space-3) var(--space-4) var(--space-4); margin-bottom: var(--space-3); }
+.ann-feature { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4) var(--space-4); margin-bottom: var(--space-3); }
 .ann-feature__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
-.ann-feature__head .t { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); }
-.ann-strip-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--ink-3); margin: var(--space-3) 0 var(--space-1); }
+.ann-feature__head .t { font-size: 12px; color: var(--text-subtle); }
+.ann-strip-label { font-size: 12px; color: var(--text-subtle); margin: var(--space-3) 0 var(--space-1); }
 .ann-strip { display: flex; flex-wrap: wrap; gap: 3px; }
-.ann-cell { font-family: var(--font-mincho); font-size: 18px; line-height: 1; text-align: center; min-width: 1.5em; padding: 9px 5px; border: 1px solid var(--rule-mid); background: transparent; color: var(--ink); cursor: pointer; transition: background 0.1s, color 0.1s, border-color 0.1s; }
-.ann-strip--reading .ann-cell { font-family: var(--font-gothic); font-size: 14px; }
-.ann-cell:hover { border-color: var(--ink); }
-.ann-cell.is-sel { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
-.ann-cell.is-start { color: var(--shu); border-color: var(--shu); box-shadow: inset 0 -2px 0 var(--shu); }
-.ann-feature__result { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-2); margin-top: var(--space-2); }
+.ann-cell { font-family: inherit; font-size: 15px; line-height: 1; text-align: center; min-width: 1.6em; padding: 9px 5px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; transition: background var(--transition), color var(--transition), border-color var(--transition); }
+.ann-strip--reading .ann-cell { font-size: 14px; }
+.ann-cell:hover { border-color: var(--text); color: var(--text); }
+.ann-cell.is-sel { background: var(--text); color: var(--bg); border-color: var(--text); }
+.ann-cell.is-start { background: var(--bg-tint); color: var(--text); border-color: var(--text); }
+.ann-feature__result { font-size: 12px; color: var(--text-muted); margin-top: var(--space-2); }
 
 /* 別表記(行追加・テキスト) */
-.ann-subrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px dotted var(--rule); }
+.ann-subrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .ann-subrow input { flex: 1 1 8em; min-width: 6em; }
-.ann-subrow .ann-remove { font-family: var(--font-mono); font-size: 15px; line-height: 1; color: var(--ink-3); background: transparent; border: 0; cursor: pointer; padding: 6px; }
-.ann-subrow .ann-remove:hover { color: var(--shu); }
+.ann-subrow .ann-remove { font-size: 15px; line-height: 1; color: var(--text-subtle); background: transparent; border: 0; cursor: pointer; padding: 6px; }
+.ann-subrow .ann-remove:hover { color: var(--danger); }
 
-.ann-addrow { align-self: flex-start; margin-top: var(--space-2); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; background: transparent; color: var(--ink); border: 1px solid var(--ink); padding: 6px 14px; cursor: pointer; min-height: 34px; }
-.ann-addrow:hover { background: var(--ink); color: var(--on-ink); }
+.ann-addrow { align-self: flex-start; margin-top: var(--space-2); font-size: 13px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 6px 14px; cursor: pointer; min-height: 32px; }
+.ann-addrow:hover { background: var(--bg-soft); border-color: var(--text-subtle); }
 
 /* 「特徴なしで確定」(Issue 76)。特徴を足す導線より控えめに、下に添える */
-.ann-features__review { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--rule); }
-.ann-features__review-hint { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+.ann-features__review { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); }
+.ann-features__review-hint { font-size: 12px; color: var(--text-subtle); }
 
 /* 語義を追加 */
-.ann-add-sense { display: block; width: 100%; margin-top: var(--space-5); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.16em; background: transparent; color: var(--ink); border: 1px dashed var(--ink); padding: var(--space-3); cursor: pointer; }
-.ann-add-sense:hover { background: var(--ink); color: var(--on-ink); }
-.ann-add-sense small { display: block; font-size: 9.5px; color: var(--ink-3); letter-spacing: 0.08em; margin-top: 3px; }
-.ann-add-sense:hover small { color: var(--on-ink-dim); }
+.ann-add-sense { display: block; width: 100%; margin-top: var(--space-5); font-size: 13px; background: transparent; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: var(--space-3); cursor: pointer; }
+.ann-add-sense:hover { background: var(--bg-soft); border-color: var(--text); color: var(--text); }
+.ann-add-sense small { display: block; font-size: 11px; color: var(--text-subtle); margin-top: 3px; }
 
 /* 最下部アクションバー */
-.ann-actionbar { position: sticky; bottom: 0; z-index: 4; background: var(--bg); border-top: 2px solid var(--ink); padding: var(--space-3) 0; margin-top: var(--space-5); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.ann-actionbar { position: sticky; bottom: 0; z-index: 4; background: var(--bg); border-top: 1px solid var(--border); padding: var(--space-3) 0; margin-top: var(--space-5); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .ann-actionbar .spacer { flex: 1; }
-.ann-actionbar .kbd { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-left: 6px; }
-.ann-actionbar .btn:hover .kbd, .ann-actionbar .btn--primary .kbd { color: var(--on-ink-dim); }
+.ann-actionbar .kbd { font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle); margin-left: 6px; }
+.ann-actionbar .btn--primary .kbd { color: var(--bg); opacity: 0.75; }
 
 /* 完了画面 */
 .ann-done { padding: var(--space-6) 0; }
-.ann-done__lead { font-family: var(--font-mincho); font-size: clamp(24px, 4vw, 36px); }
+.ann-done__lead { font-weight: 400; font-size: clamp(20px, 3vw, 26px); }
 
 @media (max-width: 560px) {
-  .ann-row { grid-template-columns: 1fr; gap: 6px; }
-  .ann-row__label { padding-top: 0; }
-  .ann-bar__legend { display: none; }
+ .ann-row { grid-template-columns: 1fr; gap: 6px; }
+ .ann-row__label { padding-top: 0; }
+ .ann-bar__legend { display: none; }
 }
 
-/* 提案の一括承認プレビュー表(Issue 65)。墨の細罫・等幅の極小ヘッダ(角丸・影なし) */
+/* 提案の一括承認プレビュー表(Issue 65) */
 .bulk-approval { width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 13px; }
-.bulk-approval th { text-align: left; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); font-weight: 400; border-bottom: 2px solid var(--ink); padding: 6px 10px; white-space: nowrap; }
-.bulk-approval td { border-bottom: 1px solid var(--rule); padding: 8px 10px; vertical-align: top; }
-.bulk-approval__no { font-family: var(--font-mono); font-size: 11px; color: var(--shu); white-space: nowrap; }
-.bulk-approval__word { font-family: var(--font-mincho); font-size: 15px; }
-.bulk-approval__word a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule-mid); }
-.bulk-approval__word a:hover { color: var(--shu); border-color: var(--shu); }
-.bulk-approval__genre { font-size: 12px; color: var(--ink-2); }
+.bulk-approval th { text-align: left; font-size: 12px; color: var(--text-muted); font-weight: 400; border-bottom: 1px solid var(--border-strong); padding: 6px 10px; white-space: nowrap; }
+.bulk-approval td { border-bottom: 1px solid var(--border); padding: 8px 10px; vertical-align: top; }
+.bulk-approval__no { font-family: var(--font-mono); font-size: 12px; color: var(--text-subtle); white-space: nowrap; }
+.bulk-approval__word { font-size: 14px; font-weight: 400; }
+.bulk-approval__word a { color: var(--text); text-decoration: none; }
+.bulk-approval__word a:hover { color: var(--text); text-decoration: underline; }
+.bulk-approval__genre { font-size: 12px; color: var(--text-muted); }
 @media (max-width: 700px) {
-  .bulk-approval, .bulk-approval tbody, .bulk-approval tr, .bulk-approval td { display: block; }
-  .bulk-approval thead { display: none; }
-  .bulk-approval tr { border: 1px solid var(--rule-mid); padding: 6px 4px; margin-bottom: var(--space-2); }
-  .bulk-approval td { border: 0; padding: 3px 8px; }
+ .bulk-approval, .bulk-approval tbody, .bulk-approval tr, .bulk-approval td { display: block; }
+ .bulk-approval thead { display: none; }
+ .bulk-approval tr { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 4px; margin-bottom: var(--space-2); }
+ .bulk-approval td { border: 0; padding: 3px 8px; }
 }
 
 /* =====================================================================
-   アノテーション・デッキ(まとめてアノテーション)
-   10件を横一列に並べ、スマホは横スワイプ(scroll-snap)、PC は矢印/ドット/←→キーで送る。
-   見た目は1語コンソールの部品(ann-*)をそのまま使い、ここは並べ方と現在地の表示だけ。
-   ===================================================================== */
+ アノテーション・デッキ(まとめてアノテーション)
+ 10件を横一列に並べ、スマホは横スワイプ(scroll-snap)、PC は矢印/ドット/←→キーで送る。
+ 見た目は1語コンソールの部品(ann-*)をそのまま使い、ここは並べ方と現在地の表示だけ。
+ ===================================================================== */
 .deck { position: relative; touch-action: manipulation; }
 .deck .ann-bar .spacer { flex: 1; }
-.deck-bar__link { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule-mid); padding-bottom: 1px; }
-.deck-bar__link:hover { color: var(--shu); border-bottom-color: var(--shu); }
+.deck-bar__link { font-size: 12px; color: var(--text); text-decoration: none; }
+.deck-bar__link:hover { text-decoration: underline; }
 
 /* カード送り(現在地・ドット・矢印) */
-.deck-nav { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-2) 0 var(--space-3); border-bottom: 1px solid var(--rule); }
-.deck-nav__arrow { font-family: var(--font-mono); font-size: 13px; line-height: 1; background: transparent; border: 1px solid var(--ink); color: var(--ink); min-width: 40px; height: 34px; cursor: pointer; }
-.deck-nav__arrow:hover:not(:disabled) { background: var(--ink); color: var(--on-ink); }
-.deck-nav__arrow:disabled { border-color: var(--rule-mid); color: var(--ink-3); cursor: default; }
-.deck-nav__position { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.deck-nav { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-2) 0 var(--space-3); border-bottom: 1px solid var(--border); }
+.deck-nav__arrow { font-size: 13px; line-height: 1; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); min-width: 40px; height: 32px; cursor: pointer; }
+.deck-nav__arrow:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--text-subtle); }
+.deck-nav__arrow:disabled { border-color: var(--border); color: var(--text-subtle); cursor: default; }
+.deck-nav__position { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .deck-nav__dots { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中は朱枠 */
-.deck-dot { font-family: var(--font-mono); font-size: 10px; line-height: 1; min-width: 26px; height: 26px; padding: 0; background: transparent; border: 1px solid var(--rule-mid); color: var(--ink-3); cursor: pointer; }
-.deck-dot:hover { border-color: var(--ink); color: var(--ink); }
-.deck-dot.is-done { background: var(--midori); border-color: var(--midori); color: var(--on-ink); }
-.deck-dot.is-on { border-color: var(--shu); color: var(--shu); box-shadow: inset 0 0 0 1px var(--shu); }
-.deck-dot.is-on.is-done { color: var(--on-ink); }
+/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中はアクセントの淡い面 */
+.deck-dot { font-size: 11px; line-height: 1; min-width: 26px; height: 26px; padding: 0; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text-subtle); cursor: pointer; }
+.deck-dot:hover { border-color: var(--text-subtle); color: var(--text); }
+.deck-dot.is-done { background: var(--success); border-color: var(--success); color: var(--bg); }
+.deck-dot.is-on { background: var(--bg-tint); border-color: var(--text); color: var(--text); font-weight: 400; }
+.deck-dot.is-on.is-done { background: var(--success); color: var(--bg); border-color: var(--text); }
 
-.deck-lead { font-size: 13px; line-height: 1.8; color: var(--ink-2); margin: 0 0 var(--space-3); }
+.deck-lead { font-size: 13px; line-height: 1.8; color: var(--text-muted); margin: 0 0 var(--space-3); }
 .deck-glossary { margin: var(--space-3) 0 0; }
 
 /* カードの並び。トラックだけが横スクロールし、ページ本体は横に流れない。
-   カードは高さを揃えない(align-items: flex-start)ので、トラックの縦スクロールは出ず、
-   長いカードはページごと縦にスクロールする。 */
+ カードは高さを揃えない(align-items: flex-start)ので、トラックの縦スクロールは出ず、
+ 長いカードはページごと縦にスクロールする。 */
 .deck-track {
-  position: relative; display: flex; align-items: flex-start; gap: var(--space-6);
-  overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory; scrollbar-width: none;
-  padding: var(--space-4) 0 var(--space-2);
+ position: relative; display: flex; align-items: flex-start; gap: var(--space-6);
+ overflow-x: auto; overscroll-behavior-x: contain;
+ scroll-snap-type: x mandatory; scrollbar-width: none;
+ padding: var(--space-4) 0 var(--space-2);
 }
 .deck-track::-webkit-scrollbar { display: none; }
 .deck-card { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
 /* 見出し語は1語コンソールより一段小さく(カード内で完結させるため) */
-.deck-card .ann-word { font-size: clamp(28px, 6vw, 54px); }
-.deck-card__count { margin-left: auto; color: var(--ink-2); }
+.deck-card .ann-word { font-size: clamp(21px, 3.4vw, 28px); }
+.deck-card__count { margin-left: auto; color: var(--text-muted); }
 
 /* 提案の要約(既定は畳む)。反映は読み込み時に済んでいるので、ここは根拠の確認用 */
 .deck-proposal { margin-top: var(--space-3); }
 .deck-proposal__summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; padding: 4px 0; }
 .deck-proposal__summary:hover .deck-proposal__title { text-decoration: underline; }
-.deck-proposal__title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; color: var(--shu); }
+.deck-proposal__title { font-size: 12px; font-weight: 400; color: var(--text); }
 .deck-proposal .ann-proposal { margin-top: var(--space-2); }
 
 /* まとめ保存バーの進捗(n / m 完了)。全部そろったら緑にする */
-.deck-progress { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.deck.is-all-complete .deck-progress { color: var(--midori); }
+.deck-progress { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.deck.is-all-complete .deck-progress { color: var(--success); font-weight: 400; }
 
 @media (max-width: 560px) {
-  .deck-track { gap: var(--space-5); }
-  .deck-nav__dots { order: 3; flex-basis: 100%; }
+ .deck-track { gap: var(--space-5); }
+ .deck-nav__dots { order: 3; flex-basis: 100%; }
 }
 
 /* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。
-   このファイルは components より後に読まれるため、ここの小さめ入力は個別に上げる */
+ このファイルは components より後に読まれるため、ここの小さめ入力は個別に上げる */
 @media (max-width: 767px) {
-  .ann-add__input { font-size: 16px; }
+ .ann-add__input { font-size: 16px; }
 }

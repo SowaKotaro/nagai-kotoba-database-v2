@@ -6,12 +6,17 @@
         data-nav-drawer-close-label-value="<%= t("layouts.menu_close") %>">
   <div class="site-header__inner">
     <%= link_to root_path, class: "site-brand" do %>
-      <%# ブランド印章(落款)。インライン SVG なので色はトークンを参照できる %>
-      <svg class="site-brand__seal" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <rect width="24" height="24" fill="var(--shu)"/>
-        <text x="12" y="17.5" text-anchor="middle" font-size="14" font-family="serif" fill="var(--bg)">言</text>
-      </svg>
+      <%# ブランドマークはサイト名の読みの五十音円環(ホーム最上部の印と同じ図) %>
+      <%= render "shared/brand_mark" %>
       <span class="site-brand__name"><%= t("layouts.brand") %></span>
+      <%# ブランド名の右に、縦罫で仕切って英字を小さく添える。ページを名前で締める印で、
+          もとは奥付(フッター)に 3 行のワードマークとして置いていたものをここへ移した
+          (2026-09-05 オーナー指示)。値ではなく名前なので標識(.label-en)とは別物 %>
+      <span class="site-brand__roman" aria-hidden="true">
+        <% t("labels.en.site").split.each do |word| %>
+          <span class="site-brand__roman-line"><%= word %></span>
+        <% end %>
+      </span>
     <% end %>
 
     <button type="button" class="nav-toggle" aria-label="<%= t("layouts.menu_open") %>" aria-expanded="false"

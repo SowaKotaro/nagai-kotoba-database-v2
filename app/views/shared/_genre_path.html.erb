@@ -1,5 +1,5 @@
 <%# ジャンルの階層パンくず(大 › 中 › 小)。各階層が単語一覧の絞り込みへの実リンクで、
-    区切りは朱、末端(小分類)だけ下線で強調する(docs/design.md §5.5)。
+    区切りは薄いグレー、末端(小分類)だけ太字で強調する(docs/design.md §5.5)。
     行リンクの上に載る場所でも押せるよう、重なりの制御は呼び出し側の CSS に任せる。
     local: genre / modifier(任意の修飾クラス。一覧の行では genre-path--sm) %>
 <nav class="genre-path <%= local_assigns[:modifier] %>">

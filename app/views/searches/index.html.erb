@@ -5,6 +5,7 @@
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("searches.title"), nil ] ] %>
 
+<p class="label-en"><%= t("labels.en.search") %></p>
 <h1 class="page-title"><%= t("searches.title") %></h1>
 
 <%= form_with url: search_path, method: :get, data: { turbo_action: "advance" }, class: "search-form" do %>

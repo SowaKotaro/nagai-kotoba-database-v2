@@ -5,6 +5,8 @@
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("rankings.index.title"), nil ] ] %>
 
 <header class="page-header">
+  <p class="label-en"><%= t("labels.en.rankings") %></p>
+  <p class="label-en"><%= t("labels.en.boards", count: @boards.size, limit: WordRanking::TOP_LIMIT) %></p>
   <h1 class="page-title"><%= t("rankings.index.title") %></h1>
   <p class="page-lead"><%= t("rankings.index.lead") %></p>
 </header>

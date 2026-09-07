@@ -1,120 +1,123 @@
 /* デザイントークン(docs/design.md)。色・フォント・余白はここ以外で直書きしない。
-   方針: 文字が主役、UI は文字を引き立てる額縁。図書館・辞書・学術書の静けさ。 */
+   手本は「しずかなインターネット」。値の多くは実サイトから採寸している。
+   要点: 彩度をほぼ持たない／太字を使わない／狭いカラム／大きな余白と大きな角丸。 */
 :root {
-  /* 紙と墨。コントラストは十分に、ただし黒すぎない */
-  --bg: #faf8f4;          /* 紙(温かみのある白) */
-  --bg-soft: #f3f0ea;     /* hover などのごく淡い面。単独の背景色としては使わない */
-  --paper: #ffffff;       /* 操作要素(入力・ボタン・チップ)だけを地から一段持ち上げる白 */
-  --ink: #202020;         /* 本文・見出し */
-  --ink-2: #575757;       /* 補足文 */
-  --ink-3: #777777;       /* メタ情報(最も弱い文字。これ以上薄くしない) */
-  --rule: #e5e2dc;        /* 細罫(ヘアライン) */
-  --rule-mid: #d3cfc6;    /* 中間の罫(入力の下線・枠など) */
+  /* ── 面 ───────────────────────────────────────────────────────────
+     地をわずかに沈ませ、区画の面を白まで上げて、コンテンツと背景の差を作る。
+     影は使わず、この 3 段の明度差と 1px の細罫だけで区画を示す。 */
+  --bg: #eff2f6;          /* 地(ページの背景)。真っ白にしない */
+  --bg-soft: #e6ebf2;     /* 一段沈めた面(フッター・hover・画像帯) */
+  --bg-tint: #e4ecf6;     /* さらに淡い青の面(選択中・ハイライト) */
+  --surface: #ffffff;     /* 区画の面。地との差をはっきり出すため白まで上げる */
 
-  /* 朱: 唯一のアクセント。使用量はページ全体の 5% 以下に抑える。
-     見出し・本文には使わず、本当に強調したい箇所(現在地・ふりがな・印章)だけに使う */
-  --shu: #b94e2f;
-  --shu-deep: #9b3f25;    /* hover */
+  /* ── 文字 ─────────────────────────────────────────────────────────
+     真っ黒にしない。わずかに青みのある濃色を 87% で置いたときの実効値。 */
+  --text: #232a31;        /* 本文・見出し(手本の rgba(3,10,18,.87) 相当) */
+  --text-muted: #5f6568;  /* 補足・メタ(白地 5.9:1) */
+  --text-subtle: #63686c; /* 最も弱い文字。ここが下限(地 5.0:1 / 沈んだ面の上でも 4.7:1) */
 
-  /* 緑: 管理画面の「満たされている」状態表示だけに使う色(オーナー承認の例外)。
-     用途は以下に限る:
-       - 一括登録 step2 の「読み一致」バッジ(一致=緑 / 不一致=朱)
-       - アノテーション・コンソールで最低限の項目が揃った語義カードの枠 */
-  --midori: #2f7a45;
+  /* ── 罫 ───────────────────────────────────────────────────────────
+     ほとんど見えない細さ。構造は罫ではなく「余白」で作る。 */
+  --border: #dfe4ec;         /* 仕切り(表の行・区画の中の細罫) */
+  --border-strong: #c6ccd5;  /* 本文リンクの下線・図の補助線 */
 
-  /* 濃い面(管理画面の一部で使う)の上に載せる文字色 */
-  --on-ink: #faf8f4;
-  --on-ink-dim: #b6b3a6;
-  --on-ink-rule: #3b3931;
+  /* ── 状態色 ─────────────────────────────────────────────────────
+     意味を持つときだけ。彩度は抑え、面には使わず文字と細枠にとどめる。 */
+  --danger: #b4453f;
+  --success: #3f7d5a;
 
-  /* 地に敷く方眼の罫(base.css の body)。
-     地との差はごく僅かにして、文字の可読性を落とさない */
-  --grid-line: rgba(32, 32, 32, 0.035);
+  /* ── データ可視化 ───────────────────────────────────────────────
+     チャートの塗りだけに使う、彩度を落とした青灰。UI には使わない。 */
+  --chart: #6f8ea8;
 
-  /* 影と幕。影は検索フォームのカードだけの例外(オーナー判断)、幕は狭幅のドロワー背後。
-     ダークでは意味が変わる(影は効かない/幕はより濃く)ので、色と同じくトークンで持つ */
-  --shadow-card: 0 2px 12px rgba(25, 24, 19, 0.05);
-  --scrim: rgba(25, 24, 19, 0.4);
+  /* ── 影 ─────────────────────────────────────────────────────────
+     ごく淡く、浮かせる必要があるものだけ。カード・一覧・表・ボタンには落とさない。 */
+  --shadow-soft: 0 4px 12px -5px rgba(0, 0, 0, 0.08);
+  --shadow-pop: 0 8px 24px -6px rgba(0, 0, 0, 0.12);
+  --scrim: rgba(35, 42, 49, 0.35);
 
-  /* タイポグラフィ: 見出しは明朝を大胆に、本文は読みやすいゴシックで長時間読めるように */
-  --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
-  --font-gothic: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
-                 system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ── タイポグラフィ ─────────────────────────────────────────────
+     web フォントは読まない。手本と同じ system + Inter + 日本語ゴシックの並び。 */
+  --font-sans: -apple-system, BlinkMacSystemFont, Inter, "Segoe UI",
+               "Hiragino Kaku Gothic Pro", "Hiragino Sans", "Noto Sans JP",
+               "BIZ UDPGothic", Meiryo, sans-serif;
+  /* 等幅はローマ字・パターン・JSON などの「機械が読む値」と、極小の英字ラベルに使う */
+  /* サイトタイトル専用の書体(--font-brand)は持たない。手本「ただ、そこ」のスタックを
+     当てていたが「イメージと違う」として本文と同じ --font-sans に戻したため
+     (2026-09-04 → 05 オーナー判断)。書体はサイト全体で 1 本 + 等幅 + 図用の 3 つだけ */
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+               "Liberation Mono", monospace;
+  /* 「図」として置く英数字(アウトラインの巨大数字など)。日本語は含めない */
+  --font-display: "Helvetica Neue", Helvetica, Arial, "Inter", sans-serif;
+  /* 字間をわずかに開けるのが手本の空気感の要。本文・見出しに一律で効かせる */
+  --tracking: 0.03em;
 
-  /* 余白スケール。1〜7 は要素の内側、8〜9 はセクションどうしの間隔に使う */
+  /* ── 余白スケール ───────────────────────────────────────────────
+     「疎」を作るのはここ。セクション間は思い切って広く取る。 */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
-  --space-6: 36px;
-  --space-7: 56px;
-  --space-8: 80px;
-  --space-9: 120px;
+  --space-6: 40px;
+  --space-7: 64px;
+  --space-8: 96px;
+  --space-9: 128px;
 
-  /* 角丸は操作要素(ボタン・入力・チップ)だけに、この 1 段階のみ使う。
-     面やカードは角丸にしない(罫線で整理する) */
-  --radius: 4px;
+  /* ── 角丸 ───────────────────────────────────────────────────────
+     大きめ。カードは 20px、面の中の小片は 12px、ボタン・タグは全丸。 */
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
 
-  /* 1200px まで広げたが間延びしたため、従来の 1040px に戻した(オーナー判断) */
-  --content-width: 1040px;
+  /* 本文カラムは狭く。読み物は 640px、一覧・データ面は 800px まで */
+  --content-width: 800px;
+  --reading-width: 640px;
 
-  /* 状態変化は 200ms のフェード相当に統一する(動きで飾らない) */
-  --transition: 200ms ease;
+  --transition: 160ms ease;
 
-  /* フォームコントロールやスクロールバーの既定色をブラウザに伝える */
   color-scheme: light;
 
-  /* ── ダークの値(定義はここだけ。適用は下の 2 つのセレクタが行う) ───────────────
-     思想は「紙と墨の反転」。真っ黒にはせず、紙 #faf8f4 の温かみを裏返した
-     わずかに黄みの残る濃墨を地にして、朱と地続きに見せる。
-     朱は #b94e2f のままだと濃墨の上でコントラストが足りないため明度を上げる
-     (#e0785a は地 #17150f に対して 6.6:1)。hover は「より暗く」ではなく「より明るく」。 */
-  --dark-bg: #17150f;
-  --dark-bg-soft: #211e17;    /* ダークでは hover は沈まずわずかに浮く */
-  --dark-paper: #1e1b14;
-  --dark-ink: #ede9e0;        /* 地に対して 15.1:1 */
-  --dark-ink-2: #b3ada0;      /* 8.3:1 */
-  --dark-ink-3: #8f897d;      /* 5.4:1(メタ情報の下限。これ以上暗くしない) */
-  --dark-rule: #33302a;
-  --dark-rule-mid: #4a463d;
-  --dark-shu: #e0785a;
-  --dark-shu-deep: #ef8d70;
-  --dark-midori: #5fae76;
-  /* 墨ベタ面(--ink 地)はダークでは自動的に「紙色のベタ」に反転するので、
-     その上に載る文字・罫は逆に暗くする */
-  --dark-on-ink: #17150f;
-  --dark-on-ink-dim: #4a463d;
-  --dark-on-ink-rule: #c9c3b6;
-  --dark-grid-line: rgba(237, 233, 224, 0.032); /* 濃墨の上では紙色の罫にする */
-  --dark-shadow-card: none;   /* 暗い地の上では影は見えない。枠だけで浮かせる */
+  /* ── ダークの値(定義はここだけ。適用は下の 2 つのセレクタが行う) ───────────
+     同じ「静けさ」を明度だけ反転させる。青みをわずかに残した濃色。 */
+  --dark-bg: #191d22;
+  --dark-bg-soft: #12161a;
+  --dark-bg-tint: #1c2530;
+  --dark-surface: #232930;
+  --dark-text: #e3e7ea;
+  --dark-text-muted: #98a0a5;
+  --dark-text-subtle: #8f969b;
+  --dark-border: #2c3339;
+  --dark-border-strong: #454d55;
+  --dark-danger: #d98079;
+  --dark-success: #7fb79a;
+  --dark-chart: #7ea3bf;
+  --dark-shadow-soft: none;
+  --dark-shadow-pop: 0 8px 24px -6px rgba(0, 0, 0, 0.6);
   --dark-scrim: rgba(0, 0, 0, 0.6);
 }
 
 /* ダークの適用。既定は OS 設定に追従し、ヘッダーのトグルで付く
    data-theme("light" / "dark")がそれを上書きする。
-   ※トークンを 1 つ足したら、下の 2 ブロック両方に参照を追記すること
-   (CSS には mixin が無いため。値そのものは上の --dark-* だけを直せばよい) */
+   ※トークンを 1 つ足したら、下の 2 ブロック両方に参照を追記すること */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg: var(--dark-bg);
     --bg-soft: var(--dark-bg-soft);
-    --paper: var(--dark-paper);
-    --ink: var(--dark-ink);
-    --ink-2: var(--dark-ink-2);
-    --ink-3: var(--dark-ink-3);
-    --rule: var(--dark-rule);
-    --rule-mid: var(--dark-rule-mid);
-    --shu: var(--dark-shu);
-    --shu-deep: var(--dark-shu-deep);
-    --midori: var(--dark-midori);
-    --on-ink: var(--dark-on-ink);
-    --on-ink-dim: var(--dark-on-ink-dim);
-    --on-ink-rule: var(--dark-on-ink-rule);
-    --grid-line: var(--dark-grid-line);
-    --shadow-card: var(--dark-shadow-card);
+    --bg-tint: var(--dark-bg-tint);
+    --surface: var(--dark-surface);
+    --text: var(--dark-text);
+    --text-muted: var(--dark-text-muted);
+    --text-subtle: var(--dark-text-subtle);
+    --border: var(--dark-border);
+    --border-strong: var(--dark-border-strong);
+    --danger: var(--dark-danger);
+    --success: var(--dark-success);
+    --chart: var(--dark-chart);
+    --shadow-soft: var(--dark-shadow-soft);
+    --shadow-pop: var(--dark-shadow-pop);
     --scrim: var(--dark-scrim);
   }
 }
@@ -123,19 +126,17 @@
   color-scheme: dark;
   --bg: var(--dark-bg);
   --bg-soft: var(--dark-bg-soft);
-  --paper: var(--dark-paper);
-  --ink: var(--dark-ink);
-  --ink-2: var(--dark-ink-2);
-  --ink-3: var(--dark-ink-3);
-  --rule: var(--dark-rule);
-  --rule-mid: var(--dark-rule-mid);
-  --shu: var(--dark-shu);
-  --shu-deep: var(--dark-shu-deep);
-  --midori: var(--dark-midori);
-  --on-ink: var(--dark-on-ink);
-  --on-ink-dim: var(--dark-on-ink-dim);
-  --on-ink-rule: var(--dark-on-ink-rule);
-  --grid-line: var(--dark-grid-line);
-  --shadow-card: var(--dark-shadow-card);
+  --bg-tint: var(--dark-bg-tint);
+  --surface: var(--dark-surface);
+  --text: var(--dark-text);
+  --text-muted: var(--dark-text-muted);
+  --text-subtle: var(--dark-text-subtle);
+  --border: var(--dark-border);
+  --border-strong: var(--dark-border-strong);
+  --danger: var(--dark-danger);
+  --success: var(--dark-success);
+  --chart: var(--dark-chart);
+  --shadow-soft: var(--dark-shadow-soft);
+  --shadow-pop: var(--dark-shadow-pop);
   --scrim: var(--dark-scrim);
 }

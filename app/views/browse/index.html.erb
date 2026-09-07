@@ -5,7 +5,8 @@
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("browse.index.title"), nil ] ] %>
 
 <header class="page-header">
-  <p class="page-eyebrow"><span><%= t("browse.index.eyebrow") %></span></p>
+  <p class="label-en"><%= t("labels.en.browse") %></p>
+  <p class="label-en"><%= t("labels.en.kana_lengths", kana: @first_char_counts.size, lengths: @reading_length_counts.size) %></p>
   <h1 class="page-title"><%= t("browse.index.title") %></h1>
   <p class="page-lead"><%= t("browse.index.lead") %></p>
 </header>
@@ -19,7 +20,7 @@
           <% if kana.nil? %>
             <span class="kana-cell--blank" aria-hidden="true"></span>
           <% elsif (count = @first_char_counts[kana].to_i).positive? %>
-            <%# 件数はセルの朱の濃淡(ヒート)で示し、実数はホバー(title)で見せる。
+            <%# 件数はセルの濃淡(ヒート)で示し、実数はホバー(title)で見せる。
                 こうすると 50音表の行・列の整列が崩れず、分布が一目で分かる %>
             <% fill = @first_char_max.positive? ? (count.to_f / @first_char_max).round(3) : 0 %>
             <%= link_to words_path(first_char: kana),
@@ -46,7 +47,7 @@
   <% if lengths.empty? %>
     <p class="empty-note"><%= icon "binoculars" %><%= t("browse.index.empty") %></p>
   <% else %>
-    <%# 50音表と同じ朱ヒート(単色の濃淡)で件数の分布を塗る。索引全体で文法を揃える %>
+    <%# 50音表と同じヒート(単色の濃淡)で件数の分布を塗る。索引全体で文法を揃える %>
     <% length_max = @reading_length_counts.values.max %>
     <ul class="browse-lengths">
       <% lengths.each do |length| %>

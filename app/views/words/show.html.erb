@@ -9,9 +9,10 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), words_path ], [ @word.surface, nil ] ] %>
 
-<header class="page-header">
+<header class="page-header page-header--rail">
+  <div class="page-header__main">
   <p class="page-eyebrow">
-    <span><%= t("words.show.headword") %></span>
+    <span class="label-en"><%= t("labels.en.headword") %></span>
     <%# 見出し語ストリップに溶け込ませた控えめなランダム導線。下部まで下がらずに回遊できる %>
     <span class="page-eyebrow__meta">
       <span class="mono"><%= t("words.show.record_number", id: @word.id) %></span>
@@ -31,7 +32,7 @@
   <p class="page-title-meta">
     <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
   </p>
-  <%# 動的に組み立てる解説文。図鑑の説明欄のように、墨1px枠のパネルへ収める %>
+  <%# 動的に組み立てる解説文。細罫の下に控えめに添える %>
   <% if lead.present? %>
     <figure class="word-flavor">
       <figcaption class="word-flavor__label mono"><%= icon "quotes" %><%= t("words.show.flavor_label") %></figcaption>
@@ -53,6 +54,21 @@
       <%= icon "link" %><span data-clipboard-target="label"><%= t("words.show.share.copy") %></span>
     </button>
   </div>
+  </div>
+
+  <%# 右のレール: この語の一番の指標(読みの文字数)を線だけの数字で置き、
+      その下に読みを五十音の円環で一筆書きにした線画を常時出す(docs/design.md §5.9) %>
+  <% headline_sense = @word.word_senses.first %>
+  <% if headline_sense&.reading_length %>
+    <div class="page-header__rail">
+      <div>
+        <span class="figure-number figure-number--sm"><%= headline_sense.reading_length %></span>
+        <span class="figure-caption"><%= t("labels.en.characters") %></span>
+      </div>
+      <%= render "shared/kana_ring_art", reading: headline_sense.reading,
+            caption: t("labels.en.kana_ring") %>
+    </div>
+  <% end %>
 </header>
 
 <% if @word.word_senses.empty? %>
@@ -62,7 +78,7 @@
     <% @word.word_senses.each.with_index(1) do |sense, number| %>
       <%# 語義カードは見出し+意味+属性で自己完結する辞書項目なので article %>
       <article class="sense-card">
-        <span class="sense-card__number"><%= t("words.show.sense_number", number: format("%02d", number)) %></span>
+        <span class="sense-card__number"><%= t("words.show.sense_number", number: number) %></span>
 
         <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.2) %>
         <h2 class="sense-heading">
@@ -86,7 +102,7 @@
           <ul class="annotations">
             <% sense.word_sense_features.each do |feature| %>
               <li class="annotation">
-                <%# チップは同じ特徴の単語一覧へ、該当部分は朱ハイライト+読みルビ %>
+                <%# チップは同じ特徴の単語一覧へ、該当部分は淡いハイライト+読みルビ %>
                 <%= link_to feature.linguistic_feature.name,
                       words_path(linguistic_feature_id: feature.linguistic_feature_id), class: "chip" %>
                 <ruby class="annotation-target"><%= feature.target %><rt><%= feature.target_reading %></rt></ruby>

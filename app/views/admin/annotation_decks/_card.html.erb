@@ -50,7 +50,7 @@
         <% proposal.senses.each_with_index do |sense, i| %>
           <div class="ann-proposal__sense">
             <% if proposal.multiple_senses? %>
-              <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= format("%02d", i + 1) %></span>
+              <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
             <% end %>
             <%= render "admin/annotations/proposal_sense", sense: sense, word: word, creatable: false %>
           </div>

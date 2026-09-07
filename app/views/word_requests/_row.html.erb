@@ -10,7 +10,7 @@
           placeholder: t("word_requests.new.surface_placeholder"), autocomplete: "off" %>
 
     <%# 重複チェックの結果は、その語の入力欄の真下に出す(専用の列や別区画を作らない)。
-        既に載っている・似ている場合だけ朱枠で引き止め、未収録は枠なしで静かに伝える。 %>
+        既に載っている・似ている場合だけ赤枠で引き止め、未収録は枠なしで静かに伝える。 %>
     <% if result %>
       <p class="dup-note dup-note--<%= result.kind %>">
         <span class="dup-note__verdict"><%= t("word_requests.duplicates.#{result.kind}_title") %></span>

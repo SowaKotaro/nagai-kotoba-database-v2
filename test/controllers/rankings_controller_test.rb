@@ -33,11 +33,11 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".rank-board__more[rel=nofollow]", count: boards
   end
 
-  test "行は順位・見出し語・指標値を持ち、上位3位は刻印になる" do
+  test "行は順位・見出し語・指標値を持ち、上位3位は色が付く" do
     get rankings_path
     assert_select "#rank-length-desc .rank-row", count: 2
     assert_select "#rank-length-desc .rank-row:first-child" do
-      assert_select ".rank-row__no.rank-row__no--top", text: "01"
+      assert_select ".rank-row__no.rank-row__no--top", text: "1"
       assert_select "a.rank-row__surface[href=?]", word_path(words(:abc_murder)), text: "ABC殺人事件"
       assert_select ".rank-row__number", text: "7"
       assert_select ".rank-row__unit", text: I18n.t("rankings.boards.length_desc.unit")

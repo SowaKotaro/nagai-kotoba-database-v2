@@ -34,6 +34,11 @@ class HomeController < ApplicationController
                          .includes(word_senses: [ :part_of_speech, :entity_type ])
                          .order(WordSort.new("length_desc").order_clause)
                          .limit(RANKING_LIMIT)
+    # 看板に出す「最長の読み」。サイト最大のフックになる数で、下の「読みが長い言葉」の
+    # 1 位と同じ値になる。@longest_words は読み込み済みなので追加のクエリは発行しない。
+    # load してから first を取る。未読込のリレーションに first を呼ぶと LIMIT 1 の
+    # 問い合わせが別に飛び、ビューで改めて 10 件を引き直すことになる。
+    @longest_reading_length = @longest_words.load.first&.word_senses&.first&.reading_length
     @featured_word = featured_word
   end
 
@@ -43,6 +48,11 @@ class HomeController < ApplicationController
   def featured_word
     return nil if @word_count.zero?
 
-    Word.annotated.includes(:word_senses).order(:id).offset(Date.current.jd % @word_count).first
+    # ジャンル・エンティティ・品詞・語種まで見せるので、1語ぶんとはいえ個別に引かないよう先読みする
+    Word.annotated
+        .includes(word_senses: [ { genre: { parent: :parent } }, :entity_type, :part_of_speech, :word_origins ])
+        .order(:id)
+        .offset(Date.current.jd % @word_count)
+        .first
   end
 end

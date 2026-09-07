@@ -5,27 +5,32 @@
   <title>リクエストを処理できませんでした (422) | 長い言葉のデータベース</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    /* 静的ページのため、デザイントークンの値をリテラルで持つ(docs/design.md)。角丸・影なし。 */
+    /* 静的ページのため、デザイントークンの値をリテラルで持つ(docs/design.md)。 */
     * { box-sizing: border-box; }
     body {
       margin: 0; min-height: 100vh; padding: 24px;
       display: flex; align-items: center; justify-content: center;
-      background: #FAF8F3; color: #191813; line-height: 1.9;
-      font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background: #EFF2F6; color: #232A31; line-height: 1.9; letter-spacing: .03em;
+      font-family: -apple-system, BlinkMacSystemFont, Inter, "Segoe UI",
+                   "Hiragino Kaku Gothic Pro", "Noto Sans JP", Meiryo, sans-serif;
     }
-    .box { width: 100%; max-width: 36em; border: 1px solid #191813; padding: 40px 32px; }
-    .code {
-      margin: 0 0 8px; font-size: 64px; line-height: 1; color: #C43A1E; letter-spacing: .02em;
-      font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+    .box { width: 100%; max-width: 30em; text-align: center; }
+    .code { margin: 0 0 8px; font-size: 12px; color: #63686C; }
+    h1 { margin: 0 0 16px; font-size: 20px; font-weight: 400; }
+    p { margin: 0 0 32px; color: #5F6568; font-size: 14px; }
+    .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .links a {
+      color: #232A31; text-decoration: none; border: 1px solid #C6CCD5; border-radius: 999px;
+      padding: 8px 20px; font-size: 14px;
     }
-    h1 {
-      margin: 0 0 16px; font-size: 24px; font-weight: 600;
-      font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+    .links a:hover { background: #F7F9FC; border-color: #63686C; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #191D22; color: #E3E7EA; }
+      .code { color: #798085; }
+      p { color: #98A0A5; }
+      .links a { color: #E3E7EA; border-color: #3A4148; }
+      .links a:hover { background: #14181C; border-color: #868D92; }
     }
-    p { margin: 0 0 24px; }
-    .links { display: flex; flex-wrap: wrap; gap: 12px; border-top: 1px solid #C9C5B4; padding-top: 20px; }
-    .links a { color: #191813; text-decoration: none; border: 1px solid #191813; padding: 4px 14px; font-size: 14px; }
-    .links a:hover { background: #191813; color: #FAF8F3; }
   </style>
 </head>
 <body>

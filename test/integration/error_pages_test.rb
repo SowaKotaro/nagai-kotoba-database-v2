@@ -5,11 +5,12 @@ require "test_helper"
 class ErrorPagesTest < ActionDispatch::IntegrationTest
   def page(name) = File.read(Rails.root.join("public", name))
 
-  test "404 は日本語・ブランド色で、主要ページへの導線がある" do
+  test "404 は日本語・デザイントークンの配色で、主要ページへの導線がある" do
     html = page("404.html")
     assert_includes html, "ページが見つかりません"
     assert_includes html, 'lang="ja"'
-    assert_includes html, "#C43A1E"          # 朱
+    assert_includes html, "#232A31"          # --text(デザイントークンの文字色)
+    assert_includes html, "prefers-color-scheme: dark" # ダークにも追従する
     assert_includes html, 'href="/"'
     assert_includes html, 'href="/words"'
     assert_includes html, 'href="/search"'

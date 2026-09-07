@@ -1,0 +1,10 @@
+<%# 画像プレースホルダ(docs/design.md §5.7)。
+    実素材が入るまでの間、置き場所と用途・目安サイズだけを示しておく。
+    locals: label(必須) / hint(任意) / modifier(任意: image-slot--banner など) %>
+<figure class="image-slot <%= local_assigns[:modifier] %>" role="img" aria-label="<%= label %>">
+  <%= icon "image" %>
+  <figcaption class="image-slot__label"><%= label %></figcaption>
+  <% if local_assigns[:hint].present? %>
+    <p class="image-slot__hint"><%= hint %></p>
+  <% end %>
+</figure>

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- ブランド印章の favicon。単体ファイルのため色はトークンと同値をリテラルで持つ
-     (--shu: #C43A1E / --bg: #FAF8F3。docs/design.md §1) -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <rect width="24" height="24" fill="#C43A1E"/>
-  <text x="12" y="17.5" text-anchor="middle" font-size="14" font-family="serif" fill="#FAF8F3">言</text>
+<!-- ファビコン。サイト名の読み「ナガイコトバノデータベース」を五十音の円環で一筆書きにした図で、
+     ヘッダーのブランドマーク(shared/_brand_mark)・ホーム最上部の印と同じ KanaRing の座標を使う。
+     座標は KanaRing.path("ナガイコトバノデータベース") の出力(viewBox 200)。
+     単体ファイルなので色はトークンと同値をリテラルで持つ(text #232A31 / dark-text #E3E7EA)。
+     ブラウザのタブがライトでもダークでも沈まないよう、地と線を prefers-color-scheme で入れ替える。 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <style>
+    .plate { fill: #232A31; }
+    .mark  { stroke: #FFFFFF; }
+    @media (prefers-color-scheme: dark) {
+      .plate { fill: #E3E7EA; }
+      .mark  { stroke: #232A31; }
+    }
+  </style>
+  <rect class="plate" width="200" height="200" rx="66"/>
+  <circle class="mark" cx="100" cy="100" r="82" fill="none" stroke-width="5" opacity="0.5"/>
+  <polyline class="mark" fill="none" stroke-width="6"
+            stroke-linejoin="round" stroke-linecap="round"
+            points="132.67,175.21 151.75,36.39 111.17,18.76 177.27,72.54 142.61,170.06 77.88,178.96 88.83,181.24 151.75,163.61 172.81,137.73 48.25,163.61 181.81,105.6"/>
 </svg>

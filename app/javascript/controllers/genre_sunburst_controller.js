@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 //   - サンバーストは maxdepth: 2 で常に「中心+2階層」だけ描画する(小分類は中分類を
 //     押したときに初めて現れる。ラベルが読め、ズームの再描画も軽い)
 //   - 右は 大分類の積み上げ棒 → 押すとその大分類の中分類の積み上げ棒 → さらに押すと
-//     その中分類の小分類を墨枠タグ(件数付き)の一覧で表示する
+//     その中分類の小分類をタグ(件数付き)の一覧で表示する
 //   - 末端(小分類)は扇もタグも、そのジャンルで絞り込んだ語の一覧へ遷移する
 // Plotly(vendor/javascript/plotly.min.js)はこのページ専用のため、接続時に1度だけ読み込む。
 export default class extends Controller {
@@ -13,10 +13,10 @@ export default class extends Controller {
                     "smallContainer", "smallTitle", "smallList"]
   static values = { script: String, searchUrl: String, countLabel: String, smallsSuffix: String }
 
-  // 朱の濃淡だけのパレット(--shu #C43A1E 起点。多色カテゴリカルは作らない)
+  // チャート色(--chart #6F8EA8)の濃淡だけのパレット。多色カテゴリカルは作らない
   static palette = [
-    "#C43A1E", "#CC5036", "#D4664E", "#DC7C66", "#E4927E",
-    "#EBA896", "#F1BDAE", "#F6D0C5", "#F9E0D9", "#FBEDE8"
+    "#6F8EA8", "#829DB4", "#95ACC0", "#A8BBCC", "#BBCAD8",
+    "#C9D5E0", "#D7E0E8", "#E3E9EF", "#EDF1F5", "#F5F8FA"
   ]
 
   async connect() {
@@ -35,14 +35,14 @@ export default class extends Controller {
     if (window.Plotly) this.plots.forEach((element) => window.Plotly.purge(element))
   }
 
-  // グラフの色は JS に持たせず CSS のトークンから読む(ダークで地と墨が入れ替わるため)。
+  // グラフの色は JS に持たせず CSS のトークンから読む(ダークで地と文字色が入れ替わるため)。
   // 扇・棒を仕切る線は「地の色」で抜く。
   get separatorColor() {
     return this.token("--bg")
   }
 
-  get inkColor() {
-    return this.token("--ink")
+  get textColor() {
+    return this.token("--text")
   }
 
   token(name) {
@@ -55,7 +55,7 @@ export default class extends Controller {
 
     this.plots.forEach((element) => {
       window.Plotly.restyle(element, { "marker.line.color": this.separatorColor })
-      window.Plotly.relayout(element, { "font.color": this.inkColor })
+      window.Plotly.relayout(element, { "font.color": this.textColor })
     })
   }
 
@@ -80,7 +80,7 @@ export default class extends Controller {
       plot_bgcolor: "transparent",
       // 色は地の上に直に載る文字(サンバースト中心のルートラベルなど)のためのもの。
       // 扇の中のラベルは塗りに対して Plotly が自動でコントラストを取るので影響しない。
-      font: { family: "'Shippori Mincho', 'Hiragino Mincho ProN', serif", size: 13, color: this.inkColor }
+      font: { family: this.token("--font-sans"), size: 13, color: this.textColor }
     }
   }
 
@@ -229,7 +229,7 @@ export default class extends Controller {
     }
   }
 
-  // --- 選んだ中分類の小分類(墨枠タグ+件数の一覧。多くても縦に伸びず、そのまま検索導線) ---
+  // --- 選んだ中分類の小分類(タグ+件数の一覧。多くても縦に伸びず、そのまま検索導線) ---
 
   expandMedium(mediumId) {
     const medium = this.nodeOf(mediumId)

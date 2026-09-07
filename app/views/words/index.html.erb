@@ -17,12 +17,36 @@
 <% content_for :robots, "noindex,follow" unless indexable %>
 <% canonical_path canonical_index_path(@search, @page, @sort) %>
 <% content_for :title, page_heading %>
-<% content_for :description,
-     heading ? t("words.index.facet_description", label: heading) : t("words.index.description") %>
+<%# ページの説明文。meta description と、ページ頭のリードの両方で使う %>
+<% page_description = heading ? t("words.index.facet_description", label: heading) : t("words.index.description") %>
+<% content_for :description, page_description %>
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ page_heading, nil ] ] %>
 
-<h1 class="page-title"><%= page_heading %></h1>
+<%# この面でいちばん読みが長い語。レールの線画に使う。語義は includes 済みなので追加のクエリは無い %>
+<% headline_sense = @words.flat_map(&:word_senses).max_by { |sense| sense.reading_length.to_i } %>
+
+<header class="page-header page-header--rail">
+  <div class="page-header__main">
+    <p class="label-en"><%= t("labels.en.words_index") %></p>
+    <%# 標識の2行目はいまの頁の位置。総件数はレールの数字とツールバーの「全 N 語」が持つ %>
+    <p class="label-en"><%= t("labels.en.page_of", page: @page, total: @total_pages) %></p>
+    <h1 class="page-title"><%= page_heading %></h1>
+    <p class="page-lead"><%= page_description %></p>
+  </div>
+
+  <%# レール: この面が何件の面なのか(絞り込むと変わる)と、その中でいちばん長い読みの円環 %>
+  <div class="page-header__rail">
+    <div>
+      <span class="figure-number figure-number--sm"><%= number_with_delimiter(@total_count) %></span>
+      <span class="figure-caption"><%= t("labels.en.entries_unit") %></span>
+    </div>
+    <% if headline_sense&.reading.present? %>
+      <%= render "shared/kana_ring_art", reading: headline_sense.reading,
+            caption: t("labels.en.longest_here") %>
+    <% end %>
+  </div>
+</header>
 
 <% conditions = applied_search_conditions(@search) %>
 <% if conditions.any? %>
@@ -49,7 +73,14 @@
 <% end %>
 
 <div class="entry-toolbar">
-  <p class="entry-count"><%= t("words.index.total", count: @total_count) %></p>
+  <p class="entry-count">
+    <%= t("words.index.total", count: @total_count) %>
+    <%# いま何件目を見ているか。手本(ただ、そこ)の「001–022 / 022」と同じ役割 %>
+    <% if @words.any? %>
+      <% first_index = (@page - 1) * WordsController::PER_PAGE + 1 %>
+      <span class="entry-range mono"><%= format("%03d", first_index) %>–<%= format("%03d", first_index + @words.size - 1) %></span>
+    <% end %>
+  </p>
 
   <% if @words.any? %>
     <div class="entry-toolbar__controls">

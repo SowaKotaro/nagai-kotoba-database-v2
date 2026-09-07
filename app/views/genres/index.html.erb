@@ -4,13 +4,37 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("genres.index.title"), nil ] ] %>
 
-<header class="page-header">
-  <p class="page-eyebrow"><span><%= icon "tag" %><%= t("genres.index.eyebrow") %></span></p>
-  <h1 class="page-title"><%= t("genres.index.title") %></h1>
-  <p class="page-lead"><%= t("genres.index.lead") %></p>
-</header>
-
+<%# 大分類とその語義数は、ページ頭のレールの図と下の一覧の両方で使うので先に出す %>
 <% larges = genres_with_published(nil, @genres_by_parent, @published_counts) %>
+<%# 大分類ごとの公開語義数。下の横棒と、レールの放射図の頂点の距離に使う %>
+<% large_counts = larges.to_h { |genre| [ genre.id, genre_published_count(genre, @genres_by_parent, @published_counts) ] } %>
+
+<header class="page-header page-header--rail">
+  <div class="page-header__main">
+    <p class="label-en"><%= t("labels.en.genres") %></p>
+    <%# 標識の2行目は階層の深さと大分類の数。分類の総数はレールの数字が持つ %>
+    <p class="label-en"><%= t("labels.en.genre_nodes", count: larges.size) %></p>
+    <h1 class="page-title"><%= t("genres.index.title") %></h1>
+    <p class="page-lead"><%= t("genres.index.lead", count: number_with_delimiter(@published_counts.size)) %></p>
+  </div>
+
+  <%# レール: このページの性格を表す数(公開語をもつ分類の数)と、大分類ごとの語義数を
+      円の上に並べた線画。数はホームの「ジャンル数」と同じ定義に揃える %>
+  <div class="page-header__rail">
+    <div>
+      <span class="figure-number figure-number--sm"><%= number_with_delimiter(@published_counts.size) %></span>
+      <span class="figure-caption"><%= t("labels.en.genres_unit") %></span>
+    </div>
+    <%= render "shared/radial_art",
+          entries: larges.map { |genre| [ genre.name, large_counts[genre.id] ] },
+          caption: t("labels.en.genre_spread") %>
+  </div>
+</header>
+<%# 大分類の公開語義数。数字だけだと 143 と 196 の差が読めないので、細い横棒を添えて
+    「比べられる図」にする(docs/design.md §5.9)。最大値で割ると 73〜97% に潰れて差が見えないため、
+    最小値〜最大値を 20〜100% に写して幅の差を作る(レールの放射図も同じ写像) %>
+<% count_min, count_max = large_counts.values.minmax %>
+<% bar_width = ->(count) { count_max.to_i == count_min.to_i ? 100 : (20 + (count - count_min) * 80.0 / (count_max - count_min)).round } %>
 <% if larges.empty? %>
   <p class="empty-note"><%= icon "binoculars" %><%= t("genres.index.empty") %></p>
 <% else %>
@@ -23,7 +47,9 @@
         <summary class="genre-fold__summary genre-hub__summary">
           <%= icon "caret_down", "genre-fold__caret" %>
           <span class="genre-hub__large-name"><%= large.name %></span>
-          <span class="genre-hub__count mono"><%= genre_published_count(large, @genres_by_parent, @published_counts) %></span>
+          <span class="genre-hub__bar" aria-hidden="true"
+                style="--w: <%= bar_width.call(large_counts[large.id]) %>%"></span>
+          <span class="genre-hub__count mono"><%= large_counts[large.id] %></span>
         </summary>
         <div class="genre-fold__body">
           <%= link_to words_path(genre_id: large.id), class: "genre-hub__whole icon-label" do %>

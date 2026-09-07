@@ -1,6 +1,6 @@
 <%# 1つの語義提案の内訳(意味・ジャンル・エンティティ・品詞・語種・別表記)。
     local: sense(AnnotationProposal::SenseProposal) / word / creatable。
-    未知のマスタ名は新設候補(朱)で示し、creatable(単一語義)ならワンタップ作成ボタンにする(Issue 66)。 %>
+    未知のマスタ名は新設候補のバッジで示し、creatable(単一語義)ならワンタップ作成ボタンにする(Issue 66)。 %>
 <dl class="ann-proposal__grid">
   <% if sense.meaning %>
     <dt><%= t("admin.annotations.meaning") %></dt>
@@ -65,7 +65,7 @@
   <% end %>
 
   <%# 言語的特徴(該当部分つき)。反映すると範囲タップ済みの状態でフォームに組まれる。
-      マスタに無い特徴名は朱「新設候補」で示す(反映では組まれず、その場追加が要る)。 %>
+      マスタに無い特徴名は「新設候補」のバッジで示す(反映では組まれず、その場追加が要る)。 %>
   <% if sense.linguistic_features.any? %>
     <dt><%= t("admin.annotations.features") %></dt>
     <dd>

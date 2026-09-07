@@ -82,6 +82,49 @@ ja:
               too_many_items: "一度に送れるのは %{count} 語までです。"
             items:
               blank: "を1つ以上入力してください"
+  # 区画の頭に置く英字の標識(docs/design.md §5.8)。翻訳ではなく「図」なので日本語版でも英字のまま。
+  labels:
+    en:
+      site: "NAGAI KOTOBA DATABASE"
+      est: "EST. 2026 / JAPAN"
+      words_index: "WORD INDEX"
+      headword: "HEADWORD"
+      search: "SEARCH"
+      browse: "KANA INDEX"
+      genres: "GENRES"
+      rankings: "RANKINGS"
+      stats: "STATISTICS"
+      about: "ABOUT"
+      privacy: "PRIVACY"
+      request: "REQUEST"
+      word_of_the_day: "WORD OF THE DAY"
+      recently_added: "RECENTLY ADDED"
+      longest_readings: "LONGEST READINGS"
+      words_collected: "WORDS COLLECTED"
+      characters: "CHARACTERS"
+      kana_ring: "READING PATH / 50-ON RING"
+      # 円環の標識2行目に置く値(弦が円の内側で交わった回数)
+      crossings: "%{count} CROSSINGS"
+      max: "MAX %{unit}"
+      # 標識の2行目(必ず数字を持たせる。数字が無い標識は h1 の英訳になって読まれない)
+      entries: "%{count} ENTRIES"
+      # 一覧の標識2行目。総件数はレールの巨大数字が持つので、標識はいまの頁の位置を示す
+      page_of: "PAGE %{page} / %{total}"
+      # 一覧のレールに置く線画のキャプション(この頁でいちばん読みが長い語の円環)
+      longest_here: "LONGEST ON THIS PAGE"
+      boards: "%{count} BOARDS / TOP %{limit}"
+      genre_nodes: "3 LEVELS / %{count} CATEGORIES"
+      updated: "UPDATED %{date}"
+      kana_lengths: "%{kana} KANA / %{lengths} LENGTHS"
+      # レールの figure-number に添える単位ラベル
+      genres_unit: "GENRES"
+      entries_unit: "ENTRIES"
+      # 放射図(円の上に数値を並べた線画)のキャプション
+      genre_spread: "SENSES BY CATEGORY"
+  shared:
+    radial_art:
+      aria: "%{labels} を円の上に並べ、多いものほど外へ伸ばして結んだ図"
+
   layouts:
     brand: "長い言葉のデータベース"
     search_placeholder: "単語を検索"
@@ -130,22 +173,29 @@ ja:
         search: "詳細検索で絞り込む"
       # ヒーロー: 検索を主役にする(見出し → 短い説明 → ページ最大の検索バー)
       hero_title: "長い言葉を探す。"
+      # 画像プレースホルダ(実素材が入ったら差し替えて枠ごと外す。docs/design.md §5.7)
+      # 全幅の画像帯(4枚)。収録語の世界観を写した写真・図版を想定
       search_placeholder: "単語を検索（例：不完全性定理、メンブレンキーボード）"
       advanced: "詳細検索はこちら"
       featured: "今日の一語"
       featured_more: "詳しく見る"
+      # 今日の一語の丸タグ。文字だけだと何の値か読めないのでラベルを添える(docs/design.md §5.5)
+      first_char_tag: "先頭 %{char}"
+      last_char_tag: "末尾 %{char}"
       recent: "最近追加された単語"
       ranking: "読みが長い言葉"
       see_all: "一覧へ"
       see_ranking: "ランキングへ"
       new_badge: "NEW"
+      # ページ最上部の印(五十音円環)に使うサイト名の読み。表示はされず、線の形だけになる
+      site_reading: "ナガイコトバノデータベース"
       stats:
-        words: "収録語数"
-        words_unit: "語"
         senses: "語義数"
         senses_unit: "件"
         genres: "ジャンル数"
         genres_unit: "分類"
+        longest: "最長の読み"
+        longest_unit: "字"
         monthly_new: "今月の新収録数"
         monthly_new_unit: "語"
   searches:
@@ -974,7 +1024,7 @@ ja:
       title: "ジャンルから探す"
       eyebrow: "ジャンル一覧"
       description: "収録している日本語の長い言葉を、大・中・小のジャンル階層から辿れます。各分類の公開件数つき。"
-      lead: "大分類から小分類まで、ジャンルの階層をたどって長い言葉を探せます。数字はそのジャンルに含まれる公開語義の数です。"
+      lead: "%{count} の分類を、大・中・小の階層をたどって辿れます。数字はそのジャンルに含まれる公開語義の数です。"
       whole: "%{name} 全体を見る"
       empty: "まだ公開されているジャンルがありません。"
 
@@ -983,6 +1033,9 @@ ja:
       title: "このサイトについて"
       description: "「長い言葉のデータベース」の目的・収録基準・データの精査方針・利用条件(CC BY 4.0)・連絡先。"
       lead: "「長い言葉のデータベース」は、日本語の長い言葉を収集・解析して公開するデータベースです。読みの長さ・文字の構成・韻・ジャンルなど、さまざまな軸から言葉を引ける形に整理しています。"
+      # 画像プレースホルダ(実素材が入ったら差し替えて枠ごと外す。docs/design.md §5.7)
+      image: "サイトの成り立ちを表すイラストを挿入"
+      image_hint: "横長・目安 1280 × 480px（線画のイラストを想定）"
       criteria_title: "収録の基準"
       criteria_body: "読みが10文字以上の言葉を収録対象としています。単語ごとに、読み・語義・ジャンル・品詞・語種・言語学的特徴といった情報を付与しています。"
       curation_title: "データの精査"
