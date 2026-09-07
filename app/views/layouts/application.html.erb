@@ -83,7 +83,10 @@
     <%= website_json_ld %>
   </head>
 
-  <body>
+  <%# 管理画面は「読み物」ではなく「作業画面」なので、公開側のトークン(淡い色・広い字間と
+      行間・大きな角丸)をこのクラスの下で上書きする(app/assets/stylesheets/admin.css)。
+      HTML の構成は公開側と共有したまま、見え方だけを切り替える %>
+  <body class="<%= "is-admin" if request.path.start_with?("/admin") %>">
     <%= render "shared/header" %>
     <%# 管理画面だけに出す共通サブナビ(Issue 35) %>
     <%= render "admin/nav" if admin_page? %>
