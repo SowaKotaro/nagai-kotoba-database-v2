@@ -15,7 +15,6 @@ module AdminHelper
     when "dashboard" then :dashboard
     when "annotations", "annotation_decks" then :annotations
     when "tags" then :tags
-    when "design_mocks" then :design_mocks
     when "word_requests" then :requests
     when "words"
       ADMIN_REGISTER_ACTIONS.include?(action_name) ? :register : :words

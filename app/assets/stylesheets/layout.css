@@ -1,22 +1,20 @@
-/* ページ骨格(docs/design.md §5.1)。ヘッダー・フッターとも細罫だけで区切り、面で主張しない。 */
+/* ページ骨格(docs/design.md §5.1)。
+   手本にならい、ヘッダーは罫も影も持たず、追従もしない。
+   ページは「大きな余白の中に、狭いカラムがひとつ」だけ置かれる。 */
 
 /* --- グローバルヘッダー --- */
-/* スクロールしても常に上部へ留める。ドロワー/スクリム(z-index 19〜21)は
-   このヘッダー内にあるので、ヘッダーを stacking context にしても相対順序は保たれる */
+/* ヘッダーはフッターと同じ「一段沈めた面」。白いコンテンツを上下から挟んで境目を作る。
+   --bg(#EFF2F6)だと白との差が ΔRGB 16 しかなく、design.md の下限 19 に届かなかった(実測) */
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: var(--bg);
-  border-bottom: 1px solid var(--rule);
+  background: var(--bg-soft);
 }
 
-/* 高さ 64px。情報密度を下げ、リンクどうしの間隔を広く取る */
+/* ヘッダーだけは本文より少し広く取り、ブランドとナビが1行に収まるようにする */
 .site-header__inner {
-  max-width: var(--content-width);
+  max-width: 1040px;
   margin: 0 auto;
-  min-height: 64px;
-  padding: var(--space-2) var(--space-5);
+  /* 帯は低く。ページの主役ではないので、掴めるだけの高さがあればよい */
+  padding: var(--space-3) var(--space-5);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -28,63 +26,110 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  color: var(--text);
   text-decoration: none;
   white-space: nowrap;
 }
 
+/* ブランドマーク: サイト名の読みの五十音円環(ホーム最上部の印と同じ図)。
+   小さく置くので線は実寸 1px に固定する(non-scaling-stroke。viewBox 200 のまま
+   縮めると線が消える) */
 .site-brand__seal {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   flex: none;
 }
 
+.site-brand__ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.5;
+}
+
+.site-brand__path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* 30px まで縮めると 12 本の弦が密集して塊に見えるので、線は淡く落として
+     「円の中の軌跡」として読ませる(濃くすると汚れに見える) */
+  opacity: 0.62;
+}
+
 .site-brand__name {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 17px;
-  letter-spacing: 0.12em;
+  /* 書体は本文と同じ --font-sans を継承する(2026-09-04 オーナー判断。手本「ただ、そこ」の
+     スタックを当てていたが、イメージと違うとして戻した)。太字もやめてサイト全体と同じ 400 に
+     戻した(2026-09-05 オーナー指示。これで「太字を使わない」の例外が無くなった) */
+  font-size: 16px;
+}
+
+/* ブランド名の右に添える英字。縦罫で仕切り、等幅で 1 語 1 行の 3 段に積む。
+   もとは奥付に 22px のワードマークとして置いていたものを、小さくしてここへ移した
+   (2026-09-05 オーナー指示)。**名前を掴めればよいので、読ませには来ない**濃さに留める */
+.site-brand__roman {
+  flex: none;
+  align-self: center;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.01em;
+  color: var(--text-subtle);
+  /* 3 行を塊として詰める。行送りを字面ぎりぎり(1.05)まで寄せると、行間の余りが減って
+     1 行目は下へ・最終行は上へ寄り、3 行が中央に凝縮される
+     (2026-09-05 オーナー指示「NAGAI は下揃え、DATABASE は上揃え」)。
+     負のマージンで押し込むと字面がボックスの外へ出て上下が欠けるので、行送りだけで詰める */
+  line-height: 1.05;
+}
+
+.site-brand__roman-line {
+  display: block;
 }
 
 .site-header__right {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
-/* ハンバーガー(狭幅のみ表示。デスクトップ/タブレットは非表示のまま)。
-   開閉で×に変形する(aria-expanded を JS が切り替え、CSS だけでモーフィングさせる)。 */
+/* ハンバーガー(狭幅のみ表示) */
 .nav-toggle {
   display: none;
   border: none;
   background: none;
-  padding: 14px;
-  color: var(--ink);
+  padding: 12px;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
 .nav-toggle__bars {
   display: block;
   position: relative;
-  width: 22px;
-  height: 16px;
+  width: 18px;
+  height: 12px;
 }
 
 .nav-toggle__bar {
   position: absolute;
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 1px;
+  border-radius: 1px;
   background: currentColor;
   transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease;
 }
 
 .nav-toggle__bar:nth-child(1) { top: 0; }
-.nav-toggle__bar:nth-child(2) { top: 7px; }
-.nav-toggle__bar:nth-child(3) { top: 14px; }
+.nav-toggle__bar:nth-child(2) { top: 5px; }
+.nav-toggle__bar:nth-child(3) { top: 10px; }
 
 .nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
-  top: 7px;
+  top: 5px;
   transform: rotate(45deg);
 }
 
@@ -93,7 +138,7 @@
 }
 
 .nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
-  top: 7px;
+  top: 5px;
   transform: rotate(-45deg);
 }
 
@@ -103,28 +148,25 @@
 
 .site-nav {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-6);
-  font-size: 15px;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 14px;
 }
 
 /* 直下のリンクだけを対象にする(プルダウン内のリンクは .nav-menu__panel a が受け持つ) */
 .site-nav > a {
   text-decoration: none;
-  color: var(--ink-2);
-  /* タップ領域確保(見た目は変えずに padding で広げる) */
+  color: var(--text-muted);
   padding: var(--space-2) 2px;
 }
 
 .site-nav > a:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
-/* 現在地は朱の下線 */
+/* 現在地は色を濃くするだけ。下線も面も足さない */
 .site-nav > a.is-current {
-  color: var(--ink);
-  font-weight: 500;
-  border-bottom: 2px solid var(--shu);
+  color: var(--text);
 }
 
 /* ログアウト(button_to)をナビリンクと同じ見た目にする */
@@ -136,13 +178,13 @@
   background: none;
   border: none;
   padding: var(--space-2) 2px;
-  font-size: 15px;
-  color: var(--ink-2);
+  font-size: 14px;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
 .site-nav form button:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 /* --- ナビのプルダウン(「検索」→ ジャンル/索引/詳細検索) --- */
@@ -158,25 +200,19 @@
   border: none;
   padding: var(--space-2) 2px;
   font-family: inherit;
-  font-size: 15px;
-  color: var(--ink-2);
+  font-size: 14px;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
-.nav-menu__trigger:hover {
-  color: var(--ink);
-}
-
+.nav-menu__trigger:hover,
 .nav-menu__trigger.is-current {
-  color: var(--ink);
-  font-weight: 500;
-  border-bottom: 2px solid var(--shu);
+  color: var(--text);
 }
 
-/* .icon(components.css)が後勝ちで 1em にするため、詳細度を上げて小さく保つ */
 .nav-menu__trigger .nav-menu__caret {
-  width: 0.72em;
-  height: 0.72em;
+  width: 0.7em;
+  height: 0.7em;
   transition: transform 0.15s ease;
 }
 
@@ -184,20 +220,23 @@
   transform: rotate(180deg);
 }
 
-/* 墨 1px 枠のパネル(角丸・影なし) */
+/* 浮かせるパネルなので、ここだけは影を許す */
 .nav-menu__panel {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 25;
-  min-width: 8.5rem;
+  min-width: 10rem;
+  padding: var(--space-2);
   display: flex;
   flex-direction: column;
-  background: var(--bg);
-  border: 1px solid var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
 }
 
-/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す */
 .nav-menu__panel[hidden] {
   display: none;
 }
@@ -205,99 +244,237 @@
 .nav-menu__panel a {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: var(--space-3) var(--space-4);
-  border-left: 2px solid transparent;
-  border-bottom: 1px solid var(--rule);
-  font-size: 15px;
-  color: var(--ink-2);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-muted);
   text-decoration: none;
   white-space: nowrap;
 }
 
-.nav-menu__panel a:last-child {
-  border-bottom: none;
-}
-
-/* hover は墨反転 */
 .nav-menu__panel a:hover {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-soft);
+  color: var(--text);
 }
 
-/* 現在地は朱の縦罫(下線はパネルの区切り罫と衝突するので使わない) */
 .nav-menu__panel a.is-current {
-  border-left-color: var(--shu);
-  color: var(--ink);
-  font-weight: 500;
-}
-
-.nav-menu__panel a.is-current:hover {
-  color: var(--bg);
+  color: var(--text);
 }
 
 /* --- メインコンテナ --- */
 main.container {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: var(--space-7) var(--space-5) var(--space-8);
-  /* 想定外の広い子でもページ全体が横スクロールしないようにする backstop。
-     clip なので内側の overflow-x:auto(50音表など)のスクロールには影響しない */
+  padding: var(--space-7) var(--space-5) var(--space-9);
+  /* 想定外の広い子でもページ全体が横スクロールしないようにする backstop */
   overflow-x: clip;
 }
 
-/* モバイルは左右パディングを詰めて実効幅を確保する */
 @media (max-width: 560px) {
   main.container {
-    padding: var(--space-5) var(--space-4) var(--space-6);
+    padding: var(--space-5) var(--space-4) var(--space-7);
   }
+}
+
+/* --- 全幅の帯で組むページ(トップ) ---------------------------------------
+   区画を「角丸の面」で囲うと、閉じた図形がいくつも縦に並んで一体感を失う。
+   面ではなく**画面端まで届く帯**で割り、境目は全幅の罫が受け持つ。
+   帯は左右に輪郭を持てないので、原理的に「島」にならない(docs/design.md §5.2)。 */
+main.container--flush {
+  max-width: none;
+  padding: 0;
+}
+
+
+/* 全幅ページでは紙とフッターを直に継ぐ(あいだに地が覗くと帯が途切れて見える) */
+main.container--flush + .site-footer {
+  margin-top: 0;
+}
+
+/* 全幅でもフラッシュだけは本文カラムの幅に揃える */
+main.container--flush > .flash {
+  max-width: var(--content-width);
+  margin: var(--space-5) auto 0;
+}
+
+/* 帯の中身は本文カラムの幅(800px)に戻す。ヘッダー(1040px)に合わせて広げてみたが、
+   区画が横に伸びて中身が間延びしたため取りやめた(2026-09-04 オーナー指示) */
+.band__inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+
+/* ページ最上部の印。上を広く取り、下は看板と続けて読ませたいので詰める */
+.band--mark .band__inner {
+  padding-block: var(--space-6) 0;
+}
+
+/* 看板の帯。印を受けて始まるので上は詰め、紙に入る前の下だけ広く取る */
+.band--hero .band__inner {
+  padding-block: var(--space-5) var(--space-7);
+}
+
+/* 紙の面は白 1 枚(2026-09-04 オーナー指示「やっぱり背景を全部白色に戻しましょう」)。
+   面を敷く案(区画ごとに交互 / 一覧の棚だけ)はどちらも試作のうえ取りやめ。
+   本当の困りごとは「区画の境目が分かりにくい」「中身が宙に浮いて見える」ことだったので、
+   色ではなく罫で解く。手本「ただ、そこ」も面ではなく罫で区画を割っている(§3)。
+
+   区画どうしの罫は border ではなく **1px の隙間**で作る(2026-09-06 オーナー指示)。
+   紙を罫の色で塗り、各区画を面の色で塗ると、gap がそのまま全幅の境界線になる。
+   看板と本文の切れ目だけは「ここから下は本文」の合図なので、章の罫(--text-muted)を
+   .sheet 自身の border-top として残す(要素と要素のあいだではなく、紙の上端に引く線なので) */
+.sheet {
+  border-top: 1px solid var(--text-muted);
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.sheet .band {
+  background: var(--surface);
+}
+
+/* 左のガター: 標識と小さな図を置く柱。ページを貫く縦の基準線を作る */
+.sheet .band__inner {
+  display: grid;
+  /* 袖と本体のあいだに縦罫を通すので、gap は持たせず padding で振り分ける。
+     袖の幅は「WORD OF THE DAY」が収まる値(標識 12px 化に伴い 132 → 152px) */
+  grid-template-columns: 152px minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
+  /* 区画の左右にも縦罫を立てる。袖の柱と合わせて 3 本になり、紙が額に収まる
+     (2026-09-04 オーナー指示「標識の左側と、導線の右側にも罫線を」) */
+  border-inline: 1px solid var(--border);
+}
+
+/* 袖と本体を分ける縦罫。区画をまたいで同じ位置に立つので、紙全体で 1 本の柱に見える。
+   §5.2 が意図していた「縦に長い 1 本の索引の背」は、この罫があってはじめて成立する。
+   中身がこの背に綴じられるので、宙に浮いて見えなくなる
+   (2026-09-04 オーナー指示「band__body の各コンテンツが浮いているのが気になる」) */
+.sheet .band__body {
+  border-left: 1px solid var(--border);
+  padding-left: var(--space-6);
+}
+
+/* 縦罫は区画の全高に通す。宙で途切れると「切り株」に見えて、
+   かえって中身が浮く(§5.4 で単語詳細のレールについて確かめたのと同じ)。
+   そのため上下の余白は .band__inner ではなく、袖と本体それぞれが持つ */
+.sheet .band__inner {
+  padding-block: 0;
+}
+
+.sheet .band__gutter,
+.sheet .band__body {
+  padding-block: var(--space-7);
+}
+
+/* 袖は罫のきわに寄せる(標識が背の左に貼り付いて、柱の一部として読める) */
+.sheet .band__gutter {
+  padding-right: var(--space-5);
+}
+
+.band__gutter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.band__body {
+  min-width: 0;
+}
+
+/* 区画の頭: 日本語の見出しと導線を同じ行に置く */
+/* 区画の見出し行。下に細罫を敷いて中身と地続きにする。
+   罫が無いと見出しと中身が別々に宙に置かれて見える
+   (手本「ただ、そこ」も .archive-control の下に同じ罫を持つ) */
+.band__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 767px) {
+  .band__inner {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .sheet .band__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: var(--space-6);
+    /* 狭幅ではカラムが画面幅いっぱいになるので、左右の罫は画面の縁に貼り付いて
+       見切れたように見える。額は外して横罫だけで割る */
+    border-inline: none;
+  }
+
+  /* 1 カラムに畳むと袖が本体の上に回るので、縦罫は外す
+     (残すと本体の左端に意味のない線が立つ)。上下の余白も .band__inner 側へ戻す */
+  .sheet .band__gutter,
+  .sheet .band__body {
+    padding-block: 0;
+  }
+
+  .sheet .band__body {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .sheet .band__gutter {
+    padding-right: 0;
+  }
+
+  /* 狭幅ではガターを横に寝かせ、標識と図を1行に並べる */
+  .band__gutter {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-4);
+  }
+}
+
+/* 読み物(About・プライバシー)はさらに狭く組む */
+.reading-column {
+  max-width: var(--reading-width);
 }
 
 /* --- 管理画面の共通サブナビ(Issue 35) --- */
 .admin-nav {
-  border-bottom: 1px solid var(--rule-mid);
+  border-bottom: 1px solid var(--border);
 }
 
 .admin-nav__inner {
-  max-width: var(--content-width);
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 0 var(--space-5);
+  padding: 0 var(--space-5) var(--space-3);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-4);
-  /* 狭幅では折り返さず横スクロールで逃がす(管理画面のみなので許容) */
   overflow-x: auto;
   white-space: nowrap;
+  font-size: 13px;
 }
 
 .admin-nav__label {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  color: var(--ink-3);
-  padding: var(--space-2) 0;
+  color: var(--text-subtle);
 }
 
 .admin-nav__link {
   text-decoration: none;
-  color: var(--ink-2);
-  font-size: 14px;
-  /* タップ領域確保(見た目は変えずに padding で広げる) */
-  padding: var(--space-2) 2px;
+  color: var(--text-muted);
+  padding: var(--space-1) 0;
 }
 
-.admin-nav__link:hover {
-  color: var(--ink);
-}
-
-/* 現在地は朱の下線(グローバルナビと同じ文法) */
+.admin-nav__link:hover,
 .admin-nav__link[aria-current="page"] {
-  color: var(--ink);
-  font-weight: 500;
-  border-bottom: 2px solid var(--shu);
+  color: var(--text);
 }
 
-/* 公開サイトへの出口リンクは右端に離す */
 .admin-nav__link--site {
   margin-left: auto;
   display: inline-flex;
@@ -305,20 +482,30 @@ main.container {
   gap: 4px;
 }
 
-/* --- フッター: 墨のベタ面で締める --- */
-/* --- フッター(書籍の奥付) --------------------------------
-   ページと同じ紙の色のまま、細罫で仕切って静かに終える。ベタ面では締めない。 */
+/* 未着手件数のバッジ(Issue 75) */
+.admin-nav__badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-tint);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+/* --- フッター(奥付) ------------------------------------------------
+   1列目にブランドと説明、右の3列に導線を割る。地を一段沈めた帯で静かに閉じる。 */
 .site-footer {
-  background: var(--bg);
-  color: var(--ink);
-  border-top: 1px solid var(--rule);
+  background: var(--bg-soft);
+  color: var(--text);
   margin-top: var(--space-9);
 }
 
 .site-footer__inner {
-  max-width: var(--content-width);
+  max-width: 1040px;
   margin: 0 auto;
-  padding: var(--space-8) var(--space-5) var(--space-7);
+  padding: var(--space-7) var(--space-5) var(--space-6);
   display: grid;
   grid-template-columns: 1.6fr repeat(3, 1fr);
   gap: var(--space-6);
@@ -330,66 +517,64 @@ main.container {
 }
 
 .site-footer__brand {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 17px;
-  letter-spacing: 0.1em;
-  margin: 0 0 var(--space-3);
+  font-size: 15px;
+  margin: 0 0 var(--space-2);
 }
 
 .site-footer__desc {
-  font-size: 14px;
-  line-height: 2.05;
-  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--text-muted);
   margin: 0 0 var(--space-4);
 }
 
-/* 列見出し(さがす／データ／その他)。小さく、太らせずに置く */
+/* 列見出し(さがす / データを見る / サイト情報)。太らせず、小さく置くだけ */
 .site-footer__col-title {
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--ink);
+  color: var(--text);
   margin: 0 0 var(--space-3);
-  font-family: var(--font-gothic);
 }
 
 .site-footer__nav {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .site-footer__nav a {
-  color: var(--ink-2);
+  color: var(--text-muted);
   text-decoration: none;
   width: fit-content;
 }
 
 .site-footer__nav a:hover {
-  color: var(--ink);
+  color: var(--text);
   text-decoration: underline;
-  text-decoration-color: var(--rule-mid);
+  text-decoration-color: var(--border-strong);
 }
 
+/* 奥付の最下段。細罫で切って、標識とコピーライトだけを置く */
 .site-footer__bottom {
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--border);
 }
 
 .site-footer__bottom-inner {
-  max-width: var(--content-width);
+  max-width: 1040px;
   margin: 0 auto;
   padding: var(--space-4) var(--space-5) var(--space-6);
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
-@media (max-width: 860px) {
+/* 狭幅では 4 列 → 2 列 → 1 列と畳む */
+@media (max-width: 900px) {
   .site-footer__inner {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-6) var(--space-5);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .site-footer__about {
@@ -397,40 +582,44 @@ main.container {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .site-footer__inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: var(--space-6) var(--space-4) var(--space-5);
+  }
+
+  .site-footer__bottom-inner {
+    padding: var(--space-4) var(--space-4) var(--space-6);
   }
 }
 
 /* --- ダークモードの切り替え(docs/design.md §9) ---
-   ピル型は使わない方針なので、トラックもツマミも 4px 角丸の矩形で組む。
-   ON は「墨に反転」(タグ・チップと同じ、押せることを示す唯一の強い合図)で表し、
-   朱は使わない(アクセントの総量を増やさない)。 */
+   色を持たせず、明度だけのトグル。 */
 .theme-toggle__button {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) 2px; /* 見た目は変えずタップ領域を確保(ナビリンクと同じ) */
+  padding: var(--space-2) 2px;
   border: none;
   background: none;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   cursor: pointer;
   transition: color var(--transition);
 }
 
 .theme-toggle__icon {
-  font-size: 17px; /* .icon は 1em 基準 */
+  font-size: 16px;
 }
 
 .theme-toggle__track {
   position: relative;
-  width: 34px;
+  width: 32px;
   height: 18px;
   flex: none;
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  background: var(--paper);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   transition: background var(--transition), border-color var(--transition);
 }
 
@@ -440,56 +629,68 @@ main.container {
   left: 2px;
   width: 12px;
   height: 12px;
-  background: var(--ink-3);
+  border-radius: 50%;
+  background: var(--text-subtle);
   transition: transform var(--transition), background var(--transition);
 }
 
 .theme-toggle__button:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .theme-toggle__button:hover .theme-toggle__track {
-  border-color: var(--ink);
+  border-color: var(--text-subtle);
 }
 
-/* ON(ダーク)。トラックが墨のベタになり、ツマミはその上の紙色に反転する */
+
+
 .theme-toggle__button[aria-checked="true"] {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .theme-toggle__button[aria-checked="true"] .theme-toggle__track {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--text);
+  border-color: var(--text);
 }
 
 .theme-toggle__button[aria-checked="true"] .theme-toggle__thumb {
-  transform: translateX(16px);
-  background: var(--on-ink);
+  transform: translateX(14px);
+  background: var(--bg);
 }
 
 /* --- フラッシュ(レイアウトで一元表示) --- */
 .flash {
-  border: 1px solid var(--ink);
-  padding: var(--space-2) var(--space-4);
-  font-size: 15px;
-  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-3) var(--space-5);
+  font-size: 14px;
+  margin-bottom: var(--space-6);
 }
 
 .flash .icon {
-  margin-right: 8px;
+  margin-right: var(--space-2);
+  flex: none;
+  color: var(--text-subtle);
 }
 
 .flash--alert {
-  color: var(--shu); /* エラーは朱テキストのみ。背景は塗らない */
-  border-color: var(--shu);
+  color: var(--danger);
+  background: transparent;
+  border: 1px solid var(--danger);
 }
 
-/* 375px 想定の狭幅: ナビ+検索をハンバーガーで開閉するサイドパネルに格納する */
+.flash--alert .icon {
+  color: var(--danger);
+}
+
+/* 狭幅: ナビをハンバーガーで開閉するサイドパネルに格納する */
 @media (max-width: 767px) {
   .nav-toggle {
     display: block;
     position: relative;
-    z-index: 21; /* ドロワー(20)・スクリム(19)より前面に置き、開いた後も押せるようにする */
+    z-index: 21;
   }
 
   .site-header__right {
@@ -497,16 +698,16 @@ main.container {
     top: 0;
     right: 0;
     z-index: 20;
-    width: min(280px, 80vw);
+    width: min(280px, 82vw);
     height: 100vh;
     margin: 0;
     background: var(--bg);
-    border-left: 1px solid var(--ink);
+    box-shadow: var(--shadow-pop);
     flex-wrap: nowrap;
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-5);
-    padding: var(--space-5);
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-5);
     transform: translateX(100%);
     transition: transform 0.2s ease;
     overflow-y: auto;
@@ -516,12 +717,11 @@ main.container {
     transform: translateX(0);
   }
 
-  /* リンクの行全体をタップ領域にする(文字だけでなく行いっぱいを押せるように) */
   .site-nav {
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    margin-top: var(--space-6);
+    margin-top: var(--space-5);
   }
 
   .site-nav > a,
@@ -533,44 +733,35 @@ main.container {
   .nav-menu__trigger,
   .site-nav form button {
     width: 100%;
-    padding: var(--space-4) 2px;
-    border-bottom: 1px solid var(--rule);
+    padding: var(--space-3) 2px;
     text-align: left;
   }
 
-  /* ドロワー内では他の項目と同じく行いっぱいに広げ、スイッチを右端に寄せる */
   .theme-toggle__button {
     width: 100%;
     justify-content: space-between;
-    padding: var(--space-4) 2px;
+    padding: var(--space-3) 2px;
   }
 
-  /* ドロワー内ではプルダウンを浮かせず、その場で開いて下の項目を押し下げる */
   .nav-menu__trigger {
     justify-content: space-between;
   }
 
+  /* ドロワー内ではプルダウンを浮かせず、その場で開いて下の項目を押し下げる */
   .nav-menu__panel {
     position: static;
+    transform: none;
     min-width: 0;
+    padding: 0 0 0 var(--space-4);
     border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
   }
 
   .nav-menu__panel a {
-    padding: var(--space-4) 2px var(--space-4) var(--space-5);
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .nav-menu__panel a:last-child {
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .header-search {
-    width: 100%;
-  }
-
-  .header-search__input {
-    width: 100%;
+    padding: var(--space-3) 2px;
+    border-radius: 0;
   }
 
   .nav-drawer__scrim {
@@ -587,18 +778,4 @@ main.container {
   body.nav-drawer-open {
     overflow: hidden;
   }
-}
-
-/* 管理サブナビの件数バッジ(収録リクエストの未着手。Issue 75)。
-   通知メールを持たない代わりに、管理画面に入った時点で残件に気づけるようにする */
-.admin-nav__badge {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 0 5px;
-  border: 1px solid var(--shu);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--shu);
 }

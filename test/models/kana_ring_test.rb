@@ -64,4 +64,19 @@ class KanaRingTest < ActiveSupport::TestCase
     # 同じ字の連続(退化したエッジ)も交差しない
     assert_equal 0, KanaRing.crossing_count("アアサ")
   end
+  test "stroke_length は折れ線の全長(区間の直線距離の合計)を返す" do
+    nodes = KanaRing.path("アカサ")
+    expected = nodes.each_cons(2).sum { |from, to| Math.hypot(to.cx - from.cx, to.cy - from.cy) }
+    assert_in_delta expected, KanaRing.stroke_length("アカサ"), 0.01
+  end
+
+  test "stroke_length は経路が1点以下なら0(区間が無い)" do
+    assert_equal 0, KanaRing.stroke_length("ア")
+    assert_equal 0, KanaRing.stroke_length("ー"), "円環に載らない字だけなら経路が空になる"
+    assert_equal 0, KanaRing.stroke_length("")
+  end
+
+  test "stroke_length は長音符を飛ばした経路の長さになる" do
+    assert_in_delta KanaRing.stroke_length("アカ"), KanaRing.stroke_length("アーカ"), 0.01
+  end
 end

@@ -1,0 +1,52 @@
+<%# 「読みを五十音の円環で一筆書きにした線画」。単語詳細の円環交差数(words/_kana_ring)と
+    同じ座標を使うが、こちらは数値を読ませない装飾なので、ラベルも枠も持たせない。
+    実データから生まれる図なので、写真のプレースホルダを置かずに済む(docs/design.md §5.7)。
+    locals: reading(必須) / caption(任意) / value(任意: キャプション2行目の値) / modifier(任意: 追加クラス)
+           / arc_label(任意: 円の外側を弧を描いて回る英字。ホーム最上部の印だけで使う) %>
+<% path = KanaRing.path(reading) %>
+<% if path.present? %>
+  <% arc_label = local_assigns[:arc_label] %>
+  <%# 弧ラベルのベースライン半径。文字の高さ(大文字だけなので級数の 0.7 倍)を足しても
+      viewBox(200)の内側に収まる値にしてあるので、枠を広げずに済む %>
+  <% arc_radius = 90 %>
+  <%# 折れ線の全長と円の中心を CSS 変数で渡す。ホーム最上部の印だけが、これを使って
+      「ナ」から「ス」へ 1 本ずつ描き足し、外周の英字を中心のまわりに回す(components.css) %>
+  <figure class="ring-art <%= local_assigns[:modifier] %>"
+          style="--ring-length: <%= KanaRing.stroke_length(reading) %>; --ring-center: <%= KanaRing::CENTER %>px">
+    <svg class="ring-art__svg" role="img"
+         viewBox="0 0 <%= KanaRing::VIEWBOX %> <%= KanaRing::VIEWBOX %>"
+         aria-label="<%= t("words.show.kana_ring.aria", reading: reading) %>">
+      <% if arc_label.present? %>
+        <%# 円の外側を回る英字。下から時計回りに 1 周するパスを引き、その 50% =「真上」に
+            中央揃えで載せる(真上では進行方向が左→右なので文字が正立する)。
+            パスは描かず、文字の軌道としてだけ使う。
+            id を持つので、この partial に arc_label を渡せるのは 1 ページに 1 箇所だけ %>
+        <g class="ring-art__orbit">
+          <path id="ring-art-arc" fill="none"
+                d="M <%= KanaRing::CENTER %>,<%= KanaRing::CENTER + arc_radius %>
+                   a <%= arc_radius %>,<%= arc_radius %> 0 1,1 0,<%= -arc_radius * 2 %>
+                   a <%= arc_radius %>,<%= arc_radius %> 0 1,1 0,<%= arc_radius * 2 %>"></path>
+          <text class="ring-art__arc">
+            <textPath href="#ring-art-arc" startOffset="50%" text-anchor="middle"><%= arc_label %></textPath>
+          </text>
+        </g>
+      <% end %>
+      <circle class="ring-art__guide" cx="<%= KanaRing::CENTER %>" cy="<%= KanaRing::CENTER %>"
+              r="<%= KanaRing::RADIUS %>"></circle>
+      <polyline class="ring-art__stroke"
+                points="<%= path.map { |node| "#{node.cx},#{node.cy}" }.join(" ") %>"></polyline>
+      <% start = path.first %>
+      <circle class="ring-art__start" cx="<%= start.cx %>" cy="<%= start.cy %>" r="2.6"></circle>
+    </svg>
+    <% if local_assigns[:caption].present? %>
+      <%# 標識は2行にし、2行目に必ず「値」を置く(docs/design.md §5.8)。
+          図が何本の弦で交差しているかを数で併記しておくと、線の込み具合が読める %>
+      <figcaption class="ring-art__caption label-en">
+        <%= caption %>
+        <% if local_assigns[:value].present? %>
+          <span class="ring-art__value"><%= value %></span>
+        <% end %>
+      </figcaption>
+    <% end %>
+  </figure>
+<% end %>

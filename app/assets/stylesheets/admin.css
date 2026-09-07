@@ -1,0 +1,237 @@
+/*
+ * 管理画面（/admin 配下）だけに効かせる上書き。
+ *
+ * 公開側のデザインシステム「しずか」は**読み物**のための設計で、淡い色・広い字間(0.03em)と
+ * 行間(1.9)・大きな角丸・多めの transition を持つ。管理画面は**作業画面**であり、
+ * 見る人はオーナー1人なので、そのトーンを引き継ぐ必要がない(2026-09-06 オーナー指示)。
+ *
+ * 狙いは 2 つだけ:
+ *   1. 認知負荷を下げる … 文字と罫を濃くし、字間・行間を詰めて、視線の移動量を減らす
+ *   2. レンダリング負荷を下げる … 「高速アノテーション」が主題なので、
+ *      transition / animation / 影 / 大きな角丸のような、毎フレーム描き直す要素を落とす
+ *
+ * ページ構成・レイアウト・HTML は公開側と共有したまま、**トークンの上書きだけ**で切り替える。
+ * 個々のコンポーネント(.btn / .tag / .chip / .admin-*)には触らない。
+ */
+
+.is-admin {
+  /* ── 字組み ───────────────────────────────────────────────
+     読ませるためではなく、拾わせるための組み。字間を殺し、行間を詰める */
+  --tracking: 0;
+
+  /* ── 色 ───────────────────────────────────────────────────
+     公開側は「静けさ」を優先して淡いが、作業画面ではコントラストがそのまま速さになる。
+     弱い文字ほど濃くする(--text-subtle と --text-muted を --text に寄せる) */
+  --text-muted: #414850;
+  --text-subtle: #4a515a;
+
+  /* 罫は「どこで区切れているか」を一目で取れる濃さまで上げる */
+  --border: #c4cad3;
+  --border-strong: #98a1ad;
+
+  /* ── 形 ───────────────────────────────────────────────────
+     角丸は輪郭を曖昧にするぶん、形の判別に一手間かかる。ほぼ直角にする。
+     ピル(999px)も四角へ。描画コストも下がる */
+  --radius: 3px;
+  --radius-lg: 4px;
+  --radius-pill: 3px;
+
+  /* 影は使わない(公開側でも使っていないが、管理画面のパネルに残っているものを潰す) */
+  --shadow-soft: none;
+  --shadow-pop: none;
+
+  line-height: 1.5;
+}
+
+/* 見出し・本文の行送りも詰める(base.css の 1.75〜1.9 を上書き) */
+.is-admin h1,
+.is-admin h2,
+.is-admin h3,
+.is-admin h4 {
+  line-height: 1.4;
+}
+
+/* ── レンダリング負荷 ───────────────────────────────────────
+   **全称セレクタ(.is-admin *)で transition を潰す案は計測して取りやめた**(2026-09-06)。
+   スタイル再計算のたびに全要素へマッチするぶん、かえって重くなる
+   (強制レイアウト30回: 全称セレクタあり 255.7ms / なし 175.1ms を実測)。
+   transition はそもそも hover したときだけ走るので、常時のコストではない。
+
+   効くのは「毎回の描画で払っているもの」を減らすことのほう:
+   影(合成レイヤ)・大きな角丸・SVG の描画・要らない要素そのもの。 */
+.is-admin .admin-card,
+.is-admin .nav-menu__panel,
+.is-admin .proposal,
+.is-admin .sense-card {
+  box-shadow: none;
+}
+
+/* ── 画面に出す物を減らす ───────────────────────────────────
+   公開側のヘッダーは「サイトの顔」を作るための要素を持つが、作業画面では
+   どれも読まない。**描かない = 認知負荷もレンダリング負荷も下がる**。
+   ログアウトとナビは残す(それだけは作業中に押す) */
+.is-admin .site-brand__seal,
+.is-admin .site-brand__roman {
+  display: none;
+}
+
+/* ヘッダーの帯を低くする。作業の主役は下の本文なので、上に場所を割かない */
+.is-admin .site-header__inner {
+  padding-block: var(--space-2);
+}
+
+.is-admin .site-brand__name {
+  font-size: 14px;
+}
+
+/* 本文の上下余白も詰める(公開側は「疎でよい」が、作業画面では1画面の情報量が価値) */
+.is-admin main.container {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+
+/* ── 色のメリハリ ───────────────────────────────────────────
+   公開側は無彩色で通すが、管理画面では**色が最短の手がかり**になる
+   (2026-09-07 オーナー指摘「色のメリハリもないので、各コンテンツや数字、文章を認識しにくい」)。
+   増やすのは 2 色だけ: 操作の色(青)と、要対応を示す色(橙)。
+   状態の意味を持つ --danger / --success は公開側と共通のものをそのまま使う。 */
+.is-admin {
+  --admin-accent: #1d4ed8;   /* 押せるもの・アイコン */
+  --admin-warn: #b45309;     /* 未対応・要判断の件数 */
+}
+
+/* ── グリッドの境界を見せる ─────────────────────────────────
+   カードが枠も面も持たないと、どこからどこまでが 1 枚か分からない
+   (2026-09-07 オーナー指摘「グリッドの境界が見えないのでわかりにくい」) */
+.is-admin .admin-card {
+  border: 1px solid var(--border);
+}
+
+.is-admin .admin-card:hover {
+  border-color: var(--admin-accent);
+  background: var(--bg-soft);
+}
+
+/* カードの頭は「アイコン + 見出し」。形でも中身を取れるようにする */
+.is-admin .admin-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text);
+}
+
+.is-admin .admin-card__title .icon {
+  flex: none;
+  color: var(--admin-accent);
+}
+
+/* 説明文は 1 段落として読ませる。見出しとの差を色で付ける */
+.is-admin .admin-card__desc {
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+/* カード下端の件数。カードの高さが揃うよう下に押しつけ、罫で本文と分ける */
+.is-admin .admin-card__tag {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 数字を主役にする ───────────────────────────────────────
+   ラベルと数字が同じ級数・同じ濃さだと、拾うのに一手間かかる。
+   ラベルは小さく薄く、数字は大きく濃く、上下に積んで対にする */
+.is-admin .stats-grid {
+  margin: var(--space-5) 0;
+  padding: var(--space-4) 0;
+  border-block: 1px solid var(--border);
+  gap: var(--space-4) var(--space-7);
+  justify-content: flex-start;
+}
+
+.is-admin .stats-grid__item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.is-admin .stats-grid__item dt {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.is-admin .stats-grid__item dd {
+  font-size: 22px;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.is-admin .stats-grid__unit {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* 区画の見出し(「作業」など)。本文と同じ濃さだと段が読めない */
+.is-admin .section-label {
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+/* ── 表の見出し行を面で押さえる ─────────────────────────────
+   どこまでが見出しでどこからがデータかを、罫だけでなく面でも示す */
+.is-admin .data-table thead th {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+/* ── 状態を色で分ける ───────────────────────────────────────
+   注釈の状態は 3 値(未対応 / 保留 / 完了)。文字だけだと読み取りに一手間かかるので、
+   **意味を持つ色**を当てる。色を足すのは状態と操作だけで、装飾には使わない */
+.is-admin .admin-words-table__unannotated {
+  color: var(--admin-warn);
+}
+
+.is-admin .admin-words-table__on-hold {
+  color: var(--text-muted);
+}
+
+.is-admin .admin-words-table__annotated {
+  color: var(--success);
+}
+
+/* ── 破壊的な操作を色で分ける ───────────────────────────────
+   行末の「annot.」と「del.」は同じ見た目なので、押し間違えると戻せない側だけ色を変える */
+.is-admin .btn[data-turbo-confirm],
+.is-admin form[data-turbo-confirm] .btn,
+.is-admin .btn--danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+
+.is-admin .btn[data-turbo-confirm]:hover,
+.is-admin form[data-turbo-confirm] .btn:hover,
+.is-admin .btn--danger:hover {
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+}
+
+/* ── 押せるものを青で示す ───────────────────────────────────
+   管理画面のリンクは「読み物の中のリンク」ではなく操作の入口なので、下線ではなく色で示す */
+.is-admin main a:not(.btn):not(.admin-card):not(.tag):not(.chip):not(.genre-path a) {
+  color: var(--admin-accent);
+  text-decoration: none;
+}
+
+.is-admin main a:not(.btn):not(.admin-card):hover {
+  text-decoration: underline;
+}
+
+/* ── 現在地をはっきりさせる ─────────────────────────────────
+   状態タブ・管理ナビの選択中は、下線だけでなく色でも示す */
+.is-admin .admin-status-tabs a[aria-current],
+.is-admin .admin-status-tabs .is-current,
+.is-admin .admin-nav a.is-current {
+  color: var(--admin-accent);
+  border-color: var(--admin-accent);
+}

@@ -1,0 +1,33 @@
+<%# 「並んだ数値を、円の上の一筆書きにした線画」。五十音円環(shared/_kana_ring_art)と
+    同じ円・同じ線の濃さで描くので、サイトの図は「円」ひとつの家族に収まる(docs/design.md §5.9)。
+    実データから生まれる図なので、装飾でありながら嘘がない。
+    locals: entries(必須: [[ラベル, 値], ...]) / caption(任意) / modifier(任意: 追加クラス) %>
+<% points = RadialChart.points(entries) %>
+<% if points.present? %>
+  <figure class="ring-art radial-art <%= local_assigns[:modifier] %>">
+    <svg class="ring-art__svg" role="img"
+         viewBox="0 0 <%= RadialChart::VIEWBOX %> <%= RadialChart::VIEWBOX %>"
+         aria-label="<%= t("shared.radial_art.aria",
+                           labels: points.map { |point| "#{point.label} #{point.value}" }.join("、")) %>">
+      <circle class="ring-art__guide" cx="<%= RadialChart::CENTER %>" cy="<%= RadialChart::CENTER %>"
+              r="<%= RadialChart::RADIUS %>"></circle>
+      <%# 各項目が立つ位置を示す放射線。中心から外周まで通す「目盛り」で、
+          頂点が外周までどれだけ届いていないかを読めるようにする。
+          頂点までで止めると多角形の内側が線で詰まって重くなる %>
+      <g class="radial-art__spokes">
+        <% points.each do |point| %>
+          <line x1="<%= RadialChart::CENTER %>" y1="<%= RadialChart::CENTER %>"
+                x2="<%= point.outer_cx %>" y2="<%= point.outer_cy %>"></line>
+        <% end %>
+      </g>
+      <polygon class="ring-art__stroke"
+               points="<%= points.map { |point| "#{point.cx},#{point.cy}" }.join(" ") %>"></polygon>
+      <% points.each do |point| %>
+        <circle class="radial-art__node" cx="<%= point.cx %>" cy="<%= point.cy %>" r="1.8"></circle>
+      <% end %>
+    </svg>
+    <% if local_assigns[:caption].present? %>
+      <figcaption class="ring-art__caption label-en"><%= caption %></figcaption>
+    <% end %>
+  </figure>
+<% end %>

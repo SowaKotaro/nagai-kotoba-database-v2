@@ -295,7 +295,7 @@ class SiteStatistics
 
   # ==== §8 ことばの見どころ(言語学的特徴) ==========================================
 
-  # 特徴の件数ランキングと実例(該当部分に朱下線を引くための surface / target / target_start)。
+  # 特徴の件数ランキングと実例(該当部分をハイライトするための surface / target / target_start)。
   def build_feature_ranking
     counts = WordSenseFeature.joins(word_sense: :word).merge(Word.annotated)
                              .group(:linguistic_feature_id).count

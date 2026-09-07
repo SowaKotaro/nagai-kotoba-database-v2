@@ -1,0 +1,12 @@
+<%# ヘッダーのブランドマーク。サイト名の読み「ナガイコトバノデータベース」を五十音の円環で
+    一筆書きにした図で、ホーム最上部の印(.ring-art--mark)とまったく同じ座標から生まれる
+    (docs/design.md §5.9)。小さく置くので、始点の点・外周の英字・キャプションは持たない。
+    色は currentColor で受けてライト/ダークに自動追従させる %>
+<% path = KanaRing.path(t("home.index.site_reading")) %>
+<svg class="site-brand__seal" viewBox="0 0 <%= KanaRing::VIEWBOX %> <%= KanaRing::VIEWBOX %>"
+     aria-hidden="true" focusable="false">
+  <circle class="site-brand__ring" cx="<%= KanaRing::CENTER %>" cy="<%= KanaRing::CENTER %>"
+          r="<%= KanaRing::RADIUS %>"></circle>
+  <polyline class="site-brand__path"
+            points="<%= path.map { |node| "#{node.cx},#{node.cy}" }.join(" ") %>"></polyline>
+</svg>

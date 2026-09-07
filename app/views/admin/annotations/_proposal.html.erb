@@ -1,6 +1,6 @@
 <%# Claude の提案パネル(Issue 38)。提案値・confidence・判断メモを見せ、「提案を反映」で
     フォームに初期値として流し込む(保存＝承認は人間の操作のみ)。
-    未知のマスタ名は新設候補(朱)として表示し、各行のその場追加で作ってから反映し直す。 %>
+    未知のマスタ名は新設候補として表示し、各行のその場追加で作ってから反映し直す。 %>
 <div class="ann-proposal">
   <div class="ann-proposal__head">
     <span class="ann-proposal__title"><%= t("admin.annotations.proposal.title") %></span>
@@ -16,7 +16,7 @@
               default: proposal.confidence) %>
       </span>
     <% end %>
-    <%# 立項スコア(docs/annotation-guidelines.md §2)。3以下は朱でオーナー判断を促す %>
+    <%# 立項スコア(docs/annotation-guidelines.md §2)。3以下は赤でオーナー判断を促す %>
     <% if proposal.entry_score %>
       <span class="ann-proposal__entry <%= "ann-proposal__entry--concern" if proposal.entry_concern? %>">
         <%= t("admin.annotations.proposal.entry_score", score: proposal.entry_score) %>
@@ -34,7 +34,7 @@
     <p class="ann-proposal__senses-note"><%= t("admin.annotations.proposal.multiple_senses", count: proposal.senses.size) %></p>
     <% proposal.senses.each_with_index do |sense, i| %>
       <div class="ann-proposal__sense">
-        <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= format("%02d", i + 1) %></span>
+        <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
         <%= render "proposal_sense", sense: sense, word: word, creatable: false %>
       </div>
     <% end %>

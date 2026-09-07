@@ -109,7 +109,7 @@ class AnnotationProposal < ApplicationRecord
   # 立項の懸念理由(どの原則を・なぜ欠くか)。スコア3以下の語に付く。
   def entry_notes = payload["entry_notes"].presence
 
-  # 3以下は「オーナー判断が必要」ゾーン。コンソールの提案パネルで朱バッジを出す。
+  # 3以下は「オーナー判断が必要」ゾーン。コンソールの提案パネルで赤いバッジを出す。
   def entry_concern?
     entry_score.present? && entry_score <= 3
   end

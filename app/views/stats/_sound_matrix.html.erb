@@ -1,6 +1,6 @@
 <%# 頭文字と末尾文字の分布。50音表ヒートマップ(先頭・末尾)と、
     頭文字の行×末尾文字の行の10×11マトリクス。
-    セルの朱ヒートは索引と同じ式(--fill 0〜1)。最多セルのみ数字を直書き、他はホバー(title) %>
+    セルのヒートは索引と同じ式(--fill 0〜1)。最多セルのみ数字を直書き、他はホバー(title) %>
 <div class="stats-kana-pair">
   <%= render "kana_heatmap", counts: @stats.first_char_counts, param: :first_char,
         heading: t("stats.index.sound_matrix.first_heading") %>

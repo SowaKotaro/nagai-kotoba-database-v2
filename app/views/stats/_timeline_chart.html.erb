@@ -1,6 +1,6 @@
 <%# §4 収録の推移(株価チャート式。docs/stats.md §4)。
-    上段: 累計の折れ線(墨2px) + 朱チントの面。端点に朱の点 + 累計値の直書き。
-    下段: 「出来高」= 週別新収録の棒(墨、直近週のみ朱)。locals: weeks %>
+    上段: 累計の折れ線(アクセント色) + そのチントの面。端点に点 + 累計値の直書き。
+    下段: 「出来高」= 週別新収録の棒(グレー、直近週のみアクセント色)。locals: weeks %>
 <% chart = stats_timeline_chart(weeks) %>
 <% if chart %>
   <svg class="timeline-chart" viewBox="0 0 <%= chart[:width] %> <%= chart[:height] %>" role="img"

@@ -5,6 +5,8 @@
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("stats.index.title"), nil ] ] %>
 
 <header class="page-header stats-header">
+  <p class="label-en"><%= t("labels.en.stats") %></p>
+  <p class="label-en"><%= t("labels.en.updated", date: @stats.computed_at.strftime("%Y-%m-%d")) %></p>
   <h1 class="page-title"><%= t("stats.index.title") %></h1>
   <p class="page-lead"><%= t("stats.index.lead") %></p>
   <p class="stats-computed"><%= t("stats.index.computed_at", time: @stats.computed_at.strftime("%Y-%m-%d %H:%M")) %></p>

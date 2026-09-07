@@ -1,6 +1,6 @@
 /* UI 部品(docs/design.md §5)。
-   言葉を巨大な明朝で組み、データは極小の等幅ラベルで添える(スケール対比)。
-   構造は「墨の罫線」と「墨の枠(1px)」で作る。角丸・影は使わない。 */
+   手本は「しずかなインターネット」。太字を使わず、差は「大きさ」と「文字の濃さ」だけ。
+   囲いは細罫より「淡いグレーの面 + 大きな角丸」を優先し、間は思い切って空ける。 */
 
 /* --- アイコン(Phosphor Light をインライン SVG。currentColor でトークン連動) --- */
 .icon {
@@ -27,8 +27,6 @@
 .related__title .icon,
 .prose h2 .icon,
 .sort-form__label .icon,
-.home-column__title .icon,
-.hero-featured__label .icon,
 .word-flavor__label .icon,
 .empty-note .icon {
   margin-right: 6px;
@@ -46,58 +44,55 @@
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: var(--space-5);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .breadcrumbs a {
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-decoration: none;
 }
 
 .breadcrumbs a:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .breadcrumbs__sep {
-  color: var(--rule-mid);
+  color: var(--text-subtle);
 }
 
 /* --- ページ見出し(一覧・検索など) --- */
 .page-title {
-  font-size: clamp(24px, 4vw, 36px);
+  font-size: 21px;
+  line-height: 1.7;
   overflow-wrap: anywhere;
 }
 
-/* 見出し末尾の Web 検索(外部リンク)。主役は言葉なので、墨の最も弱い色で小さく添える。
-   見出しは最大 92px まで伸びるため、font-size を継承させず独立して小さく保つ。 */
+/* 見出し末尾の Web 検索(外部リンク)。主役は言葉なので、最も弱い文字色で小さく添える。
+   見出しは画面幅で伸びるため、font-size を継承させず独立して小さく保つ。 */
 .page-title__web-search {
-  margin-left: 0.5em;
-  font-size: clamp(15px, 1.6vw, 20px);
+  margin-left: 0.4em;
+  font-size: 15px;
   line-height: 1;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-decoration: none;
-  /* 大きな字面のなかほどへ少し持ち上げ、ベースラインに沈めない */
-  vertical-align: 0.2em;
+  vertical-align: 0.1em;
 }
 
 .page-title__web-search:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .page-eyebrow {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: var(--space-3);
   margin: 0 0 var(--space-2);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.14em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 /* 記録番号とランダム導線を右肩にまとめる。導線は情報より右に置き「めくる」向きにする */
@@ -107,34 +102,32 @@
   gap: var(--space-3);
 }
 
-/* 見出し語ストリップに溶け込む控えめなランダム導線。地は ink-3、朱のシャッフル印を1つ添え、
-   hover で全体を朱へ転じて操作可能と気づかせる(型見本の朱アクセント) */
+/* 見出し語ストリップに溶け込む控えめなランダム導線。弱い文字色にシャッフル印を1つ添え、
+   hover で全体をアクセント色へ転じて操作可能と気づかせる */
 .eyebrow-random {
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .eyebrow-random .icon {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .eyebrow-random:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .page-title-meta {
-  margin: var(--space-2) 0 0;
-  font-size: 14px;
-  color: var(--ink-3);
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .entry-count {
-  margin: var(--space-2) 0 var(--space-4);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 /* --- 一覧の件数と並び順(同じ行に組む。狭幅では折り返す) --- */
@@ -143,12 +136,25 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  margin: var(--space-2) 0 var(--space-4);
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-5);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--text-muted);
+  border-bottom: 1px solid var(--border);
 }
 
 .entry-toolbar .entry-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
   margin: 0;
+}
+
+/* いま何件目を見ているか(001–050)。数えられる目盛りとして等幅で置く */
+.entry-range {
+  font-size: 11px;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 右側の操作群(シャッフル・並び順)。狭幅では件数の下へ回り込む */
@@ -172,10 +178,8 @@
 }
 
 .sort-form__label {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .sort-form__select {
@@ -183,77 +187,143 @@
   padding: 4px 8px;
 }
 
-/* --- 単語詳細: 見出し語を紙面いっぱいの明朝で組む(型見本の文法) --- */
+/* ページの頭と中身を分ける「章の罫」。サイト内で唯一、罫に文字色を使う場所。
+   手本が淡い縦罫と濃い横罫の二層を持つのに倣う(濃さは --text-muted まで。黒にはしない) */
+.page-header:not(.page-header--rail) {
+  border-bottom: 1px solid var(--text-muted);
+}
+
+/* --- レール付きのページ頭: 左に見出し、右のレールにその面を表す数と線画を置く ---
+   もとは単語詳細だけの組み(.page-header--word)だったのを、全ページ共通の型にした
+   (2026-09-04 オーナー指示「トップの雰囲気を他のページにも」)。
+   縦罫が章の罫の代わりになるので、この型のときは下端に横罫を引かない */
+.page-header--rail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+.page-header__main {
+  min-width: 0;
+}
+
+.page-header__rail {
+  border-left: 1px solid var(--border);
+  padding-left: var(--space-5);
+  padding-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  /* レールは左の見出しより背が高くなりやすく、余ったぶんがヘッダー下の空白になる。
+     一覧が始まる位置を上げるため、数字と線画の間は詰める(2026-09-06) */
+  gap: var(--space-5);
+}
+
+/* レールの中の線画は左揃えにする(数字と頭を合わせる) */
+.page-header__rail .ring-art {
+  align-items: flex-start;
+}
+
+.page-header__rail .ring-art__svg {
+  max-width: 104px;
+}
+
+.page-header__rail .ring-art__caption {
+  text-align: left;
+}
+
+/* 本文が痩せるので、1024px 未満ではレールを下へ回して横並びにする */
+@media (max-width: 1023px) {
+  .page-header--rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .page-header__rail {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-6);
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: var(--space-4);
+  }
+
+  .page-header__rail .ring-art__svg {
+    max-width: 120px;
+  }
+}
+
+
 .page-header {
-  padding: var(--space-5) 0 var(--space-5);
-  border-bottom: 2px solid var(--ink);
+  padding: var(--space-2) 0 var(--space-5);
   margin-bottom: var(--space-6);
 }
 
 .page-header .page-title {
-  font-size: clamp(40px, 9vw, 92px);
-  line-height: 1.15;
-  letter-spacing: 0.01em;
+  font-size: 24px;
+  line-height: 1.7;
+  margin-top: var(--space-2);
   overflow-wrap: anywhere;
 }
 
 .page-header .page-title-meta {
-  margin-top: var(--space-4);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
+  margin-top: var(--space-3);
+  font-size: 13px;
 }
 
 /* 見出し語ブロック内の自己完結リード文(定義文)。本文体で読ませる(Issue 18)。
    横幅は親(見出し語ブロック)いっぱいまで取る(オーナー判断で字送りの上限は設けない) */
 .page-header .page-lead {
-  margin: var(--space-4) 0 0;
-  font-size: 16px;
-  line-height: 1.9;
+  margin: var(--space-5) 0 0;
+  max-width: var(--reading-width);
+  font-size: 15px;
+  line-height: 2;
+  color: var(--text-muted);
 }
 
 /* 動的に組み立てる解説文。細罫の下に控えめに置き、突拍子ない印象を避ける。
    横幅は親(見出し語ブロック)いっぱいまで取り、ひっそりと添える */
 .word-flavor {
   margin: var(--space-5) 0 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--rule);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--bg-soft);
 }
 
 .word-flavor__label {
   margin: 0 0 var(--space-1);
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .word-flavor__text {
   margin: 0;
-  color: var(--ink-2);
+  color: var(--text-muted);
   font-size: 14px;
-  line-height: 1.85;
+  line-height: 1.95;
 }
 
 /* 恒久ページ(About 等)の本文。幅は他の要素と同じだけ取る(Issue 20) */
 .prose {
   font-size: 15px;
+  max-width: var(--reading-width);
 }
 
 .prose section + section {
-  margin-top: var(--space-6);
+  margin-top: var(--space-7);
 }
 
 .prose h2 {
-  margin: 0 0 var(--space-3);
-  font-size: clamp(18px, 2.4vw, 22px);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--rule-mid);
+  margin: 0 0 var(--space-4);
+  font-size: 17px;
+  color: var(--text);
 }
 
 /* FAQ の質問文(h3)と活用シーンの箇条書き */
 .prose h3 {
-  margin: var(--space-4) 0 var(--space-1);
-  font-size: 16px;
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: 15px;
 }
 
 .prose ul {
@@ -268,15 +338,22 @@
 /* クレジット文は等幅で「そのまま貼れる」体裁にする */
 .prose__credit {
   font-family: var(--font-mono);
-  font-size: 14px;
-}
-
-.prose__note {
-  color: var(--ink-3);
   font-size: 13px;
 }
 
-/* --- 語義パネル: 墨の1px枠(印刷物のフレーム) --- */
+/* 本文中のリンクだけは下線を出す(地の文に埋もれさせない) */
+.prose p a,
+.prose li a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose__note {
+  color: var(--text-subtle);
+  font-size: 13px;
+}
+
+/* --- 語義パネル: 枠を持たない、淡い面の大きな角丸 --- */
 .sense-list {
   display: grid;
   gap: var(--space-5);
@@ -284,31 +361,24 @@
 
 .sense-card {
   position: relative;
-  border: 1px solid var(--ink);
-  /* 紙地から一段持ち上げて、枠の中が「刷られた面」に見えるようにする */
-  background: var(--paper);
-  padding: var(--space-5) var(--space-6) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   /* グリッド項目の既定 min-width: auto だと、長いローマ字などの折り返せない
      文字列が列幅を押し広げ、モバイルで枠ごと画面からはみ出す */
   min-width: 0;
 }
 
-/* 左上の通し番号(01/02…)。朱の刻印 */
+/* 通し番号(語義 1 / 2 …)。小さな見出しとして静かに置く */
 .sense-card__number {
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.14em;
-  color: var(--bg);
-  background: var(--ink);
-  padding: 3px 10px;
+  display: block;
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .sense-heading {
-  margin-top: var(--space-4);
-  font-size: clamp(22px, 3.6vw, 32px);
+  margin-top: var(--space-3);
+  font-size: 19px;
   overflow-wrap: anywhere;
 }
 
@@ -316,14 +386,10 @@
 .sense-heading-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
+  gap: var(--space-1) var(--space-4);
   margin: var(--space-2) 0 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-  /* 読みが長い語のローマ字・母音パターンは区切りの無い長大な英字列になるので、
-     どこでも折り返させる(既定では折り返せず横にはみ出す) */
+  font-size: 12px;
+  color: var(--text-subtle);
   overflow-wrap: anywhere;
 }
 
@@ -346,147 +412,43 @@
   row-gap: 2px;
 }
 
-/* 見出し語のふりがなは朱(教科書のルビの文法) */
+/* 見出し語のふりがなは本文より一段弱い文字色で添える */
 .sense-heading rt {
   /* ルビ注釈のままだと折り返さないので、通常のブロックとして流す */
   display: block;
   white-space: normal;
   overflow-wrap: anywhere;
-  font-size: 14px;
-  color: var(--shu);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .sense-meaning {
-  margin: var(--space-4) 0 0;
+  margin: var(--space-5) 0 0;
   font-size: 15px;
-  line-height: 2.1;
-}
-
-/* --- 円環交差数(印章): 交差数のカウント + 五十音円環の折り畳み。genre-fold の文法を流用 --- */
-.kana-ring {
-  border: 1px solid var(--rule-mid);
-}
-
-.kana-ring[open] {
-  border-color: var(--ink);
-}
-
-.kana-ring__summary {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  padding: 6px 12px;
-  cursor: pointer;
-  /* 既定の三角マーカーは消し、朱のキャレットで示す */
-  list-style: none;
-}
-
-.kana-ring__summary::-webkit-details-marker {
-  display: none;
+  line-height: 2;
 }
 
 /* 交差数の値(常時表示) */
 .kana-ring__count {
   font-family: var(--font-mono);
-  font-size: 15px;
-  letter-spacing: 0.08em;
-  color: var(--ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
 /* 円環を開く副次的な導線 */
-.kana-ring__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
-}
-
-.kana-ring__summary:hover .kana-ring__toggle {
-  color: var(--ink);
-}
-
-.kana-ring__caret {
-  color: var(--shu);
-  transform: rotate(-90deg);
-  transition: transform 0.15s;
-}
-
-.kana-ring[open] > .kana-ring__summary .kana-ring__caret {
-  transform: rotate(0deg);
-}
-
-.kana-ring__body {
-  border-top: 1px solid var(--rule);
-  padding: var(--space-4);
-}
-
-.kana-ring__figure {
-  margin: 0 auto;
-  max-width: 320px;
-}
-
-.kana-ring__svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
 /* 五十音を並べた外周円の薄いガイド */
-.kana-ring__guide {
-  fill: none;
-  stroke: var(--rule);
-  stroke-width: 0.6;
-}
-
-/* 読み順に結ぶ朱の折れ線 */
-.kana-ring__stroke {
-  fill: none;
-  stroke: var(--shu);
-  stroke-width: 1.4;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
+/* 読み順に結ぶアクセント色の折れ線 */
 /* 始点の刻印 */
-.kana-ring__start {
-  fill: var(--shu);
-}
-
-/* 五十音の各字。既定は薄い墨、読みに登場する字は朱で点灯 */
-.kana-ring__kana {
-  font-family: var(--font-mono);
-  font-size: 7px;
-  fill: var(--ink-3);
-  text-anchor: middle;
-}
-
-.kana-ring__kana.is-on {
-  font-size: 8.5px;
-  fill: var(--shu);
-}
-
-.kana-ring__caption {
-  margin-top: var(--space-3);
-  font-size: 14px;
-  letter-spacing: 0.04em;
-  color: var(--ink-3);
-  text-align: center;
-}
-
+/* 五十音の各字。既定は弱い文字色、読みに登場する字はアクセント色で点灯 */
 /* 小さなセクションラベル */
 .section-label {
-  margin: var(--space-5) 0 var(--space-3);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.14em;
-  color: var(--ink-3);
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
-/* --- 該当部分つき特徴: 朱書きの注釈 --- */
+/* --- 該当部分つき特徴: 注釈対象を淡いハイライトで示す --- */
 .annotations {
   list-style: none;
   margin: 0;
@@ -502,42 +464,48 @@
   gap: var(--space-2);
 }
 
-/* 注釈対象は明朝 + 朱の下線(校正記号の文法)。コンパクトに添える */
+/* 注釈対象はアクセントのごく淡い面でハイライトする(下線・囲みは使わない) */
 .annotation-target {
-  font-family: var(--font-mincho);
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 1.3;
-  border-bottom: 2px solid var(--shu);
-  padding-bottom: 2px;
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--bg-tint);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
 }
 
 .annotation-target rt {
-  font-size: 12px;
-  color: var(--shu);
+  font-size: 11px;
+  color: var(--text-subtle);
 }
 
-/* 特徴名は墨枠の小ラベル(検索リンク)。hover で反転 */
+/* 特徴名は白地の丸タグ(検索リンク)。hover でわずかに色づく */
 .chip {
   display: inline-block;
-  border: 1px solid var(--ink);
-  color: var(--ink);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  line-height: 1.6;
-  padding: 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.9;
+  padding: 1px 12px;
   text-decoration: none;
   margin-bottom: 4px;
 }
 
 a.chip:hover {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-tint);
+  border-color: var(--bg-tint);
+  color: var(--text);
+  text-decoration: none;
 }
 
-/* --- 語義の関連データ: ラベル列 + 値列の定義グリッド --- */
+/* --- 語義の関連データ: ラベル列 + 値列。行を細罫で仕切る(面が広いので余白だけでは読めない) --- */
 .sense-attrs {
   margin: var(--space-5) 0 0;
+  /* 行の区切りは border ではなく 1px の隙間で作る(§5.3 と同じ組み) */
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
 .sense-attrs__item {
@@ -545,11 +513,12 @@ a.chip:hover {
   /* 値側は minmax(0,1fr) にして、長いジャンルパス等でも列が伸びず内側で折り返す
      (これが 1fr だと min-content で押し広げられ、main/section が横にはみ出す) */
   /* ラベル列は先頭のアイコン(1em + 6px)込みで「エンティティ」等が折り返さない幅 */
-  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-columns: 140px minmax(0, 1fr);
   gap: var(--space-4);
   align-items: baseline;
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--rule);
+  padding: var(--space-3) 0;
+  /* 語義カードは枠だけで背景を持たない(地は白)ので、行も面の色で塗る */
+  background: var(--surface);
 }
 
 /* モバイルではラベルと値を縦に積む(固定ラベル列が画面幅を圧迫しないように)。
@@ -566,24 +535,22 @@ a.chip:hover {
 }
 
 .sense-attrs dt {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  color: var(--ink-3);
+  display: flex;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .sense-attrs dd {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
 
 /* 属性が未登録のときの「—」表示。データが無いことを控えめに示す */
 .sense-undefined {
-  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 /* ジャンル階層: リンク付きパンくず(各階層から検索絞り込みへ) */
@@ -596,80 +563,78 @@ a.chip:hover {
 
 .genre-path a {
   text-decoration: none;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .genre-path a:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
-/* 末端(小分類)は強調 */
+/* 末端(小分類)は色の濃さと太さだけで一段立てる(下線は引かない) */
 .genre-path a.genre-path__current {
-  color: var(--ink);
-  font-weight: 500;
-  border-bottom: 1px solid var(--ink);
-}
-
-.genre-path a.genre-path__current:hover {
-  color: var(--shu);
-  border-color: var(--shu);
+  color: var(--text);
+  font-weight: 400;
 }
 
 .genre-path__sep {
-  color: var(--shu);
-  font-size: 14px;
+  color: var(--text-subtle);
+  font-size: 13px;
 }
 
 /* 一覧の行に添える小さいパンくず。一覧の主役はあくまで見出し語なので、詳細と同じ
-   文法のまま級数・色を落として静かに添える。末端の下線と太字、区切りの朱は取り、
-   hover したときだけ朱を出す(押せることは失わない)。 */
+   文法のまま級数・色を落として静かに添える。末端の太字は取り、
+   hover したときだけアクセント色を出す(押せることは失わない)。 */
 .genre-path--sm {
   gap: 5px;
   font-size: 12px;
-  letter-spacing: 0.02em;
   line-height: 1.7;
 }
 
 .genre-path--sm a {
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 /* 末端(小分類)は最も具体的な情報なので、下線ではなく色差だけで一段立てる */
 .genre-path--sm a.genre-path__current {
-  color: var(--ink-2);
+  color: var(--text-muted);
   font-weight: 400;
   border-bottom: 0;
 }
 
 .genre-path--sm a:hover,
 .genre-path--sm a.genre-path__current:hover {
-  color: var(--shu);
+  color: var(--text);
+  text-decoration: underline;
 }
 
 .genre-path--sm .genre-path__sep {
   font-size: 11px;
-  color: var(--rule-mid);
+  color: var(--text-subtle);
 }
 
-/* 品詞・エンティティタイプなどのタグ(検索リンク)。墨枠、hover で反転 */
+/* 品詞・エンティティタイプなどのタグ(検索リンク)。白地の丸タグ */
 .tag {
   display: inline-block;
-  border: 1px solid var(--rule-mid);
-  color: var(--ink-2);
-  font-size: 15px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.9;
   padding: 1px 12px;
   text-decoration: none;
 }
 
 a.tag:hover {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--bg);
+  border-color: var(--bg-tint);
+  background: var(--bg-tint);
+  color: var(--text);
+  text-decoration: none;
 }
 
 /* 表示のみのタグ(語種など、絞り込み対象でないもの) */
 .tag--static {
-  color: var(--ink);
+  color: var(--text-muted);
 }
 
 /* --- 索引ページ(Issue 22) --- */
@@ -678,10 +643,11 @@ a.tag:hover {
 }
 
 .section-heading {
-  font-size: clamp(18px, 2.6vw, 22px);
+  font-size: 17px;
+  color: var(--text-muted);
   margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--rule-mid);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
 }
 
 /* 索引の 50音セルは(検索フォームのチェックボックスと違い)一覧への実リンク */
@@ -694,20 +660,19 @@ a.tag:hover {
 }
 
 .kana-cell--link:hover .kana-cell__face {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--bg);
+  border-color: var(--text);
+  color: var(--text);
 }
 
 .kana-cell--muted .kana-cell__face {
-  color: var(--rule-mid);
+  color: var(--text-subtle);
 }
 
-/* 件数ヒート: --fill(0〜1)に応じて朱の濃淡でセルを塗る。多いマスほど濃い朱。
-   単色の塗り(グラデーションではない)で 50音表の分布を一目で示す。実数はホバー表示 */
+/* 件数ヒート: --fill(0〜1)に応じてアクセント色の濃淡でセルを塗る。多いマスほど濃い。
+   最大でも 45% までに抑え、ライト/ダークどちらでも文字が読める濃さに留める */
 .kana-cell--heat .kana-cell__face {
-  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 70%), transparent);
-  border-color: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 55% + 12%), var(--rule-mid));
+  background: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 45%), transparent);
+  border-color: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 40% + 10%), var(--border-strong));
 }
 
 .browse-lengths {
@@ -725,24 +690,24 @@ a.tag:hover {
   gap: var(--space-2);
 }
 
-/* 文字数チップも 50音表と同じ朱ヒート(--fill 0〜1 の単色濃淡)で塗る。
+/* 文字数チップも 50音表と同じヒート(--fill 0〜1 の単色濃淡)で塗る。
    ラベル文字より弱めの塗りに抑え、索引全体でくどくならないようにする */
 .browse-length--heat {
-  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 55%), transparent);
-  border-color: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 45% + 12%), var(--rule-mid));
+  background: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 35%), transparent);
+  border-color: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 35% + 10%), var(--border-strong));
 }
 
 /* 「11文字」(条件)と「2件」(該当数)が別物と一目で分かるよう、細罫で仕切る */
 .browse-length__count {
   padding-left: var(--space-2);
-  border-left: 1px solid var(--rule-mid);
+  border-left: 1px solid var(--border-strong);
   font-size: 13px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 a.browse-length:hover .browse-length__count {
-  color: var(--bg);
-  border-left-color: var(--on-ink-rule);
+  color: var(--text);
+  border-left-color: var(--text-subtle);
 }
 
 /* --- シェア導線(Issue 30) --- */
@@ -750,39 +715,41 @@ a.browse-length:hover .browse-length__count {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
 }
 
 .share__btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 4px 12px;
-  border: 1px solid var(--ink);
-  background: var(--bg);
-  color: var(--ink);
+  padding: 6px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
   font-family: inherit;
   font-size: 13px;
-  line-height: 1.6;
+  letter-spacing: inherit;
+  line-height: 1.8;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .share__btn:hover {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-soft);
+  color: var(--text);
+  text-decoration: none;
 }
 
 /* --- 関連語セクション(Issue 23) --- */
 .related {
-  margin-top: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 2px solid var(--ink);
+  margin-top: var(--space-8);
 }
 
 .related__title {
-  font-size: clamp(18px, 2.6vw, 24px);
+  font-size: 17px;
+  color: var(--text-muted);
   margin: 0 0 var(--space-4);
 }
 
@@ -790,7 +757,7 @@ a.browse-length:hover .browse-length__count {
   margin-top: var(--space-5);
 }
 
-/* 見出し行: 左にラベル、右端に「もっと見る」(ホームの section-header と同じ配置) */
+/* 見出し行: 左にラベル、右端に「もっと見る」(ホームの .band__head と同じ配置) */
 .related__group-header {
   display: flex;
   align-items: baseline;
@@ -806,20 +773,19 @@ a.browse-length:hover .browse-length__count {
 .related__more {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-2);
+  gap: 0.4em;
+  font-size: 13px;
+  color: var(--text-subtle);
+  text-decoration: none;
 }
 
-/* しりとりの「次の一手」。関連語セクションの文法を流用し、繋ぎ目の文字だけ朱で示す */
+/* しりとりの「次の一手」。関連語セクションの文法を流用し、繋ぎ目の文字だけ色を付ける */
 .related--shiritori .empty-note {
   margin-top: var(--space-4);
 }
 
 .shiritori__char {
-  color: var(--shu);
+  color: var(--text);
 }
 
 /* --- ジャンル・ハブページ(Issue 21) --- */
@@ -835,14 +801,32 @@ a.browse-length:hover .browse-length__count {
 }
 
 .genre-hub__large-name {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(18px, 2.6vw, 24px);
-  color: var(--ink);
+  font-weight: 400;
+  font-size: 17px;
+  color: var(--text);
+}
+
+/* 件数の左に、最大値で正規化した細い横棒を添える(数値は必ず併記する) */
+.genre-hub__bar {
+  margin-left: auto;
+  flex: none;
+  display: block;
+  width: 72px;
+  height: 2px;
+  background: var(--border-strong);
+}
+
+.genre-hub__bar::before {
+  content: "";
+  display: block;
+  height: 100%;
+  width: var(--w, 0%);
+  background: var(--text-subtle);
 }
 
 .genre-hub__summary .genre-hub__count {
-  margin-left: auto;
+  min-width: 3em;
+  text-align: right;
 }
 
 .genre-hub__fold > .genre-fold__body {
@@ -851,25 +835,19 @@ a.browse-length:hover .browse-length__count {
 
 /* 大分類そのもので絞り込む導線(名前クリックは開閉に充てるため別リンク) */
 .genre-hub__whole {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-2);
+  font-size: 13px;
+  color: var(--text);
   align-self: flex-start;
-}
-
-.genre-hub__whole:hover {
-  color: var(--shu);
 }
 
 .genre-hub__medium {
   margin: var(--space-4) 0 0;
   padding-left: var(--space-4);
-  border-left: 1px solid var(--rule-mid);
+  border-left: 1px solid var(--border-strong);
 }
 
 .genre-hub__medium-title {
-  font-size: 16px;
+  font-size: 15px;
   margin: 0 0 var(--space-3);
 }
 
@@ -891,14 +869,12 @@ a.browse-length:hover .browse-length__count {
 
 /* 分類名の右に添える公開件数 */
 .genre-hub__count {
-  font-size: 13px;
-  color: var(--ink-3);
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
-a:hover > .genre-hub__count,
 a.tag:hover .genre-hub__count {
-  color: var(--bg);
+  color: var(--text-muted);
 }
 
 .tag-row {
@@ -930,8 +906,8 @@ a.tag:hover .genre-hub__count {
   display: block;
   white-space: normal;
   overflow-wrap: anywhere;
-  font-size: 14px;
-  color: var(--shu);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 /* 一覧の絞り込み中インジケータ(どのファセットで絞っているか + 解除) */
@@ -942,7 +918,7 @@ a.tag:hover .genre-hub__count {
   gap: var(--space-3);
   margin: var(--space-3) 0 var(--space-2);
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
 }
 
 .active-facet .condition-list {
@@ -950,73 +926,97 @@ a.tag:hover .genre-hub__count {
 }
 
 .active-facet__edit {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
+  font-size: 13px;
+  color: var(--text-muted);
   text-decoration: none;
 }
 
 .active-facet__edit:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .active-facet__clear {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--shu);
+  font-size: 13px;
+  color: var(--text);
   text-decoration: none;
 }
 
 .active-facet__clear:hover {
-  color: var(--shu-deep);
+  color: var(--text);
   text-decoration: underline;
 }
 
-/* --- 一覧: リストUI(カードにせず 1px の細罫だけで仕切る) ---------------
-   1件 = 言葉 / 読み / 文字数・ジャンル・タグ。
-   1画面に並ぶ語数を稼ぐため、見出しと読みは 1 行に組んで縦を詰める。
-   hover は背景がほんのり変わる程度に留め、行そのものを目立たせない。 */
+/* --- 一覧: 罫だけで仕切り、1件を 2 段 2 列に組む ---------------------
+   1件 = 左に見出し語 → 読み、右に分類・種別 → 文字数。**2 段に収める**。
+   (2026-09-06 オーナー指摘「縦に情報を積んでいるせいで一画面の情報量が落ち、
+    最下部までのスクロール量が大きい」。3 段 109px/行 → 2 段へ)
+
+   面(白い地に白い面 + 枠 + 角丸)は外した。本文の地が白になった今、面に載せても差が出ず、
+   トップ(罫の格子で組む)とも雰囲気が食い違うため。区切りは細罫だけが受け持つ。 */
 .entry-list {
-  border-top: 1px solid var(--rule);
+  /* 行の区切りは border ではなく「1px の隙間」で作る(2026-09-06 オーナー指示)。
+     親を罫の色で塗り、各行を面の色で塗ると、gap がそのまま境界線に見える。
+     border-top で作らないので、先頭行だけ線を消す `+` セレクタも、
+     狭幅での打ち消しも要らない */
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
 /* 行全体を詳細リンクに(surface のストレッチで実現)。タグは上に載る実リンク。
-   見出し+読み / ジャンル・タグ / 文字数 の 3 列グリッド。flex の折り返しだと語の長さで
-   データの位置がずれて一覧性を損なうので、列に分けて右端を必ず揃える。 */
+   左列に見出し語と読みを縦に、右列に分類・種別と文字数を縦に置く。 */
 .entry-row {
   position: relative;
   display: grid;
-  /* 左列には最低限の幅を確保し、分類が長い語でも見出しが痩せないようにする */
-  grid-template-columns: minmax(min(100%, 300px), 1fr) auto max-content;
-  align-items: baseline;
+  /* 右列(分類のパンくず)は語より長くなることがあるので上限を持たせる。
+     auto のままだと右列が幅を食い尽くし、左列が潰れて見出し語が 1 文字ずつ
+     縦に折り返す(2026-09-06 に狭幅で実測) */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 46%);
   column-gap: var(--space-4);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--rule);
+  row-gap: 0;
+  align-items: baseline;
+  /* 100 行が縦に並ぶので、行の余白は本文の基準より一段締める */
+  padding: var(--space-2) var(--space-2);
+  /* 面の色で塗って、親(罫の色)を 1px の隙間だけ覗かせる。
+     角丸は持たせない: 隙間が 1px しかないので、角が丸いと線が途切れて見える */
+  background: var(--surface);
   transition: background-color var(--transition);
+}
+
+/* 左列: 見出し語 + 読み(2 段ぶんを占める) */
+.entry-row__head {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+/* 右列の上段: 分類のパンくずと種別タグ */
+.entry-row__data {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* 右列の下段: 文字数。全行で同じ位置に来る「目盛り」の列 */
+.entry-row__meta {
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: flex-end;
 }
 
 .entry-row:hover {
   background: var(--bg-soft);
 }
 
-/* 見出し語と読み。読みが長い語では読みだけが下へ回り込む */
+/* 見出し語と読み */
 .entry-row__head {
-  display: flex;
-  align-items: baseline;
-  gap: 2px var(--space-3);
-  flex-wrap: wrap;
   min-width: 0;
 }
 
 .entry-row__surface {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(19px, 2vw, 22px);
-  line-height: 1.5;
-  letter-spacing: 0.03em;
-  color: var(--ink);
+  display: block;
+  font-size: 17px;
+  /* 一覧は 100 行が縦に並ぶので、行送りは本文(1.9)より締める */
+  line-height: 1.45;
+  color: var(--text);
   text-decoration: none;
   overflow-wrap: anywhere;
 }
@@ -1034,9 +1034,10 @@ a.tag:hover .genre-hub__count {
 .entry-row__data {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  flex-wrap: nowrap;
   gap: 2px var(--space-3);
+  min-width: 0;
 }
 
 /* ジャンルのパンくずは行リンクの上に載せる(各階層が絞り込みリンク)。
@@ -1048,7 +1049,6 @@ a.tag:hover .genre-hub__count {
   justify-content: flex-end;
 }
 
-/* 右端の文字数(+矢印)。全行で同じ幅・同じ位置に来る「目盛り」の列 */
 .entry-row__meta {
   display: flex;
   align-items: baseline;
@@ -1056,10 +1056,8 @@ a.tag:hover .genre-hub__count {
 }
 
 .entry-row__len {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -1068,153 +1066,127 @@ a.tag:hover .genre-hub__count {
 .entry-row__tag {
   position: relative;
   z-index: 1;
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink-2);
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  line-height: 1.7;
-  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.9;
+  padding: 0 10px;
   white-space: nowrap;
   text-decoration: none;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
 
 .entry-row__tag:hover {
-  background: var(--ink);
-  color: var(--bg);
-  border-color: var(--ink);
+  background: var(--bg-tint);
+  color: var(--text);
+  text-decoration: none;
 }
 
 /* 「押せる行」であることだけを示す矢印。装飾ではないので最小・最弱に置く */
 .entry-row__go {
-  width: 0.9em;
-  height: 0.9em;
-  color: var(--rule-mid);
-  flex: none;
-  transition: color var(--transition), transform var(--transition);
-}
-
-.entry-row:hover .entry-row__go {
-  color: var(--shu);
-  transform: translateX(2px);
+  display: none;
 }
 
 .entry-row__reading {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  line-height: 1.6;
-  color: var(--ink-3);
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-subtle);
+  overflow-wrap: anywhere;
 }
 
-/* 「別表記〈◯◯〉で一致」。検索結果に出た理由の注記なので、朱の縦罫で脇に添える。
+/* 「別表記〈◯◯〉で一致」。検索結果に出た理由の注記なので、細い縦罫で脇に添える。
    行の下に全幅で敷きたいので、グリッドの全列にまたがらせる */
 .entry-row__match {
   grid-column: 1 / -1;
-  margin-top: 4px;
-  padding-left: var(--space-2);
-  border-left: 2px solid var(--shu);
-  font-family: var(--font-mono);
+  margin-top: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-strong);
   font-size: 12px;
-  letter-spacing: 0.06em;
-  line-height: 1.6;
-  color: var(--ink-2);
+  line-height: 1.8;
+  color: var(--text-muted);
 }
 
-/* 大分類まで並べられるのは紙幅に余裕がある画面だけ。それ以下では 1 行に収まらず
-   分類とタグが 2〜3 行に膨らんで密度を損なうので、中 › 小 に畳む
+/* 一覧のカラムは狭いので、分類は常に「中 › 小」に畳む
    (大分類への導線はジャンル一覧と単語詳細が担う) */
-@media (max-width: 980px) {
-  .entry-row__data .genre-path a:first-child,
-  .entry-row__data .genre-path a:first-child + .genre-path__sep {
-    display: none;
-  }
+.entry-row__data .genre-path a:first-child,
+.entry-row__data .genre-path a:first-child + .genre-path__sep {
+  display: none;
 }
 
 @media (max-width: 600px) {
-  /* 狭幅では列に割ると語もデータも潰れるので、素直に縦へ積む
-     (文字数だけは分類と同じ行に並べて 1 行ぶん節約する) */
+  /* 狭幅では 2 列に割る幅が無い。左右に分けず、見出し語 → 読み → 分類 → 文字数と縦に積む
+     (2 列のままだと右列が幅を取って見出し語が 1 文字ずつ折り返す) */
   .entry-row {
-    grid-template-columns: minmax(0, 1fr) max-content;
-    padding: var(--space-2) 0;
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-3);
   }
 
   .entry-row__head {
-    grid-column: 1 / -1;
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .entry-row__data {
+    grid-column: 1;
+    grid-row: 2;
     justify-content: flex-start;
-    gap: 2px var(--space-2);
+    margin-top: var(--space-2);
   }
 
-  /* 縦積みでは行の左端から始めたいので、パンくずの右寄せも解く */
+  .entry-row__meta {
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: flex-start;
+  }
+
+  /* 狭幅では分類のパンくずも左揃えに戻す */
   .entry-row__data .genre-path {
     justify-content: flex-start;
   }
-
-  /* 狭幅では矢印は場所を食うだけなので落とす(行全体が押せることは変わらない) */
-  .entry-row__go {
-    display: none;
-  }
 }
 
-/* --- ホーム: 検索を主役にしたヒーロー ---------------------------------
-   ページで最も大きい UI は検索バー。見出しはその上に静かに置く。 */
-.hero {
-  /* 紙幅 1040px では 120px の天は空きすぎるので、上下とも 80px に揃える */
-  padding: var(--space-8) 0;
-  text-align: center;
-}
-
+/* --- ホームの看板の中身 -------------------------------------------------
+   見出し → 一行の説明 → 検索 → 補助導線。左揃えで、右のレールと対にする。 */
 .hero__title {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(40px, 7.5vw, 82px);
-  line-height: 1.35;
-  letter-spacing: 0.06em;
+  font-size: 26px;
+  line-height: 1.6;
   margin: 0;
-  /* 末尾の「。」は字の右半分が空くため、中央揃えだと左に寄って見える。
-     左に半角ぶんの余白を足し、見た目の中心を右へ 0.25em 戻す */
-  padding-left: 0.5em;
 }
 
 .hero__lead {
-  margin: var(--space-5) auto 0;
-  /* 検索バー(720px)の 85% 程度。狭すぎると3行に折れて間延びする */
-  max-width: 612px;
-  font-family: var(--font-gothic);
-  font-weight: 400;
+  margin: var(--space-4) 0 0;
+  max-width: 30em;
   font-size: 15px;
-  line-height: 2.1;
-  color: var(--ink-2);
+  line-height: 2;
+  color: var(--text-muted);
 }
 
-/* ページ最大のコンポーネント。枠は細く、角丸は 4px の1段階のみ */
+/* 検索は丸い一本のバー。枠は細く、影は落とさない */
 .hero-search {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  max-width: 720px;
-  margin: var(--space-7) auto 0;
-  padding: 0 var(--space-3) 0 var(--space-5);
-  height: 68px;
-  background: var(--paper);
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
+  width: 100%;
+  max-width: 560px;
+  margin: var(--space-6) 0 0;
+  padding: 0 6px 0 var(--space-5);
+  height: 52px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
   transition: border-color var(--transition);
 }
 
 .hero-search:focus-within {
-  border-color: var(--ink);
+  border-color: var(--text-muted);
 }
 
 .hero-search .icon {
   flex: none;
-  font-size: 20px;
-  color: var(--ink-3);
+  font-size: 17px;
+  color: var(--text-subtle);
 }
 
 /* 素の input[type="text"] は下線付き(0,0,1,1)なので、クラス1つでは打ち消せない。
@@ -1228,7 +1200,7 @@ a.tag:hover .genre-hub__count {
   background: transparent;
   font-family: inherit;
   font-size: 16px;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .hero-search__input:focus {
@@ -1236,46 +1208,42 @@ a.tag:hover .genre-hub__count {
 }
 
 .hero-search__input::placeholder {
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .hero-search__submit {
   flex: none;
-  height: 48px;
+  height: 38px;
   padding: 0 var(--space-5);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius);
-  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
   font-family: inherit;
-  font-size: 15px;
-  letter-spacing: 0.08em;
-  color: var(--ink);
+  font-size: 14px;
+  letter-spacing: inherit;
+  color: var(--text);
   cursor: pointer;
-  transition: background var(--transition), color var(--transition);
+  transition: background var(--transition), border-color var(--transition);
 }
 
 .hero-search__submit:hover {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-soft);
+  border-color: var(--text-subtle);
 }
 
-/* 検索バーの下の補助導線。控えめに、下線だけで置く */
+/* 検索バーの下の補助導線 */
 .hero__sub {
-  margin: var(--space-4) 0 0;
-  font-size: 14px;
-  color: var(--ink-2);
+  margin: var(--space-5) 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .hero__sub a {
-  color: var(--ink-2);
-  text-decoration: none;
-  border-bottom: 1px solid var(--rule-mid);
-  padding-bottom: 2px;
+  color: var(--text-muted);
 }
 
 .hero__sub a:hover {
-  color: var(--ink);
-  border-bottom-color: var(--ink);
+  color: var(--text);
 }
 
 .hero__sub .icon {
@@ -1297,39 +1265,32 @@ a.tag:hover .genre-hub__count {
 
 .field-legend {
   display: block;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.12em;
-  color: var(--ink-3);
-  margin-bottom: var(--space-1);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
 }
 
-/* 検索フォームは全項目の幅を揃えた1カラムの墨1px枠パネル(カード)で、ページ中央に置く。
-   内容の幅は50音表の最小幅(セル34px×16列 + すき間4px×15 = 604px)より余裕を持たせ、
-   PCサイズで50音表がスクロールバー無しに収まるようにする。
-   影はサイト全体では使わない方針だが、このカードだけオーナー判断でごく薄く敷く。 */
+/* 検索フォームは面を持たない。条件どうしを細罫で仕切るだけにする
+   (全高の7割が単色の面だと、13項目が平坦に流れて目が滑るため)。
+   内容の幅は50音表の最小幅(セル34px×16列 + すき間4px×15 = 604px)より余裕を持たせる。 */
 .search-form {
-  max-width: calc(720px + var(--space-6) * 2 + 2px);
-  margin: var(--space-6) auto var(--space-7);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
-  padding: var(--space-7) var(--space-6);
-  box-shadow: var(--shadow-card);
+  margin: var(--space-5) 0 var(--space-7);
 }
 
 /* 項目(fieldset / .field)同士の間隔。
    後続の .field / .kana-field 等の margin 指定に負けないよう詳細度を上げている */
 .search-form > fieldset,
 .search-form > .field {
-  margin-bottom: var(--space-3);
+  margin-bottom: 0;
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--border);
 }
 
 /* 狭幅ではカードの余白を詰めて、50音表・チップ群の実効幅を確保する */
 @media (max-width: 560px) {
-  .search-form {
-    margin: var(--space-5) auto var(--space-6);
-    padding: var(--space-5) var(--space-4);
+  .search-form > fieldset,
+  .search-form > .field {
+    padding: var(--space-4) 0;
   }
 }
 
@@ -1338,55 +1299,47 @@ a.tag:hover .genre-hub__count {
   display: flex;
   align-items: center;
   gap: var(--space-5);
-  margin-top: var(--space-5);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--text-muted);
 }
 
 .search-clear {
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .search-clear:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
-/* 罫線と見分けが付くよう、検索フォームのテキスト入力は下線でなく細枠の箱にする */
 .search-form .field input[type="text"] {
   width: 100%;
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  padding: 8px 12px;
-  background: var(--paper);
-  transition: border-color var(--transition);
-}
-
-.search-form .field input[type="text"]:focus {
-  border-color: var(--ink);
 }
 
 /* 押したキーの文字種が並ぶ表示欄。VSCode の検索窓のように、先頭に「>」プロンプト、
    左に組み立て中のパターン、右端に切替アイコン(text-aa / "ab")を置く。手入力不可の読み取り専用。
-   枠線は他の入力欄と同じ(--rule-mid、focus で朱)。 */
+   枠線は他の入力欄と同じ(--border-strong、focus でアクセント色)。 */
 .char-type-display {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 42px;
-  padding: 5px 6px 5px 12px;
-  border: 1px solid var(--rule-mid);
-  background: var(--bg);
+  min-height: 40px;
+  padding: 4px 5px 4px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .char-type-display:focus-within {
-  border-color: var(--shu);
+  border-color: var(--text-muted);
 }
 
 .char-type-display__prompt {
   flex: none;
   font-family: var(--font-mono);
   font-size: 16px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .char-type-display__value {
@@ -1395,7 +1348,7 @@ a.tag:hover .genre-hub__count {
   font-family: var(--font-mono);
   font-size: 17px;
   line-height: 1.4;
-  color: var(--ink);
+  color: var(--text);
   /* 漢/あ/ア と 1/A/a/@ の字幅差を無くすため全角字形に揃える(表示のみ。送信値は半角のまま) */
   text-transform: full-width;
   white-space: pre-wrap;
@@ -1405,9 +1358,9 @@ a.tag:hover .genre-hub__count {
 /* 未入力のときは薄い案内文を出す(placeholder 相当) */
 .char-type-display__value:empty::before {
   content: attr(data-placeholder);
-  font-family: var(--font-gothic);
+  font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-transform: none;
 }
 
@@ -1433,7 +1386,7 @@ a.tag:hover .genre-hub__count {
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-user-select: none;
@@ -1447,23 +1400,19 @@ a.tag:hover .genre-hub__count {
 }
 
 .char-type-flag__btn:hover {
-  background: var(--rule);
-  color: var(--ink-2);
+  background: var(--bg-soft);
+  color: var(--text-muted);
 }
 
-/* 選択中(aria-pressed=true = 厳密側が有効)は枠線でなく背景の塗りで示す。
-   墨ベタは主張が強いので、未選択ホバーと同じベージュ(--rule)の淡い塗りにする。 */
+/* 選択中(aria-pressed=true = 厳密側が有効)は枠線でなくアクセントの淡い塗りで示す */
 .char-type-flag__btn[aria-pressed="true"] {
-  background: var(--rule);
-  color: var(--ink);
-}
-
-.char-type-flag__btn[aria-pressed="true"]:hover {
-  background: var(--rule-mid);
+  background: var(--bg-tint);
+  color: var(--text);
+  border-radius: var(--radius-sm);
 }
 
 .char-type-flag__btn:focus-visible {
-  outline: 2px solid var(--shu);
+  outline: 2px solid var(--text);
   outline-offset: 1px;
 }
 
@@ -1474,11 +1423,10 @@ a.tag:hover .genre-hub__count {
   right: 0;
   z-index: 2;
   padding: 3px 8px;
-  background: var(--ink);
-  color: var(--on-ink);
-  font-family: var(--font-mono);
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
   font-size: 11px;
-  letter-spacing: 0.04em;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
@@ -1494,7 +1442,6 @@ a.tag:hover .genre-hub__count {
 }
 
 /* 文字種の入力キー(あ/ア/漢/1/A/a/@ と ⌫)。キーで末尾へ追記、⌫ で末尾を1文字削除。
-   紙より少し濃いキー面＋下辺の淡い影で少しレトロなキーボード風。押すと沈み込む。
    キー同士は詰めて置き、削除キーだけ少し離す。 */
 .char-type-keys {
   display: flex;
@@ -1509,22 +1456,22 @@ a.tag:hover .genre-hub__count {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 5px;
-  border: 1px solid var(--rule-mid);
-  background: var(--rule);
-  box-shadow: 0 2px 0 var(--rule-mid);
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   cursor: pointer;
   /* 字形を表示欄と揃える。連打でダブルタップ拡大・文字選択が起きないようにする */
   text-transform: full-width;
   touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
-  transition: transform 0.05s, background 0.12s, border-color 0.12s, box-shadow 0.05s;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
 
 /* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
@@ -1534,23 +1481,21 @@ a.tag:hover .genre-hub__count {
 }
 
 .char-type-key:hover {
-  border-color: var(--ink-3);
-  box-shadow: 0 2px 0 var(--ink-3);
+  background: var(--bg-soft);
+  border-color: var(--text-subtle);
+  color: var(--text);
 }
 
-/* 押し込み: キーを影の上に沈める */
 .char-type-key:active {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 var(--ink-3);
-  background: var(--ink);
-  color: var(--on-ink);
-  border-color: var(--ink);
+  background: var(--bg-tint);
+  border-color: var(--text);
+  color: var(--text);
 }
 
 /* 削除キーは SVG アイコン。全角化の対象外にし、少し右に離して置く */
 .char-type-key--backspace {
   margin-inline-start: var(--space-3);
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-transform: none;
 }
 
@@ -1575,10 +1520,9 @@ a.tag:hover .genre-hub__count {
 
 /* 読み文字数の二つまみスライダー */
 .length-slider__message {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 22px;
-  color: var(--ink);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--text);
   margin: 0 0 var(--space-3);
 }
 
@@ -1587,9 +1531,9 @@ a.tag:hover .genre-hub__count {
   height: 36px;
   background-image: linear-gradient(
     to right,
-    var(--rule-mid) 0, var(--rule-mid) var(--from, 0%),
-    var(--shu) var(--from, 0%), var(--shu) var(--to, 100%),
-    var(--rule-mid) var(--to, 100%), var(--rule-mid) 100%
+    var(--border-strong) 0, var(--border-strong) var(--from, 0%),
+    var(--text) var(--from, 0%), var(--text) var(--to, 100%),
+    var(--border-strong) var(--to, 100%), var(--border-strong) 100%
   );
   background-size: 100% 2px;
   background-position: 0 center;
@@ -1611,8 +1555,7 @@ a.tag:hover .genre-hub__count {
 .length-slider__thumb::-webkit-slider-runnable-track { background: transparent; height: 36px; }
 .length-slider__thumb::-moz-range-track { background: transparent; }
 
-/* ツマミ: 墨の丸ノブ(紙色フチで罫トラック/もう一方のツマミから分離)。
-   design.md は角丸禁止だが、スライダーのツマミはオーナー判断で丸を許可(掴む対象として自然)。 */
+/* ツマミ: アクセント色の丸ノブ(地の色のフチでトラック/もう一方のツマミから分離) */
 .length-slider__thumb::-webkit-slider-thumb {
   pointer-events: auto;
   -webkit-appearance: none;
@@ -1621,7 +1564,7 @@ a.tag:hover .genre-hub__count {
   height: 16px;
   /* トラック(36px)の中央線にツマミを重ねる: (36 - 16) / 2 */
   margin-top: 10px;
-  background: var(--ink);
+  background: var(--text);
   border: 2px solid var(--bg);
   border-radius: 50%;
   cursor: pointer;
@@ -1630,7 +1573,7 @@ a.tag:hover .genre-hub__count {
   pointer-events: auto;
   width: 16px;
   height: 16px;
-  background: var(--ink);
+  background: var(--text);
   border: 2px solid var(--bg);
   border-radius: 50%;
   cursor: pointer;
@@ -1673,28 +1616,31 @@ a.tag:hover .genre-hub__count {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid var(--rule-mid);
-  font-size: 15px;
-  color: var(--ink-2);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .kana-cell__face:hover {
-  border-color: var(--ink);
+  border-color: var(--text-subtle);
+  color: var(--text);
 }
 
 .kana-cell input:checked + .kana-cell__face {
-  background: var(--ink);
+  background: var(--text);
   color: var(--bg);
-  border-color: var(--ink);
+  border-color: var(--text);
 }
 
 .kana-cell input:focus-visible + .kana-cell__face {
-  outline: 2px solid var(--shu);
+  outline: 2px solid var(--text);
   outline-offset: 1px;
 }
 
-/* 一覧選択チップ(品詞・エンティティ・特徴)。選択で墨に反転 */
+/* 一覧選択チップ(品詞・エンティティ・特徴)。選択でアクセントの塗りに変わる */
 .check-chips,
 .genre-filter__level {
   display: flex;
@@ -1708,28 +1654,30 @@ a.tag:hover .genre-hub__count {
 
 .check-chip__face {
   display: inline-block;
-  border: 1px solid var(--rule-mid);
-  color: var(--ink-2);
-  font-size: 14px;
-  line-height: 1.6;
-  padding: 3px 12px;
-  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.9;
+  padding: 3px 14px;
+  background: var(--surface);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .check-chip__face:hover {
-  border-color: var(--ink);
+  border-color: var(--text-subtle);
+  color: var(--text);
 }
 
 .check-chip input:checked + .check-chip__face {
-  background: var(--ink);
+  background: var(--text);
   color: var(--bg);
-  border-color: var(--ink);
+  border-color: var(--text);
 }
 
 .check-chip input:focus-visible + .check-chip__face {
-  outline: 2px solid var(--shu);
+  outline: 2px solid var(--text);
   outline-offset: 1px;
 }
 
@@ -1742,23 +1690,24 @@ a.tag:hover .genre-hub__count {
 }
 
 .genre-fold {
-  border: 1px solid var(--rule-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .genre-fold[open] {
-  border-color: var(--ink);
+  border-color: var(--border-strong);
 }
 
 .genre-fold__summary {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 6px 12px;
+  padding: 7px 12px;
   cursor: pointer;
   font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
-  /* 既定の三角マーカーは消し、朱のキャレットで示す */
+  color: var(--text-muted);
+  /* 既定の三角マーカーは消し、キャレットで示す */
   list-style: none;
 }
 
@@ -1767,11 +1716,11 @@ a.tag:hover .genre-hub__count {
 }
 
 .genre-fold__summary:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .genre-fold__caret {
-  color: var(--shu);
+  color: var(--text-subtle);
   transform: rotate(-90deg);
   transition: transform 0.15s;
 }
@@ -1780,12 +1729,14 @@ a.tag:hover .genre-hub__count {
   transform: rotate(0deg);
 }
 
-/* 畳んだままでも配下の選択数が分かる朱のバッジ */
+/* 畳んだままでも配下の選択数が分かるバッジ */
 .genre-fold__count {
   margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--shu);
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-tint);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .genre-fold__body {
@@ -1793,17 +1744,17 @@ a.tag:hover .genre-hub__count {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3) 12px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--border);
 }
 
 /* 中分類の折り畳みは左罫のみで、ひとつ下の階層と分かるように */
 .genre-fold--medium {
   border: none;
-  border-left: 2px solid var(--rule-mid);
+  border-left: 2px solid var(--border-strong);
 }
 
 .genre-fold--medium[open] {
-  border-left-color: var(--ink);
+  border-left-color: var(--text);
 }
 
 .genre-fold--medium > .genre-fold__summary {
@@ -1829,167 +1780,434 @@ a.tag:hover .genre-hub__count {
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-2);
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  background: var(--paper);
-  padding: 3px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  padding: 3px 12px;
 }
 
 .condition-chip__label {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--shu);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .condition-chip__value {
-  font-size: 14px;
-  color: var(--ink);
+  font-size: 13px;
+  color: var(--text);
 }
 
-/* 簡素↔詳細 検索の切替リンク(等幅小・朱 hover) */
+/* 簡素↔詳細 検索の切替リンク */
 .search-switch {
   margin: var(--space-3) 0 var(--space-5);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
+  font-size: 13px;
 }
 
-.search-switch a {
-  color: var(--ink-2);
-  text-decoration: none;
-  border-bottom: 1px solid var(--rule-mid);
-  padding-bottom: 2px;
-}
+/* --- 収録数の内訳。ホームでは看板のレールに、管理画面では横並びに置く --- */
 
-.search-switch a:hover {
-  color: var(--shu);
-  border-color: var(--shu);
-}
-
-/* --- 収録統計: 罫線で仕切る数字の行(箱にしない) --- */
 .stats-grid {
-  margin: 0;
+  margin: var(--space-7) 0 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  padding: var(--space-5) 0;
+  gap: var(--space-2) var(--space-5);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .stats-grid__item {
-  flex: 0 1 240px;
-  min-width: 140px;
-  padding: 0 var(--space-5);
-  border-left: 1px solid var(--rule);
-  text-align: center;
-}
-
-.stats-grid__item:first-child {
-  border-left: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .stats-grid__item dt {
-  font-family: var(--font-gothic);
   font-size: 13px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .stats-grid__item dd {
-  margin: var(--space-1) 0 0;
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(32px, 4.4vw, 46px);
+  margin: 0;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
+  color: var(--text-muted);
 }
 
 .stats-grid__unit {
-  font-family: var(--font-gothic);
-  font-weight: 400;
-  font-size: 14px;
-  color: var(--ink-3);
-  margin-left: 5px;
+  font-size: 12px;
+  color: var(--text-subtle);
+  margin-left: 2px;
 }
 
-/* --- ホーム: 2カラム(最近追加 / 読みが長い) -----------------------------
-   カードを大量に並べるのではなく、面を細罫で仕切るだけに留める。
-   今日の一語はこの上に全幅の帯として置く(.home-featured)。 */
-.home-columns {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-5);
-  margin-top: var(--space-5);
+/* --- 標識(英字の極小ラベル) -------------------------------------------
+   資料館のキャプションのように、区画の頭に等幅の小さな英字を置く。
+   本文の代わりではなく「そこが何の区画か」を示す標識なので、必ず日本語の
+   見出しと対にして使う(docs/design.md §5.8)。 */
+.label-en {
+  display: block;
+  margin: 0;
+  font-family: var(--font-mono);
+  /* 級数は 12px。§2 の「補足・ラベルは 11px 未満にしない」を満たす最小で、
+     かつ**白抜きが成立する最小**でもある(10px では線が溶けるか字面が潰れる。実測は §5.8)。
+     16px / 20px の縦積み / 30px(figure-number の書体)まで上げて試したが、
+     いずれもオーナー判断で戻した(2026-09-05)。字送りは 0.04em */
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
 }
 
-/* 地は今日の一語と同じ紙色にして、2カラムと帯をひと続きの面として見せる */
-.home-column {
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  padding: var(--space-5);
+/* 標識 + 日本語見出しの縦組み。見出しの上に標識を重ねる */
+.section-title {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
-.home-column__header {
-  display: flex;
-  align-items: baseline;
+.section-title__ja {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* --- 図としての数字(アウトライン) -------------------------------------
+   収録語数・文字数のように「サイトの性格を一目で伝える数」を、
+   線だけの巨大な数字として置く。文字の中身は塗らない。 */
+.figure-number {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(44px, 5.5vw, 68px);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  /* -webkit-text-stroke が無い環境では塗りのまま見えるようにしておく */
+  color: var(--border-strong);
+}
+
+@supports (-webkit-text-stroke: 1px currentColor) {
+  .figure-number {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--text-muted);
+  }
+}
+
+.figure-number--sm {
+  font-size: clamp(36px, 4vw, 48px);
+}
+
+/* 数字に添える単位・キャプション */
+/* 線だけの数字に添える単位ラベル。標識(.label-en)と同じ級数・同じ塗りで置く */
+.figure-caption {
+  display: block;
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+/* --- 額装(ホームの看板) -----------------------------------------------
+   細い枠でひと区画を囲い、縦罫で「本文」と「数字」に分ける。 */
+/* 看板の列の最後に置く「収録の規模」。左に収録語数、縦罫を挟んで右にそのほかの数。
+   検索からは --space-8 離して切り、ここだけ左右に割ることで列の終わりを示す */
+.masthead__figures {
+  margin-top: var(--space-8);
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--space-6);
+  text-align: left;
+}
+
+/* 左はこのページの主役の数(収録語数)。ページ中でいちばん大きな図にする */
+.masthead__figures-main .figure-number {
+  font-size: clamp(56px, 7vw, 88px);
+}
+
+/* 右はそのほかの数。ラベル左・値右の等幅の行で積み、縦罫で左と分ける。
+   罫は区画の高さいっぱいに通したいので、行のほうを縦中央に寄せる */
+.stats-grid--rows {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+  margin: 0;
+  min-width: 210px;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.stats-grid--rows .stats-grid__item {
   justify-content: space-between;
   gap: var(--space-3);
-  padding-bottom: var(--space-4);
 }
 
-.home-column__title {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 16px;
+.stats-grid--rows .stats-grid__item dd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* 狭幅では左右に割らず、数の下に内訳を積む(縦罫も外す) */
+@media (max-width: 560px) {
+  .masthead__figures {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    justify-items: center;
+  }
+
+  .stats-grid--rows {
+    width: 100%;
+    max-width: 260px;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* --- 線画(読みの円環) -------------------------------------------------
+   実データ(読み)から描く装飾。線だけで、面も色も持たない。 */
+.ring-art {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ring-art__svg {
+  display: block;
+  width: 100%;
+  max-width: 168px;
+  height: auto;
+}
+
+.ring-art__guide {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ring-art__stroke {
+  fill: none;
+  stroke: var(--text-subtle);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ring-art__start {
+  fill: var(--text-muted);
+}
+
+/* 図に添えるキャプションは標識より一段小さい 10px。
+   級数を上げると「READING PATH / 50-ON RING」がレール幅(168px)で 2 行に折り返し、図より重くなる。
+   標識=区画が何かを示す / キャプション=図が何かを示す、で役割が違うので揃えなくてよい */
+.ring-art__caption {
+  font-size: 10px;
+  line-height: 1.9;
   letter-spacing: 0.06em;
+  text-align: center;
+}
+
+/* 標識の2行目に置く値(交差回数など)。1行目の役割の下へ落とす(docs/design.md §5.8) */
+.ring-art__value {
+  display: block;
+}
+
+/* ページ最上部に置く印。サイト名の読みの円環を、看板の上に静かに 1 つだけ、中央に置く */
+.ring-art--mark .ring-art__svg {
+  max-width: 172px;
+  margin: 0 auto;
+}
+
+/* 円の外側を回る英字。標識(.label-en)と同じ等幅・大文字で、級数だけ図に合わせる。
+   viewBox 200 を 172px で描くので、11 単位 = 画面上およそ 9.5px(標識とほぼ同じ大きさ) */
+.ring-art__arc {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  fill: var(--text-subtle);
+  text-transform: uppercase;
+}
+
+/* 印だけは「ナ」から「ス」へ一筆書きで描かれ、外周の英字がゆっくり回り続ける。
+   線の全長(--ring-length)はサーバ側で算出済み(KanaRing.stroke_length)なので、
+   長さを測るためだけの JS を持たない。円 → 始点 → 折れ線 の順に、1度だけ描いて止まる。 */
+@media (prefers-reduced-motion: no-preference) {
+  .ring-art--mark .ring-art__guide {
+    opacity: 0;
+    animation: ring-mark-fade 1000ms ease-out 170ms forwards;
+  }
+
+  .ring-art--mark .ring-art__start {
+    opacity: 0;
+    animation: ring-mark-fade 580ms ease-out 750ms forwards;
+  }
+
+  .ring-art--mark .ring-art__stroke {
+    stroke-dasharray: var(--ring-length);
+    stroke-dashoffset: var(--ring-length);
+    /* 読みを1字ずつ辿る線なので、速度は変えず一定で引く(ペンの動きに合わせる)。
+       2026-09-04 に**線を引くところだけ**速めた(4.65s → 2.2s。オーナー指示)。
+       円が浮かぶ・始点が点く の 2 つと、外周の回転は元の速さのまま */
+    animation: ring-mark-draw 4650ms linear 920ms forwards;
+  }
+
+  /* 外周の英字だけは止まらない。1周 80 秒 = 目で追えない速さで、視界の端で気づく程度に。
+     回転の中心は**円環そのものの中心**(--ring-center = KanaRing::CENTER)。
+     g の外形の中心にすると、文字が弧の上側にあるぶん重心が上へずれて回転が振れる */
+  .ring-art--mark .ring-art__orbit {
+    transform-box: view-box;
+    transform-origin: var(--ring-center) var(--ring-center);
+    animation: ring-mark-orbit 80s linear infinite;
+  }
+}
+
+@keyframes ring-mark-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ring-mark-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ring-mark-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- 放射図(RadialChart): 並んだ数値を、円の上の一筆書きにする -------------
+   五十音円環とまったく同じ円・同じ線の濃さで描く。サイトの図を「円」ひとつの
+   家族に収めるための約束で、塗りは持たせない(docs/design.md §5.9) */
+.radial-art__spokes line {
+  stroke: var(--border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.radial-art__node {
+  fill: var(--text-muted);
+}
+
+/* --- 画像プレースホルダ -----------------------------------------------
+   イラスト・写真を入れる予定の場所。実素材が入るまでの間、破線の枠と
+   「何を入れるか」の一文だけを置いておく(design.md §5.7)。 */
+.image-slot {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 120px;
+  padding: var(--space-5);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text-subtle);
+  text-align: center;
+}
+
+.image-slot__label {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.image-slot--square .image-slot__label {
+  font-size: 12px;
+}
+
+.image-slot__hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-subtle);
+  opacity: 0.8;
+}
+
+.image-slot .icon {
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+/* 横長(ヒーロー下・About の頭) */
+.image-slot--banner {
+  min-height: 180px;
+}
+
+/* 正方形に近い小さめの枠(カードの中に添えるとき) */
+.image-slot--square {
+  min-height: 168px;
+  padding: var(--space-4) var(--space-3);
+}
+
+/* --- ホーム: 2つのリスト(最近追加 / 読みが長い) -------------------------
+   横に並べず、縦に積んで余白で離す。囲いは付けない。 */
+/* 地は今日の一語と同じ白にして、2カラムと帯をひと続きの面として見せる */
+.home-column {
+  margin: 0;
 }
 
 /* 「一覧へ →」「ランキングへ →」。今日の一語の導線(.home-featured__more)と同じ重み */
 .home-column__more {
   display: inline-flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.4em;
   font-size: 13px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .home-column__more:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .home-column__item {
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--rule);
+  padding: var(--space-3);
+  margin: 0 calc(var(--space-3) * -1);
+  border-radius: var(--radius);
   text-decoration: none;
+  transition: background-color var(--transition);
 }
 
 .home-column__item:hover {
   background: var(--bg-soft);
 }
 
-/* 順位・NEW などの行頭のしるし。細く小さく、朱は「新着」だけに使う */
+/* 順位・NEW などの行頭のしるし。細く小さく、色を付けるのは「新着」だけ */
 .home-column__mark {
   flex: none;
   width: 2.2em;
   font-size: 12px;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
 .home-column__mark--new {
-  color: var(--shu);
+  color: var(--text-subtle);
   font-size: 11px;
-  letter-spacing: 0.08em;
 }
 
 .home-column__body {
@@ -2001,128 +2219,108 @@ a.tag:hover .genre-hub__count {
 
 .home-column__word {
   font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink);
+  line-height: 1.7;
+  color: var(--text);
   overflow-wrap: anywhere;
 }
 
 .home-column__item:hover .home-column__word {
-  text-decoration: underline;
-  text-decoration-color: var(--rule-mid);
-  text-underline-offset: 4px;
+  color: var(--text);
 }
 
 .home-column__reading {
   font-size: 12px;
   line-height: 1.7;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   overflow-wrap: anywhere;
 }
 
 .home-column__meta {
   flex: none;
   font-size: 12px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-/* --- 今日の一語: 統計と2カラムのあいだに置く全幅の帯 ---------------------
-   3カラムの1面に入れると中身が薄く縦に間延びするため、横長に組み替えた。
-   検索が主役なので、見出し語はヒーローよりずっと小さいままにする。 */
+/* --- 今日の一語: 淡い面の大きな角丸カード。右にイラストを添える --------- */
 .home-featured {
-  margin-top: var(--space-8);
-  /* 下の2カラムより「ほんの少しだけ」前に出す: 枠を中間罫に、地を白に */
-  border: 1px solid var(--rule-mid);
-  background: var(--paper);
-  padding: var(--space-5) var(--space-6) var(--space-6);
+  margin: 0;
 }
 
 /* 見出し語+読み → 意味の順に上下へ積む(オーナー判断。左右2段組みは不採用) */
 .home-featured__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) 168px;
+  gap: var(--space-5);
   align-items: start;
-  border-top: 1px solid var(--rule);
-  padding-top: var(--space-4);
 }
 
 .home-featured__word {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(30px, 3.4vw, 40px);
-  line-height: 1.45;
-  letter-spacing: 0.04em;
-  color: var(--shu);
+  font-size: 20px;
+  line-height: 1.7;
+  color: var(--text);
   text-decoration: none;
   overflow-wrap: anywhere;
 }
 
 .home-featured__word:hover {
-  color: var(--shu-deep);
   text-decoration: underline;
-  text-underline-offset: 5px;
+  text-decoration-color: var(--border-strong);
 }
 
 .home-featured__reading {
   margin: var(--space-1) 0 0;
   font-size: 13px;
-  line-height: 1.7;
-  color: var(--ink-3);
+  line-height: 1.8;
+  color: var(--text-subtle);
   overflow-wrap: anywhere;
 }
 
 .home-featured__meaning {
-  margin: 0;
+  margin: var(--space-4) 0 0;
   font-size: 14px;
-  line-height: 1.95;
-  color: var(--ink-2);
+  line-height: 2;
+  color: var(--text-muted);
+}
+
+/* その語の関連データ(ジャンルのパンくず + 丸タグ)。本文から離して、
+   「ここから絞り込める」ひとかたまりとして置く(docs/design.md §5.5) */
+.home-featured__data {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 /* 見出し行の右端に置く詳細への導線(2カラムの「一覧へ」と同じ重み) */
 .home-featured__more {
   display: inline-flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.4em;
   font-size: 13px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .home-featured__more:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 @media (max-width: 700px) {
-  .home-columns {
-    grid-template-columns: 1fr;
+  .home-featured__body {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-/* 375px 想定の狭幅: 3項目が中途半端に折り返さないよう縦積みにする(区切りは上罫に) */
 @media (max-width: 767px) {
   .stats-grid {
-    flex-direction: column;
-  }
-
-  .stats-grid__item {
-    /* 縦積みでは flex-basis が「高さ」になり 240px の空白ができるので打ち消す */
-    flex: none;
-    min-width: 0;
-    border-left: none;
-    border-top: 1px solid var(--rule-mid);
-    padding: var(--space-3) 0;
-  }
-
-  .stats-grid__item:first-child {
-    border-top: none;
-    padding-top: 0;
+    gap: var(--space-2) var(--space-4);
   }
 }
 
-/* --- 管理コンソール(ダッシュボード): 墨枠パネルの入口カード --- */
+/* --- 管理コンソール(ダッシュボード): 細罫の入口カード --- */
 .admin-dash-grid {
   display: grid;
   gap: var(--space-4);
@@ -2133,45 +2331,34 @@ a.tag:hover .genre-hub__count {
 .admin-card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   padding: var(--space-5);
   text-decoration: none;
   color: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--transition);
 }
 
 .admin-card:hover {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-tint);
+  text-decoration: none;
 }
 
 .admin-card__title {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 21px;
+  font-size: 16px;
 }
 
 .admin-card__desc {
-  margin-top: var(--space-3);
-  font-size: 15px;
-  line-height: 1.9;
-  color: var(--ink-2);
-}
-
-.admin-card:hover .admin-card__desc {
-  color: var(--on-ink-dim);
+  margin-top: var(--space-2);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-muted);
 }
 
 .admin-card__tag {
   margin-top: var(--space-4);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.16em;
-  color: var(--shu);
-}
-
-.admin-card:hover .admin-card__tag {
-  color: var(--bg);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 /* --- 単語の管理一覧(Issue 36): 検索 + 注釈状態タブ + テーブル --- */
@@ -2184,22 +2371,26 @@ a.tag:hover .genre-hub__count {
   margin: var(--space-5) 0 var(--space-3);
 }
 
-/* 検索はヘッダー検索と同じ文法(下線1本 + 虫眼鏡) */
+/* 検索は細枠の箱 + 虫眼鏡 */
 .admin-words-search {
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 4px;
-  border-bottom: 1px solid var(--rule-mid);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .admin-words-search:focus-within {
-  border-bottom-color: var(--shu);
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px var(--bg-tint);
 }
 
 .admin-words-search__input {
   border: none;
   background: transparent;
-  font-size: 15px;
+  font-size: 14px;
   padding: 6px 2px;
   width: 16em;
 }
@@ -2213,11 +2404,11 @@ a.tag:hover .genre-hub__count {
   background: transparent;
   cursor: pointer;
   padding: 6px 4px;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .admin-words-search__submit:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 /* 検索とタグ絞り込みを縦に積む(タグは語義のジャンル・品詞・エンティティ・語種) */
@@ -2234,7 +2425,6 @@ a.tag:hover .genre-hub__count {
   flex-wrap: wrap;
 }
 
-/* データラベルは極小の等幅(デザインシステムのスケール対比) */
 .admin-words-tag-filter {
   display: flex;
   flex-direction: column;
@@ -2242,10 +2432,8 @@ a.tag:hover .genre-hub__count {
 }
 
 .admin-words-tag-filter__label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .admin-words-tag-filter select {
@@ -2256,13 +2444,13 @@ a.tag:hover .genre-hub__count {
 
 .admin-words-tag-filter__reset {
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   align-self: flex-end;
   padding-bottom: 5px;
 }
 
 .admin-words-tag-filter__reset:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .admin-status-tabs {
@@ -2273,58 +2461,57 @@ a.tag:hover .genre-hub__count {
 
 .admin-status-tabs__tab {
   text-decoration: none;
-  color: var(--ink-2);
+  color: var(--text-muted);
   font-size: 14px;
+  border-bottom: 2px solid transparent;
   padding: var(--space-2) 2px;
 }
 
 .admin-status-tabs__tab:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .admin-status-tabs__tab[aria-current="page"] {
-  color: var(--ink);
-  font-weight: 500;
-  border-bottom: 2px solid var(--shu);
+  color: var(--text);
+  font-weight: 400;
+  border-bottom-color: var(--text);
 }
 
 .admin-words-count {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
   margin-bottom: var(--space-3);
 }
 
-/* 一括適用(Issue 37)。パネルは墨1px枠、中身はコンソールの ann-row/ann-chip を流用 */
+/* 一括適用(Issue 37)。パネルは細罫の角丸、中身はコンソールの ann-row/ann-chip を流用 */
 .bulk-annotation {
-  border: 1px solid var(--ink);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
 }
 
 .bulk-annotation__summary {
   cursor: pointer;
-  font-family: var(--font-mono);
   font-size: 14px;
-  letter-spacing: 0.12em;
-  color: var(--ink-2);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .bulk-annotation__summary:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .bulk-annotation[open] .bulk-annotation__summary {
-  color: var(--ink);
-  border-bottom: 2px solid var(--ink);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
   display: block;
   padding-bottom: var(--space-2);
 }
 
 .bulk-annotation__hint {
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   margin: var(--space-2) 0;
   max-width: 46em;
 }
@@ -2332,14 +2519,7 @@ a.tag:hover .genre-hub__count {
 .bulk-annotation__meaning {
   width: 100%;
   max-width: 34em;
-  border-bottom: 1px solid var(--rule-mid);
-  font-size: 15px;
-  padding: 4px 2px;
-}
-
-.bulk-annotation__meaning:focus {
-  outline: none;
-  border-bottom-color: var(--shu);
+  font-size: 14px;
 }
 
 .bulk-annotation__actionbar {
@@ -2355,7 +2535,7 @@ a.tag:hover .genre-hub__count {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   cursor: pointer;
 }
 
@@ -2366,13 +2546,13 @@ a.tag:hover .genre-hub__count {
 }
 
 .admin-words-claude .sep {
-  color: var(--shu);
+  color: var(--text-subtle);
   margin: 0 var(--space-2);
 }
 
 .proposal-lead {
   font-size: 14px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   max-width: 46em;
   margin: var(--space-3) 0 var(--space-4);
 }
@@ -2386,32 +2566,25 @@ a.tag:hover .genre-hub__count {
 }
 
 .proposal-limit__range-sep {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .proposal-limit__label {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .proposal-limit__input {
   width: 5em;
-  border: none;
-  border-bottom: 1px solid var(--rule-mid);
-  font-size: 15px;
-  padding: 4px 2px;
+  font-size: 14px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .proposal-limit__count {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .proposal-json__bar {
@@ -2424,18 +2597,19 @@ a.tag:hover .genre-hub__count {
 
 .proposal-json__hint {
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
-/* JSON は等幅・墨1px枠(コード面) */
+/* JSON は等幅・淡い面のコードブロック */
 .proposal-json__area {
   width: 100%;
-  border: 1px solid var(--ink);
-  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.6;
-  background: transparent;
+  line-height: 1.7;
+  background: var(--bg-soft);
 }
 
 .proposal-actions {
@@ -2470,10 +2644,8 @@ a.tag:hover .genre-hub__count {
 }
 
 .admin-words-table__reading {
-  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 /* 語義数・注釈状態・操作は内容ぶんだけ。余りは表層形と読みに配る */
@@ -2498,88 +2670,65 @@ a.tag:hover .genre-hub__count {
 }
 
 .admin-words-table__annotated {
-  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
-/* 未対応は朱(注意を引く現在の作業対象) */
+/* 未対応はアクセント色(注意を引く現在の作業対象) */
 .admin-words-table__unannotated {
-  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.1em;
-  color: var(--shu);
+  color: var(--text);
 }
 
-/* 保留は墨の淡色(対応待ちで脇に置いた語) */
+/* 保留は弱い文字色(対応待ちで脇に置いた語) */
 .admin-words-table__on-hold {
-  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.1em;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 /* --- セクション見出し --- */
-.section-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin: var(--space-6) 0 var(--space-4);
-}
-
-.section-header .section-heading {
-  margin: 0;
-}
-
-.section-header__more {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-2);
-}
-
 .section-heading {
-  margin: var(--space-6) 0 var(--space-4);
-  font-size: 18px;
+  margin: var(--space-7) 0 var(--space-4);
+  font-size: 17px;
+  color: var(--text-muted);
 }
 
 /* --- ページネーション --- */
 .pagination {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
-  gap: var(--space-5);
-  margin-top: var(--space-6);
-  font-size: 15px;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+  font-size: 14px;
 }
 
 .pagination span {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .pagination a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  background: var(--paper);
-  padding: 7px 18px;
-  font-size: 15px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  padding: 7px 20px;
+  font-size: 14px;
+  color: var(--text);
   text-decoration: none;
   transition: background-color var(--transition), border-color var(--transition);
 }
 
 .pagination a:hover {
   background: var(--bg-soft);
-  border-color: var(--ink-3);
+  border-color: var(--text-subtle);
+  text-decoration: none;
 }
 
-/* --- テーブル(検索結果・管理一覧): 墨の太罫で頭を締める --- */
+/* --- テーブル(検索結果・管理一覧): ヘッダは細罫で締め、行は細罫で仕切る --- */
 /* 狭幅では列を潰さず、この入れ物の中だけ横スクロールで逃がす(main は overflow-x: clip)。
    中のテーブルに min-width を与えてはじめて効く(無いと width:100% のまま列が潰れる) */
 .table-scroll {
@@ -2587,20 +2736,17 @@ a.tag:hover .genre-hub__count {
 }
 
 .data-table thead th {
-  font-family: var(--font-mono);
-  font-weight: 400;
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
   text-align: left;
-  padding: var(--space-2) var(--space-3) var(--space-2) 0;
-  border-bottom: 1px solid var(--rule-mid);
+  padding: var(--space-2) var(--space-3) var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .data-table td {
   padding: var(--space-3) var(--space-3) var(--space-3) 0;
-  border-bottom: 1px solid var(--rule);
-  font-size: 15px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
   vertical-align: baseline;
   font-variant-numeric: tabular-nums;
 }
@@ -2610,30 +2756,29 @@ a.tag:hover .genre-hub__count {
 }
 
 .data-table td a {
-  font-family: var(--font-mincho);
-  font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
   text-decoration: none;
 }
 
 .data-table td a:hover {
-  color: var(--shu);
+  text-decoration: underline;
 }
 
-/* --- ボタン: 白地に 1px 枠。hover では背景だけをわずかに変える。
-   塗り(墨)は主要 CTA のみ。動きは 200ms のフェード相当に統一する。 --- */
+/* --- ボタン: 白地の丸いピル。hover では背景だけをわずかに変える。
+   塗りは主要 CTA のみで、色は持たせず文字色のベタにする。 --- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5em;
-  min-height: 48px;
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 15px;
-  line-height: 1.5;
+  min-height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  letter-spacing: inherit;
+  line-height: 1.6;
   padding: 0 var(--space-5);
   text-decoration: none;
   cursor: pointer;
@@ -2642,75 +2787,70 @@ a.tag:hover .genre-hub__count {
 
 .btn:hover {
   background: var(--bg-soft);
-  border-color: var(--ink-3);
+  border-color: var(--text-subtle);
+  color: var(--text);
+  text-decoration: none;
 }
 
 .btn--primary {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--text);
+  border-color: var(--text);
   color: var(--bg);
 }
 
 .btn--primary:hover {
-  background: var(--shu-deep);
-  border-color: var(--shu-deep);
+  background: var(--text-muted);
+  border-color: var(--text-muted);
   color: var(--bg);
 }
 
 /* 一覧のツールバーなど、行に紛れさせたい小さなボタン */
 .btn--sm {
-  min-height: 34px;
-  font-size: 14px;
-  padding: 0 var(--space-3);
+  min-height: 32px;
+  font-size: 13px;
+  padding: 0 var(--space-4);
 }
 
-/* アイコン+極小の等幅ラベルを持つ行アクション用ボタン(annot. / del.)。
-   高さと文字送りを揃え、隣接しても行がガタつかないようにする。 */
+/* アイコン+小さなラベルを持つ行アクション用ボタン(annot. / del.)。
+   高さを揃え、隣接しても行がガタつかないようにする。 */
 .btn--icon {
   gap: 0.4em;
   min-height: 30px;
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
   line-height: 1.4;
-  padding: 0 10px;
+  padding: 0 var(--space-3);
   white-space: nowrap;
 }
 
-/* --- フォーム --- */
+/* --- フォーム: 入力はすべて細枠の角丸ボックス(下線 1 本の意匠は使わない) --- */
 input[type="text"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+textarea,
+select {
   font-family: inherit;
-  font-size: 15px;
-  color: var(--ink);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--rule-mid);
-  padding: 6px 2px;
+  font-size: 14px;
+  letter-spacing: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  padding: 9px 14px;
   max-width: 100%;
+  transition: border-color var(--transition);
 }
 
 input[type="text"]:focus,
 input[type="password"]:focus,
-input[type="number"]:focus {
-  border-bottom-color: var(--shu);
-}
-
-textarea,
-select {
-  font-family: inherit;
-  font-size: 15px;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--rule-mid);
-  padding: 6px 10px;
-  max-width: 100%;
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--text-muted);
 }
 
 /* iOS Safari は select/input を独自のグラデーション付きスタイルで描くため、
-   ネイティブの見た目を切って細枠に戻す。角丸は操作要素に許した 1 段階(--radius)に揃える。
-   矢印も一緒に消えるので、caret-down(Phosphor Light)を data URI の背景で描き直す。 */
+   ネイティブの見た目を切って細枠に戻す。
+   矢印も一緒に消えるので、caret-down(Phosphor Light)を data URI の背景で描き直す。
+   data URI では CSS 変数を参照できないので、両テーマで見える中間のグレーを直に持つ。 */
 input[type="text"],
 input[type="password"],
 input[type="number"],
@@ -2722,16 +2862,11 @@ select {
 }
 
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%23191813'%3E%3Cpath d='M212.24,100.24l-80,80a6,6,0,0,1-8.48,0l-80-80a6,6,0,0,1,8.48-8.48L128,167.51l75.76-75.75a6,6,0,0,1,8.48,8.48Z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%236e7781'%3E%3Cpath d='M212.24,100.24l-80,80a6,6,0,0,1-8.48,0l-80-80a6,6,0,0,1,8.48-8.48L128,167.51l75.76-75.75a6,6,0,0,1,8.48,8.48Z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
+  background-position: right 12px center;
   background-size: 10px;
-  padding-right: 28px;
-}
-
-textarea:focus,
-select:focus {
-  border-color: var(--ink);
+  padding-right: 32px;
 }
 
 textarea {
@@ -2740,43 +2875,40 @@ textarea {
 }
 
 .field {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .field label {
   display: block;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  color: var(--ink-3);
-  margin-bottom: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
 }
 
 /* 検索のキーワード欄はひと回り大きく */
 .field--keyword input {
   width: min(420px, 100%);
   font-size: 15px;
-  border-bottom-width: 2px;
-  border-bottom-color: var(--ink);
 }
 
-/* フォームのまとまり: 墨の枠 */
+/* フォームのまとまり: 細罫の角丸パネル */
 .fieldset-card {
-  border: 1px solid var(--ink);
-  padding: var(--space-4) var(--space-5);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-5);
   margin: 0 0 var(--space-5);
 }
 
 .fieldset-card legend {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.14em;
-  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
   padding: 0 var(--space-2);
 }
 
 /* 入力欄に添える畳んだヘルプ(genre-fold の文法を流用)。
-   既定は閉じていて、開くと墨枠のパネルで早見表を出す。ホバーには依存しない */
+   既定は閉じていて、開くと淡い面のパネルで早見表を出す。ホバーには依存しない */
 .field-help {
   margin-top: var(--space-2);
 }
@@ -2785,13 +2917,11 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  /* タップ領域を確保しつつ、畳んだ状態では極小の等幅で目立たせない */
+  /* タップ領域を確保しつつ、畳んだ状態では小さく目立たせない */
   padding: 6px 2px;
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
   list-style: none;
 }
 
@@ -2800,16 +2930,16 @@ textarea {
 }
 
 .field-help__summary:hover {
-  color: var(--shu);
+  color: var(--text);
 }
 
 .field-help__summary:focus-visible {
-  outline: 2px solid var(--shu);
+  outline: 2px solid var(--text);
   outline-offset: 1px;
 }
 
 .field-help__caret {
-  color: var(--shu);
+  color: var(--text-subtle);
   transform: rotate(-90deg);
   transition: transform 0.15s;
 }
@@ -2819,18 +2949,20 @@ textarea {
 }
 
 .field-help__body {
-  border: 1px solid var(--ink);
-  padding: var(--space-3);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  padding: var(--space-4);
 }
 
 .field-help__note {
   margin: var(--space-3) 0 0;
   font-size: 13px;
   line-height: 1.7;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
-/* 記法(等幅)と意味(明朝)の対比で読ませる早見表 */
+/* 記法(等幅)と意味(本文)の対比で読ませる早見表 */
 .regexp-help__table {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -2841,21 +2973,21 @@ textarea {
 .regexp-help__table dt {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--shu);
+  color: var(--text);
   white-space: nowrap;
 }
 
 .regexp-help__table dd {
   margin: 0;
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 /* 入力欄の補足説明 */
 .field-hint {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.8;
-  color: var(--ink-2);
+  color: var(--text-muted);
   margin: 0 0 var(--space-3);
 }
 
@@ -2866,18 +2998,20 @@ textarea {
   line-height: 1.8;
 }
 
-/* フォーム上部の警告(一部失敗など): 朱テキスト */
+/* フォーム上部の警告(一部失敗など): 赤の枠と文字(背景は塗らない) */
 .form-alert {
-  border: 1px solid var(--shu);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-5);
-  color: var(--shu);
-  font-size: 15px;
+  color: var(--danger);
+  font-size: 14px;
 }
 
 /* 一括登録の結果サマリ */
 .bulk-result {
-  border: 1px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
 }
@@ -2889,30 +3023,28 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-5);
-  font-family: var(--font-mono);
-  font-size: 15px;
-  letter-spacing: 0.08em;
+  font-size: 14px;
 }
 
 .bulk-result__errors {
   margin: var(--space-3) 0 0;
   padding-left: var(--space-5);
-  color: var(--shu);
-  font-size: 15px;
+  color: var(--danger);
+  font-size: 14px;
   line-height: 1.9;
 }
 
-/* バリデーションエラー: 朱テキストのみ(背景を塗らない) */
+/* バリデーションエラー: 赤の枠と文字のみ(背景を塗らない) */
 .error-explanation {
-  border: 1px solid var(--shu);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-5);
 }
 
 .error-explanation h2 {
-  font-family: var(--font-gothic);
-  font-size: 15px;
-  color: var(--shu);
+  font-size: 14px;
+  color: var(--danger);
 }
 
 .error-explanation ul {
@@ -2921,8 +3053,8 @@ textarea {
 }
 
 .error-explanation li {
-  font-size: 15px;
-  color: var(--shu);
+  font-size: 14px;
+  color: var(--danger);
 }
 
 /* --- 一括登録のフェーズ表示(入力→読み→重複) --- */
@@ -2939,22 +3071,20 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.12em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
-/* ステップ間の細い墨罫でつなぐ */
+/* ステップ間の細罫でつなぐ */
 .steps__item:not(:last-child)::after {
   content: "";
   width: var(--space-6);
   height: 1px;
-  background: var(--rule-mid);
+  background: var(--border-strong);
   margin-left: var(--space-2);
 }
 
-/* 番号は 1px 墨枠の正方形。現在は朱ベタ、完了は墨ベタ。 */
+/* 番号は 1px 枠の丸。現在はアクセントのベタ、完了は淡い面。 */
 .steps__no {
   display: inline-flex;
   align-items: center;
@@ -2962,34 +3092,37 @@ textarea {
   width: 22px;
   height: 22px;
   border: 1px solid currentColor;
+  border-radius: 50%;
   font-size: 12px;
   line-height: 1;
 }
 
 .steps__item.is-current {
-  color: var(--shu);
+  color: var(--text);
+  font-weight: 400;
 }
 
 .steps__item.is-current .steps__no {
-  background: var(--shu);
-  border-color: var(--shu);
+  background: var(--text);
+  border-color: var(--text);
   color: var(--bg);
 }
 
 .steps__item.is-done {
-  color: var(--ink);
+  color: var(--text-muted);
 }
 
 .steps__item.is-done .steps__no {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
+  background: var(--bg-soft);
+  border-color: var(--border-strong);
+  color: var(--text-muted);
 }
 
-/* --- 一括登録の読み確認テーブル(墨罫の表 + 朱の警告) --- */
+/* --- 一括登録の読み確認テーブル(細罫の表 + 赤の警告) --- */
 .bulk-review {
   overflow-x: auto;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   margin-bottom: var(--space-5);
 }
 
@@ -3007,15 +3140,15 @@ textarea {
   text-align: left;
   vertical-align: top;
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
 }
 
 .bulk-review__table thead th {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
-  border-bottom: 2px solid var(--ink);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .bulk-review__table tbody tr:last-child td {
@@ -3025,19 +3158,20 @@ textarea {
 .bulk-review__no {
   width: 3rem;
   font-family: var(--font-mono);
-  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
 }
 
-/* 類似・重複がある行、収録基準を満たさない行は左端に朱の帯を出して目立たせる */
+/* 類似・重複がある行、収録基準を満たさない行は左端に赤い帯を出して目立たせる */
 .bulk-review__row--warn td:first-child,
 .bulk-review__row--error td:first-child {
-  box-shadow: inset 3px 0 0 var(--shu);
+  box-shadow: inset 3px 0 0 var(--danger);
 }
 
 .bulk-review__surface {
   width: calc(50% - 1.5rem);
-  font-family: var(--font-mincho);
-  font-size: 18px;
+  font-size: 15px;
+  font-weight: 400;
 }
 
 .bulk-review__reading {
@@ -3051,22 +3185,22 @@ textarea {
   font-size: 15px;
 }
 
-/* 検証エラーの入力欄は朱の枠で示す(警告=朱文字、エラー=朱ベタのラベルと合わせる) */
+/* 検証エラーの入力欄は赤の枠で示す */
 .bulk-review__reading-input.is-error {
-  border-color: var(--shu);
-  outline: 1px solid var(--shu);
+  border-color: var(--danger);
 }
 
-/* エラー(登録できない/収録基準を満たさない)は朱ベタで、類似警告(朱文字)より強く出す */
+/* エラー(登録できない/収録基準を満たさない)は赤ベタで、類似警告(赤文字)より強く出す */
 .bulk-review__error-label {
   display: inline-block;
   margin: 0 0 var(--space-1);
   padding: 1px 8px;
-  background: var(--shu);
+  border-radius: var(--radius-sm);
+  background: var(--danger);
   color: var(--bg);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 .bulk-review__reading-error {
@@ -3080,16 +3214,16 @@ textarea {
 
 /* --- step2: 調査 JSON の反映パネル --- */
 .bulk-research {
-  border: 1px solid var(--ink);
-  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
 }
 
 .bulk-research__summary {
-  font-family: var(--font-mono);
   font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-2);
+  font-weight: 400;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
@@ -3106,30 +3240,29 @@ textarea {
 }
 
 .reading-status {
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.06em;
-  padding: 1px 6px;
+  font-weight: 400;
+  padding: 1px 8px;
   border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
 }
 
-/* 一致=緑 / 不一致=朱(赤) で即時に判別できるようにする */
+/* 一致=緑 / 不一致=赤 で即時に判別できるようにする */
 .reading-status--match {
-  color: var(--midori);
+  color: var(--success);
 }
 
 .reading-status--differ {
-  color: var(--shu);
+  color: var(--danger);
 }
 
 .reading-status--research {
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .reading-status__conf {
-  font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .reading-choices {
@@ -3139,34 +3272,34 @@ textarea {
   margin-top: var(--space-2);
 }
 
-/* 候補チップ: クリックで読み欄へ流し込む。選択中は墨ベタ反転。 */
+/* 候補チップ: クリックで読み欄へ流し込む。選択中はアクセントの淡い面。 */
 .reading-choice {
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-2);
-  border: 1px solid var(--ink);
-  background: var(--bg);
-  color: var(--ink);
-  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+  padding: 3px 10px;
   cursor: pointer;
   font: inherit;
 }
 
 .reading-choice:hover {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-soft);
+  color: var(--text);
 }
 
 .reading-choice.is-active {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-tint);
+  border-color: var(--text);
+  color: var(--text);
 }
 
 .reading-choice__src {
-  font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
-  opacity: 0.75;
+  color: var(--text-subtle);
 }
 
 .reading-choice__val {
@@ -3184,15 +3317,14 @@ textarea {
   display: block;
   margin-top: var(--space-1);
   font-size: 13px;
-  color: var(--shu);
+  color: var(--danger);
 }
 
 .bulk-review__warn-label {
   margin: 0 0 var(--space-1);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: var(--shu);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--danger);
 }
 
 .bulk-review__warn-label:not(:first-child) {
@@ -3212,28 +3344,29 @@ textarea {
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-2);
-  border: 1px solid var(--shu);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
   padding: 1px 8px;
 }
 
 .bulk-review__match-surface {
-  font-family: var(--font-mincho);
+  font-weight: 400;
 }
 
 .bulk-review__match-reading {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .bulk-review__match-sim {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--shu);
+  color: var(--danger);
 }
 
 .bulk-review__ok {
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 /* step3(重複チェック)は No./表層形/読み/重複・類似/除外 の5列。
@@ -3261,10 +3394,9 @@ textarea {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.4;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   cursor: pointer;
 }
 
@@ -3275,7 +3407,7 @@ textarea {
 
 .bulk-review__table tbody tr:has(.bulk-review__exclude:checked) .bulk-review__surface {
   text-decoration: line-through;
-  text-decoration-color: var(--shu);
+  text-decoration-color: var(--danger);
 }
 
 .bulk-review__table tbody tr:has(.bulk-review__exclude:checked) .bulk-review__reading-input {
@@ -3290,7 +3422,7 @@ textarea {
 
 /* --- 管理フォームの入れ子(語義・特徴の行) --- */
 .word-sense-fields {
-  border-top: 1px solid var(--rule-mid);
+  border-top: 1px solid var(--border-strong);
   padding-top: var(--space-4);
   margin-top: var(--space-4);
 }
@@ -3305,7 +3437,7 @@ textarea {
 
 /* --- 汎用 --- */
 .empty-note {
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .back-link {
@@ -3346,10 +3478,11 @@ textarea {
 }
 
 /* --- タグ統括管理(Admin::Tags) ------------------------------------------ */
-/* 一覧のエラー列挙(編集フォームのバリデーションエラー)。朱テキスト・背景は塗らない */
+/* 一覧のエラー列挙(編集フォームのバリデーションエラー)。赤テキスト・背景は塗らない */
 .form-errors {
-  border: 1px solid var(--shu);
-  color: var(--shu);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  color: var(--danger);
   padding: var(--space-2) var(--space-3);
   margin-bottom: var(--space-4);
   list-style: none;
@@ -3359,28 +3492,28 @@ textarea {
   margin-top: var(--space-1);
 }
 
-/* 追加パネル(details)。統合パネルと同じ墨枠のトーンに揃える */
+/* 追加パネル(details)。統合パネルと同じトーンに揃える */
 .tag-add {
-  border: 1px solid var(--ink);
-  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
 }
 .tag-add__summary {
   cursor: pointer;
-  font-family: var(--font-mono);
   font-size: 14px;
-  letter-spacing: 0.12em;
-  color: var(--ink-2);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 .tag-add[open] .tag-add__summary {
-  color: var(--ink);
-  border-bottom: 2px solid var(--ink);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
   display: block;
   padding-bottom: var(--space-2);
 }
 .tag-add__hint {
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   margin: var(--space-2) 0 var(--space-3);
   max-width: 46em;
 }
@@ -3389,28 +3522,28 @@ textarea {
   max-width: 24em;
 }
 
-/* 統合パネル(details)。一括適用パネルと同じ墨枠のトーンに揃える */
+/* 統合パネル(details)。一括適用パネルと同じトーンに揃える */
 .tag-merge {
-  border: 1px solid var(--ink);
-  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
 }
 .tag-merge__summary {
   cursor: pointer;
-  font-family: var(--font-mono);
   font-size: 14px;
-  letter-spacing: 0.12em;
-  color: var(--ink-2);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 .tag-merge[open] .tag-merge__summary {
-  color: var(--ink);
-  border-bottom: 2px solid var(--ink);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
   display: block;
   padding-bottom: var(--space-2);
 }
 .tag-merge__hint {
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   margin: var(--space-2) 0 var(--space-3);
   max-width: 46em;
 }
@@ -3424,7 +3557,7 @@ textarea {
 .tag-merge__arrow {
   font-size: 18px;
   line-height: 2.2;
-  color: var(--shu);
+  color: var(--text-subtle);
 }
 
 /* タグ一覧テーブル */
@@ -3438,7 +3571,7 @@ textarea {
   white-space: nowrap;
 }
 /* ジャンルの階層インデント(中分類・小分類を段付けして木構造を示す)。
-   段差を大きめに取り、朱のツリーコネクタ「└」でぶら下がりを明示する。
+   段差を大きめに取り、ツリーコネクタ「└」でぶら下がりを明示する。
    等幅ラベルの階層列(大/中/小)と併せて読み取れるようにする。
    ※パディングは .data-table td より詳細度を上げないと効かない(セルの既定パディングに負ける)。 */
 .data-table td.tag-table__name--medium {
@@ -3454,47 +3587,42 @@ textarea {
   width: 1.4em;
   margin-left: -1.9em;
   font-family: var(--font-mono);
-  color: var(--shu);
+  color: var(--text-subtle);
 }
 .tag-table__level {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 .tag-table__inuse {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
-/* seed(SeedCatalog)管理タグの印。墨1px枠+極小等幅(Issue 49) */
+/* seed(SeedCatalog)管理タグの印(Issue 49) */
 .tag-table__seed {
   display: inline-block;
   margin-left: 6px;
-  padding: 0 4px;
-  border: 1px solid var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  color: var(--text-subtle);
   vertical-align: 1px;
 }
-/* seed管理タグのリネーム時警告。墨1px枠パネル+朱の左罫(Issue 49) */
+/* seed管理タグのリネーム時警告。細罫パネル + 左罫で注意を示す(Issue 49) */
 .seed-warning {
   margin: 12px 0 20px;
   padding: 10px 14px;
-  border: 1px solid var(--ink);
-  border-left: 3px solid var(--shu);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius);
   font-size: 13px;
   line-height: 1.7;
 }
 .seed-warning__title {
   margin: 0 0 4px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--shu);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--danger);
 }
 
 /* --- モバイルのフォーム部品は 16px を下限にする ---
@@ -3519,16 +3647,14 @@ textarea {
   }
 }
 
-/* --- 統計ページ「蔵版目録」(Issue 34 / docs/stats.md) ---------------------------------
-   本編は言葉が主役、この頁だけは等幅数字と罫線が主役。チャートはインライン SVG で描き、
-   量の濃淡は朱チント(color-mix)、識別は色でなくラベルと位置で持つ。朱は「最」にだけ使う。 */
+/* --- 統計ページ(Issue 34 / docs/stats.md) ---------------------------------
+   チャートはインライン SVG で描く。量の濃淡はアクセント色のチント(color-mix)、
+   識別は色でなくラベルと位置で持つ。アクセントの濃い色は「最」にだけ使う。 */
 
 .stats-computed {
   margin: var(--space-4) 0 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 /* 数字の壁: 4群×5指標の定義リスト。罫線で仕切り、箱にしない */
@@ -3537,20 +3663,22 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4) var(--space-5);
   padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
   margin-bottom: var(--space-7);
 }
 
 .stats-wall__heading {
   margin: 0 0 var(--space-2);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  color: var(--shu);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .stats-wall__list {
   margin: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
 .stats-wall__row {
@@ -3559,29 +3687,27 @@ textarea {
   align-items: baseline;
   gap: var(--space-2);
   padding: 6px 0;
-  border-top: 1px solid var(--rule);
+  background: var(--surface);
 }
 
 .stats-wall__row dt {
-  font-size: 14px;
-  color: var(--ink-2);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .stats-wall__row dd {
   margin: 0;
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 20px;
+  font-weight: 400;
+  font-size: 18px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .stats-wall__unit {
   margin-left: 3px;
-  font-family: var(--font-gothic);
   font-weight: 400;
-  font-size: 13px;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 @media (max-width: 1023px) {
@@ -3596,7 +3722,7 @@ textarea {
   }
 }
 
-/* 章立て。§番号は朱の等幅ラベル、見出しは明朝。章の区切りは墨の太罫 */
+/* 章立て。章の区切りは細罫だけで作る */
 .stats-section {
   margin-bottom: var(--space-7);
 }
@@ -3604,8 +3730,9 @@ textarea {
 .stats-section__title {
   margin: 0 0 var(--space-4);
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--rule);
-  font-size: clamp(20px, 2.8vw, 26px);
+  border-bottom: 1px solid var(--border);
+  font-size: 17px;
+  color: var(--text-muted);
 }
 
 .stats-section__header {
@@ -3615,7 +3742,7 @@ textarea {
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
   margin-bottom: var(--space-4);
 }
 
@@ -3630,29 +3757,28 @@ textarea {
   max-width: 46em;
   font-size: 14px;
   line-height: 1.9;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .stats-subheading {
-  margin: var(--space-5) 0 var(--space-2);
-  font-size: clamp(16px, 2.2vw, 19px);
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: 15px;
+  color: var(--text-muted);
 }
 
 .stats-subheading:first-child {
   margin-top: 0;
 }
 
-/* 章内の注記・補足(等幅の欄外注) */
+/* 章内の注記・補足 */
 .stats-hint,
 .stats-covered {
   margin: var(--space-2) 0 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.04em;
-  color: var(--ink-3);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
-/* 読み物キャプション。行頭に朱の「※」を置く(欄外注の文法) */
+/* 読み物キャプション。行頭に「※」を置く(欄外注の文法) */
 .stats-notes {
   list-style: none;
   margin: 0;
@@ -3664,7 +3790,7 @@ textarea {
   padding-left: 1.4em;
   font-size: 14px;
   line-height: 1.9;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 .stats-notes li + li {
@@ -3675,7 +3801,7 @@ textarea {
   content: "※";
   position: absolute;
   left: 0;
-  color: var(--shu);
+  color: var(--text-subtle);
 }
 
 /* 幅の広いチャートは自身の中で横スクロールさせる(ページ全体は横スクロール禁止) */
@@ -3683,7 +3809,7 @@ textarea {
   overflow-x: auto;
 }
 
-/* 墨枠セグメントボタン(文字数/モーラ・期間切替)。選択中は墨に反転 */
+/* セグメントボタン(文字数/モーラ・期間切替)。選択中はアクセントの淡い面 */
 .segmented {
   display: inline-flex;
   margin-bottom: var(--space-4);
@@ -3691,25 +3817,39 @@ textarea {
 
 .segmented__button {
   margin-left: -1px;
-  padding: 6px 16px;
-  border: 1px solid var(--rule-mid);
-  background: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink);
+  padding: 6px 18px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: inherit;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .segmented__button:first-child {
   margin-left: 0;
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  padding-left: var(--space-5);
 }
 
-.segmented__button:hover,
+.segmented__button:last-child {
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  padding-right: var(--space-5);
+}
+
+.segmented__button:hover {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
 .segmented__button[aria-pressed="true"] {
-  background: var(--ink);
+  background: var(--text);
+  border-color: var(--text);
   color: var(--bg);
+  position: relative;
+  z-index: 1;
 }
 
 /* --- 頭文字と末尾文字: 50音表ヒートマップ(索引の kana-grid を再利用)と行×行マトリクス --- */
@@ -3749,18 +3889,16 @@ textarea {
 }
 
 .sound-matrix th {
-  font-family: var(--font-mono);
   font-weight: 400;
   font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   white-space: nowrap;
 }
 
 .sound-matrix thead th {
   width: 32px;
   padding: 0 0 2px;
-  border-bottom: 1px solid var(--rule-mid);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 /* 行見出しは1文字。マスの左端に寄せて読めるよう右揃えにする */
@@ -3778,33 +3916,35 @@ textarea {
   padding: 0;
 }
 
-/* セルの朱ヒートは索引の kana-cell--heat と同じ式(--fill 0〜1) */
+/* セルのヒートは索引の kana-cell--heat と同じ式(--fill 0〜1) */
 .sound-matrix__cell {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 55% + 12%), var(--rule-mid));
-  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 70%), transparent);
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 40% + 10%), var(--border-strong));
+  background: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 45%), transparent);
   text-decoration: none;
 }
 
 a.sound-matrix__cell:hover {
-  border-color: var(--ink);
-  background: var(--ink);
+  border-color: var(--chart);
+  background: color-mix(in srgb, var(--chart) 14%, transparent);
 }
 
 .sound-matrix__cell--empty {
-  border-color: var(--rule);
+  border-color: var(--border);
   background: none;
 }
 
-/* 最多セルだけ数字を白抜きで直書きする(朱は「最」にだけ) */
+/* 最多セルだけ数字を直書きする */
 .sound-matrix__count {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--bg);
+  font-weight: 400;
+  color: var(--text);
 }
 
 /* --- §3 波形塗りバー --- */
@@ -3815,46 +3955,46 @@ a.sound-matrix__cell:hover {
 }
 
 .wave-chart__bar path {
-  fill: color-mix(in srgb, var(--shu) 38%, transparent);
+  fill: color-mix(in srgb, var(--chart) 30%, transparent);
   transition: fill 0.15s;
 }
 
 .wave-chart__bar--mode path {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 .wave-chart__bar:hover path {
-  fill: var(--ink);
+  fill: var(--chart);
 }
 
-/* リンクにならないまとめ棒(モーラの「30+」)。hover の墨反転はさせない */
+/* リンクにならないまとめ棒(モーラの「30+」)。hover で色を変えない */
 .wave-chart__bar--static:hover path {
-  fill: color-mix(in srgb, var(--shu) 38%, transparent);
+  fill: color-mix(in srgb, var(--chart) 30%, transparent);
 }
 
 .wave-chart__bar--static.wave-chart__bar--mode:hover path {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 .wave-chart__baseline {
-  stroke: var(--ink);
-  stroke-width: 2;
+  stroke: var(--border-strong);
+  stroke-width: 1;
 }
 
 .wave-chart__value {
   font-family: var(--font-mono);
   font-size: 13px;
-  fill: var(--ink-3);
+  fill: var(--text-subtle);
 }
 
 .wave-chart__count {
   font-family: var(--font-mono);
   font-size: 13px;
-  fill: var(--ink-2);
+  fill: var(--text-muted);
 }
 
 .wave-chart__count--mode {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 /* --- §4 収録の推移(株価チャート式) --- */
@@ -3864,17 +4004,15 @@ a.sound-matrix__cell:hover {
 }
 
 .stats-current__total {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: 22px;
+  font-weight: 400;
+  font-size: 20px;
   font-variant-numeric: tabular-nums;
 }
 
 .stats-current__delta {
   margin-left: 8px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--shu);
+  font-size: 13px;
+  color: var(--success);
 }
 
 .timeline-chart {
@@ -3884,46 +4022,46 @@ a.sound-matrix__cell:hover {
 }
 
 .timeline-chart__area {
-  fill: color-mix(in srgb, var(--shu) 10%, transparent);
+  fill: color-mix(in srgb, var(--chart) 10%, transparent);
 }
 
 .timeline-chart__line {
   fill: none;
-  stroke: var(--ink);
+  stroke: var(--chart);
   stroke-width: 2;
 }
 
 .timeline-chart__dot {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 .timeline-chart__value {
   font-family: var(--font-mono);
   font-size: 13px;
-  fill: var(--ink-2);
+  fill: var(--text-muted);
 }
 
 .timeline-chart__value--now {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 .timeline-chart__vol {
-  fill: var(--ink);
+  fill: var(--text-subtle);
 }
 
 .timeline-chart__vol--last {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 .timeline-chart__base {
-  stroke: var(--ink);
-  stroke-width: 2;
+  stroke: var(--border-strong);
+  stroke-width: 1;
 }
 
 .timeline-chart__date {
   font-family: var(--font-mono);
   font-size: 12px;
-  fill: var(--ink-3);
+  fill: var(--text-subtle);
 }
 
 /* --- ジャンル別の語義数(Plotly サンバースト + 連動する積み上げ棒) ---
@@ -3957,7 +4095,7 @@ a.sound-matrix__cell:hover {
 .genre-analysis__label {
   margin: 0 0 var(--space-1);
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -3986,8 +4124,8 @@ a.sound-matrix__cell:hover {
 }
 
 /* --- 語種の構成(ワッフル)とエンティティ型のヒートマップ ---
-   ワッフルの塗りは順位で固定: 1位=朱ベタ / 2位=墨ベタ / 3位=朱チント / 4位=紙+墨枠 /
-   5番目(その他)=墨チント。明度差で識別する(色相に依存しない) */
+   ワッフルの塗りは順位で固定: 1位=アクセント / 2位=文字色 / 3位=アクセントのチント /
+   4位=地のまま / 5番目(その他)=文字色のチント。明度差で識別する(色相に依存しない) */
 .origin-case {
   display: flex;
   align-items: flex-start;
@@ -4006,21 +4144,22 @@ a.sound-matrix__cell:hover {
   display: inline-block;
   width: 18px;
   height: 18px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--border-strong);
 }
 
 .waffle__cell--f1 {
-  background: var(--shu);
-  border-color: var(--shu);
+  background: var(--chart);
+  border-color: var(--chart);
 }
 
 .waffle__cell--f2 {
-  background: var(--ink);
+  background: color-mix(in srgb, var(--text) 65%, var(--bg));
+  border-color: color-mix(in srgb, var(--text) 65%, var(--bg));
 }
 
 .waffle__cell--f3 {
-  background: color-mix(in srgb, var(--shu) 35%, var(--bg));
-  border-color: color-mix(in srgb, var(--shu) 55%, var(--rule-mid));
+  background: color-mix(in srgb, var(--chart) 35%, var(--bg));
+  border-color: color-mix(in srgb, var(--chart) 55%, var(--border-strong));
 }
 
 .waffle__cell--f4 {
@@ -4028,11 +4167,11 @@ a.sound-matrix__cell:hover {
 }
 
 .waffle__cell--f5 {
-  background: color-mix(in srgb, var(--ink) 20%, var(--bg));
+  background: color-mix(in srgb, var(--text) 20%, var(--bg));
 }
 
 /* 同じ100マスを語種ごとに横へ並べ直した棒(凡例を兼ねる)。
-   「名前 | マス… 件数」の3列。名前とマスの間は墨罫で仕切る */
+   「名前 | マス… 件数」の3列。名前とマスの間は細罫で仕切る */
 .waffle-bars {
   display: flex;
   flex-direction: column;
@@ -4058,7 +4197,7 @@ a.sound-matrix__cell:hover {
   flex-wrap: wrap;
   gap: 2px;
   padding-left: var(--space-3);
-  border-left: 2px solid var(--ink);
+  border-left: 1px solid var(--border-strong);
 }
 
 .waffle-bars__cells .waffle__cell {
@@ -4070,20 +4209,22 @@ a.sound-matrix__cell:hover {
   font-family: var(--font-mono);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   white-space: nowrap;
 }
 
 /* エンティティ型のツリーマップ。面積 = 語義数(squarified、座標は%)。
-   罫は各セルの墨 1px 枠の重なりで引く。塗りは朱チントの濃淡 */
+   罫は各セルの 1px 枠の重なりで引く。塗りはアクセント色のチントの濃淡 */
 .entity-treemap {
   position: relative;
   aspect-ratio: 2 / 1;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
   background: var(--bg);
 }
 
-/* マス同士の境目は細罫1本ぶんに留める(墨の枠だと隣り合う辺が二重になって重い) */
+/* マス同士の境目は細罫1本ぶんに留める(濃い枠だと隣り合う辺が二重になって重い) */
 .entity-treemap__cell {
   position: absolute;
   display: flex;
@@ -4092,23 +4233,22 @@ a.sound-matrix__cell:hover {
   gap: 2px;
   padding: 6px 8px;
   overflow: hidden;
-  border: 1px solid var(--rule-mid);
-  background: color-mix(in srgb, var(--shu) calc(var(--fill, 0) * 50% + 6%), var(--bg));
-  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 38% + 5%), var(--bg));
+  color: var(--text);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 a.entity-treemap__cell:hover {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--bg);
+  border-color: var(--chart);
+  text-decoration: none;
 }
 
-/* 小さすぎる型を畳んだ面。絞り込み先が無いのでリンクにせず、墨チントで区別する */
+/* 小さすぎる型を畳んだ面。絞り込み先が無いのでリンクにせず、グレーの面で区別する */
 .entity-treemap__cell--other {
   background: var(--bg-soft);
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .entity-treemap__name {
@@ -4124,7 +4264,7 @@ a.entity-treemap__cell:hover {
 }
 
 /* --- §7 母音スペクトルと頭子音 ---
-   帯は墨の明度4段 + オ段のみ朱チントの5値。右端の段名で識別する(色相に依存しない) */
+   帯は文字色の明度4段 + オ段のみアクセントのチントの5値。右端の段名で識別する */
 .vowel-spectrum {
   display: block;
   width: 100%;
@@ -4132,43 +4272,46 @@ a.entity-treemap__cell:hover {
 }
 
 .vowel-spectrum__band--a {
-  fill: var(--ink);
+  fill: var(--text);
 }
 
 .vowel-spectrum__band--i {
-  fill: color-mix(in srgb, var(--ink) 68%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 68%, var(--bg));
 }
 
 .vowel-spectrum__band--u {
-  fill: color-mix(in srgb, var(--ink) 44%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 44%, var(--bg));
 }
 
 .vowel-spectrum__band--e {
-  fill: color-mix(in srgb, var(--ink) 22%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 22%, var(--bg));
 }
 
 .vowel-spectrum__band--o {
-  fill: color-mix(in srgb, var(--shu) 38%, var(--bg));
+  fill: color-mix(in srgb, var(--chart) 38%, var(--bg));
 }
 
 .vowel-spectrum__label {
   font-family: var(--font-mono);
   font-size: 13px;
-  fill: var(--ink);
+  fill: var(--text);
 }
 
 .vowel-spectrum__tick {
   font-family: var(--font-mono);
   font-size: 12px;
-  fill: var(--ink-3);
+  fill: var(--text-subtle);
 }
 
-/* 頭子音の横棒。行ラベル + 墨の棒(最多のみ朱) + 等幅の件数 */
+/* 頭子音の横棒。行ラベル + グレーの棒(最多のみアクセント) + 件数 */
 .stats-bars {
   list-style: none;
   margin: 0;
   padding: 0;
   max-width: 560px;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
 .stats-bars__row {
@@ -4177,17 +4320,11 @@ a.entity-treemap__cell:hover {
   align-items: center;
   gap: var(--space-3);
   padding: 4px 0;
-  border-top: 1px solid var(--rule);
-}
-
-.stats-bars__row:first-child {
-  border-top: none;
+  background: var(--surface);
 }
 
 .stats-bars__label {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
+  font-size: 13px;
 }
 
 .stats-bars__bar {
@@ -4199,23 +4336,24 @@ a.entity-treemap__cell:hover {
   display: block;
   height: 100%;
   width: var(--w, 0%);
-  background: var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--text-subtle);
   transition: background 0.15s;
 }
 
 .stats-bars__row:first-child .stats-bars__fill {
-  background: var(--shu);
+  background: var(--chart);
 }
 
 .stats-bars__bar:hover .stats-bars__fill {
-  background: var(--shu-deep);
+  background: var(--chart);
 }
 
 .stats-bars__count {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
+  color: var(--text-muted);
   text-align: right;
 }
 
@@ -4225,15 +4363,14 @@ a.entity-treemap__cell:hover {
   margin: 0;
   padding: 0;
   max-width: 720px;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
 .feature-rank__row {
   padding: var(--space-3) 0;
-  border-top: 1px solid var(--rule);
-}
-
-.feature-rank__row:first-child {
-  border-top: none;
+  background: var(--surface);
 }
 
 .feature-rank__head {
@@ -4245,22 +4382,22 @@ a.entity-treemap__cell:hover {
 
 .feature-rank__count {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
-/* 実例語は明朝。該当部分に朱2px下線(単語詳細の校正記号の文法) */
+/* 実例語の該当部分は淡いハイライトで示す(単語詳細の注釈と同じ文法) */
 .feature-rank__example {
-  font-family: var(--font-mincho);
-  font-weight: 500;
-  font-size: 16px;
+  font-weight: 400;
+  font-size: 15px;
   overflow-wrap: anywhere;
 }
 
 .feature-rank__target {
-  border-bottom: 2px solid var(--shu);
-  padding-bottom: 1px;
+  background: var(--bg-tint);
+  border-radius: var(--radius-sm);
+  padding: 1px 3px;
 }
 
 .feature-rank__bar {
@@ -4272,129 +4409,155 @@ a.entity-treemap__cell:hover {
   display: block;
   height: 100%;
   width: var(--w, 0%);
-  background: var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--text-subtle);
 }
 
 .feature-rank__row:first-child .feature-rank__fill {
-  background: var(--shu);
+  background: var(--chart);
 }
 
-/* --- 奥付(フッター直前の等幅一行) --- */
+/* --- 出典・更新日の一行(フッター直前) --- */
 .stats-colophon {
   margin: var(--space-7) 0 0;
   padding-top: var(--space-3);
-  border-top: 1px solid var(--rule);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
-/* --- ランキング(/rankings): 切替タブ + 墨枠パネルのランキング --- */
-/* 種類が多いので目次を兼ねた切替タブにする(タグの文法・現在地は墨反転) */
+/* --- ランキング(/rankings): 切替タブ + 細罫パネルのランキング --- */
+/* 種類が多いので目次を兼ねた切替タブにする(タグの文法・現在地はアクセントの淡い面) */
 .rank-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-5);
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--text-muted);
+  border-bottom: 1px solid var(--border);
 }
 
 .rank-tab {
-  border: 1px solid var(--rule-mid);
-  border-radius: var(--radius);
-  background: var(--paper);
-  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  padding: 4px 14px;
   font-family: inherit;
-  font-size: 14px;
-  color: var(--ink-2);
+  font-size: 13px;
+  letter-spacing: inherit;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
 
-.rank-tab:hover,
+.rank-tab:hover {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
 .rank-tab[aria-pressed="true"] {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--text);
+  border-color: var(--text);
   color: var(--bg);
 }
 
 /* 1枠 = 細罫のパネル(区切りは示すが、面としては主張させない) */
 .rank-board {
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4) var(--space-4);
   margin-bottom: var(--space-6);
 }
 
 /* 見出し行は細罫で仕切る */
 .rank-board__header {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--rule);
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-3) var(--space-5);
+}
+
+.rank-board__head-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .rank-board__title {
   margin: 0;
-  font-size: clamp(18px, 2.4vw, 22px);
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* その板の最大値。縦罫で仕切って右肩に置く */
+.rank-board__figure {
+  flex: none;
+  border-left: 1px solid var(--border);
+  padding-left: var(--space-5);
+  text-align: right;
 }
 
 .rank-board__more {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--ink-2);
+  font-size: 13px;
+  color: var(--text-subtle);
+  text-decoration: none;
 }
 
 .rank-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* 行の区切りは border ではなく 1px の隙間で作る(§5.3 と同じ組み)。
+     親を罫の色で塗り、行を面の色で塗る */
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
-/* 順位(等幅) / 読み+見出し語(明朝) / 指標値 の3列。狭幅でも3列のまま折り返す */
+/* 順位 / 読み+見出し語 / 指標値 の3列。狭幅でも3列のまま折り返す */
 .rank-row {
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: baseline;
-  gap: var(--space-3) var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--rule);
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3);
+  /* 隙間が 1px しかないので角丸は持たせない(角が丸いと線が途切れて見える) */
+  background: var(--surface);
+  transition: background-color var(--transition);
 }
 
-.rank-row:last-child {
-  border-bottom: none;
+.rank-row:hover {
+  background: var(--bg-soft);
 }
 
 .rank-row__no {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.4em;
-  padding: 2px 0;
-  border: 1px solid transparent;
+  align-items: baseline;
+  justify-content: flex-end;
+  min-width: 1.8em;
   font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
-/* 上位3位は朱の刻印。1位だけベタ、2〜3位は朱枠にして段を作る */
+/* 上位3位だけ文字を一段濃くする(同率1位が続いてもベタが連続しない) */
 .rank-row__no--top {
-  border-color: var(--shu);
-  color: var(--shu);
-  font-size: 15px;
+  color: var(--text-muted);
 }
 
 .rank-row__no--first {
-  background: var(--shu);
-  border-color: var(--shu);
-  color: var(--bg);
+  color: var(--text);
+}
+
+/* 1位の「値」だけを本文色まで濃くして、板の中の頂点を示す */
+.rank-row__number--first {
+  color: var(--text);
 }
 
 .rank-row__main {
@@ -4405,21 +4568,16 @@ a.entity-treemap__cell:hover {
 }
 
 .rank-row__reading {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.16em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .rank-row__surface {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(22px, 3.2vw, 30px);
-  line-height: 1.4;
-  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
   text-decoration: none;
   overflow-wrap: anywhere;
-  transition: color 0.15s;
 }
 
 /* 行のどこを押しても詳細へ(entry-row と同じ手口) */
@@ -4427,10 +4585,6 @@ a.entity-treemap__cell:hover {
   content: "";
   position: absolute;
   inset: 0;
-}
-
-.rank-row:hover .rank-row__surface {
-  color: var(--shu);
 }
 
 .rank-row__value {
@@ -4441,28 +4595,20 @@ a.entity-treemap__cell:hover {
 }
 
 .rank-row__number {
-  font-family: var(--font-mincho);
-  font-weight: 600;
-  font-size: clamp(20px, 2.6vw, 26px);
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: var(--text-muted);
 }
 
 .rank-row__unit {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .rank-colophon {
   margin-top: var(--space-6);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--rule);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 /* ============================================================
@@ -4484,18 +4630,16 @@ a.entity-treemap__cell:hover {
 .request-table thead th {
   text-align: left;
   padding: 0 var(--space-2) var(--space-2);
-  border-bottom: 1px solid var(--rule-mid);
-  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border-strong);
   font-size: 12px;
   font-weight: 400;
-  letter-spacing: 0.14em;
-  color: var(--ink-3);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .request-table td {
   padding: var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
 
@@ -4516,7 +4660,7 @@ a.entity-treemap__cell:hover {
   width: 2.5em;
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--ink-3);
+  color: var(--text-subtle);
   white-space: nowrap;
 }
 
@@ -4545,37 +4689,32 @@ a.entity-treemap__cell:hover {
   white-space: nowrap;
 }
 
-/* 読みの字数カウンタ: 極小の等幅(データラベルの文法)。基準を満たしたときだけ朱 */
+/* 読みの字数カウンタ。収録基準を満たしたときだけ緑にする */
 .reading-counter {
   margin: var(--space-1) 0 0;
   min-height: 1.4em;
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .reading-counter--ok {
-  color: var(--shu);
+  color: var(--success);
 }
 
 /* 重複チェックの判定。その語の入力欄の真下に置く。
-   既に載っている・似ている場合だけ朱枠で引き止め(design.md: エラーは朱テキスト＋朱枠、
-   背景は塗らない)、未収録は枠なしの薄墨で静かに伝える */
+   既に載っている・似ている場合だけ赤枠で引き止め、未収録は枠なしで静かに伝える */
 .dup-note {
   margin: var(--space-2) 0 0;
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .dup-note--exact,
 .dup-note--similar {
-  border: 1px solid var(--shu);
+  border: 1px solid var(--danger);
   border-radius: var(--radius);
   padding: var(--space-2);
-  color: var(--shu);
+  color: var(--danger);
 }
 
 .dup-note__verdict {
@@ -4586,19 +4725,16 @@ a.entity-treemap__cell:hover {
   display: inline-block;
   margin-top: 2px;
   margin-right: var(--space-2);
-  font-family: var(--font-mincho);
-  font-size: 15px;
-  letter-spacing: 0;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 /* 照合中だけ出す(turbo が turbo-frame に busy を立てる) */
 .request-table__loading {
   display: none;
   margin: 0 0 var(--space-3);
-  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .request-frame[busy] .request-table__loading,
@@ -4615,7 +4751,7 @@ a.entity-treemap__cell:hover {
 .request-table__notice {
   margin: 0 0 var(--space-3);
   font-size: 14px;
-  color: var(--shu);
+  color: var(--danger);
 }
 
 .request-actions {
@@ -4627,10 +4763,8 @@ a.entity-treemap__cell:hover {
 }
 
 .request-actions__limit {
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 /* 重複チェックは送信の手前に置く補助操作なので、主 CTA から離して右へ寄せる */
@@ -4647,11 +4781,11 @@ a.entity-treemap__cell:hover {
   overflow: hidden;
 }
 
-/* 送信前のお願い(奥付のように静かに置く) */
+/* 送信前のお願い(静かに置く) */
 .request-notes {
   margin-top: var(--space-6);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--border);
 }
 
 .request-notes ul {
@@ -4659,7 +4793,7 @@ a.entity-treemap__cell:hover {
   padding-left: 1.2em;
   font-size: 14px;
   line-height: 1.9;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 /* 狭幅では表を組まず、1行 = 1枚の面に積む(横スクロールを作らない) */
@@ -4677,7 +4811,7 @@ a.entity-treemap__cell:hover {
 
   .request-row {
     position: relative;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: var(--space-3) var(--space-3) var(--space-2);
     margin-bottom: var(--space-3);
@@ -4724,23 +4858,19 @@ a.entity-treemap__cell:hover {
 .admin-requests-table__registered {
   display: inline-block;
   margin-left: var(--space-2);
-  padding: 1px var(--space-1);
+  padding: 0 6px;
   border: 1px solid currentcolor;
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
+  border-radius: var(--radius-pill);
   font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--shu);
+  color: var(--success);
   white-space: nowrap;
 }
 
 .admin-requests-table__len,
 .admin-requests-table__at,
 .admin-requests-table__memo {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .admin-requests-table__len {
@@ -4755,7 +4885,6 @@ a.entity-treemap__cell:hover {
   display: block;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.04em;
 }
 
 .admin-requests-table__meta {
@@ -4764,9 +4893,8 @@ a.entity-treemap__cell:hover {
 }
 
 .admin-requests-table__meta summary {
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
   cursor: pointer;
 }
 
@@ -4779,33 +4907,32 @@ a.entity-treemap__cell:hover {
 }
 
 .admin-requests-table__meta dt {
-  font-family: var(--font-mono);
-  color: var(--ink-3);
+  font-size: 12px;
+  color: var(--text-subtle);
   white-space: nowrap;
 }
 
 .admin-requests-table__meta dd {
   margin: 0;
-  color: var(--ink-2);
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
 .admin-requests-table__status {
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
-/* 未着手だけ朱で残件を目立たせる。処理済みの3状態は薄墨で沈める */
+/* 未着手だけ色を付けて残件を目立たせる。処理済みの3状態は沈める */
 .admin-requests-table__status--pending {
-  color: var(--shu);
+  color: var(--text);
+  font-weight: 400;
 }
 
 .admin-requests-table__status--accepted,
 .admin-requests-table__status--on_hold,
 .admin-requests-table__status--rejected {
-  color: var(--ink-3);
+  color: var(--text-subtle);
 }
 
 .admin-requests-table__memo {
@@ -4816,8 +4943,9 @@ a.entity-treemap__cell:hover {
 
 /* 一括操作パネル */
 .bulk-requests {
-  border: 1px solid var(--ink);
-  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
 }
 
@@ -4839,16 +4967,15 @@ a.entity-treemap__cell:hover {
 }
 
 .bulk-requests__label {
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.14em;
-  color: var(--ink-3);
+  font-weight: 400;
+  color: var(--text-subtle);
 }
 
 .bulk-requests__hint {
   margin: var(--space-2) 0 0;
   font-size: 13px;
-  color: var(--ink-2);
+  color: var(--text-muted);
 }
 
 /* ===== 統計 §1 級数見本(Issue 78) =====
@@ -4856,7 +4983,8 @@ a.entity-treemap__cell:hover {
    空いた隙間へ小さい語を詰める(オーナー指示 2026-08-11)。
    配置は MorphemeCloud が仮想平面で決め、viewBox 付き SVG で拡縮する。 */
 .scale-specimen {
-  border: 1px solid var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: var(--space-4);
 }
 
@@ -4867,9 +4995,9 @@ a.entity-treemap__cell:hover {
 }
 
 .scale-specimen__text {
-  fill: var(--ink);
-  font-family: var(--font-mincho);
-  font-weight: 600;
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-weight: 400;
   /* 隙間に詰めた小さい語まで拾えるよう、字面の当たりを広めに取る */
   paint-order: stroke;
 }
@@ -4882,24 +5010,23 @@ a.entity-treemap__cell:hover {
 
 .scale-specimen__link:hover .scale-specimen__text,
 .scale-specimen__link:focus-visible .scale-specimen__text {
-  fill: var(--shu);
+  fill: var(--text);
 }
 
-/* 最頻の1語だけ朱(design.md「朱は『最』にだけ」) */
+/* 最頻の1語だけアクセント色にする */
 .scale-specimen__link.is-top .scale-specimen__text {
-  fill: var(--shu);
+  fill: var(--chart);
 }
 
 .scale-specimen__link.is-top:hover .scale-specimen__text,
 .scale-specimen__link.is-top:focus-visible .scale-specimen__text {
-  fill: var(--ink);
+  fill: var(--text);
 }
 
 .scale-specimen__note {
   margin: var(--space-4) 0 0;
   padding-top: var(--space-3);
-  border-top: 1px solid var(--rule);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-3);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-subtle);
 }

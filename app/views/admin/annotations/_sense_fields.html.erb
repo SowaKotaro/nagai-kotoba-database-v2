@@ -15,7 +15,7 @@
                   genre-picker:changed->sense-completeness#check
                   inline-add:added->sense-completeness#check">
   <div class="ann-sense__head">
-    <span class="ann-sense__stamp"><%= t("admin.words.senses_legend") %> <%= format("%02d", form.index + 1) %></span>
+    <span class="ann-sense__stamp"><%= t("admin.words.senses_legend") %> <%= form.index + 1 %></span>
     <%= form.hidden_field :_destroy, data: { sense_destroy: "" } %>
     <button type="button" class="ann-sense__del" data-action="sense-cloner#remove"><%= t("admin.annotations.remove_sense") %></button>
   </div>

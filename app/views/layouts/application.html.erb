@@ -41,18 +41,12 @@
     <%# 新着単語の Atom フィード(autodiscovery。Issue 28) %>
     <%= auto_discovery_link_tag :atom, words_path(format: :atom), title: t("words.feed.title") %>
 
-    <%# 見出し用の明朝のみ web フォントで読む(本文は OS 標準ゴシック。docs/design.md §2)。
-        display=swap に加え、CSS 自体もレンダーブロッキングにしない: media="print" で
-        描画を止めずに読み込み、完了後に onload で全メディアへ適用する(モバイルの LCP 対策)。
-        JS 無効環境では noscript 側の通常読み込みにフォールバックする。 %>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho:wght@500;600&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho:wght@500;600&display=swap"></noscript>
+    <%# web フォントは読まない(書体は OS 標準のゴシック 1 本。docs/design.md §2)。
+        外部フォント CDN への接続をなくすことが、そのまま表示速度になる。 %>
 
     <%# モバイルのブラウザ UI の色。既定値はライトの --bg で、実際の値は
         直後のスクリプトと theme コントローラが CSS のトークンから読んで上書きする %>
-    <meta name="theme-color" content="#faf8f4">
+    <meta name="theme-color" content="#ffffff">
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
@@ -83,12 +77,17 @@
     <%= website_json_ld %>
   </head>
 
-  <body>
+  <%# 管理画面は「読み物」ではなく「作業画面」なので、公開側のトークン(淡い色・広い字間と
+      行間・大きな角丸)をこのクラスの下で上書きする(app/assets/stylesheets/admin.css)。
+      HTML の構成は公開側と共有したまま、見え方だけを切り替える %>
+  <body class="<%= "is-admin" if request.path.start_with?("/admin") %>">
     <%= render "shared/header" %>
     <%# 管理画面だけに出す共通サブナビ(Issue 35) %>
     <%= render "admin/nav" if admin_page? %>
 
-    <main class="container">
+    <%# トップだけは全幅の帯で組むため、ページ側からクラスを差し込めるようにする
+        (container--flush = 幅と左右の余白を外し、帯が画面端まで届くようにする) %>
+    <main class="container <%= yield(:main_class) %>">
       <%# フラッシュはここで一元表示する(各ビューでは表示しない) %>
       <% if flash[:notice] %>
         <p class="flash flash--notice"><%= icon "check_circle" %><%= flash[:notice] %></p>
@@ -100,10 +99,15 @@
       <%= yield %>
     </main>
 
-    <%# 奥付。紙の色のまま細罫で仕切り、リンクは細いタイポグラフィで静かに並べる %>
+    <%# フッター。1列目にブランドの説明、右の3列に導線を割る(奥付の体裁)。
+        地の色を一段沈めた帯で、ページを静かに閉じる %>
     <footer class="site-footer">
       <div class="site-footer__inner">
         <div class="site-footer__about">
+          <%# 3 行に積んだワードマーク。奥付の頭に置いて、ページを名前で閉じる。
+              1 語 1 行の左寄せなので、読む順が上から下に決まって迷いがない %>
+          <%# 3 行のワードマークはヘッダーのブランド名の右へ移した(2026-09-05 オーナー指示)。
+              同じ英字を 2 箇所に出さないので、奥付はブランド名から始める %>
           <p class="site-footer__brand"><%= t("layouts.brand") %></p>
           <p class="site-footer__desc"><%= t("layouts.footer.about") %></p>
           <nav class="site-footer__nav">
@@ -148,8 +152,12 @@
           </nav>
         </div>
       </div>
+
       <div class="site-footer__bottom">
-        <div class="site-footer__bottom-inner"><%= t("layouts.footer.copyright", year: Date.current.year) %></div>
+        <div class="site-footer__bottom-inner">
+          <span class="label-en"><%= t("labels.en.est") %></span>
+          <span><%= t("layouts.footer.copyright", year: Date.current.year) %></span>
+        </div>
       </div>
     </footer>
   </body>

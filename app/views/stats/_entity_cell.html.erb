@@ -1,5 +1,5 @@
 <%# ツリーマップの1マス。畳んだ「その他」(id: nil)だけは絞り込み先が無いので
-    リンクにせず、墨チントの面として置く(名前・件数の組みは同じ)。 %>
+    リンクにせず、淡いグレーの面として置く(名前・件数の組みは同じ)。 %>
 <% style = "left: #{rect[:left]}%; top: #{rect[:top]}%; width: #{rect[:width]}%; height: #{rect[:height]}%; " \
            "--fill: #{(rect[:count] / max_count).round(3)}" %>
 <% if rect[:id] %>
