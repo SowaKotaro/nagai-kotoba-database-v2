@@ -6,6 +6,13 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# Turbo のスナップショットキャッシュの扱い。同じ URL でも中身が変わるページ
+        (シャッフル中の一覧など)は no-preview を宣言して、前回の内容を preview として
+        描き直させない。宣言はキャッシュされる側のページに要るのでここで出す %>
+    <% if (turbo_cache_control = yield(:turbo_cache_control)).present? %>
+      <meta name="turbo-cache-control" content="<%= turbo_cache_control %>">
+    <% end %>
+
     <%# サーチコンソール所有権確認(任意・環境変数。DNS 確認が使えないとき用。Issue 19) %>
     <% if google_site_verification %><meta name="google-site-verification" content="<%= google_site_verification %>"><% end %>
     <% if bing_site_verification %><meta name="msvalidate.01" content="<%= bing_site_verification %>"><% end %>

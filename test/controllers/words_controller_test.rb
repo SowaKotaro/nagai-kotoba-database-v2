@@ -483,6 +483,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal hrefs.first, hrefs.last, "描画のたびに URL が変わるとクローラの無限ループになる"
   end
 
+  # Turbo はキャッシュ済みのスナップショットをまず preview として描いてから、
+  # サーバの応答で描き直す。シャッフルは同じ URL でも並びが毎回変わるので、
+  # preview を許すと1クリックで「前回の並び → 今回の並び」と2回シャッフルして見える。
+  test "シャッフル中の一覧は Turbo の preview を止める" do
+    get words_path(sort: "shuffle")
+    assert_select "meta[name=turbo-cache-control][content=no-preview]", count: 1
+  end
+
+  test "シャッフル以外の一覧は Turbo のキャッシュ設定を出さない" do
+    get words_path
+    assert_select "meta[name=turbo-cache-control]", count: 0
+
+    get words_path(sort: "kana_asc")
+    assert_select "meta[name=turbo-cache-control]", count: 0
+  end
+
   test "同じ seed のシャッフルは順序が変わらず、seed が変わると並び直る" do
     get words_path(sort: "shuffle", seed: "abc123")
     first = [ body_position(words(:curry)), body_position(words(:abc_murder)) ]
