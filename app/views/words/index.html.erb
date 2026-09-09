@@ -5,6 +5,12 @@
   - それ以外(複数条件・キーワード・2ページ目以降) → noindex,follow
   canonical は重複を避けるため常に正規化した自身を指す。
 %>
+<%# シャッフル中は同じ URL でも並びが毎回変わる。Turbo はキャッシュ済みのスナップショットを
+    まず preview として描き、そのあとサーバの応答で描き直すので、放っておくと
+    「前回の並び → 今回の並び」と1クリックで2回シャッフルしたように見える。
+    no-preview で preview だけを止める(キャッシュ自体は残るので、戻る操作では同じ並びに戻る) %>
+<% content_for :turbo_cache_control, "no-preview" if @sort.shuffle? %>
+
 <% heading = facet_heading(@search) %>
 <% page_heading = heading || t("words.index.title") %>
 <%# 並び替え(sort)はコンテンツが同じ順列違いなので、既定順のときだけインデックスを許可する。
