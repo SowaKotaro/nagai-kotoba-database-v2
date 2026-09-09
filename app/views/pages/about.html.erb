@@ -6,18 +6,17 @@
 
 <header class="page-header">
   <p class="label-en"><%= t("labels.en.about") %></p>
+  <%# 標識の2行目は必ず「値」を持たせる。同じ数は下の「収録の基準」に日本語でも置く %>
+  <p class="label-en"><%= t("labels.en.entries", count: number_with_delimiter(@word_count)) %></p>
   <h1 class="page-title"><%= t("layouts.brand") %></h1>
   <p class="page-lead"><%= t("pages.about.lead") %></p>
 </header>
-
-<%# サイトの成り立ちを表す一枚。実素材が入ったらこの枠ごと <img> に差し替える %>
-<%= render "shared/image_slot", label: t("pages.about.image"),
-      hint: t("pages.about.image_hint"), modifier: "image-slot--banner" %>
 
 <div class="prose">
   <section>
     <h2><%= icon "list_checks" %><%= t("pages.about.criteria_title") %></h2>
     <p><%= t("pages.about.criteria_body") %></p>
+    <p><%= t("pages.about.criteria_count", count: number_with_delimiter(@word_count)) %></p>
   </section>
 
   <section>

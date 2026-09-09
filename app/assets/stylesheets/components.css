@@ -314,16 +314,27 @@
   margin-top: var(--space-7);
 }
 
+/* 章の見出し。§3 の「細罫はセクション見出しの下」に従って 1px の細罫で章の頭を示す。
+   h2 が等間隔に並ぶだけだと、どこで話題が変わるのか読めない(濃い章の罫は
+   ページ見出しの下など 4 箇所だけなので、ここは --border で止める) */
 .prose h2 {
   margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
   font-size: 17px;
   color: var(--text);
 }
 
-/* FAQ の質問文(h3)と活用シーンの箇条書き */
+/* FAQ の質問文(h3)。太字を使わないので、問いと答えの差は「大きさ」と「文字の濃さ」で作る
+   (質問 = 16px の --text / 答え = 15px の --text-muted)。問いの上は広く空ける */
 .prose h3 {
-  margin: var(--space-5) 0 var(--space-2);
-  font-size: 15px;
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: 16px;
+  color: var(--text);
+}
+
+.prose h3 + p {
+  color: var(--text-muted);
 }
 
 .prose ul {
@@ -2105,58 +2116,6 @@ a.tag:hover .genre-hub__count {
 
 .radial-art__node {
   fill: var(--text-muted);
-}
-
-/* --- 画像プレースホルダ -----------------------------------------------
-   イラスト・写真を入れる予定の場所。実素材が入るまでの間、破線の枠と
-   「何を入れるか」の一文だけを置いておく(design.md §5.7)。 */
-.image-slot {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 120px;
-  padding: var(--space-5);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  color: var(--text-subtle);
-  text-align: center;
-}
-
-.image-slot__label {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-.image-slot--square .image-slot__label {
-  font-size: 12px;
-}
-
-.image-slot__hint {
-  margin: 0;
-  font-size: 11px;
-  color: var(--text-subtle);
-  opacity: 0.8;
-}
-
-.image-slot .icon {
-  font-size: 20px;
-  opacity: 0.6;
-}
-
-/* 横長(ヒーロー下・About の頭) */
-.image-slot--banner {
-  min-height: 180px;
-}
-
-/* 正方形に近い小さめの枠(カードの中に添えるとき) */
-.image-slot--square {
-  min-height: 168px;
-  padding: var(--space-4) var(--space-3);
 }
 
 /* --- ホーム: 2つのリスト(最近追加 / 読みが長い) -------------------------
