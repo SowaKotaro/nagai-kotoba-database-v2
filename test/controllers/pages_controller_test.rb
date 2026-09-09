@@ -21,6 +21,25 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", "mailto:specialnamahamu@gmail.com"
   end
 
+  test "About は図・イラストを一切持たない(文章だけで組む)" do
+    get about_path
+
+    # 線画(円環・放射図)も写真プレースホルダも置かない(docs/design.md §5.7。オーナー判断)
+    assert_select ".ring-art", count: 0
+    assert_select ".image-slot", count: 0
+    assert_select "svg[role=img]", count: 0
+    # ページ内もくじも持たない
+    assert_select ".page-toc", count: 0
+  end
+
+  test "About の標識は2行目に収録語数を持ち、同じ数を日本語でも出す" do
+    get about_path
+    count = Word.annotated.count
+
+    assert_select ".label-en", text: I18n.t("labels.en.entries", count: ActiveSupport::NumberHelper.number_to_delimited(count))
+    assert_select ".prose", text: /現在 #{count} 語を収録しています。/
+  end
+
   test "About はフッターから恒久リンクされている" do
     get root_path
     assert_select "footer a[href=?]", about_path, text: I18n.t("layouts.nav.about")
