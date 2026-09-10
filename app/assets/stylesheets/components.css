@@ -254,7 +254,6 @@
   }
 }
 
-
 .page-header {
   padding: var(--space-2) 0 var(--space-5);
   margin-bottom: var(--space-6);
@@ -4176,7 +4175,8 @@ a.sound-matrix__cell:hover {
    罫は各セルの 1px 枠の重なりで引く。塗りはアクセント色のチントの濃淡 */
 .entity-treemap {
   position: relative;
-  aspect-ratio: 2 / 1;
+  /* 仮想キャンバス(StatsHelper::TREEMAP_WIDTH / _HEIGHT)と必ず同じ比にする */
+  aspect-ratio: 3 / 2;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
@@ -4216,10 +4216,67 @@ a.entity-treemap__cell:hover {
   overflow: hidden;
 }
 
+/* 小さいマスの名前は折り返さず「…」で切る(全文はマスの title に残る)。
+   折り返させると、マスの高さが 2 行に足りないときに 2 行目が半分だけ見える。
+   マスの高さは面積しだいで連続的に変わるので、行数を決め打ちしても防げない。 */
+.entity-treemap__cell--small .entity-treemap__name,
+.entity-treemap__cell--tiny .entity-treemap__name {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .entity-treemap__count {
   font-family: var(--font-mono);
   font-size: 12px;
   color: inherit;
+}
+
+/* 面が小さいマスは余白と級数を詰める。詰めないと名前が枠から溢れて読めなくなる。
+   いちばん小さい段は名前だけ(件数は title に残す)。11px は §2 の下限。 */
+.entity-treemap__cell--small {
+  padding: 4px 5px;
+  gap: 1px;
+}
+
+.entity-treemap__cell--small .entity-treemap__name {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.entity-treemap__cell--small .entity-treemap__count {
+  font-size: 11px;
+}
+
+.entity-treemap__cell--tiny {
+  padding: 3px 4px;
+  gap: 0;
+}
+
+.entity-treemap__cell--tiny .entity-treemap__name {
+  font-size: 11px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.entity-treemap__cell--tiny .entity-treemap__count {
+  font-size: 11px;
+}
+
+/* スマホでは横に入る文字数が足りず、小さいマスの名前が2〜3字で切れてしまう。
+   足りないぶんを縦で稼ぎ(マスは縦長になる)、名前は折り返させる。 */
+@media (max-width: 767px) {
+  .entity-treemap {
+    aspect-ratio: 3 / 5;
+  }
+
+  .entity-treemap__cell--small .entity-treemap__name,
+  .entity-treemap__cell--tiny .entity-treemap__name {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
 }
 
 /* --- §7 母音スペクトルと頭子音 ---
@@ -4259,6 +4316,173 @@ a.entity-treemap__cell:hover {
 .vowel-spectrum__tick {
   font-family: var(--font-mono);
   font-size: 12px;
+  fill: var(--text-subtle);
+}
+
+/* --- §7 母音の遷移グラフ ---
+   層 = 拍位置、ノード = 母音、エッジ = 隣り合う層の全結合。
+   太さと濃さで多寡を出し、最多の1本だけ --chart(「最」にだけ色を使う作法) */
+/* 「多い遷移だけ」の切替。checkbox + 兄弟セレクタで JS を持たない。
+   図の右上に、極小のラベルと 26×14 のスイッチだけで置く(区画の主役は図なので、
+   ボタンとして立たせない。2026-09-10 オーナー指示で墨反転のピルから作り替えた) */
+.vowel-graph-panel__head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.vowel-graph-panel__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.vowel-graph-panel__switch:hover {
+  color: var(--text-muted);
+}
+
+.vowel-graph-panel__switch-track {
+  position: relative;
+  width: 26px;
+  height: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.vowel-graph-panel__switch-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-subtle);
+  transition: transform var(--transition), background var(--transition);
+}
+
+.vowel-graph-panel__toggle:checked ~ .vowel-graph-panel__head .vowel-graph-panel__switch-track {
+  background: var(--text-muted);
+  border-color: var(--text-muted);
+}
+
+.vowel-graph-panel__toggle:checked ~ .vowel-graph-panel__head .vowel-graph-panel__switch-track::after {
+  transform: translateX(12px);
+  background: var(--surface);
+}
+
+.vowel-graph-panel__toggle:checked ~ .vowel-graph-panel__head .vowel-graph-panel__switch {
+  color: var(--text-muted);
+}
+
+.vowel-graph-panel__toggle:focus-visible ~ .vowel-graph-panel__head .vowel-graph-panel__switch-track {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* 少ない遷移を伏せると、残った線の濃淡が読めるようになる */
+.vowel-graph-panel__toggle:checked ~ .vowel-graph-frame .vowel-graph__edge.is-faint {
+  display: none;
+}
+
+/* 伏せている最中でも、選んだ線は出す(押した手応えが無くなるため) */
+.vowel-graph-panel__toggle:checked ~ .vowel-graph-frame .vowel-graph__edge.is-faint.is-selected {
+  display: inline;
+}
+
+/* 押して選んだ2ノードと、そのあいだの1本。
+   色を持つのはこの「選んでいる状態」だけにする。最多の1本にも --chart を塗っていた時期が
+   あるが(2026-09-10)、押しても消えない線が1本あることになり、選択の色と見分けが付かない。
+   最多は太さで既に出ているうえ、注記に数字つきで書いてある。 */
+.vowel-graph__edge.is-selected {
+  stroke: var(--chart);
+  stroke-opacity: 1;
+  stroke-width: 3.2;
+}
+
+.vowel-graph__node.is-picked {
+  fill: var(--chart);
+  stroke: var(--chart);
+}
+
+/* 選んだ移り方と、その語の検索への導線。押すまでは出さない。
+   display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す */
+.vowel-graph-panel__readout[hidden] {
+  display: none;
+}
+
+.vowel-graph-panel__readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* 段名の列(横スクロールしない)＋ 図(横スクロールする)。
+   図は縮めない。75 個のノードと 350 本の線が入るので、縮めると拍位置も読めなくなる。
+   拡縮させないのは、左の段名と段の y をずらさないためでもある。 */
+.vowel-graph-frame {
+  display: flex;
+  align-items: flex-start;
+}
+
+.vowel-graph-frame .stats-scroll {
+  flex: 1;
+  min-width: 0;
+}
+
+.vowel-graph,
+.vowel-graph__rows {
+  display: block;
+  flex: none;
+}
+
+.vowel-graph__edge {
+  stroke: var(--text);
+  stroke-linecap: round;
+}
+
+/* ノードは地の色で塗り、後ろを通る線を隠す(線がノードを貫くと層の区切りが読めない) */
+.vowel-graph__node {
+  fill: var(--surface);
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill var(--transition), stroke var(--transition);
+}
+
+.vowel-graph__node:hover {
+  fill: var(--bg);
+  stroke: var(--text);
+}
+
+/* 既定のフォーカスリングは丸の外接矩形に黒い枠を描いて重いので、細い罫に置き換える
+   (消しはしない。キーボードでも押せる要素なので、どこに居るかは必ず見せる) */
+.vowel-graph__node:focus-visible {
+  fill: var(--bg);
+  stroke: var(--text);
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+
+.vowel-graph__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--text-muted);
+}
+
+.vowel-graph__tick {
+  font-family: var(--font-mono);
+  font-size: 10px;
   fill: var(--text-subtle);
 }
 
@@ -4937,55 +5161,57 @@ a.entity-treemap__cell:hover {
   color: var(--text-muted);
 }
 
-/* ===== 統計 §1 級数見本(Issue 78) =====
-   よく現れる形態素を「活字の大きさ＝頻度」で組む。大きい語をばらばらに置き、
-   空いた隙間へ小さい語を詰める(オーナー指示 2026-08-11)。
+/* ===== 統計 §1 ワードクラウド(Issue 78) =====
+   よく現れる形態素を「活字の大きさ＝頻度」で組む。最頻の1語を中心に据え、
+   残りはばらばらに置いて隙間を詰める(オーナー指示 2026-08-11 / 2026-09-10)。
+   100 件を余白が見えないくらい詰めて組む(docs/stats.md §1)。
    配置は MorphemeCloud が仮想平面で決め、viewBox 付き SVG で拡縮する。 */
-.scale-specimen {
+.word-cloud {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-4);
 }
 
-.scale-specimen__svg {
+.word-cloud__svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.scale-specimen__text {
+.word-cloud__text {
   fill: var(--text);
   font-family: var(--font-sans);
   font-weight: 400;
   /* 隙間に詰めた小さい語まで拾えるよう、字面の当たりを広めに取る */
   paint-order: stroke;
+  transition: fill var(--transition);
 }
 
+/* 語ごとの色(2026-09-10 オーナー指示)。サイト唯一の多色で、色相は8つ。
+   割り当ては語そのものから決まる(MorphemeCloud#palette_for)ので、
+   収録が増えても同じ語は同じ色のまま。値と実測は tokens.css / docs/design.md §5.10 */
+.word-cloud__text--c1 { fill: var(--cloud-1); }
+.word-cloud__text--c2 { fill: var(--cloud-2); }
+.word-cloud__text--c3 { fill: var(--cloud-3); }
+.word-cloud__text--c4 { fill: var(--cloud-4); }
+.word-cloud__text--c5 { fill: var(--cloud-5); }
+.word-cloud__text--c6 { fill: var(--cloud-6); }
+.word-cloud__text--c7 { fill: var(--cloud-7); }
+.word-cloud__text--c8 { fill: var(--cloud-8); }
+
 /* 大域の a に付く下線は図の中では邪魔なので消す(押せることは大きさと hover で伝える) */
-.scale-specimen__link {
+.word-cloud__link {
   cursor: pointer;
   text-decoration: none;
 }
 
-.scale-specimen__link:hover .scale-specimen__text,
-.scale-specimen__link:focus-visible .scale-specimen__text {
+/* hover は色を落として細い下線を引く(サイト全体のリンクと同じ作法)。
+   語ごとに色が付いたぶん、押している1語だけ墨に戻ると狙いがはっきりする */
+.word-cloud__link:hover .word-cloud__text,
+.word-cloud__link:focus-visible .word-cloud__text {
   fill: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.1em;
 }
 
-/* 最頻の1語だけアクセント色にする */
-.scale-specimen__link.is-top .scale-specimen__text {
-  fill: var(--chart);
-}
-
-.scale-specimen__link.is-top:hover .scale-specimen__text,
-.scale-specimen__link.is-top:focus-visible .scale-specimen__text {
-  fill: var(--text);
-}
-
-.scale-specimen__note {
-  margin: var(--space-4) 0 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--text-subtle);
-}

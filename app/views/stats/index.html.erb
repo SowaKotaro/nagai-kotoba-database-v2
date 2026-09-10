@@ -15,12 +15,12 @@
 <% if @stats.word_count.zero? %>
   <p class="empty-note"><%= icon "binoculars" %><%= t("stats.index.empty") %></p>
 <% else %>
-  <%# §1 看板「級数見本」。頻度は事前集計のため、集計ファイルが無ければ丸ごと出さない %>
+  <%# §1 看板「ワードクラウド」。頻度は事前集計のため、集計ファイルが無ければ丸ごと出さない %>
   <% if MorphemeFrequencies.available? %>
-    <section class="stats-section stats-section--specimen">
-      <h2 class="stats-section__title"><%= icon "text_aa" %><%= t("stats.index.scale_specimen.title") %></h2>
-      <p class="stats-section__lead"><%= t("stats.index.scale_specimen.lead") %></p>
-      <%= render "scale_specimen" %>
+    <section class="stats-section stats-section--word-cloud">
+      <h2 class="stats-section__title"><%= icon "text_aa" %><%= t("stats.index.word_cloud.title") %></h2>
+      <p class="stats-section__lead"><%= t("stats.index.word_cloud.lead") %></p>
+      <%= render "word_cloud" %>
     </section>
   <% end %>
 

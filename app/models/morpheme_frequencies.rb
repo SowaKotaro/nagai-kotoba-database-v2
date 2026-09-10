@@ -1,4 +1,4 @@
-# 統計ページ §1「級数見本」が読む、形態素の出現頻度(Issue 78)。
+# 統計ページ §1「ワードクラウド」が読む、形態素の出現頻度(Issue 78)。
 #
 # 本番・CI に MeCab が無いため、頻度は**ローカルで事前集計してファイルに置く**。
 # 更新は `bin/rails stats:morphemes`(lib/tasks/stats.rake)。本番はこのファイルを読むだけで、
@@ -9,8 +9,9 @@
 class MorphemeFrequencies
   DEFAULT_PATH = Rails.root.join("db/morpheme_frequencies.json")
 
-  # 見本に載せる上限。多すぎると級数の差が潰れて見本にならない。
-  DISPLAY_LIMIT = 60
+  # 図に載せる件数(オーナー指示 2026-09-10 で 260 → 100)。
+  # 全部載せると縦に伸びるばかりで、1つ1つの語が読めなくなる。
+  DISPLAY_LIMIT = 100
   # この回数以上現れた形態素だけを載せる(1回だけの語は「繰り返し現れる部品」ではない)。
   MIN_COUNT = 2
 
@@ -82,11 +83,14 @@ class MorphemeFrequencies
 
       max = selected.first.last
       min = selected.last.last
-      span = (max - min).to_f
+      # 級数は頻度の位置(0.0〜1.0)で決める。全部同数なら一律で最大にする。
+      #
+      # 位置は**対数**で採る。頻度は一部の語だけが飛び抜ける分布なので、そのまま線形に
+      # 割り当てると大多数(2〜3回)が下限に貼り付いて、大小の差が読めない図になる。
+      span = Math.log(max) - Math.log(min)
 
       selected.map do |text, count|
-        # 級数は頻度の位置(0.0〜1.0)で決める。全部同数なら一律で最大にする。
-        weight = span.zero? ? 1.0 : (count - min) / span
+        weight = span.zero? ? 1.0 : (Math.log(count) - Math.log(min)) / span
         Entry.new(text: text, count: count, weight: weight)
       end
     end

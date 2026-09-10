@@ -267,6 +267,43 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_includes ids(vowel_reading: "ケー"), word_senses(:curry).id
   end
 
+  # --- 母音の遷移(統計 §7 のグラフから来る、拍位置で固定した2拍の組) ---
+  test "母音の遷移は指定した拍位置の2拍で絞れる" do
+    # curry の母音は aee。1拍目 a → 2拍目 e。
+    assert_equal [ word_senses(:curry).id ], ids(vowel_transition: "1-ae")
+    assert_equal [ word_senses(:curry).id ], ids(vowel_transition: "2-ee")
+    # 位置が違えば当たらない(位置を問わない押韻検索とは別物)
+    assert_equal [], ids(vowel_transition: "3-ae")
+  end
+
+  test "母音の遷移は3拍以上つなげた並びでも絞れる" do
+    # curry の母音は aee。1拍目から a → e → e。
+    assert_equal [ word_senses(:curry).id ], ids(vowel_transition: "1-aee")
+    assert_equal [], ids(vowel_transition: "1-aea")
+  end
+
+  test "母音の遷移は読みがそこまで続かない語義を外す" do
+    # curry は3拍(aee)しかないので、3拍目から先の組には該当しない。
+    assert_not_includes ids(vowel_transition: "3-ea"), word_senses(:curry).id
+  end
+
+  test "母音の遷移は形が違えば条件ごと無視する" do
+    all = ids({})
+    assert_equal all, ids(vowel_transition: "1-xy")   # 母音でない
+    assert_equal all, ids(vowel_transition: "ae")     # 位置が無い
+    assert_equal all, ids(vowel_transition: "0-ae")   # 拍位置は1から
+    assert_equal all, ids(vowel_transition: "1-a")    # 1拍では遷移にならない
+    assert_equal all, ids(vowel_transition: "1-#{'a' * 16}") # 並びは15拍まで
+    assert_equal all, ids(vowel_transition: "99-ae")  # 上限より後ろ
+    assert_not WordSenseSearch.new(vowel_transition: "1-xy").conditions?
+  end
+
+  test "母音の遷移は引き継ぐ条件に入り、単独でもインデックスは許可しない" do
+    search = WordSenseSearch.new(vowel_transition: "1-ae")
+    assert_equal "1-ae", search.to_query_params[:vowel_transition]
+    assert_nil search.indexable_facet
+  end
+
   # --- 複数選択(同一項目内は OR) ---
   test "先頭文字は複数指定(OR)で絞れる" do
     both = ids(first_char: [ word_senses(:murder).first_char, word_senses(:curry).first_char ])

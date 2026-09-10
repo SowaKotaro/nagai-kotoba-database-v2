@@ -13,7 +13,7 @@
         <path class="vowel-spectrum__band vowel-spectrum__band--<%= band[:vowel] %>" d="<%= band[:path] %>" />
       <% end %>
       <% spectrum[:bands].each do |band| %>
-        <text class="vowel-spectrum__label" x="<%= spectrum[:label_x] %>" y="<%= band[:label_y] + 4 %>"><%= t("stats.index.sound.vowel_labels.#{band[:vowel]}") %></text>
+        <text class="vowel-spectrum__label" x="<%= spectrum[:label_x] %>" y="<%= band[:label_y] + 4 %>"><%= t("vowel_rows.#{band[:vowel]}") %></text>
       <% end %>
       <%# 横軸: 拍位置の番号(等幅極小)。全点に振らず、1 と 5 刻みだけ %>
       <% spectrum[:xs].each_with_index do |x, index| %>
@@ -25,6 +25,12 @@
     </svg>
   </div>
   <p class="stats-hint"><%= t("stats.index.sound.position_axis") %></p>
+<% end %>
+
+<%# 母音の遷移グラフ(層=拍位置・ノード=母音・エッジ=全結合)。層が2つ揃わなければ出さない %>
+<% graph = stats_vowel_graph(@stats.vowel_transitions) %>
+<% if graph %>
+  <%= render "vowel_graph", graph: graph %>
 <% end %>
 
 <% if @stats.head_consonants.any? %>

@@ -1,11 +1,11 @@
-# 表層形を形態素(名詞)へ分割するサービス。統計ページ §1「級数見本」の事前集計で使う。
+# 表層形を形態素(名詞)へ分割するサービス。統計ページ §1「ワードクラウド」の事前集計で使う。
 # MeCab の CLI を Open3 で呼び出す(gem は増やさない方針。ReadingExtractor と同じ作法)。
 #
 # ReadingExtractor との違いが2つある。
 #
 # 1. **辞書は既定(ipadic)を使い、neologd は使わない**。
 #    neologd は固有名詞に強く、読みの取得には最適だが、「涼宮ハルヒの憂鬱」を丸ごと1語として
-#    持っているため、部品を数えたいこの用途では何も分割されない。級数見本が見たいのは
+#    持っているため、部品を数えたいこの用途では何も分割されない。ワードクラウドが見たいのは
 #    「選手権」「症候群」のような繰り返し現れる部品なので、既定辞書の方が目的に合う。
 #
 # 2. **連続するカタカナの名詞は1語に畳む**。既定辞書は長いカタカナ語を知らないことが多く、
@@ -19,6 +19,10 @@ class MorphemeExtractor
 
   KATAKANA_ONLY = /\A[ァ-ヶー]+\z/
   NOUN = "名詞".freeze
+
+  # 未知の記号は ipadic で名詞(サ変接続)になるため、「!!」のような記号だけの塊が
+  # 名詞として残ってしまう。文字を1つも含まないものは部品として数えない。
+  WORDY = /[\p{Han}\p{Hiragana}\p{Katakana}\p{Alnum}]/
 
   # 数えても見どころにならない語(数詞・非自立・代名詞など)は落とす。
   SKIPPED_NOUN_SUBTYPES = %w[数 非自立 代名詞 接尾 接続詞的 動詞非自立的].freeze
@@ -102,6 +106,8 @@ class MorphemeExtractor
 
   def keep?(surface, feature)
     return false if surface.nil? || surface.empty? || feature.nil?
+
+    return false unless surface.match?(WORDY)
 
     fields = feature.split(",")
     return false unless fields.first == NOUN

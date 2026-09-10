@@ -1,4 +1,4 @@
-# 統計ページ §1「級数見本」の形態素頻度を事前集計する(Issue 78)。
+# 統計ページ §1「ワードクラウド」の形態素頻度を事前集計する(Issue 78)。
 #
 # 本番・CI には MeCab が無いため、集計は MeCab のあるローカルで行い、
 # 結果(db/morpheme_frequencies.json)をコミットして本番は読むだけにする。
@@ -12,7 +12,7 @@
 # 本番の公開データは https://nagai-kotoba-database.jp/llms-full.txt から取れるので、
 # そこから見出し語を抜いたファイルを渡せば本番相当の集計ができる。
 namespace :stats do
-  desc "統計ページの級数見本用に、収録語の形態素頻度を集計して db/morpheme_frequencies.json を更新する"
+  desc "統計ページのワードクラウド用に、収録語の形態素頻度を集計して db/morpheme_frequencies.json を更新する"
   task morphemes: :environment do
     extractor = MorphemeExtractor.new
     unless extractor.available?
@@ -38,7 +38,7 @@ namespace :stats do
     puts
 
     metadata = MorphemeFrequencies.write!(counts, word_count: surfaces.size)
-    puts "書き出しました: #{MorphemeFrequencies::PATH}"
+    puts "書き出しました: #{MorphemeFrequencies.path}"
     puts "  対象語数: #{metadata['word_count']} / 形態素の種類: #{metadata['morpheme_count']}"
     puts "  見本に載る形態素(#{MorphemeFrequencies::MIN_COUNT}回以上): #{MorphemeFrequencies.entries.size}"
     puts "  上位10件:"

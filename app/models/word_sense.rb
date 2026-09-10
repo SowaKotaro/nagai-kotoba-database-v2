@@ -86,6 +86,13 @@ class WordSense < ApplicationRecord
   scope :rhythm_containing, ->(text) { where("rhythm_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
   # 母音パターン(vowel_pattern)の部分一致。押韻検索(母音の並びで韻を探す)に使う。
   scope :vowel_containing, ->(text) { where("vowel_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
+  # 語頭から position 拍目以降の母音が pattern("ou" "aoi" など)と一致する語義。
+  # 統計 §7 の母音遷移グラフ(拍位置で固定した母音の並び)から来る条件で、
+  # 位置を問わない vowel_containing とは別物。読みがそこまで続かない語義は
+  # SUBSTRING が pattern の長さに満たないので自然に外れる。
+  scope :vowel_transition_at, lambda { |position, pattern|
+    where("SUBSTRING(vowel_pattern, ?, ?) = ?", position, pattern.length, pattern)
+  }
   # 文字種(words.char_type_pattern)で絞り込む。
   # partial:        真なら部分一致(LIKE %...%)、偽なら完全一致(=)。
   # case_sensitive: 真なら大文字小文字を区別する。カラムは utf8mb4_0900_ai_ci で

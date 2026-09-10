@@ -43,12 +43,21 @@ module SearchesHelper
     conditions << [ t("searches.linguistic_feature"), master_names(LinguisticFeature, search.linguistic_feature_id) ] if search.linguistic_feature_id.present?
     conditions << [ t("words.show.origins"), master_names(WordOrigin, search.word_origin_id) ] if search.word_origin_id.present?
     conditions << [ t("searches.vowel_pattern"), search.vowel_reading ] if search.vowel_reading.present?
+    conditions << [ t("searches.vowel_transition"), vowel_transition_phrase(search) ] if search.vowel_transition.present?
     conditions << [ WordSense.human_attribute_name(:rhythm_pattern), search.rhythm_pattern ] if search.rhythm_pattern.present?
     conditions << [ t("words.show.char_type_pattern"), char_type_pattern_phrase(search) ] if search.char_type_pattern.present?
     conditions
   end
 
   private
+
+  # 母音の遷移の条件チップ。「3〜5拍目: オ段 → ウ段 → イ段」と、拍位置つきで読ませる。
+  def vowel_transition_phrase(search)
+    position, pattern = search.vowel_transition_path
+    t("searches.vowel_transition_value",
+      from: position, to: position + pattern.length - 1,
+      rows: pattern.each_char.map { |vowel| t("vowel_rows.#{vowel}") }.join(" → "))
+  end
 
   def reading_length_phrase(search)
     min = search.reading_length_min
