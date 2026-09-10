@@ -27,9 +27,10 @@
     </div>
   <% end %>
 
-  <%# 提案の要約(反映済みの中身の根拠)。反映・新設候補の作成ボタンは置かない
-      (どちらも画面遷移を伴い、他カードの未保存の入力が消えるため)。
-      マスタに無い名前は各行の「＋ 追加」でその場に作れる %>
+  <%# 提案の要約(反映済みの中身の根拠)。「提案を反映」は置かない(開いた時点で全カードに
+      反映済みのため)。マスタに無い名前は、この欄の「＋作成」か各行の「＋ 追加」で作れる。
+      「＋作成」はデッキのフォームごと create_master へ送って画面を組み直すが、
+      送信内容をそのまま描き直すので、他のカードの入力は消えない %>
   <% if proposal %>
     <%# 提案を見ながら入力するため、既定で開いた状態にする(畳むことはできる) %>
     <details class="deck-proposal" open>
@@ -52,7 +53,8 @@
             <% if proposal.multiple_senses? %>
               <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
             <% end %>
-            <%= render "admin/annotations/proposal_sense", sense: sense, word: word, creatable: false %>
+            <%= render "admin/annotations/proposal_sense", sense: sense, word: word,
+                  creatable: true, deck: true, sense_index: i %>
           </div>
         <% end %>
         <% if proposal.entry_notes %>

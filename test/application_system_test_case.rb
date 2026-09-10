@@ -104,6 +104,11 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     assert_selector "#{selector}[open]"
   end
 
+  # ウィンドウ幅を変える(モバイル表示の確認)。終わったら DEFAULT_SCREEN_SIZE へ戻すこと。
+  def resize_window_to(width, height)
+    page.driver.browser.manage.window.resize_to(width, height)
+  end
+
   # 管理画面のシステムテスト用: ログインフォームから管理者でサインインする。
   def system_sign_in(admin = admins(:one), password: "password")
     visit new_session_path

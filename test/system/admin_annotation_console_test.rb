@@ -8,6 +8,26 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     system_sign_in
   end
 
+  # スマホ幅では最下部のアクションバーが2〜3行に折り返す。「保存して次へ」が行の途中
+  # (画面下端の中ほど)に来ると、iOS の画面下端ジェスチャ(Apple Intelligence の呼び出し)と
+  # 近くて押しづらいため、折り返しても必ず右端に置く。
+  test "スマホ幅でも保存ボタンは画面の右端に置く" do
+    resize_window_to(402, 874)
+    visit admin_annotation_path(@word)
+    assert_selector ".ann-actionbar"
+
+    edges = page.evaluate_script(<<~JS)
+      (() => {
+        const bar = document.querySelector(".ann-actionbar");
+        const save = bar.querySelector(".btn--primary");
+        return { bar: bar.getBoundingClientRect().right, save: save.getBoundingClientRect().right };
+      })()
+    JS
+    assert_in_delta edges["bar"], edges["save"], 1, "保存ボタンがアクションバーの右端に寄っていない"
+  ensure
+    resize_window_to(*ApplicationSystemTestCase::DEFAULT_SCREEN_SIZE)
+  end
+
   test "ジャンルを大→中→小と選んで保存すると、注釈済みになり次の語へ進む" do
     visit admin_annotation_path(@word)
     wait_for_stimulus "genre-picker"

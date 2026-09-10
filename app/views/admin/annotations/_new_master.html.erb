@@ -1,8 +1,20 @@
-<%# locals: (field:, word:, creatable:, label:, name: nil) %>
-<%# 新設候補マスタ(Issue 66)。creatable(単一語義)ならワンタップ作成ボタン、そうでなければ表示だけ。
-    ボタンを押すと create_master が提案名でマスタを作り、apply_proposal=1 で再反映するので、
-    フォームに解決済みで入る(サーバ側で完結・新規 JS 不要)。 %>
-<% if creatable %>
+<%# locals: (field:, word:, creatable:, label:, name: nil, deck: false, sense_index: 0) %>
+<%# 新設候補マスタ(Issue 66)。creatable ならワンタップ作成ボタン、そうでなければ表示だけ。
+    1語コンソール: button_to(単独のフォーム)で create_master を叩き、作成後は
+      apply_proposal=1 で再反映して戻るので、フォームに解決済みで入る。
+    デッキ: 1つのフォームに複数語を抱えているのでフォームを入れ子にできない。
+      デッキのフォームごと create_master へ送り(formaction)、サーバが送信内容から
+      画面を組み直す。他のカードの入力は消えない(formnovalidate で途中入力でも押せる)。 %>
+<% deck = local_assigns.fetch(:deck, false) %>
+<% if creatable && deck %>
+  <%= submit_tag label, name: nil, formnovalidate: true,
+        formaction: create_master_admin_annotation_deck_path(
+          field: field, name: name, word_id: word.id,
+          sense_index: local_assigns.fetch(:sense_index, 0)
+        ),
+        class: "ann-proposal__new ann-proposal__new--btn",
+        data: { publish_guard_skip: "" } %>
+<% elsif creatable %>
   <%= button_to label, create_master_admin_annotation_path(word),
         params: nav_params.merge(field: field, name: name),
         form: { class: "ann-proposal__new-form", data: { turbo_frame: "annotation-console" } },

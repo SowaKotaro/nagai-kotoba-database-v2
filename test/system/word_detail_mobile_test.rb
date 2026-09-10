@@ -94,8 +94,4 @@ class WordDetailMobileTest < ApplicationSystemTestCase
                     "#{label}の読みが表記の上に積まれていない(ルビ配置のままだと iPhone Safari で横にはみ出す)"
     assert_operator layout["readingLines"], :>=, 2, "#{label}の長い読みが折り返されていない"
   end
-
-  def resize_window_to(width, height)
-    page.driver.browser.manage.window.resize_to(width, height)
-  end
 end

@@ -79,7 +79,9 @@
 .ann-proposal__new { font-size: 11px; color: var(--text); border: 1px solid var(--text); border-radius: var(--radius-pill); padding: 0 8px; margin-left: 6px; }
 /* 新設候補のワンタップ作成ボタン(Issue 66)。バッジと同じ見た目で、hover で塗る */
 .ann-proposal__new-form { display: inline; margin: 0; }
-.ann-proposal__new--btn { background: transparent; cursor: pointer; line-height: 1.6; }
+/* デッキでは input[type=submit] で描く(フォームを入れ子にできないため)。
+   ボタン要素と同じ見た目になるよう、書体と字間は本文から継がせる */
+.ann-proposal__new--btn { background: transparent; cursor: pointer; line-height: 1.6; font-family: inherit; letter-spacing: inherit; }
 .ann-proposal__new--btn:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
 /* 提案パネルの特徴(該当部分つき)。1件ずつ縦に積み、該当部分は小さく添える */
 .ann-proposal__feature { display: block; margin: 2px 0; }
@@ -203,6 +205,11 @@
 /* 最下部アクションバー */
 .ann-actionbar { position: sticky; bottom: 0; z-index: 4; background: var(--bg); border-top: 1px solid var(--border); padding: var(--space-3) 0; margin-top: var(--space-5); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .ann-actionbar .spacer { flex: 1; }
+/* 主ボタン(保存)は行が折り返しても必ず右端に置く。スマホでは項目が2〜3行に折り返し、
+   何もしないと画面下端の中ほどに保存ボタンが来る。iOS の画面下端ジェスチャ
+   (Apple Intelligence の呼び出し)と重なって押しづらいため、右端へ寄せる。
+   1行に収まるときは .spacer が余白を吸い切るので、この auto は効かない(見た目は不変) */
+.ann-actionbar .btn--primary { margin-left: auto; }
 .ann-actionbar .kbd { font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle); margin-left: 6px; }
 .ann-actionbar .btn--primary .kbd { color: var(--bg); opacity: 0.75; }
 

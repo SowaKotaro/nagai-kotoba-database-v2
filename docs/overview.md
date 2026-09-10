@@ -82,6 +82,8 @@
   - カードは横一列（CSS の `scroll-snap`）。スマホは横スワイプ、PC は矢印・ドット・← → キーで送る（`deck`）
   - 提案は開いた時点で全カードに反映済み。保存は語ごとに独立で、**通った語だけ公開**し、落ちた語はエラー付きでデッキに残る（`AnnotationDeckSave`）
   - キューの規則（`?proposed` / `sort` / `review`）とマスタ読み込みは `Admin::AnnotationQueue`（concern）で1語コンソールと共有
+  - 提案欄の「新設候補の＋作成」もデッキで使える（2026-09-10）。デッキのフォームごと
+    `PATCH create_master` へ送り、送信内容から画面を組み直す（`AnnotationDeckForm`）ので**他カードの入力は消えない**
 
 - ✅ Issue 75: **収録リクエスト**（公開 `/requests/new` → 管理 `/admin/requests`）
   - **公開側で唯一の書き込み経路**。1通に最大10語（行追加式）、連絡先欄は持たない

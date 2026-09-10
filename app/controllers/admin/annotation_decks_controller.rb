@@ -42,7 +42,71 @@ class Admin::AnnotationDecksController < Admin::BaseController
     render :show, status: :unprocessable_entity
   end
 
+  # 提案の「新設候補」マスタをその場で作る(1語コンソールの create_master のデッキ版・Issue 66)。
+  #
+  # 1語コンソールは button_to で単独のフォームを置けるが、デッキは1つのフォームに複数語を
+  # 抱えているのでフォームを入れ子にできない。そこでデッキのフォームごとこのアクションへ送り、
+  # 作成したマスタを対象の語義に入れたうえで、送信内容から画面を組み直して返す
+  # (リダイレクトすると他のカードの入力まで消えるため、Turbo Stream で差し替える)。
+  def create_master
+    word = Word.find(params[:word_id])
+    master = create_proposed_master(word)
+
+    @words = AnnotationDeckForm.new(deck_params).words
+    apply_created_master(@words.find { |candidate| candidate.id == word.id }, master)
+    @proposals = proposals_for(@words)
+    @remaining = queue_scope.count
+    load_masters
+
+    render turbo_stream: [
+      turbo_stream.replace("annotation-deck", partial: "admin/annotation_decks/deck"),
+      turbo_stream.update("flash", partial: "shared/flash")
+    ]
+  end
+
   private
+
+  # 提案の新設候補マスタを1つ作る。作れなければ理由を出して nil を返す(入力はそのまま残す)。
+  # 対象の語義は提案の並び(sense_index)で指す。
+  def create_proposed_master(word)
+    proposal = AnnotationProposal.find_by(word_id: word.id)
+    sense_proposal = proposal&.senses&.[](sense_index)
+    raise ProposedMasterCreation::Error, "no proposal for word #{word.id}" unless sense_proposal
+
+    master = ProposedMasterCreation.new(sense_proposal, params[:field], params[:name]).create!
+    flash.now[:notice] = t(".created", name: master.name)
+    master
+  rescue ProposedMasterCreation::Error, ActiveRecord::RecordInvalid
+    flash.now[:alert] = t("admin.annotations.create_master_failed")
+    nil
+  end
+
+  # 作ったマスタを対象の語義へ入れる(1語コンソールの「作成 → 提案を再反映」に当たる)。
+  # 提案の語義とカードの語義は並びで対応する(ProposalApplication が先頭から順に使うため)。
+  def apply_created_master(word, master)
+    return unless word && master
+
+    sense = word.word_senses.reject(&:marked_for_destruction?)[sense_index]
+    return unless sense
+
+    case master
+    when Genre        then sense.genre = master
+    when EntityType   then sense.entity_type = master
+    when PartOfSpeech then sense.part_of_speech = master
+    when WordOrigin   then add_origin(sense, master)
+    end
+  end
+
+  # 語種は多対多。永続化済みの語義に ids で入れると即 DB へ書かれるので、
+  # 保存前のこの段階では association の target をメモリ上で足すだけにする。
+  def add_origin(sense, origin)
+    association = sense.association(:word_origins)
+    association.target = (association.target + [ origin ]).uniq
+  end
+
+  def sense_index
+    params[:sense_index].to_i
+  end
 
   # デッキに載せる語を読み込み、提案があればフォームの初期値として反映しておく。
   def load_deck

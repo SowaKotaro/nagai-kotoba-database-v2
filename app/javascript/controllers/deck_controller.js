@@ -6,13 +6,14 @@ import { Controller } from "@hotwired/stimulus"
 // 併せて「n / m 完了」の集計を持つ。完了の判定そのものは各語義の sense-completeness が
 // 付ける is-complete を数えるだけにして、判定の定義を二重に持たない。
 export default class extends Controller {
-  static targets = ["track", "card", "dot", "position", "complete", "prev", "next"]
+  static targets = ["track", "card", "dot", "position", "complete", "prev", "next", "cardIndex"]
 
   connect() {
     this.onScroll = () => this.scheduleSync()
     this.trackTarget.addEventListener("scroll", this.onScroll, { passive: true })
     this.onKey = (event) => this.key(event)
     document.addEventListener("keydown", this.onKey)
+    this.restore()
     this.sync()
     this.recount()
   }
@@ -20,6 +21,15 @@ export default class extends Controller {
   disconnect() {
     this.trackTarget.removeEventListener("scroll", this.onScroll)
     document.removeEventListener("keydown", this.onKey)
+  }
+
+  // 提案の新設候補マスタをその場で作るとデッキごと組み直されるので、直前に見ていた
+  // カード(隠しフィールドに同期してある位置)へ戻す。スクロールは即時(送りではないため)。
+  restore() {
+    if (!this.hasCardIndexTarget) return
+
+    const card = this.cardTargets[Number(this.cardIndexTarget.value)]
+    if (card) this.trackTarget.scrollLeft = card.offsetLeft
   }
 
   // ← / → でカードを送る。文字入力中はカーソル移動を邪魔しない(キーは補助・スワイプが主)。
@@ -68,6 +78,7 @@ export default class extends Controller {
     this.dotTargets.forEach((dot, i) => dot.classList.toggle("is-on", i === index))
     this.prevTarget.disabled = index === 0
     this.nextTarget.disabled = index >= this.cardTargets.length - 1
+    if (this.hasCardIndexTarget) this.cardIndexTarget.value = index
   }
 
   // 現在地は「スクロール位置に最も近いカード」。カード幅で割る計算にすると、カード間の
