@@ -2,14 +2,16 @@
     リンクにせず、淡いグレーの面として置く(名前・件数の組みは同じ)。 %>
 <% style = "left: #{rect[:left]}%; top: #{rect[:top]}%; width: #{rect[:width]}%; height: #{rect[:height]}%; " \
            "--fill: #{(rect[:count] / max_count).round(3)}" %>
+<%# 面が小さいマスは余白と級数を落とす(名前と件数の組みはどの段でも同じ) %>
+<% cell_class = "entity-treemap__cell entity-treemap__cell--#{rect[:scale]}" %>
 <% if rect[:id] %>
-  <%= link_to words_path(entity_type_id: rect[:id]), class: "entity-treemap__cell", style: style,
+  <%= link_to words_path(entity_type_id: rect[:id]), class: cell_class, style: style,
         title: t("stats.index.origins.cell_title", name: rect[:name], count: rect[:count]) do %>
     <span class="entity-treemap__name"><%= rect[:name] %></span>
     <span class="entity-treemap__count"><%= number_with_delimiter(rect[:count]) %></span>
   <% end %>
 <% else %>
-  <span class="entity-treemap__cell entity-treemap__cell--other" style="<%= style %>"
+  <span class="<%= cell_class %> entity-treemap__cell--other" style="<%= style %>"
         title="<%= t('stats.index.origins.other_title', types: rect[:folded], count: rect[:count]) %>">
     <span class="entity-treemap__name"><%= rect[:name] %></span>
     <span class="entity-treemap__count"><%= number_with_delimiter(rect[:count]) %></span>

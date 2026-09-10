@@ -2,6 +2,13 @@
 # 生成カラム(reading_length / first_char)や last_char(Ruby 側で計算)のインデックスを
 # 活かした条件を、指定されたものだけ AND で積み重ねて Relation を返す。
 class WordSenseSearch
+  # 母音の遷移条件("<拍位置>-<母音の並び>"。例 "3-ou" / "3-ouia")。
+  # 並びは2拍以上(遷移なので1拍では意味を成さない)、上限は統計 §7 のグラフの層数。
+  VOWEL_TRANSITION_FORMAT = /\A(\d{1,2})-([aiueo]{2,15})\z/
+  # 拍位置の上限。ここを開けておくと、意味の無い位置ぶんだけ URL が湧く
+  # (どれも 0 件で、しかも無限に作れる)。実在する読みの長さに合わせて閉じておく。
+  VOWEL_TRANSITION_MAX_POSITION = 30
+
   def initialize(params)
     @params = params || {}
   end
@@ -26,6 +33,7 @@ class WordSenseSearch
     end
     relation = relation.rhythm_containing(rhythm_pattern) if rhythm_pattern.present?
     relation = relation.vowel_containing(vowel_pattern_query) if vowel_pattern_query.present?
+    relation = relation.vowel_transition_at(*vowel_transition_path) if vowel_transition_path
     relation = relation.with_part_of_speech(part_of_speech_id) if part_of_speech_id.present?
     relation = relation.with_entity_type(entity_type_id) if entity_type_id.present?
     relation = relation.with_word_origin(word_origin_id) if word_origin_id.present?
@@ -58,6 +66,24 @@ class WordSenseSearch
   def rhythm_pattern = @params[:rhythm_pattern].to_s.strip
   # 母音パターン検索のフォーム入力(押韻したい読みのカナ)。表示はこの生入力のまま返す。
   def vowel_reading = @params[:vowel_reading].to_s.strip
+
+  # 母音の遷移(統計 §7 のグラフから来る)。"3-ou" = 3拍目がオ段・4拍目がウ段。
+  # 3拍以上つなげた並び("3-ouia" = 3拍目から オ→ウ→イ→ア)も受ける。
+  # 形が違う/位置が範囲外なら空にして条件から外す(SQL エラーにも 0 件ページにもしない)。
+  def vowel_transition
+    path = vowel_transition_path
+    path ? "#{path.first}-#{path.last}" : ""
+  end
+
+  # [開始の拍位置, "ouia"] か nil。
+  def vowel_transition_path
+    return @vowel_transition_path if defined?(@vowel_transition_path)
+
+    match = VOWEL_TRANSITION_FORMAT.match(@params[:vowel_transition].to_s.strip)
+    position = match && match[1].to_i
+    @vowel_transition_path =
+      position&.between?(1, VOWEL_TRANSITION_MAX_POSITION) ? [ position, match[2] ] : nil
+  end
   # 複数選択(OR)の条件。単一値でも配列でも受ける(詳細検索は配列、ファセットリンクは単一)。
   def genre_id = value_list(:genre_id)
   def first_char = value_list(:first_char)
@@ -86,6 +112,7 @@ class WordSenseSearch
       word_origin_id: word_origin_id.presence,
       rhythm_pattern: rhythm_pattern.presence,
       vowel_reading: vowel_reading.presence,
+      vowel_transition: vowel_transition.presence,
       char_type_pattern: char_type_pattern.presence,
       # トグルは既定と異なる(=有効な)ときだけ引き継ぐ。文字種パターンがある場合に限る。
       char_type_partial: ("1" if char_type_pattern.present? && char_type_partial?),

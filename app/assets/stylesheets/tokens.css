@@ -30,6 +30,19 @@
      チャートの塗りだけに使う、彩度を落とした青灰。UI には使わない。 */
   --chart: #6f8ea8;
 
+  /* ── ワードクラウドの語別の色(統計 §1 だけで使う。docs/design.md §5.10) ──────
+     サイトは無彩色が原則で、ここだけが例外(2026-09-10 オーナー指示)。
+     彩度は 30% に抑え、明度は「白地で 4.6:1 以上」になるところまで落としてある
+     (--chart 自身は白地 3.4:1 で、文字色としては使えない)。色相は8つ。 */
+  --cloud-1: #507795;
+  --cloud-2: #8067ad;
+  --cloud-3: #a6598f;
+  --cloud-4: #a66159;
+  --cloud-5: #8b6f4b;
+  --cloud-6: #5f7e44;
+  --cloud-7: #447e63;
+  --cloud-8: #447e7c;
+
   /* ── 影 ─────────────────────────────────────────────────────────
      ごく淡く、浮かせる必要があるものだけ。カード・一覧・表・ボタンには落とさない。 */
   --shadow-soft: 0 4px 12px -5px rgba(0, 0, 0, 0.08);
@@ -93,6 +106,15 @@
   --dark-danger: #d98079;
   --dark-success: #7fb79a;
   --dark-chart: #7ea3bf;
+  /* ダークは面(#232930)に対して 4.6:1 以上。彩度は 34% で光らせすぎない */
+  --dark-cloud-1: #6c96b7;
+  --dark-cloud-2: #9e87c4;
+  --dark-cloud-3: #bf7dab;
+  --dark-cloud-4: #bf847d;
+  --dark-cloud-5: #ae8a5b;
+  --dark-cloud-6: #739d4d;
+  --dark-cloud-7: #4fa17b;
+  --dark-cloud-8: #4d9d9b;
   --dark-shadow-soft: none;
   --dark-shadow-pop: 0 8px 24px -6px rgba(0, 0, 0, 0.6);
   --dark-scrim: rgba(0, 0, 0, 0.6);
@@ -116,6 +138,14 @@
     --danger: var(--dark-danger);
     --success: var(--dark-success);
     --chart: var(--dark-chart);
+    --cloud-1: var(--dark-cloud-1);
+    --cloud-2: var(--dark-cloud-2);
+    --cloud-3: var(--dark-cloud-3);
+    --cloud-4: var(--dark-cloud-4);
+    --cloud-5: var(--dark-cloud-5);
+    --cloud-6: var(--dark-cloud-6);
+    --cloud-7: var(--dark-cloud-7);
+    --cloud-8: var(--dark-cloud-8);
     --shadow-soft: var(--dark-shadow-soft);
     --shadow-pop: var(--dark-shadow-pop);
     --scrim: var(--dark-scrim);
@@ -136,6 +166,14 @@
   --danger: var(--dark-danger);
   --success: var(--dark-success);
   --chart: var(--dark-chart);
+  --cloud-1: var(--dark-cloud-1);
+  --cloud-2: var(--dark-cloud-2);
+  --cloud-3: var(--dark-cloud-3);
+  --cloud-4: var(--dark-cloud-4);
+  --cloud-5: var(--dark-cloud-5);
+  --cloud-6: var(--dark-cloud-6);
+  --cloud-7: var(--dark-cloud-7);
+  --cloud-8: var(--dark-cloud-8);
   --shadow-soft: var(--dark-shadow-soft);
   --shadow-pop: var(--dark-shadow-pop);
   --scrim: var(--dark-scrim);

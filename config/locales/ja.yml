@@ -1,4 +1,11 @@
 ja:
+  # 母音の段。統計(母音スペクトル・母音の遷移グラフ)と検索の条件表示で共有する。
+  vowel_rows:
+    a: "ア段"
+    i: "イ段"
+    u: "ウ段"
+    e: "エ段"
+    o: "オ段"
   # 一覧・カードに添える日付の表記(奥付のように「2026.07.22」と点で区切る)
   date:
     formats:
@@ -200,6 +207,8 @@ ja:
         monthly_new_unit: "語"
   searches:
     title: "検索・絞り込み"
+    vowel_transition: "母音の移り"
+    vowel_transition_value: "%{from}〜%{to}拍目: %{rows}"
     description: "日本語の長い言葉の詳細検索。読みの文字数・先頭と末尾の文字・文字種・ヘボン式ローマ字・母音の韻・正規表現など、多彩な条件で絞り込めます。"
     q_label: "キーワード（表層形・読み・別表記）"
     regexp: "正規表現（表層形・読み）"
@@ -937,12 +946,11 @@ ja:
         genres: "分類"
         features: "種"
         days: "日"
-      scale_specimen:
-        title: "級数見本"
+      word_cloud:
+        title: "ワードクラウド"
         lead: "収録語を形態素に分け、よく現れる部品を活字の大きさで組みました。大きいほど多くの語に現れます。押すとその部品を含む語を検索します。"
         aria: "収録語によく現れる部品を、出現数に応じた大きさで配置した図"
         item_title: "%{text}（%{count} 語に出現）"
-        note: "%{words} 語を解析し、2回以上現れた部品のうち %{count} 件を配置しています。"
       sound_matrix:
         title: "頭文字と末尾文字"
         first_heading: "先頭文字(50音)"
@@ -1004,12 +1012,16 @@ ja:
         spectrum_lead: "横軸は語頭からの拍位置、縦軸はその位置の母音(ア〜オ段)の構成比です。"
         spectrum_aria: "語頭からの位置ごとの母音構成比"
         position_axis: "語頭からの拍位置"
-        vowel_labels:
-          a: "ア段"
-          i: "イ段"
-          u: "ウ段"
-          e: "エ段"
-          o: "オ段"
+        graph_heading: "母音のつながり"
+        graph_lead: "語頭から %{positions} 拍ぶんの母音を、拍位置ごとの5段(ア〜オ段)に並べ、隣り合う拍のつながりを線で結んだ図です。線の太さと濃さは、その拍から次の拍への移り方の多さを表します。"
+        graph_aria: "拍位置ごとの母音と、隣り合う拍のあいだの母音の移り方"
+        graph_filter: "多い遷移だけ"
+        # {from} {to} {rows} は JS(vowel_graph_controller)が差し込む
+        graph_pick_label: "{from}〜{to}拍目: {rows}"
+        graph_link: "この移り方の語を見る"
+        graph_hint: "最も多いのは %{top_position} 拍目の%{top_from} → %{top_to} で %{top_count} 語義です。下の数字は語頭からの拍位置で、後ろの拍ほど、そこまで読みが続く語義は減ります（%{last} 拍目まで届くのは %{last_count} 語義 = 全体の %{last_percent}%）。"
+        graph_node_title: "%{position}拍目の%{vowel}: %{count}語義（%{percent}%）"
+        graph_edge_title: "%{position}拍目の%{from} → %{next_position}拍目の%{to}: %{count}語義（%{percent}%）"
         consonant_heading: "第1拍の子音"
         consonant_lead: "読みの第1拍の子音(ヘボン式)ごとの語義数です。棒を押すとその音で始まる語の一覧を表示します。"
         vowel_initial: "母音"

@@ -1,0 +1,90 @@
+<%# §7 母音の遷移(docs/stats.md §7)。
+    層 = 語頭からの拍位置、ノード = その位置の母音(ア〜オ段)、
+    エッジ = 隣り合う位置の母音の組を全結合(25本 × 層間)。
+    太さ・濃さはその層間の遷移に占める割合。ノードは件数によらず同じ大きさ。
+    多層ニューラルネットワークの概念図の組み方(オーナー指示 2026-09-10)。
+
+    「多い遷移だけ」の切替は checkbox + 兄弟セレクタで JS を持たない。
+    ノードを2つ押して検索へ進む導線だけ Stimulus(vowel-graph)で足している。 %>
+<h3 class="stats-subheading"><%= t("stats.index.sound.graph_heading") %></h3>
+<p class="stats-section__lead"><%= t("stats.index.sound.graph_lead", positions: graph[:layers].size) %></p>
+<div class="vowel-graph-panel" data-controller="vowel-graph"
+     data-vowel-graph-path-value="<%= words_path %>"
+     data-vowel-graph-label-value="<%= t("stats.index.sound.graph_pick_label") %>">
+  <%# 切替は checkbox のまま(JS を持たない)。input は .vowel-graph-frame の兄弟に置き、
+      見えるスイッチは図の右上へ。ラベルは for で結ぶので、離れていても押せる %>
+  <input class="visually-hidden vowel-graph-panel__toggle" type="checkbox" id="vowel-graph-filter">
+  <div class="vowel-graph-panel__head">
+    <label class="vowel-graph-panel__switch" for="vowel-graph-filter">
+      <span class="vowel-graph-panel__switch-text"><%= t("stats.index.sound.graph_filter") %></span>
+      <span class="vowel-graph-panel__switch-track" aria-hidden="true"></span>
+    </label>
+  </div>
+  <div class="vowel-graph-frame">
+    <%# 段名は横スクロールに付いていかないよう、図とは別の SVG に出して左に置く。
+        高さと段の y はどちらも同じ値なので、どちらも拡縮しない限り必ず揃う %>
+    <svg class="vowel-graph__rows" width="<%= graph[:label_width] %>" height="<%= graph[:height] %>"
+         viewBox="0 0 <%= graph[:label_width] %> <%= graph[:height] %>" aria-hidden="true">
+      <% graph[:rows].each do |row| %>
+        <text class="vowel-graph__label" x="<%= graph[:label_x] %>" y="<%= row[:y] + 4 %>" text-anchor="end"><%= t("vowel_rows.#{row[:vowel]}") %></text>
+      <% end %>
+    </svg>
+    <div class="stats-scroll">
+      <%# 幅は層の数で決まる。拡縮させると左の段名と段の位置がずれるので、実寸で置く。
+          押せるノードを持つので role は img ではなく group %>
+      <svg class="vowel-graph" viewBox="0 0 <%= graph[:width] %> <%= graph[:height] %>" role="group"
+           width="<%= graph[:width] %>" height="<%= graph[:height] %>"
+           aria-label="<%= t("stats.index.sound.graph_aria") %>">
+      <%# エッジを先に敷き、ノードで隠す(ノードは地の色で塗るので線が中を通らない) %>
+      <% graph[:edges].each do |edge| %>
+        <% edge_title = t("stats.index.sound.graph_edge_title",
+                          from: t("vowel_rows.#{edge[:from]}"), to: t("vowel_rows.#{edge[:to]}"),
+                          position: edge[:position], next_position: edge[:position] + 1,
+                          count: number_with_delimiter(edge[:count]),
+                          percent: (edge[:share] * 100).round(1)) %>
+        <line class="vowel-graph__edge<%= " is-faint" unless edge[:significant] %>"
+              x1="<%= edge[:x1] %>" y1="<%= edge[:y1] %>" x2="<%= edge[:x2] %>" y2="<%= edge[:y2] %>"
+              stroke-width="<%= edge[:stroke] %>" stroke-opacity="<%= edge[:opacity] %>"
+              data-vowel-graph-target="edge"
+              data-position="<%= edge[:position] %>" data-from="<%= edge[:from] %>" data-to="<%= edge[:to] %>">
+          <title><%= edge_title %></title>
+        </line>
+      <% end %>
+      <% graph[:layers].each do |layer| %>
+        <% layer[:nodes].each do |node| %>
+          <circle class="vowel-graph__node" cx="<%= node[:cx] %>" cy="<%= node[:cy] %>" r="<%= node[:r] %>"
+                  role="button" tabindex="0"
+                  data-vowel-graph-target="node"
+                  data-position="<%= layer[:position] %>" data-vowel="<%= node[:vowel] %>"
+                  data-row="<%= t("vowel_rows.#{node[:vowel]}") %>"
+                  data-action="click->vowel-graph#choose keydown.enter->vowel-graph#choose keydown.space->vowel-graph#choose">
+            <title><%= t("stats.index.sound.graph_node_title",
+                         position: layer[:position], vowel: t("vowel_rows.#{node[:vowel]}"),
+                         count: number_with_delimiter(node[:count]),
+                         percent: (node[:share] * 100).round(1)) %></title>
+          </circle>
+        <% end %>
+      <% end %>
+      <% graph[:layers].each do |layer| %>
+        <text class="vowel-graph__tick" x="<%= layer[:nodes].first[:cx] %>" y="<%= graph[:axis_y] %>" text-anchor="middle"><%= layer[:position] %></text>
+      <% end %>
+      </svg>
+    </div>
+  </div>
+  <%# ノードを2つ以上つないだときだけ出る導線。JS が無ければ現れない。
+      検索(母音の遷移)は拍位置で固定した細かい面なので必ず nofollow %>
+  <p class="vowel-graph-panel__readout" data-vowel-graph-target="readout" hidden>
+    <span class="vowel-graph-panel__pick" data-vowel-graph-target="pick"></span>
+    <%= link_to t("stats.index.sound.graph_link"), "#", class: "vowel-graph-panel__link icon-label",
+          rel: "nofollow", data: { vowel_graph_target: "link" } %>
+  </p>
+</div>
+<% last = graph[:layers].last %>
+<% top = graph[:edges].find { |edge| edge[:top] } %>
+<p class="stats-hint"><%= t("stats.index.sound.graph_hint",
+      top_position: top[:position],
+      top_from: t("vowel_rows.#{top[:from]}"),
+      top_to: t("vowel_rows.#{top[:to]}"),
+      top_count: number_with_delimiter(top[:count]),
+      last: last[:position], last_count: number_with_delimiter(last[:total]),
+      last_percent: (last[:total] * 100.0 / @stats.vowel_transitions[:total]).round(1)) %></p>

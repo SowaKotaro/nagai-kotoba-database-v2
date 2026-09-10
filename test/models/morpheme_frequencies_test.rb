@@ -36,6 +36,14 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
     end
   end
 
+  test "頻度の位置は対数で採る(大多数が下限に貼り付かない)" do
+    with_counts({ "多い" => 100, "中くらい" => 10, "少ない" => 2 }) do
+      middle = MorphemeFrequencies.entries[1]
+      # 線形なら (10-2)/98 = 0.08 で下限に貼り付くが、対数なら真ん中あたりに来る
+      assert_in_delta 0.411, middle.weight, 0.01
+    end
+  end
+
   test "全部同じ頻度なら一律で最大の級数にする" do
     with_counts({ "あああ" => 4, "いいい" => 4 }) do
       assert MorphemeFrequencies.entries.all? { |entry| entry.weight == 1.0 }

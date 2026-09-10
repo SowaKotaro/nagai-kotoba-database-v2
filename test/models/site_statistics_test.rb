@@ -119,6 +119,38 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal 5, spectrum[:positions].last[:position]
   end
 
+  test "母音の遷移: 層ごとに5母音のノード、層間は 5×5 の全結合" do
+    transitions = @stats.vowel_transitions
+    assert_equal 2, transitions[:total]
+    # 最長の auiie に合わせて5層。0 件の母音も枠として残す
+    assert_equal 5, transitions[:layers].size
+    assert(transitions[:layers].all? { |layer| layer[:nodes].map { |node| node[:vowel] } == SiteStatistics::VOWELS })
+    # 1拍目は 2 語義とも ア段
+    first = transitions[:layers].first[:nodes].index_by { |node| node[:vowel] }
+    assert_equal 2, first["a"][:count]
+    assert_in_delta 1.0, first["a"][:share]
+    assert_equal 0, first["i"][:count]
+
+    # エッジは 25 通り × 4 区間(0 件の組も持つ)
+    assert_equal 100, transitions[:edges].size
+    gap = transitions[:edges].select { |edge| edge[:position] == 1 }.index_by { |edge| [ edge[:from], edge[:to] ] }
+    assert_equal 1, gap[%w[a u]][:count] # auiie
+    assert_equal 1, gap[%w[a e]][:count] # aee
+    assert_in_delta 0.5, gap[%w[a u]][:share]
+    assert_equal 0, gap[%w[a a]][:count]
+  end
+
+  test "母音の遷移: 読みが1拍しか無ければ層が作れないので空にする" do
+    Word.annotated.destroy_all
+    word = Word.create!(surface: "亜", annotated_at: Time.current, annotation_status: :done)
+    word.word_senses.create!(reading: "ア")
+
+    transitions = SiteStatistics.new.vowel_transitions
+    assert_equal 1, transitions[:total]
+    assert_empty transitions[:layers]
+    assert_empty transitions[:edges]
+  end
+
   test "頭の子音: 第1拍の子音ごとに頭文字を束ねる" do
     consonants = @stats.head_consonants.index_by { |group| group[:consonant] }
     assert_equal 1, consonants["s"][:count]
@@ -146,6 +178,8 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_empty stats.genre_map[:groups]
     assert_empty stats.origins[:categories]
     assert_empty stats.vowel_spectrum[:positions]
+    assert_empty stats.vowel_transitions[:layers]
+    assert_empty stats.vowel_transitions[:edges]
     assert_empty stats.head_consonants
     assert_empty stats.feature_ranking[:rows]
   end

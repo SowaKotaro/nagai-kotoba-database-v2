@@ -8,7 +8,7 @@
 # ビュー側で「集計対象は◯語義」を明示する(covered 系の値を使う)。
 class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
-  CACHE_KEY = "site_statistics/v2"
+  CACHE_KEY = "site_statistics/v3"
   CACHE_TTL = 1.day
   # 集計は1万語規模で 0.8 秒かかる。期限切れの直後に複数リクエストが重なると全員が
   # 集計を始めてしまい、Puma(1プロセス・GIL)がその間ずっと塞がる。再計算は1本だけに絞る。
@@ -23,6 +23,11 @@ class SiteStatistics
   # 母音スペクトルの拍位置は、全語義の1割を下回る位置で打ち切る(端の希薄なノイズを見せない)。
   SPECTRUM_SUPPORT_RATIO = 0.1
   SPECTRUM_MAX_POSITIONS = 24
+  # 母音の遷移グラフ(層=拍位置・ノード=母音)で見せる層の数。
+  # 5母音 × 層数のノードと、隣り合う層の全結合(25本)のエッジを引く。
+  # 15拍(=350本)まで伸ばし、収まらないぶんは横スクロールで見せる(オーナー指示 2026-09-10)。
+  # 後ろの層ほど、そこまで読みが続く語義は減る(15拍まで届くのは全体の 7% ほど)。
+  TRANSITION_MAX_POSITIONS = 15
   VOWELS = %w[a i u e o].freeze
 
   def self.fetch
@@ -34,7 +39,7 @@ class SiteStatistics
               :first_char_counts, :last_char_counts,
               :sound_matrix, :reading_length_distribution, :mora_distribution,
               :timeline, :genre_map, :origins, :entity_types,
-              :vowel_spectrum, :head_consonants, :feature_ranking
+              :vowel_spectrum, :vowel_transitions, :head_consonants, :feature_ranking
 
   # キャッシュにはこのオブジェクトごと入れるため、初期化時にすべて計算し切る。
   def initialize
@@ -58,6 +63,7 @@ class SiteStatistics
     @origins = build_origins
     @entity_types = build_entity_types
     @vowel_spectrum = build_vowel_spectrum
+    @vowel_transitions = build_vowel_transitions
     @head_consonants = build_head_consonants
     @feature_ranking = build_feature_ranking
   end
@@ -275,6 +281,56 @@ class SiteStatistics
       positions << { position: index + 1, total: counts.values.sum, counts: counts }
     end
     { total: patterns.size, positions: positions }
+  end
+
+  # 母音の遷移グラフ。層=語頭からの拍位置、ノード=その位置の母音(ア〜オ段)、
+  # エッジ=隣り合う位置の母音の組(全結合の 25 本)。
+  #
+  #   { total:, layers: [{ position:, total:, nodes: [{ vowel:, count:, share: }] }],
+  #     edges: [{ position:, from:, to:, count:, share: }] }
+  #
+  # share はノードなら「その層の中での割合」、エッジなら「その層間の遷移の中での割合」。
+  # 層ごとに正規化するのは、位置が後ろになるほど読みが続く語義が減って総数が変わるため
+  # (実数のままだと右へ行くほど線が細くなるだけの図になる)。
+  def build_vowel_transitions
+    patterns = WordSense.published.where.not(vowel_pattern: [ nil, "" ]).pluck(:vowel_pattern)
+    return { total: 0, layers: [], edges: [] } if patterns.empty?
+
+    limit = [ patterns.map(&:length).max, TRANSITION_MAX_POSITIONS ].min
+    return { total: patterns.size, layers: [], edges: [] } if limit < 2
+
+    { total: patterns.size,
+      layers: transition_layers(patterns, limit),
+      edges: transition_edges(patterns, limit) }
+  end
+
+  # 各層(拍位置)のノード。母音は必ず5つ並べる(0 件の母音も枠として残す)。
+  def transition_layers(patterns, limit)
+    (0...limit).map do |index|
+      counts = patterns.filter_map { |pattern| pattern[index] }.tally.slice(*VOWELS)
+      total = counts.values.sum
+      nodes = VOWELS.map do |vowel|
+        count = counts[vowel].to_i
+        { vowel: vowel, count: count, share: total.zero? ? 0.0 : count / total.to_f }
+      end
+      { position: index + 1, total: total, nodes: nodes }
+    end
+  end
+
+  # 隣り合う層のあいだの遷移。組み合わせは 5×5 を必ず全部返す(0 件も 0 として持つ)。
+  def transition_edges(patterns, limit)
+    (0...(limit - 1)).flat_map do |index|
+      pairs = patterns.filter_map do |pattern|
+        [ pattern[index], pattern[index + 1] ] if pattern[index] && pattern[index + 1]
+      end
+      counts = pairs.tally
+      total = pairs.size
+      VOWELS.product(VOWELS).map do |from, to|
+        count = counts[[ from, to ]].to_i
+        { position: index + 1, from: from, to: to, count: count,
+          share: total.zero? ? 0.0 : count / total.to_f }
+      end
+    end
   end
 
   # 読み第1拍の子音ランキング [{ consonant: "k"|nil, chars: [観測された頭文字], count: }]。

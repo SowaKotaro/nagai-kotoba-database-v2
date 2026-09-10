@@ -98,7 +98,7 @@
 
 | パス | 内容 |
 |---|---|
-| `/stats` | 収録統計（Issue 34）。`SiteStatistics` が8章ぶんを集計し `Rails.cache` に1日保持。紙面の正は [`docs/stats.md`](stats.md)。**§1「級数見本」だけ未実装**（Issue 78） |
+| `/stats` | 収録統計（Issue 34）。`SiteStatistics` が8章ぶんを集計し `Rails.cache` に1日保持。紙面の正は [`docs/stats.md`](stats.md)。§1 のワードクラウド（形態素頻度）は事前集計（`bin/rails stats:morphemes` → `db/morpheme_frequencies.json`） |
 | `/rankings` | 各種ランキング（読みの長さ・円環交差数など）。指標は `words` に非正規化済み（[`performance-report.md`](performance-report.md)） |
 | `/browse` | 50音・読みの文字数の索引（Issue 22）。件数は `PublishedSenseCounts` でキャッシュ |
 | `/genres` | ジャンル階層のハブ（Issue 21）。同上 |

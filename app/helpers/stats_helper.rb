@@ -105,12 +105,20 @@ module StatsHelper
 
   # ==== エンティティ型のツリーマップ ================================================
 
-  # レイアウト計算に使う仮想キャンバス(横:縦 = 2:1。CSS の aspect-ratio と一致させる)。
-  TREEMAP_WIDTH = 200.0
-  TREEMAP_HEIGHT = 100.0
-  # 名前と件数が読めて、指でも押せる矩形の下限(全体に占める割合)。
-  # これを下回る型は末尾から「その他」へ畳む。
-  TREEMAP_MIN_SHARE = 0.03
+  # レイアウト計算に使う仮想キャンバス(横:縦 = 3:2。CSS の aspect-ratio と一致させる)。
+  # 2:1 から縦を伸ばしたのは、出す型を 8 → 38 に増やした 2026-09-10 に、
+  # 1マスあたりの面積を確保するため(同じ幅なら 3:2 の方が 1.3 倍広い)。
+  TREEMAP_WIDTH = 300.0
+  TREEMAP_HEIGHT = 200.0
+  # 「その他」へ畳む下限(全体に占める割合)。これを下回る型は末尾から畳む。
+  # 3% にしていた頃は 55 型が畳まれて「その他」が全体の 45% を占め、
+  # いちばん大きい面が「その他」という本末転倒な図になっていた(2026-09-10 オーナー指摘)。
+  # 0.5% まで下げると 38 型が出て「その他」は 4% に収まる。
+  # 級数は面の大きさに合わせて 3 段(TREEMAP_SMALL_SHARE / TREEMAP_TINY_SHARE)に落とす。
+  TREEMAP_MIN_SHARE = 0.005
+  # 面が小さいマスの級数を落とす境目(全体に占める割合)。
+  TREEMAP_SMALL_SHARE = 0.02
+  TREEMAP_TINY_SHARE = 0.008
 
   # [{ id:, name:, count: }](多い順) を、面積が件数に比例する矩形(squarified treemap)へ
   # 展開する。座標はコンテナに対する % (left/top/width/height)。
@@ -128,9 +136,66 @@ module StatsHelper
         left: (rect[:x] / TREEMAP_WIDTH * 100).round(3),
         top: (rect[:y] / TREEMAP_HEIGHT * 100).round(3),
         width: (rect[:w] / TREEMAP_WIDTH * 100).round(3),
-        height: (rect[:h] / TREEMAP_HEIGHT * 100).round(3)
+        height: (rect[:h] / TREEMAP_HEIGHT * 100).round(3),
+        scale: treemap_scale(rect[:count] / total)
       )
     end
+  end
+
+  # ==== §7 母音の遷移グラフ ==========================================================
+
+  # 層(拍位置)を横に並べ、各層に母音5つのノードを縦に置いて、隣り合う層を全結合で結ぶ。
+  # 座標はスペクトルと同じく仮想キャンバスで持ち、viewBox 付き SVG で拡縮する。
+  #
+  # キャンバスの幅は層の数から決める(15層で 818px)。画面に収まらないぶんは
+  # 親(.stats-scroll)を横へスクロールさせ、図そのものは縮めない。
+  # 間隔は「本文カラム(約 816px)に 10 拍ぶんが収まる」ところから決めている
+  # (段名の 52 + 14 + 80×9 + 14 = 800。オーナー指示 2026-09-10)。11拍目からはスクロールの先。
+  GRAPH_COLUMN_PITCH = 80  # 層と層の間隔
+  GRAPH_ROW_PITCH = 46     # 母音5段の間隔
+  GRAPH_LEFT = 14          # 図の左の余白(段名は横スクロールしない別の SVG に出す)
+  GRAPH_RIGHT = 14
+  # 段名(ア段〜オ段)を置く、横スクロールしない左の列の幅。
+  GRAPH_LABEL_WIDTH = 52
+  GRAPH_TOP = 16
+  GRAPH_BOTTOM = 26        # 下端の拍位置の逃げ
+  GRAPH_HEIGHT = GRAPH_TOP + (GRAPH_ROW_PITCH * 4) + GRAPH_BOTTOM
+  # ノードは件数によらず同じ大きさ(オーナー指示 2026-09-10)。多寡はエッジだけで見せる。
+  GRAPH_RADIUS = 6.5
+  # 「多い遷移だけ」に絞るときの下限。偏りが無ければどの組も 1/25 = 4% になるので、
+  # その 1.5 倍(6%)を「その位置で目立って多い」とみなす。
+  GRAPH_UNIFORM_SHARE = 1.0 / (5 * 5)
+  GRAPH_SIGNIFICANT_RATIO = 1.5
+  # エッジの太さと濃さ。350 本を重ねるので、細く薄く始めて上限も抑える。
+  GRAPH_MIN_EDGE = 0.3
+  GRAPH_MAX_EDGE = 3.2
+  GRAPH_MIN_OPACITY = 0.1
+  GRAPH_MAX_OPACITY = 0.55
+
+  # SiteStatistics#vowel_transitions を、そのまま描ける座標へ展開する。
+  # 層が2つ未満(遷移が1本も無い)なら nil を返し、ビューは区画ごと出さない。
+  def stats_vowel_graph(transitions)
+    layers = transitions[:layers]
+    return nil if layers.size < 2
+
+    xs = graph_columns(layers.size)
+    ys = graph_rows
+    # 注記で名指しする「最も多い遷移」。**割合ではなく件数**で採る。
+    # 後ろの区間ほど標本が減るので、割合で採ると 30 語義しか通らない線が
+    # 1,468 語義の線を抜いて「最多」になってしまう。同率なら位置の早い方。
+    # (図の上では塗り分けない。色を持つのは押して選んだ線だけ)
+    top_edge = transitions[:edges].max_by { |edge| edge[:count] }
+
+    {
+      width: xs.last + GRAPH_RIGHT,
+      height: GRAPH_HEIGHT,
+      label_width: GRAPH_LABEL_WIDTH,
+      label_x: GRAPH_LABEL_WIDTH - 10,
+      axis_y: GRAPH_HEIGHT - 8,
+      rows: SiteStatistics::VOWELS.map { |vowel| { vowel: vowel, y: ys[vowel] } },
+      layers: graph_nodes(layers, xs, ys),
+      edges: graph_edges(transitions[:edges], xs, ys, top_edge)
+    }
   end
 
   # ==== §7 母音スペクトル ============================================================
@@ -172,6 +237,55 @@ module StatsHelper
   end
 
   private
+
+  # 層の x 座標(等間隔)。幅は層の数ぶんだけ伸びる。
+  def graph_columns(count)
+    (0...count).map { |index| GRAPH_LEFT + (GRAPH_COLUMN_PITCH * index) }
+  end
+
+  # 母音ごとの y 座標(上から ア→オ の5段)。
+  def graph_rows
+    SiteStatistics::VOWELS.each_with_index.to_h do |vowel, index|
+      [ vowel, GRAPH_TOP + (GRAPH_ROW_PITCH * index) ]
+    end
+  end
+
+  def graph_nodes(layers, xs, ys)
+    layers.each_with_index.map do |layer, index|
+      nodes = layer[:nodes].map do |node|
+        node.merge(cx: xs[index], cy: ys[node[:vowel]], r: GRAPH_RADIUS)
+      end
+      layer.merge(nodes: nodes)
+    end
+  end
+
+  # 太さと濃さは「その区間の遷移に占める割合」の、全区間を通した最大値で正規化する。
+  def graph_edges(edges, xs, ys, top_edge)
+    max_share = edges.filter_map { |edge| edge[:share] }.max.to_f
+
+    edges.filter_map do |edge|
+      next if edge[:count].zero?
+
+      ratio = max_share.zero? ? 0.0 : edge[:share] / max_share
+      edge.merge(
+        x1: xs[edge[:position] - 1], y1: ys[edge[:from]],
+        x2: xs[edge[:position]], y2: ys[edge[:to]],
+        stroke: (GRAPH_MIN_EDGE + ((GRAPH_MAX_EDGE - GRAPH_MIN_EDGE) * ratio)).round(2),
+        opacity: (GRAPH_MIN_OPACITY + ((GRAPH_MAX_OPACITY - GRAPH_MIN_OPACITY) * ratio)).round(3),
+        significant: edge[:share] >= (GRAPH_UNIFORM_SHARE * GRAPH_SIGNIFICANT_RATIO),
+        top: edge.equal?(top_edge)
+      )
+    end
+  end
+
+  # 面の大きさに応じた級数の段。小さいマスに 14px の名前を置くと、はみ出して
+  # 名前も件数も読めなくなる(小さいマスほど名前を短く置きたい)。
+  def treemap_scale(share)
+    if share < TREEMAP_TINY_SHARE then :tiny
+    elsif share < TREEMAP_SMALL_SHARE then :small
+    else :normal
+    end
+  end
 
   # 面積が下限(TREEMAP_MIN_SHARE)に満たない型を、件数の少ない方から「その他」へ畳む。
   # 畳んだ「その他」自体が下限に届かないうちは、次に小さい型も巻き込む。

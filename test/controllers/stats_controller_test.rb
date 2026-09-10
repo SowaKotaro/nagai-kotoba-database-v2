@@ -57,9 +57,9 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     long.word_senses.create!(reading: "ア" * SiteStatistics::DISTRIBUTION_OVERFLOW_MIN)
 
     get stats_path
-    # 級数見本の形態素チップ → キーワード検索(q=)は重複コンテンツで必ず noindex
-    assert_select "a.scale-specimen__link", minimum: 1
-    assert_select "a.scale-specimen__link:not([rel=nofollow])", count: 0
+    # ワードクラウドの形態素チップ → キーワード検索(q=)は重複コンテンツで必ず noindex
+    assert_select "a.word-cloud__link", minimum: 1
+    assert_select "a.word-cloud__link:not([rel=nofollow])", count: 0
     # 波形バーの「◯以上」だけは範囲指定(reading_length_min)なので noindex
     assert_select "a.wave-chart__bar[href*=?][rel=nofollow]", "reading_length_min"
     # ちょうどの値の棒は単一ファセットとして index されるので辿らせる
@@ -88,11 +88,26 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "g.wave-chart__bar--static", count: 1
   end
 
+  test "母音の遷移グラフが出る(層ごとに5ノード・最多の1本だけ強調)" do
+    get stats_path
+    assert_response :success
+
+    layers = SiteStatistics.new.vowel_transitions[:layers].size
+    assert_operator layers, :>=, 2
+    assert_select "svg.vowel-graph circle.vowel-graph__node", count: layers * 5
+    assert_select "svg.vowel-graph line.vowel-graph__edge", minimum: 1
+    # 色を持つのは押して選んだときだけ。既定で塗られている線は無い
+    assert_select "svg.vowel-graph line.is-selected", count: 0
+    # 段名(ア段〜オ段)は、横スクロールしない左の列に1度だけ
+    assert_select "svg.vowel-graph text.vowel-graph__label", count: 0
+    assert_select "svg.vowel-graph__rows text.vowel-graph__label", count: 5
+  end
+
   test "小さすぎるエンティティ型はその他へ畳み、リンクにしない" do
-    # 面積が下限(3%)を割る型は読めず押せないので、末尾から「その他」にまとめる。
+    # 面積が下限(0.5%)を割る型は読めず押せないので、末尾から「その他」にまとめる。
     word = Word.create!(surface: "ツリーマップ検証語", annotated_at: Time.current, annotation_status: :done)
     major = EntityType.create!(name: "大きい型")
-    30.times { |index| word.word_senses.create!(reading: "ケンショウ#{index}", entity_type: major) }
+    250.times { |index| word.word_senses.create!(reading: "ケンショウ#{index}", entity_type: major) }
     3.times { |index| word.word_senses.create!(reading: "コマカイ#{index}", entity_type: EntityType.create!(name: "小さい型#{index}")) }
 
     get stats_path
@@ -133,28 +148,32 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/stats"
   end
 
-  # --- §1 級数見本(Issue 78) ---
+  # --- §1 ワードクラウド(Issue 78) ---
 
-  test "級数見本が出て、最頻の1件だけ朱になる" do
+  test "ワードクラウドが出て、語ごとに色が付く" do
     get stats_path
     assert_response :success
-    assert_select "section.stats-section--specimen"
-    assert_select ".scale-specimen__link", count: MorphemeFrequencies.entries.size
-    assert_select ".scale-specimen__link.is-top", count: 1
+    assert_select "section.stats-section--word-cloud"
+    assert_select ".word-cloud__link", count: MorphemeFrequencies.entries.size
+    # 色は8色。1語も塗り漏らさず、8色とも使われている
+    assert_select ".word-cloud__text", count: MorphemeFrequencies.entries.size
+    (1..MorphemeCloud::PALETTE_SIZE).each do |palette|
+      assert_select ".word-cloud__text--c#{palette}", minimum: 1
+    end
   end
 
-  test "級数見本の各項目はその部品を含む語の検索へのリンクになる" do
+  test "ワードクラウドの各項目はその部品を含む語の検索へのリンクになる" do
     get stats_path
     top = MorphemeFrequencies.entries.first
-    assert_select "a.scale-specimen__link[href=?]", words_path(q: top.text)
+    assert_select "a.word-cloud__link[href=?]", words_path(q: top.text)
   end
 
-  test "集計ファイルが無ければ級数見本の区画ごと出さない" do
+  test "集計ファイルが無ければワードクラウドの区画ごと出さない" do
     MorphemeFrequencies.path = Rails.root.join("db/does_not_exist.json")
 
     get stats_path
     assert_response :success
-    assert_select "section.stats-section--specimen", count: 0
+    assert_select "section.stats-section--word-cloud", count: 0
     # 他の章は通常どおり出る
     assert_select ".stats-wall__list"
   ensure
