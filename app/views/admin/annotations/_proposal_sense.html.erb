@@ -1,6 +1,10 @@
 <%# 1つの語義提案の内訳(意味・ジャンル・エンティティ・品詞・語種・別表記)。
-    local: sense(AnnotationProposal::SenseProposal) / word / creatable。
-    未知のマスタ名は新設候補のバッジで示し、creatable(単一語義)ならワンタップ作成ボタンにする(Issue 66)。 %>
+    local: sense(AnnotationProposal::SenseProposal) / word / creatable
+           / deck(既定 false。デッキから描くときの作成ボタンの作り方)
+           / sense_index(既定 0。提案の何番目の語義か = カードのどの語義に入れるか)。
+    未知のマスタ名は新設候補のバッジで示し、creatable ならワンタップ作成ボタンにする(Issue 66)。 %>
+<% deck = local_assigns.fetch(:deck, false) %>
+<% sense_index = local_assigns.fetch(:sense_index, 0) %>
 <dl class="ann-proposal__grid">
   <% if sense.meaning %>
     <dt><%= t("admin.annotations.meaning") %></dt>
@@ -22,7 +26,8 @@
       <% unless sense.resolved_genre %>
         <%= render "admin/annotations/new_master", field: "genre", word: word,
               creatable: creatable && sense.resolved_genre_chain.last&.medium?,
-              label: t("admin.annotations.proposal.create_master") %>
+              label: t("admin.annotations.proposal.create_master"),
+              deck: deck, sense_index: sense_index %>
       <% end %>
     </dd>
   <% end %>
@@ -33,7 +38,8 @@
       <%= sense.entity_type_name %>
       <% unless sense.resolved_entity_type %>
         <%= render "admin/annotations/new_master", field: "entity_type", word: word, creatable: creatable,
-              label: t("admin.annotations.proposal.create_master") %>
+              label: t("admin.annotations.proposal.create_master"),
+              deck: deck, sense_index: sense_index %>
       <% end %>
     </dd>
   <% end %>
@@ -44,7 +50,8 @@
       <%= sense.part_of_speech_name %>
       <% unless sense.resolved_part_of_speech %>
         <%= render "admin/annotations/new_master", field: "part_of_speech", word: word, creatable: creatable,
-              label: t("admin.annotations.proposal.create_master") %>
+              label: t("admin.annotations.proposal.create_master"),
+              deck: deck, sense_index: sense_index %>
       <% end %>
     </dd>
   <% end %>
@@ -56,7 +63,8 @@
       <% sense.unknown_word_origin_names.each do |name| %>
         <% if creatable %>
           <%= render "admin/annotations/new_master", field: "word_origin", word: word, creatable: true,
-                label: t("admin.annotations.proposal.create_named_master", name: name), name: name %>
+                label: t("admin.annotations.proposal.create_named_master", name: name), name: name,
+                deck: deck, sense_index: sense_index %>
         <% else %>
           <%= name %><span class="ann-proposal__new"><%= t("admin.annotations.proposal.new_master") %></span>
         <% end %>

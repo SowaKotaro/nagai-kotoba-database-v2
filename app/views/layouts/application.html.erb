@@ -95,13 +95,9 @@
     <%# トップだけは全幅の帯で組むため、ページ側からクラスを差し込めるようにする
         (container--flush = 幅と左右の余白を外し、帯が画面端まで届くようにする) %>
     <main class="container <%= yield(:main_class) %>">
-      <%# フラッシュはここで一元表示する(各ビューでは表示しない) %>
-      <% if flash[:notice] %>
-        <p class="flash flash--notice"><%= icon "check_circle" %><%= flash[:notice] %></p>
-      <% end %>
-      <% if flash[:alert] %>
-        <p class="flash flash--alert"><%= icon "warning_circle" %><%= flash[:alert] %></p>
-      <% end %>
+      <%# フラッシュはここで一元表示する(各ビューでは表示しない)。
+          Turbo Stream の応答から差し替えられるよう、器に id を持たせる %>
+      <div id="flash"><%= render "shared/flash" %></div>
 
       <%= yield %>
     </main>

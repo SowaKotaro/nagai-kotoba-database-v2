@@ -9,7 +9,10 @@
 <% compact = local_assigns.fetch(:compact, false) %>
 <%# その場追加(ジャンル・マスタ)が JS 側で出す文言。ハードコードせず i18n から渡す %>
 <% inline_add_labels = inline_add_labels_json %>
+<%# 削除印(_destroy)の付いた語義は、描き直したときも隠したままにする
+    (サーバ側で組み直す create_master などで、消したはずの語義が戻って見えないように) %>
 <div class="ann-sense js-sense" data-index="<%= form.index %>"
+     style="<%= "display:none" if sense.marked_for_destruction? %>"
      data-controller="sense-completeness"
      data-action="input->sense-completeness#check change->sense-completeness#check
                   genre-picker:changed->sense-completeness#check

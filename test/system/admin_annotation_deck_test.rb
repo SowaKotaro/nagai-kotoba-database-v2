@@ -84,6 +84,42 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     assert wait_until { @haruhi.reload.annotated_at.present? && @bermuda.reload.annotated_at.present? }
   end
 
+  # 提案欄の「＋作成」(Issue 66 のデッキ版)。デッキのフォームごと送って画面を組み直すので、
+  # 「作ったマスタが選択済みで入る」「他のカードを含む入力が消えない」「見ていたカードに戻る」
+  # の3点を実機で見る(サーバ側の組み直しは統合テストで担保済み)。
+  test "提案の新設候補をその場で作ると、入力と現在地を保ったままカードに入る" do
+    # 提案キュー(2枚)を作る。1枚目にマスタ未登録のエンティティを提案させる
+    annotation_proposals(:haruhi_proposal).update!(status: :pending, payload: {
+      "senses" => [ { "meaning" => "架空の意味。", "entity_type" => "架空種別" } ]
+    })
+    AnnotationProposal.create!(word: @bermuda, status: :pending,
+                               payload: { "senses" => [ { "meaning" => "海域の名。" } ] })
+    visit admin_annotation_deck_path(proposed: 1)
+    wait_for_stimulus "deck"
+
+    # 別のカード(提案欄を持たない方)に入力しておく。組み直しで消えないことを見る
+    fill_in "deck[#{@bermuda.id}][word_senses_attributes][0][meaning]", with: "消えては困る入力"
+
+    # 「＋作成」があるカードへ送ってから押す(組み直しでそのカードに戻ることを見る)
+    create_button = -> { find("input[type=submit][value='#{I18n.t("admin.annotations.proposal.create_master")}']") }
+    position = create_button.call.find(:xpath, "ancestor::article[@data-deck-target='card']")["data-index"].to_i + 1
+    click_expecting(expect_css: "[data-deck-target='position']", text: position.to_s) do
+      find(".deck-dot[data-index='#{position - 1}']")
+    end
+
+    click_expecting(expect_css: ".ann-chip", text: "架空種別", &create_button)
+
+    # 作ったエンティティが、そのカードで選択済みになっている(チップの input は視覚的に隠れている)
+    created = EntityType.find_by!(name: "架空種別")
+    selector = ".deck-card[data-index='#{position - 1}'] input[type=radio][value='#{created.id}']"
+    assert_selector selector, visible: false
+    assert page.evaluate_script("document.querySelector(#{selector.to_json}).checked"),
+           "作ったエンティティが選択済みになっていない"
+    assert_field "deck[#{@bermuda.id}][word_senses_attributes][0][meaning]", with: "消えては困る入力"
+    # 見ていたカードに戻る
+    assert_selector "[data-deck-target='position']", text: position.to_s
+  end
+
   # チップの input は視覚的に隠れているため、ネイティブクリックに頼らず
   # 選択して change を発火させる(ヘッドレスでの取りこぼしを避ける)。
   def choose_hidden_input(selector)

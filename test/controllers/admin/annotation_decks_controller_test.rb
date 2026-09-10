@@ -117,6 +117,97 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "1 件をまとめて保存しました。", flash[:notice]
   end
 
+  # --- 提案の新設候補マスタのその場作成(Issue 66 のデッキ版) ---
+  test "デッキの提案欄には新設候補の作成ボタンが出る" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
+    })
+    get admin_annotation_deck_path(proposed: 1)
+    assert_response :success
+    assert_select "input[type=submit][formaction*=?]", "create_master"
+  end
+
+  test "create_master はマスタを作り、入力を保ったままカードへ入れる" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
+    })
+    params = deck_params_for(@haruhi, @haruhi_sense)
+    params[@haruhi.id.to_s][:word_senses_attributes]["0"][:meaning] = "入力中の意味"
+
+    assert_difference -> { EntityType.count } => 1 do
+      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "entity_type"),
+            params: { deck: params }
+    end
+    assert_response :success
+
+    created = EntityType.find_by(name: "架空種別")
+    assert_select "input[type=radio][value=?][checked]", created.id.to_s
+    # 送った入力はそのまま残る(他のカードの入力も消さない)
+    assert_select "textarea[name=?]", "deck[#{@haruhi.id}][word_senses_attributes][0][meaning]",
+                  text: "入力中の意味"
+    assert_not @haruhi.reload.annotation_done?, "その場作成では語を保存しない"
+  end
+
+  test "create_master でジャンル小分類を中分類の下に作り、カードのジャンルに入れる" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "genre_path" => %w[文学 日本文学 私小説] } ]
+    })
+    assert_difference -> { Genre.count } => 1 do
+      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "genre"),
+            params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
+    end
+    created = Genre.find_by(name: "私小説")
+    assert_equal genres(:medium_japanese), created.parent
+    assert_select "input[name=?][value=?]",
+                  "deck[#{@haruhi.id}][word_senses_attributes][0][genre_id]", created.id.to_s
+  end
+
+  test "create_master で語種を指定名で作り、カードで選択済みにする" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "word_origins" => %w[和語 タミル語] } ]
+    })
+    assert_difference -> { WordOrigin.count } => 1 do
+      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "word_origin",
+                                                     name: "タミル語"),
+            params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
+    end
+    created = WordOrigin.find_by(name: "タミル語")
+    assert_select "input[type=checkbox][value=?][checked]", created.id.to_s
+  end
+
+  test "create_master は作れない指定でも入力を残したまま知らせる" do
+    sign_in_as(Admin.take)
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "genre_path" => %w[無い 無い 無い] } ]
+    })
+    params = deck_params_for(@haruhi, @haruhi_sense)
+    params[@haruhi.id.to_s][:word_senses_attributes]["0"][:meaning] = "入力中の意味"
+
+    assert_no_difference -> { Genre.count } do
+      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "genre"),
+            params: { deck: params }
+    end
+    assert_response :success
+    assert_equal I18n.t("admin.annotations.create_master_failed"), flash[:alert]
+    assert_select "textarea[name=?]", "deck[#{@haruhi.id}][word_senses_attributes][0][meaning]",
+                  text: "入力中の意味"
+  end
+
+  test "未認証は create_master できない" do
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "entity_type" => "架空種別" } ]
+    })
+    assert_no_difference -> { EntityType.count } do
+      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "entity_type"),
+            params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
+    end
+    assert_redirected_to new_session_path
+  end
+
   private
 
   # 1語分の送信パラメータ(既存の語義の読みをそのまま送る)。

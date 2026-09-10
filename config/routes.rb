@@ -76,7 +76,13 @@ Rails.application.routes.draw do
     resource :bulk_proposal_approval, only: %i[show create]
     # アノテーション・デッキ(まとめてアノテーション)。キューの先頭から既定10件を
     # まとめて読み込み(show)、1回の送信でまとめて保存する(update)。
-    resource :annotation_deck, only: %i[show update]
+    resource :annotation_deck, only: %i[show update] do
+      # 提案の「新設候補」マスタをその場で作る(1語コンソールの create_master のデッキ版)。
+      # デッキのフォームごと送ってもらい、作成後に入力内容を保ったまま画面を組み直す。
+      # デッキのフォームは PATCH(_method=patch)で、formaction ではその隠しフィールドを
+      # 変えられないため、POST ではなく PATCH で受ける。
+      patch :create_master
+    end
     # 高速アノテーション・コンソール(1語集中キュー)。index は最初の未対応へ誘導。
     # hold は現在の語を保留にしてキューから外し、次の未対応へ進む。
     resources :annotations, only: %i[index show update] do

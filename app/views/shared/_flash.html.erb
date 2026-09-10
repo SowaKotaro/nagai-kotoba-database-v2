@@ -1,0 +1,8 @@
+<%# フラッシュの中身。レイアウトの #flash に入れて一元表示する(各ビューでは表示しない)。
+    Turbo Stream で画面の一部だけを差し替える応答からも更新できるよう、部分テンプレートに分ける %>
+<% if flash[:notice] %>
+  <p class="flash flash--notice"><%= icon "check_circle" %><%= flash[:notice] %></p>
+<% end %>
+<% if flash[:alert] %>
+  <p class="flash flash--alert"><%= icon "warning_circle" %><%= flash[:alert] %></p>
+<% end %>

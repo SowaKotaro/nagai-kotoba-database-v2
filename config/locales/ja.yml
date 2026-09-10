@@ -840,6 +840,8 @@ ja:
       empty: "まとめて注釈できる語はありません"
       empty_lead: "未対応の語が残っていない、または絞り込みの条件に合う語がありません。"
       to_console: "1語ずつのコンソールへ"
+      create_master:
+        created: "「%{name}」を追加して、このカードに入れました。"
       update:
         saved: "%{count} 件をまとめて保存しました。"
         partially_saved: "%{saved} 件を保存しました。%{failed} 件は入力にエラーがあるため保存していません（このデッキに残しています）。"

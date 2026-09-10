@@ -1,6 +1,8 @@
 <%# 1つの言語学的特徴。該当部分は単語/読みの文字を範囲タップで指定する。
     local: form / word(該当部分を選ぶ元になる語。デッキでは1画面に複数語が並ぶため受け取る) %>
+<%# 削除印(_destroy)の付いた行は、描き直したときも隠したままにする(語義と同じ扱い) %>
 <div class="ann-feature js-feature" data-nested-form-item data-controller="feature-range"
+     style="<%= "display:none" if form.object.marked_for_destruction? %>"
      data-feature-range-surface-value="<%= word.surface %>">
   <div class="ann-feature__head">
     <span class="t"><%= t("admin.annotations.feature_no") %></span>
