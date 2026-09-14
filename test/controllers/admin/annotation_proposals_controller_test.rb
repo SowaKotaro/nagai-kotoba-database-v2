@@ -32,15 +32,15 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     assert_includes data["masters"]["genres"].fetch("文学").fetch("日本文学"), "小説"
   end
 
-  test "書き出し件数を指定できる(上限あり)" do
+  test "書き出し件数を指定でき、上限を超える指定は丸める" do
     sign_in_as(Admin.take)
     get export_admin_annotation_proposals_path(limit: 1)
     assert_response :success
     assert_equal 1, JSON.parse(css_select("textarea#export_json").first.text)["words"].size
 
-    # 上限(200)を超える指定は丸める
     get export_admin_annotation_proposals_path(limit: 99_999)
     assert_response :success
+    assert_select "input#export_limit[value=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
   end
 
   test "語ID範囲を指定すると、下書き提案がある語も再調査用に書き出す" do

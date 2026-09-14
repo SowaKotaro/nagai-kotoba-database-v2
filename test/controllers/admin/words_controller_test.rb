@@ -1,8 +1,9 @@
 require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
-# 一括登録は3ステップ(入力→読み→重複→登録)。読みの自動取得(ReadingExtractor)は
-# CI に mecab が無くても安定させるためスタブする。
+# 単語管理一覧と、一括登録の3ステップ(入力→読み→重複→登録)。解析・重複判定・登録の中身は
+# BulkWordRegistrationTest、読み欄のフロント検証は AdminWordsReadingFormatTest で見る。
+# 読みの自動取得(ReadingExtractor)は CI に mecab が無くても安定させるためスタブする。
 class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   setup { @word = words(:abc_murder) }
 
@@ -13,47 +14,34 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 認可: 未認証は弾く ---
-  test "未認証だと一覧はログインへリダイレクト" do
+  test "未認証だと一覧・読み取得・調査反映・重複チェック・登録・削除はログインへ戻す" do
     get admin_words_path
     assert_redirected_to new_session_path
-  end
 
-  test "未認証だと読み取得(step2)できずログインへリダイレクト" do
+    entries = [ { surface: "新語", reading: "シンゴ" } ]
     post readings_admin_words_path, params: { bulk_word_registration: { text: "新語" } }
     assert_redirected_to new_session_path
-  end
-
-  test "未認証だと重複チェック(step3)できずログインへリダイレクト" do
-    post duplicates_admin_words_path, params: {
-      bulk_word_registration: { entries: [ { surface: "新語", reading: "シンゴ" } ] }
-    }
+    post apply_research_admin_words_path, params: { bulk_word_registration: { entries: entries, research_json: "{}" } }
     assert_redirected_to new_session_path
-  end
-
-  test "未認証だと登録できずログインへリダイレクト" do
-    assert_no_difference -> { Word.count } do
-      post admin_words_path, params: {
-        bulk_word_registration: { entries: [ { surface: "新語", reading: "シンゴ" } ] }
-      }
-    end
+    post duplicates_admin_words_path, params: { bulk_word_registration: { entries: entries } }
     assert_redirected_to new_session_path
-  end
 
-  test "未認証だと削除できない" do
     assert_no_difference -> { Word.count } do
+      post admin_words_path, params: { bulk_word_registration: { entries: entries } }
+      assert_redirected_to new_session_path
       delete admin_word_path(@word)
+      assert_redirected_to new_session_path
     end
-    assert_redirected_to new_session_path
   end
 
-  # --- 認証済みの正常系 ---
-  test "一覧に読み・語義数・注釈状態とコンソールへのリンクが出る" do
+  # --- 一覧 ---
+  test "一覧に読み・注釈状態・件数とコンソールへのリンクが出る" do
     sign_in_as(Admin.take)
     get admin_words_path
     assert_response :success
     # 表層形はコンソール(ピンポイント・アノテーション)へのリンク
     assert_select "td a[href=?]", admin_annotation_path(@word), text: @word.surface
-    # 読み・注釈状態(注釈済みは日付、未注釈は朱ラベル)
+    # 読み・注釈状態(注釈済みは日付、未注釈はラベル)
     assert_select "td.admin-words-table__reading", text: /さつじんじけん/
     assert_select ".admin-words-table__annotated", text: @word.annotated_at.strftime("%Y-%m-%d")
     assert_select ".admin-words-table__unannotated", text: "未対応", minimum: 1
@@ -78,7 +66,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
                   "bulk_annotation[word_ids][]", @word.id.to_s
   end
 
-  test "一覧を表層形・読みで検索できる" do
+  test "一覧を表層形・読み・別表記で検索できる" do
     sign_in_as(Admin.take)
     # 表層形の部分一致
     get admin_words_path(q: "ハルヒ")
@@ -114,8 +102,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td a", text: words(:pending_haruhi).surface, count: 0
   end
 
-  # --- タグ絞り込み(ジャンル・品詞・エンティティ・語種) ---
-  test "一覧を品詞・エンティティ・語種で絞り込める" do
+  test "一覧をタグ(品詞・エンティティ・語種・ジャンル)で絞り込め、ジャンルは大分類でも配下ごと絞る" do
     sign_in_as(Admin.take)
     # 品詞「名詞」: murder と curry の語義に付いている
     get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id)
@@ -132,19 +119,13 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     get admin_words_path(word_origin_id: word_origins(:eigo).id)
     assert_select "td a", text: words(:curry).surface
     assert_select "td a", text: @word.surface, count: 0
-  end
 
-  test "ジャンルは上位(大分類)を選んでも配下の小分類ごと絞り込める" do
-    sign_in_as(Admin.take)
-    # 小分類「小説」を直接指定
-    get admin_words_path(genre_id: genres(:small_novel).id)
-    assert_select "td a", text: @word.surface
-    assert_select "td a", text: words(:curry).surface, count: 0
-
-    # 大分類「文学」でも配下の小説に付く語が出る
-    get admin_words_path(genre_id: genres(:large_literature).id)
-    assert_select "td a", text: @word.surface
-    assert_select "td a", text: words(:curry).surface, count: 0
+    # ジャンルは小分類を直接指定しても、大分類を選んでも配下の小説に付く語が出る
+    [ genres(:small_novel), genres(:large_literature) ].each do |genre|
+      get admin_words_path(genre_id: genre.id)
+      assert_select "td a", text: @word.surface
+      assert_select "td a", text: words(:curry).surface, count: 0
+    end
 
     # 存在しないジャンル id は0件(絞り込みは黙って外さない)
     get admin_words_path(genre_id: 999_999)
@@ -191,13 +172,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".pagination span", text: "2 / 2 ページ"
   end
 
-  test "新規フォーム(箇条書き貼り付け)を表示できる" do
-    sign_in_as(Admin.take)
-    get new_admin_word_path
-    assert_response :success
-    assert_select "textarea.bulk-input"
-  end
-
   # --- step2: 読みの取得 ---
   test "箇条書きから読みを取得すると編集可能な読み欄が出る(重複判定はしない)" do
     sign_in_as(Admin.take)
@@ -216,20 +190,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "bulk_word_registration[entries][][surface]", "天上天下唯我独尊"
     # step2 では重複警告は出さない
     assert_select "tr.bulk-review__row--warn", false
-  end
-
-  test "読み欄にカタカナ検証(reading-format)が仕込まれている" do
-    sign_in_as(Admin.take)
-    stub_readings("天上天下唯我独尊" => "テンジョウテンゲユイガドクソン") do
-      post readings_admin_words_path, params: { bulk_word_registration: { text: "天上天下唯我独尊" } }
-    end
-
-    assert_response :success
-    # 送信時に全行を検証するフォーム + 入力のたびに検証する読み欄 + 既定で隠れたエラー文言
-    assert_select "form[data-controller=?][data-action=?]", "reading-format", "submit->reading-format#validateAll"
-    assert_select "input.bulk-review__reading-input[data-reading-format-target=input]" \
-                  "[data-action='input->reading-format#validateField']"
-    assert_select "p.bulk-review__reading-error[hidden]"
   end
 
   test "テキストが空だと読み取得は 422 を返す" do
@@ -274,13 +234,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "p.form-alert"
     assert_select "input.bulk-review__reading-input[value=?]", "ネコ"
-  end
-
-  test "未認証だと調査反映できずログインへリダイレクト" do
-    post apply_research_admin_words_path, params: {
-      bulk_word_registration: { entries: [ { surface: "猫", reading: "ネコ" } ], research_json: "{}" }
-    }
-    assert_redirected_to new_session_path
   end
 
   # step2 フォームは formaction で duplicates と apply_research の2つに送るため、グローバル CSRF
@@ -328,42 +281,33 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".bulk-review__match-reading", text: "さつじんじけん"
   end
 
-  test "重複チェック画面に除外チェックボックスが表示される(収録基準を満たす語は未チェック)" do
-    sign_in_as(Admin.take)
-    post duplicates_admin_words_path, params: {
-      bulk_word_registration: { entries: [ { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" } ] }
-    }
-    assert_response :success
-    assert_select "input.bulk-review__exclude[type=checkbox]"
-    assert_select "input.bulk-review__exclude[checked]", count: 0
-    assert_select ".bulk-review__error-label", count: 0
-  end
-
-  test "読みが10文字未満の語はエラー表示され、除外に既定でチェックが入る" do
+  test "読みが収録基準(10文字)未満の語はエラー表示し、除外に既定でチェックを入れる" do
     sign_in_as(Admin.take)
     post duplicates_admin_words_path, params: {
       bulk_word_registration: { entries: [
-        { surface: "資本主義", reading: "シホンシュギ" },                   # 6文字: 収録基準未満
-        { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" }        # 10文字: 収録できる
+        { surface: "資本主義", reading: "シホンシュギ" },            # 6文字: 収録基準未満
+        { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" } # 10文字: 収録できる
       ] }
     }
 
     assert_response :success
+    # 行ごとに除外チェックボックスがあり、基準未満の行だけ既定で除外する
+    assert_select "input.bulk-review__exclude[type=checkbox]", count: 2
+    assert_select "input.bulk-review__exclude[checked]", count: 1
     assert_select "tr.bulk-review__row--error", count: 1
     assert_select ".bulk-review__error-label", text: /読み 6 文字/
-    # 基準未満の行だけ既定で除外される
-    assert_select "input.bulk-review__exclude[checked]", count: 1
   end
 
   # --- 登録(create) ---
-  test "確認後のエントリをまとめて登録できる(未注釈のまま)" do
+  test "確認後のエントリを未注釈のまままとめて登録し、除外(_exclude)にチェックした行は登録しない" do
     sign_in_as(Admin.take)
 
     assert_difference [ "Word.count", "WordSense.count" ], 2 do
       post admin_words_path, params: {
         bulk_word_registration: { entries: [
           { surface: "銀河鉄道の夜", reading: "ギンガテツドウノヨル" },
-          { surface: "活版印刷術", reading: "カッパンインサツジュツ" }
+          { surface: "活版印刷術", reading: "カッパンインサツジュツ" },
+          { surface: "除外語", reading: "ジョガイゴ", _exclude: "1" }
         ] }
       }
     end
@@ -372,19 +316,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     word = Word.find_by(surface: "銀河鉄道の夜")
     assert_equal "ギンガテツドウノヨル", word.word_senses.sole.reading
     assert_nil word.annotated_at
-  end
-
-  test "既存の(表層形・読み)はスキップする(冪等)" do
-    sign_in_as(Admin.take)
-
-    assert_no_difference [ "Word.count", "WordSense.count" ] do
-      post admin_words_path, params: {
-        bulk_word_registration: { entries: [
-          { surface: words(:abc_murder).surface, reading: word_senses(:murder).reading }
-        ] }
-      }
-    end
-    assert_redirected_to admin_words_path
+    assert_not Word.exists?(surface: "除外語")
   end
 
   test "読み欠落のエントリはエラーにして 422 を返す" do
@@ -399,23 +331,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".bulk-result__errors li"
   end
 
-  test "除外(_exclude)にチェックした行は登録されない" do
-    sign_in_as(Admin.take)
-
-    assert_difference [ "Word.count", "WordSense.count" ], 1 do
-      post admin_words_path, params: {
-        bulk_word_registration: { entries: [
-          { surface: "登録語", reading: "トウロクゴ" },
-          { surface: "除外語", reading: "ジョガイゴ", _exclude: "1" }
-        ] }
-      }
-    end
-
-    assert_redirected_to admin_words_path
-    assert Word.exists?(surface: "登録語")
-    assert_not Word.exists?(surface: "除外語")
-  end
-
   test "エントリが無いと貼り付け画面へ戻す" do
     sign_in_as(Admin.take)
 
@@ -426,14 +341,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 削除(編集はコンソールへ統合済み。Issue 36) ---
-  test "編集画面のルートは存在しない(コンソールへ統合済み)" do
-    sign_in_as(Admin.take)
-    get "/admin/words/#{@word.id}/edit"
-    assert_response :not_found
-    patch "/admin/words/#{@word.id}"
-    assert_response :not_found
-  end
-
   test "単語を削除できる(語義・特徴も連鎖削除)" do
     sign_in_as(Admin.take)
     word = word_senses(:murder).word

@@ -1,6 +1,7 @@
 require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
+# 一覧で選択した語への共通属性の一括適用(Issue 37)。適用の中身は BulkAnnotationTest で見る。
 class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @haruhi = words(:pending_haruhi)
@@ -15,30 +16,22 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil word_senses(:pending).reload.genre_id
   end
 
-  test "選択した語に一括適用し、検索・絞り込みを保って一覧へ戻る" do
+  test "選択した語に一括適用し、検索・注釈状態・タグの絞り込みを保って一覧へ戻る" do
     sign_in_as(Admin.take)
-    post admin_bulk_annotation_path, params: {
-      q: "ハルヒ", status: "annotation_pending",
-      bulk_annotation: { word_ids: [ @haruhi.id ], genre_id: genres(:small_novel).id }
-    }
+    filters = { q: "ハルヒ", status: "annotation_pending",
+                genre_id: genres(:large_literature).id, part_of_speech_id: parts_of_speech(:noun).id }
+    post admin_bulk_annotation_path, params: filters.merge(
+      bulk_annotation: { word_ids: [ @haruhi.id ], genre_id: genres(:small_novel).id,
+                         part_of_speech_id: parts_of_speech(:noun).id }
+    )
 
-    assert_redirected_to admin_words_path(q: "ハルヒ", status: "annotation_pending")
+    assert_redirected_to admin_words_path(filters)
     assert_equal "1 語に適用しました。", flash[:notice]
-    assert_equal genres(:small_novel).id, word_senses(:pending).reload.genre_id
+    sense = word_senses(:pending).reload
+    assert_equal genres(:small_novel).id, sense.genre_id
+    assert_equal parts_of_speech(:noun).id, sense.part_of_speech_id
     # 既定では注釈済みにしない
     assert_nil @haruhi.reload.annotated_at
-  end
-
-  test "タグ絞り込みの条件も保って一覧へ戻る" do
-    sign_in_as(Admin.take)
-    post admin_bulk_annotation_path, params: {
-      genre_id: genres(:large_literature).id, part_of_speech_id: parts_of_speech(:noun).id,
-      bulk_annotation: { word_ids: [ @haruhi.id ], part_of_speech_id: parts_of_speech(:noun).id }
-    }
-
-    assert_redirected_to admin_words_path(genre_id: genres(:large_literature).id,
-                                          part_of_speech_id: parts_of_speech(:noun).id)
-    assert_equal parts_of_speech(:noun).id, word_senses(:pending).reload.part_of_speech_id
   end
 
   test "複数語義の語はスキップし、件数をフラッシュで知らせる" do

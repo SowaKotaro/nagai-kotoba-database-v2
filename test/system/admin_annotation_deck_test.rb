@@ -11,7 +11,7 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     system_sign_in
   end
 
-  test "矢印とドットでカードを送れる" do
+  test "横スクロール・ドット・矢印でカードを送れて、現在地の表示が追従する" do
     visit admin_annotation_deck_path
     wait_for_stimulus "deck"
 
@@ -20,24 +20,8 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     # 先頭では「前へ」が押せない
     assert find("[data-deck-target='prev']").disabled?
 
-    click_expecting(expect_css: "[data-deck-target='position']", text: "2") do
-      find("[data-deck-target='next']")
-    end
-    assert_selector ".deck-dot.is-on[data-index='1']"
-    assert find("[data-deck-target='next']").disabled?
-
-    # ドットで1枚目へ戻る
-    click_expecting(expect_css: "[data-deck-target='position']", text: "1") do
-      find(".deck-dot[data-index='0']")
-    end
-  end
-
-  # スマホの横スワイプは scroll-snap(CSS)がスクロールを担い、JS は位置の追従だけを行う。
-  # 実機のスワイプは再現しづらいので、トラックのスクロール = スワイプとみなして検証する。
-  test "トラックを横スクロールすると現在地の表示が追従する" do
-    visit admin_annotation_deck_path
-    wait_for_stimulus "deck"
-
+    # スマホの横スワイプは scroll-snap(CSS)がスクロールを担い、JS は位置の追従だけを行う。
+    # 実機のスワイプは再現しづらいので、トラックのスクロール = スワイプとみなす。
     execute_script(<<~JS)
       const track = document.querySelector("[data-deck-target='track']");
       const card = document.querySelectorAll("[data-deck-target='card']")[1];
@@ -45,6 +29,16 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
       track.dispatchEvent(new Event("scroll"));
     JS
     assert_selector "[data-deck-target='position']", text: "2"
+
+    # ドットで1枚目へ戻り、矢印で2枚目へ送る(末尾では「次へ」が押せない)
+    click_expecting(expect_css: "[data-deck-target='position']", text: "1") do
+      find(".deck-dot[data-index='0']")
+    end
+    click_expecting(expect_css: "[data-deck-target='position']", text: "2") do
+      find("[data-deck-target='next']")
+    end
+    assert_selector ".deck-dot.is-on[data-index='1']"
+    assert find("[data-deck-target='next']").disabled?
   end
 
   test "最低限の項目が揃うと完了数とドットに反映される" do
@@ -118,12 +112,5 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     assert_field "deck[#{@bermuda.id}][word_senses_attributes][0][meaning]", with: "消えては困る入力"
     # 見ていたカードに戻る
     assert_selector "[data-deck-target='position']", text: position.to_s
-  end
-
-  # チップの input は視覚的に隠れているため、ネイティブクリックに頼らず
-  # 選択して change を発火させる(ヘッドレスでの取りこぼしを避ける)。
-  def choose_hidden_input(selector)
-    input = find(selector, visible: false)
-    execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", input)
   end
 end

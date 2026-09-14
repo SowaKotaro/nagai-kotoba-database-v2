@@ -1,56 +1,71 @@
 require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
+# ジャンルの段階表示ピッカー(genre-picker)が使う JSON API: 子ジャンルの取得と、その場での追加。
+# その場追加の共通処理(InlineMasterCreatable)の空白・照合順序の衝突の扱いはここで押さえ、
+# 単純マスタ3種のエンドポイントは Admin::InlineMasterCreationTest で見る。
 class Admin::GenresControllerTest < ActionDispatch::IntegrationTest
-  test "未認証だと子ジャンルを取得できない" do
+  test "未認証だと子ジャンルの取得も追加もできない" do
     get children_admin_genres_path(parent_id: genres(:large_literature).id)
     assert_redirected_to new_session_path
+
+    assert_no_difference -> { Genre.count } do
+      post admin_genres_path, params: { name: "新しい小分類", parent_id: genres(:medium_japanese).id }, as: :json
+    end
   end
 
-  test "指定した親の子ジャンルを JSON で返す" do
+  test "指定した親の子ジャンルを JSON で返し、親未指定なら空配列を返す" do
     sign_in_as(Admin.take)
     get children_admin_genres_path(parent_id: genres(:large_literature).id)
-
     assert_response :success
-    body = JSON.parse(response.body)
-    assert_equal [ { "id" => genres(:medium_japanese).id, "name" => genres(:medium_japanese).name } ], body
-  end
+    assert_equal [ { "id" => genres(:medium_japanese).id, "name" => genres(:medium_japanese).name } ],
+                 JSON.parse(response.body)
 
-  test "親未指定なら空配列を返す" do
-    sign_in_as(Admin.take)
     get children_admin_genres_path
-
     assert_response :success
     assert_equal [], JSON.parse(response.body)
   end
 
   # --- その場追加(コンソールから画面遷移せずにジャンルを作る) ---
 
-  test "同じ親の下に同名が既にあれば、作らずに既存を返す" do
+  test "親の下に小分類を作り、同じ親の下に同名が既にあれば作らずに既存を返す" do
     sign_in_as(Admin.take)
+    assert_difference -> { Genre.count } => 1 do
+      post admin_genres_path, params: { name: "新しい小分類", parent_id: genres(:medium_japanese).id }, as: :json
+    end
+    created = Genre.find(response.parsed_body["id"])
+    assert created.small?
+    assert_equal genres(:medium_japanese), created.parent
+
     assert_no_difference -> { Genre.count } do
       post admin_genres_path, params: { name: genres(:small_novel).name, parent_id: genres(:medium_japanese).id }, as: :json
     end
-
     assert_response :success
     assert_equal genres(:small_novel).id, response.parsed_body["id"]
     assert response.parsed_body["existing"]
   end
 
-  test "前後の空白(全角を含む)は落として作る" do
+  test "親が違えば同名のジャンルを作れる" do
     sign_in_as(Admin.take)
-    post admin_genres_path, params: { name: "　 SF 　", parent_id: genres(:medium_japanese).id }, as: :json
+    other = Genre.create!(name: "外国文学", parent: genres(:large_literature), level: :medium)
+
+    assert_difference -> { Genre.count } => 1 do
+      post admin_genres_path, params: { name: genres(:small_novel).name, parent_id: other.id }, as: :json
+    end
 
     assert_response :success
-    assert_equal "SF", response.parsed_body["name"]
+    assert_not_equal genres(:small_novel).id, response.parsed_body["id"]
   end
 
-  test "空白だけの名前はエラーの理由を返す" do
+  test "前後の空白(全角を含む)は落として作り、空白だけの名前はエラーの理由を返す" do
     sign_in_as(Admin.take)
+    post admin_genres_path, params: { name: "　 SF 　", parent_id: genres(:medium_japanese).id }, as: :json
+    assert_response :success
+    assert_equal "SF", response.parsed_body["name"]
+
     assert_no_difference -> { Genre.count } do
       post admin_genres_path, params: { name: "　 ", parent_id: genres(:medium_japanese).id }, as: :json
     end
-
     assert_response :unprocessable_entity
     assert_equal [ I18n.t("admin.inline_add.blank_name") ], response.parsed_body["errors"]
   end
@@ -67,17 +82,5 @@ class Admin::GenresControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.parsed_body["errors"].first, existing.name
-  end
-
-  test "親が違えば同名のジャンルを作れる" do
-    sign_in_as(Admin.take)
-    other = Genre.create!(name: "外国文学", parent: genres(:large_literature), level: :medium)
-
-    assert_difference -> { Genre.count } => 1 do
-      post admin_genres_path, params: { name: genres(:small_novel).name, parent_id: other.id }, as: :json
-    end
-
-    assert_response :success
-    assert_not_equal genres(:small_novel).id, response.parsed_body["id"]
   end
 end

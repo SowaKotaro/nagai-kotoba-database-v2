@@ -1,7 +1,7 @@
 require "test_helper"
 
-# 言語的特徴だけの再調査(Issue 76)の書き出し画面と、
-# コンソールの「特徴なしで確定」の挙動。
+# 言語的特徴だけの再調査(Issue 76)の書き出し画面と、コンソールの「特徴なしで確定」の挙動。
+# 書き出し対象の抽出条件は FeatureResearchExportTest で見る。
 class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
   setup do
     sign_in_as(Admin.take)
@@ -14,20 +14,25 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
     [ word, sense ]
   end
 
-  # --- 書き出し ---
-
-  test "書き出し画面は未認証では開けない" do
+  test "未認証だと書き出し画面も「特徴なしで確定」も使えない" do
+    word, sense = published_word_without_features
     sign_out
+
     get export_features_admin_annotation_proposals_path
     assert_redirected_to new_session_path
+
+    patch review_features_admin_annotation_path(word)
+    assert_redirected_to new_session_path
+    assert_nil sense.reload.features_reviewed_at
   end
+
+  # --- 書き出し ---
 
   test "書き出し画面に対象語義の JSON が出る" do
     _word, sense = published_word_without_features
 
     get export_features_admin_annotation_proposals_path
     assert_response :success
-    assert_select "textarea#export_json"
 
     json = JSON.parse(css_select("textarea#export_json").first.text)
     assert_equal "linguistic_features_only", json["task"]
@@ -60,15 +65,6 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
 
     patch review_features_admin_annotation_path(word)
 
-    assert_nil sense.reload.features_reviewed_at
-  end
-
-  test "特徴なしで確定は未認証ではできない" do
-    word, sense = published_word_without_features
-    sign_out
-
-    patch review_features_admin_annotation_path(word)
-    assert_redirected_to new_session_path
     assert_nil sense.reload.features_reviewed_at
   end
 

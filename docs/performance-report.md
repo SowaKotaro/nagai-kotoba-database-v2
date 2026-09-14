@@ -437,8 +437,10 @@ Hash の確保に9µs掛かり、帯状化済みの DP より高くつく（1,04
 
 **テスト**: テスト環境は `perform_caching = false` なので、素のコントローラテストでは
 「キャッシュに載せたせいで壊れる」バグを検出できない。
-`test/controllers/searches_genre_filter_cache_test.rb` でキャッシュを明示的に有効化し、
-選択状態の混線・改名/追加/削除による無効化を固定している。
+`test/controllers/searches_controller_test.rb`（ジャンルの折り畳みのテスト）でキャッシュを明示的に有効化し、
+選択状態の混線・改名/追加/削除による無効化を固定している。フラグメントキャッシュの書き込み先は
+`Rails.cache` ではなく `ActionController::Base.cache_store`（起動時に取り込んだ NullStore）なので、
+差し替えるのはそちら（`Rails.cache` だけを差し替えてもキャッシュは一度も効かない）。
 
 ---
 

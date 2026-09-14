@@ -14,39 +14,35 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     @item = @request_record.items.first
   end
 
-  test "未ログインでは一覧を見られない" do
+  test "未ログインでは一覧も一括操作も使えない" do
     get admin_requests_path
+    assert_redirected_to new_session_path
+
+    assert_no_difference "WordRequestItem.count" do
+      post bulk_admin_requests_path, params: { item_ids: [ @item.id ], commit: "destroy" }
+    end
     assert_redirected_to new_session_path
   end
 
-  test "ログインすれば一覧を見られる" do
+  test "一覧に語が並び、投稿後に収録された語には印、管理ナビには未着手の件数が出る" do
     sign_in_as(admins(:one))
     get admin_requests_path
     assert_response :success
     assert_select "td", text: /リクエストされた言葉/
-  end
-
-  test "投稿後に収録された語には印が付く" do
-    sign_in_as(admins(:one))
-    get admin_requests_path
-    # fixtures の公開語と同じ表層形のリクエストには「収録済み」を出す。
+    # fixtures の公開語と同じ表層形のリクエストには「収録済み」を出す
     assert_select ".admin-requests-table__registered"
+    assert_select ".admin-nav__badge", text: WordRequestItem.pending.count.to_s
   end
 
-  test "状態で絞り込める" do
+  test "状態や送信元 IP で絞り込める" do
     sign_in_as(admins(:one))
     @item.update!(status: :rejected)
-
     get admin_requests_path(status: "rejected")
     assert_response :success
     assert_select "tbody tr", 1
-  end
 
-  test "同じ IP のリクエストだけを見られる" do
-    sign_in_as(admins(:one))
     other = WordRequest.create!(ip_address: "198.51.100.1",
                                 items_attributes: { "0" => { surface: "別の人からの言葉" } })
-
     get admin_requests_path(ip: other.ip_address)
     assert_select "tbody tr", 1
   end
@@ -62,20 +58,17 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
       item.reload
       assert item.accepted?
       assert_equal "採用", item.admin_memo
-      # 未着手から動かした時刻が残る。
+      # 未着手から動かした時刻が残る
       assert_predicate item.handled_at, :present?
     end
   end
 
-  test "状態を選ばずに適用したら知らせる" do
+  test "選択や変更後の状態が欠けていれば知らせて何もしない" do
     sign_in_as(admins(:one))
     post bulk_admin_requests_path, params: { item_ids: [ @item.id ], commit: "apply" }
     assert_equal I18n.t("admin.word_requests.bulk.no_status"), flash[:alert]
     assert_predicate @item.reload, :pending?
-  end
 
-  test "選択が無ければ知らせる" do
-    sign_in_as(admins(:one))
     post bulk_admin_requests_path, params: { commit: "apply", status_to: "accepted" }
     assert_equal I18n.t("admin.word_requests.bulk.no_selection"), flash[:alert]
   end
@@ -86,7 +79,7 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_admin_word_path(text: @request_record.items.map(&:surface).join("\n"))
     follow_redirect!
-    # 箇条書き欄に流し込まれている。
+    # 箇条書き欄に流し込まれている
     assert_select "textarea", text: /リクエストされた言葉/
   end
 
@@ -95,11 +88,5 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "WordRequestItem.count", -1 do
       post bulk_admin_requests_path, params: { item_ids: [ @item.id ], commit: "destroy" }
     end
-  end
-
-  test "未着手の件数を管理ナビに出す" do
-    sign_in_as(admins(:one))
-    get admin_requests_path
-    assert_select ".admin-nav__badge", text: WordRequestItem.pending.count.to_s
   end
 end

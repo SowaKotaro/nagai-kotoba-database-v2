@@ -1,10 +1,11 @@
 require "test_helper"
 
-# 構造化データ(JSON-LD / Issue 16)の結合テスト。
+# 構造化データ(JSON-LD。Issue 16)の結合テスト。どのテストも JSON-LD を JSON.parse してから見るので、
+# エスケープが壊れて妥当な JSON でなくなればここで落ちる。
 class StructuredDataTest < ActionDispatch::IntegrationTest
   HOST = "https://nagai-kotoba-database.jp".freeze
 
-  test "全ページに WebSite + SearchAction が出力される" do
+  test "全ページに SearchAction つきの WebSite と、その publisher として運営者の Organization が出る" do
     get root_path
     site = find_type("WebSite")
     assert_equal I18n.t("layouts.brand"), site["name"]
@@ -12,19 +13,14 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     action = site["potentialAction"]
     assert_equal "SearchAction", action["@type"]
     assert_equal "#{HOST}/words?q={search_term_string}", action["target"]["urlTemplate"]
-  end
+    assert_equal({ "@id" => "#{HOST}/#organization" }, site["publisher"])
 
-  test "全ページに運営者の Organization が出力され WebSite の publisher から参照される" do
-    get root_path
     org = find_type("Organization")
     assert_equal "#{HOST}/#organization", org["@id"]
     assert_equal I18n.t("layouts.brand"), org["name"]
     assert_equal "#{HOST}/about", org["url"]
     assert_equal "#{HOST}/icon.svg", org["logo"]
     assert_equal I18n.t("pages.about.contact_email"), org["email"]
-
-    site = find_type("WebSite")
-    assert_equal({ "@id" => "#{HOST}/#organization" }, site["publisher"])
   end
 
   test "About に FAQPage が出力され文言は画面の FAQ と一致する" do
@@ -39,7 +35,7 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
   end
 
   test "パンくずのあるページに BreadcrumbList が出力される" do
-    # パンくずを描画する主要な公開ページを一巡する(単語詳細は下の DefinedTerm テストで別途確認)
+    # パンくずを描画する主要な公開ページを一巡する(単語詳細は DefinedTerm のテストで別途確認)
     [ words_path, genres_path, browse_path, about_path ].each do |path|
       get path
       crumb = find_type("BreadcrumbList")
@@ -51,7 +47,7 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "単語詳細に語義ごとの DefinedTerm と DefinedTermSet が出力される" do
+  test "単語詳細に語義ごとの DefinedTerm(属性つき)と DefinedTermSet が出力される" do
     word = words(:abc_murder)
     get word_path(word)
 
@@ -68,12 +64,8 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     assert_equal "#{HOST}/words/#{word.id}", term["url"]
     assert_equal word.id.to_s, term["identifier"]
     assert_includes term["description"], "日本語の長い言葉"
-  end
 
-  test "DefinedTerm の additionalProperty に語義の属性が出力される" do
-    get word_path(words(:abc_murder))
     properties = defined_term_properties
-
     assert_equal "さつじんじけん", properties[WordSense.human_attribute_name(:reading)]
     assert_equal 7, properties[I18n.t("words.show.reading_length")]
     assert_equal 7, properties[I18n.t("words.show.mora_count")]
@@ -94,11 +86,6 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
 
     term = flat_map_graph.find { |n| n["@type"] == "DefinedTerm" }
     assert_includes term["alternateName"], word_sense_variants(:curry_variant).surface
-  end
-
-  test "JSON-LD は妥当な JSON として解析できる(エスケープ健全性)" do
-    get word_path(words(:abc_murder))
-    assert_operator json_ld_objects.size, :>=, 3 # WebSite / BreadcrumbList / DefinedTerm graph
   end
 
   private

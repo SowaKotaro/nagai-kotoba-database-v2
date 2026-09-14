@@ -1,131 +1,99 @@
 require "test_helper"
 
+# 収録統計ページ(/stats)。集計値そのものは SiteStatisticsTest、図の組み立て(ツリーマップの畳み方・
+# 母音グラフの座標)は StatsHelperTest で押さえ、ここでは各章が描かれ、検索への導線になっていることを見る。
+# 1回の描画で全章を集計して重いので、同じデータで確かめられるものは1回の GET にまとめる。
 class StatsControllerTest < ActionDispatch::IntegrationTest
-  test "統計ページは未認証で閲覧できる" do
+  test "統計ページは誰でも見られ、各章の図が描かれる" do
     get stats_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("stats.index.title")
     assert_select "meta[name=robots]", count: 0
-  end
 
-  test "数字の壁は4群×5指標の定義リストで組む" do
-    get stats_path
+    # 数字の壁は4群×5指標の定義リスト
     assert_select ".stats-wall__group", count: 4
     assert_select ".stats-wall__row", count: 20
-  end
-
-  test "各チャートが描画される(50音表・行×行・波形バー・推移・サンバースト・スペクトル)" do
-    get stats_path
-    assert_select ".stats-kana .kana-grid", count: 2 # 先頭文字 / 末尾文字の50音表
+    # 50音表(先頭文字 / 末尾文字)・行×行・波形バー(文字数 / モーラ数)・推移・スペクトル・頭子音(s / k)
+    assert_select ".stats-kana .kana-grid", count: 2
     assert_select "table.sound-matrix", count: 1
-    assert_select "svg.wave-chart", count: 2         # 文字数 / モーラ数の2枚を事前描画
+    assert_select "svg.wave-chart", count: 2
     assert_select "svg.timeline-chart", minimum: 1
+    assert_select "svg.vowel-spectrum", count: 1
+    assert_select ".stats-bars__row", minimum: 2
+    # 特徴ランキングの実例は該当部分を span で示す
+    assert_select ".feature-rank__target", text: "殺人"
+    # アノテーション依存の章には集計対象の語義数を明示する
+    assert_select ".stats-covered", text: I18n.t("stats.index.annotated_note", count: 1), minimum: 1
+
+    # ジャンルのサンバーストは大→中→小の階層データ(Plotly 形式)を埋め込み、段階展開の受け皿を隠して置く
     assert_select ".genre-analysis[data-controller=genre-sunburst]", count: 1
-    # 段階展開の受け皿(中分類の棒・小分類のタグ一覧)が最初は隠れて置かれている
     assert_select "[data-genre-sunburst-target=mediumBar]", count: 1
     assert_select ".tag-row[data-genre-sunburst-target=smallList]", count: 1
-    assert_select "svg.vowel-spectrum", count: 1
-    assert_select ".stats-bars__row", minimum: 2     # 頭子音(s / k)
+    large = genres(:large_literature)
+    medium = genres(:medium_japanese)
+    small = genres(:small_novel)
+    data = JSON.parse(css_select("script[data-genre-sunburst-target=data]").first.text)
+    assert_equal [ "文学", "日本文学", "小説" ], data["labels"]
+    assert_equal [ "L#{large.id}", "M#{medium.id}", "S#{small.id}" ], data["ids"]
+    assert_equal [ "", "L#{large.id}", "M#{medium.id}" ], data["parents"]
+    assert_equal [ 1, 1, 1 ], data["values"]
+    assert_equal [ large.id, medium.id, small.id ], data["genre_ids"]
+
+    # 母音の遷移グラフは層ごとに5ノード。色を持つのは押して選んだ線だけで、既定で塗られている線は無い
+    layers = SiteStatistics.new.vowel_transitions[:layers].size
+    assert_operator layers, :>=, 2
+    assert_select "svg.vowel-graph circle.vowel-graph__node", count: layers * 5
+    assert_select "svg.vowel-graph line.vowel-graph__edge", minimum: 1
+    assert_select "svg.vowel-graph line.is-selected", count: 0
+    # 段名(ア段〜オ段)は、横スクロールしない左の列に1度だけ
+    assert_select "svg.vowel-graph text.vowel-graph__label", count: 0
+    assert_select "svg.vowel-graph__rows text.vowel-graph__label", count: 5
+
+    # ワードクラウド(Issue 78)は集計ファイルの語をすべて並べ、8色とも使う
+    entries = MorphemeFrequencies.entries
+    assert_select "section.stats-section--word-cloud"
+    assert_select ".word-cloud__link", count: entries.size
+    assert_select ".word-cloud__text", count: entries.size
+    (1..MorphemeCloud::PALETTE_SIZE).each do |palette|
+      assert_select ".word-cloud__text--c#{palette}", minimum: 1
+    end
   end
 
-  test "棒・セル・扇は検索の絞り込みへの導線になっている" do
+  test "棒・セル・チップは検索の絞り込みへの導線になり、index されない面へは nofollow を付ける" do
     get stats_path
     # 50音表ヒートマップ → 先頭文字 / 末尾文字(読みはカタカナへ正規化される)
     assert_select "a.kana-cell--heat[href=?]", words_path(first_char: "サ")
     assert_select "a.kana-cell--heat[href=?]", words_path(last_char: "レ")
-    # 波形バー → 読みの文字数(カレー = 3文字)
-    assert_select "a[href=?]", words_path(reading_length: 3)
     # 行×行ヒートマップ → 頭文字×末尾文字(サ→ン と カ→ラ の2セル)。
-    # どれも複数条件で noindex になるため、クロールもさせない(nofollow)。
+    # どれも複数条件で noindex になるため、クロールもさせない
     assert_select "a.sound-matrix__cell", count: 2
     assert_select "a.sound-matrix__cell[rel=nofollow]", count: 2
     # 頭子音の棒 → 先頭文字。1文字だけの群は canonical と揃うスカラ形で出す
-    # (`first_char[]=サ` だと canonical(`first_char=サ`)と URL が食い違う)。
-    # スカラ形は単一ファセット = index されるので nofollow は付けない。
+    # (`first_char[]=サ` だと canonical(`first_char=サ`)と URL が食い違う)。単一ファセットなので辿らせる
     assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "サ")
     assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "カ")
     assert_select "a.stats-bars__bar[rel=nofollow]", count: 0
     # エンティティ型・特徴チップ(ジャンルは Plotly サンバースト側で遷移する)
     assert_select "a[href=?]", words_path(entity_type_id: entity_types(:book_title).id)
     assert_select "a[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id)
-  end
-
-  # インデックスされない面へ辿らせるとクロール予算を食うだけなので nofollow を付ける。
-  test "index されない面(キーワード検索・範囲指定)へのリンクは nofollow" do
-    # 「◯文字以上」の棒は読みが DISTRIBUTION_OVERFLOW_MIN 以上の語があって初めて出る
-    long = Word.create!(surface: "とても長い見出し語", annotated_at: Time.current)
-    long.word_senses.create!(reading: "ア" * SiteStatistics::DISTRIBUTION_OVERFLOW_MIN)
-
-    get stats_path
-    # ワードクラウドの形態素チップ → キーワード検索(q=)は重複コンテンツで必ず noindex
-    assert_select "a.word-cloud__link", minimum: 1
+    # ワードクラウドの各項目は、その部品を含む語のキーワード検索へ。キーワード検索は必ず noindex
+    assert_select "a.word-cloud__link[href=?]", words_path(q: MorphemeFrequencies.entries.first.text)
     assert_select "a.word-cloud__link:not([rel=nofollow])", count: 0
-    # 波形バーの「◯以上」だけは範囲指定(reading_length_min)なので noindex
-    assert_select "a.wave-chart__bar[href*=?][rel=nofollow]", "reading_length_min"
-    # ちょうどの値の棒は単一ファセットとして index されるので辿らせる
-    assert_select "a.wave-chart__bar[href=?]:not([rel=nofollow])", words_path(reading_length: 3)
   end
 
-  test "ジャンルのサンバーストは大→中→小の階層データ(Plotly 形式)を埋め込む" do
-    get stats_path
-    data = JSON.parse(css_select("script[data-genre-sunburst-target=data]").first.text)
-    assert_equal [ "文学", "日本文学", "小説" ], data["labels"]
-    assert_equal [ "L#{genres(:large_literature).id}", "M#{genres(:medium_japanese).id}", "S#{genres(:small_novel).id}" ], data["ids"]
-    assert_equal [ "", "L#{genres(:large_literature).id}", "M#{genres(:medium_japanese).id}" ], data["parents"]
-    assert_equal [ 1, 1, 1 ], data["values"]
-    assert_equal [ genres(:large_literature).id, genres(:medium_japanese).id, genres(:small_novel).id ], data["genre_ids"]
-  end
-
-  test "読みの長さの30以上はまとめ棒になり、文字数側だけ範囲検索へリンクする" do
+  test "読みの長さの30以上はまとめ棒になり、文字数側だけ nofollow の範囲検索へリンクする" do
     word = Word.create!(surface: "とても長い開発語", annotated_at: Time.current, annotation_status: :done)
     word.word_senses.create!(reading: "ナ" * 35)
 
     get stats_path
-    # 文字数の35は単独の棒にならず「30+」のまとめ棒(reading_length_min の範囲検索リンク)になる
+    # 35 は単独の棒にならず「30+」のまとめ棒になる。範囲指定(reading_length_min)は noindex の面
     assert_select "a[href=?]", words_path(reading_length: 35), count: 0
-    assert_select "a[href=?]", words_path(reading_length_min: 30)
+    assert_select "a.wave-chart__bar[href=?][rel=nofollow]",
+                  words_path(reading_length_min: SiteStatistics::DISTRIBUTION_OVERFLOW_MIN)
     # モーラ側には範囲検索パラメータが無いため、まとめ棒はリンクにしない
     assert_select "g.wave-chart__bar--static", count: 1
-  end
-
-  test "母音の遷移グラフが出る(層ごとに5ノード・最多の1本だけ強調)" do
-    get stats_path
-    assert_response :success
-
-    layers = SiteStatistics.new.vowel_transitions[:layers].size
-    assert_operator layers, :>=, 2
-    assert_select "svg.vowel-graph circle.vowel-graph__node", count: layers * 5
-    assert_select "svg.vowel-graph line.vowel-graph__edge", minimum: 1
-    # 色を持つのは押して選んだときだけ。既定で塗られている線は無い
-    assert_select "svg.vowel-graph line.is-selected", count: 0
-    # 段名(ア段〜オ段)は、横スクロールしない左の列に1度だけ
-    assert_select "svg.vowel-graph text.vowel-graph__label", count: 0
-    assert_select "svg.vowel-graph__rows text.vowel-graph__label", count: 5
-  end
-
-  test "小さすぎるエンティティ型はその他へ畳み、リンクにしない" do
-    # 面積が下限(0.5%)を割る型は読めず押せないので、末尾から「その他」にまとめる。
-    word = Word.create!(surface: "ツリーマップ検証語", annotated_at: Time.current, annotation_status: :done)
-    major = EntityType.create!(name: "大きい型")
-    250.times { |index| word.word_senses.create!(reading: "ケンショウ#{index}", entity_type: major) }
-    3.times { |index| word.word_senses.create!(reading: "コマカイ#{index}", entity_type: EntityType.create!(name: "小さい型#{index}")) }
-
-    get stats_path
-    assert_select "span.entity-treemap__cell--other .entity-treemap__name",
-                  text: I18n.t("stats.index.origins.entity_other")
-    # 畳んだ型は個別のリンクを持たない(大きい型は残る)
-    assert_select "a[href=?]", words_path(entity_type_id: major.id)
-    assert_select "a[href=?]", words_path(entity_type_id: EntityType.find_by(name: "小さい型0").id), count: 0
-  end
-
-  test "特徴ランキングの実例は該当部分に朱下線の span を持つ" do
-    get stats_path
-    assert_select ".feature-rank__target", text: "殺人"
-  end
-
-  test "アノテーション依存の章には集計対象の語義数を明示する" do
-    get stats_path
-    assert_select ".stats-covered", text: I18n.t("stats.index.annotated_note", count: 1), minimum: 1
+    # ちょうどの値の棒(カレー = 3文字)は単一ファセットとして index されるので辿らせる
+    assert_select "a.wave-chart__bar[href=?]:not([rel=nofollow])", words_path(reading_length: 3)
   end
 
   test "公開語が無ければ空表示にする(例外を出さない)" do
@@ -134,38 +102,6 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".empty-note"
     assert_select "svg.wave-chart", count: 0
-  end
-
-  test "統計はヘッダー・フッター・sitemap・llms.txt からリンクされる" do
-    get root_path
-    assert_select "header a[href=?]", stats_path
-    assert_select "footer a[href=?]", stats_path
-
-    get sitemap_path
-    assert_includes response.body, "/stats"
-
-    get llms_path
-    assert_includes response.body, "/stats"
-  end
-
-  # --- §1 ワードクラウド(Issue 78) ---
-
-  test "ワードクラウドが出て、語ごとに色が付く" do
-    get stats_path
-    assert_response :success
-    assert_select "section.stats-section--word-cloud"
-    assert_select ".word-cloud__link", count: MorphemeFrequencies.entries.size
-    # 色は8色。1語も塗り漏らさず、8色とも使われている
-    assert_select ".word-cloud__text", count: MorphemeFrequencies.entries.size
-    (1..MorphemeCloud::PALETTE_SIZE).each do |palette|
-      assert_select ".word-cloud__text--c#{palette}", minimum: 1
-    end
-  end
-
-  test "ワードクラウドの各項目はその部品を含む語の検索へのリンクになる" do
-    get stats_path
-    top = MorphemeFrequencies.entries.first
-    assert_select "a.word-cloud__link[href=?]", words_path(q: top.text)
   end
 
   test "集計ファイルが無ければワードクラウドの区画ごと出さない" do

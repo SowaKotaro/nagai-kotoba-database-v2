@@ -4,12 +4,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # 遅延読み込み(importmap)や fetch を挟む UI が多いため、既定の2秒より長めに待つ。
   Capybara.default_max_wait_time = 5
 
-  # ヘッドレスで実行する(CI・WSL などディスプレイの無い環境でも動かすため)。
-  # Chrome が PATH に無い環境(WSL 等)では CHROME_BIN で Chrome for Testing などの
-  # バイナリを指定できる(CI は google-chrome-stable を使うので未指定のまま)。
   # ウィンドウ幅を変えるテスト(モバイル表示の確認)が元に戻すために参照する。
   DEFAULT_SCREEN_SIZE = [ 1400, 1400 ].freeze
 
+  # ヘッドレスで実行する(CI・WSL などディスプレイの無い環境でも動かすため)。
+  # Chrome が PATH に無い環境(WSL 等)では CHROME_BIN で Chrome for Testing などの
+  # バイナリを指定できる(CI は google-chrome-stable を使うので未指定のまま)。
   driven_by :selenium, using: :headless_chrome, screen_size: DEFAULT_SCREEN_SIZE do |options|
     options.binary = ENV["CHROME_BIN"] if ENV["CHROME_BIN"].present?
     # confirm ダイアログをドライバに自動で閉じさせない。既定の "dismiss and notify" だと
@@ -95,13 +95,20 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   # <details> パネルを開く。chromedriver のネイティブクリックが summary のトグルに
   # 効かないことがある(環境依存)ため、開かなければ JS で開く。
-  # ネイティブクリックでの開閉自体は用語解説パネルのテストで別途担保している。
+  # 開閉そのものはブラウザ標準の挙動なので、中身を操作できる状態にすることだけを目的にする。
   def open_details(selector)
     find("#{selector} summary").click
     return if has_css?("#{selector}[open]", wait: 2)
 
     execute_script("document.querySelector(#{selector.to_json}).open = true")
     assert_selector "#{selector}[open]"
+  end
+
+  # チップの input は視覚的に隠れているため、ネイティブクリックに頼らず
+  # 選択して change を発火させる(ヘッドレスでの取りこぼしを避ける)。
+  def choose_hidden_input(selector)
+    input = find(selector, visible: false)
+    execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", input)
   end
 
   # ウィンドウ幅を変える(モバイル表示の確認)。終わったら DEFAULT_SCREEN_SIZE へ戻すこと。

@@ -2,7 +2,7 @@ require "test_helper"
 
 # 新着単語の Atom フィード(Issue 28)の結合テスト。
 class WordsFeedTest < ActionDispatch::IntegrationTest
-  test "words.atom は Atom フィードを返し新着の注釈済み語を含む" do
+  test "words.atom は注釈済みの語を公開日の新しい順に並べ、本文にリード文を入れる" do
     get words_path(format: :atom)
     assert_response :success
     assert_equal "application/atom+xml", response.media_type
@@ -12,19 +12,11 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
     titles = feed.css("entry > title").map(&:text)
     assert_includes titles, words(:abc_murder).surface
     assert_includes titles, words(:curry).surface
-    # 未注釈は出さない
-    assert_not_includes titles, words(:pending_haruhi).surface
-    # エントリ本文はリード文(「日本語の長い言葉」を含む)
-    assert(feed.css("entry > content").any? { |c| c.text.include?("日本語の長い言葉") })
-  end
-
-  test "新着順(annotated_at 降順)で並ぶ" do
-    get words_path(format: :atom)
-    feed = Nokogiri::XML(response.body)
-    feed.remove_namespaces!
-    titles = feed.css("entry > title").map(&:text)
+    assert_not_includes titles, words(:pending_haruhi).surface # 未注釈は出さない
     # curry(6/2)が abc_murder(6/1)より先
     assert_operator titles.index(words(:curry).surface), :<, titles.index(words(:abc_murder).surface)
+    # エントリ本文はリード文(「日本語の長い言葉」を含む)
+    assert(feed.css("entry > content").any? { |c| c.text.include?("日本語の長い言葉") })
   end
 
   test "レイアウトに Atom の autodiscovery link がある" do
@@ -46,7 +38,7 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
     assert_operator genre_query_count, :<=, 3
   end
 
-  test "条件付きGET(If-None-Match)で 304 を返す" do
+  test "条件付きGET で 304 を返し、ジャンル名の変更(touch されないマスタ)では作り直す" do
     get words_path(format: :atom)
     assert_response :success
     etag = response.headers["ETag"]
@@ -54,11 +46,6 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
 
     get words_path(format: :atom), headers: { "If-None-Match" => etag }
     assert_response :not_modified
-  end
-
-  test "ジャンル名の変更(touch されないマスタ)でも ETag が変わる" do
-    get words_path(format: :atom)
-    etag = response.headers["ETag"]
 
     genres(:medium_japanese).update!(name: "日本文学(改名)")
 
