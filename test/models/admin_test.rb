@@ -1,7 +1,7 @@
 require "test_helper"
 
 class AdminTest < ActiveSupport::TestCase
-  test "downcases and strips username" do
+  test "username は前後の空白を落として小文字に揃える" do
     admin = Admin.new(username: " DOWNCASED_ADMIN ")
     assert_equal("downcased_admin", admin.username)
   end

@@ -1,33 +1,28 @@
 require "test_helper"
 
-# 静的エラーページ(Issue 32)の内容チェック。
-# public/*.html は本番でのみ配信されるため、ファイル内容で日本語化・ブランド化を担保する。
-class ErrorPagesTest < ActionDispatch::IntegrationTest
+# 静的エラーページ(Issue 32)。public/*.html は本番でのみ配信され、CSS のパイプラインも通らないため、
+# ファイルの中身で日本語化・ブランド化と、デザイントークン(文字色)との同期を確かめる。
+class ErrorPagesTest < ActiveSupport::TestCase
   def page(name) = File.read(Rails.root.join("public", name))
 
-  test "404 は日本語・デザイントークンの配色で、主要ページへの導線がある" do
+  test "404・422・500 は日本語で、Rails 既定のページのままではない" do
+    {
+      "404.html" => "ページが見つかりません",
+      "422.html" => "リクエストを処理できませんでした",
+      "500.html" => "サーバーでエラーが発生しました"
+    }.each do |name, heading|
+      html = page(name)
+      assert_includes html, heading, name
+      assert_includes html, 'lang="ja"', name
+      assert_not_includes html, "rails-default-error-page", name
+    end
+  end
+
+  test "404 はトークンと同じ文字色でダークにも追従し、主要ページへの導線がある" do
     html = page("404.html")
-    assert_includes html, "ページが見つかりません"
-    assert_includes html, 'lang="ja"'
-    assert_includes html, "#232A31"          # --text(デザイントークンの文字色)
-    assert_includes html, "prefers-color-scheme: dark" # ダークにも追従する
-    assert_includes html, 'href="/"'
-    assert_includes html, 'href="/words"'
-    assert_includes html, 'href="/search"'
-    assert_not_includes html, "rails-default-error-page"
-  end
-
-  test "422 は日本語・ブランド化されている" do
-    html = page("422.html")
-    assert_includes html, "リクエストを処理できませんでした"
-    assert_includes html, 'lang="ja"'
-    assert_not_includes html, "rails-default-error-page"
-  end
-
-  test "500 は日本語・ブランド化されている" do
-    html = page("500.html")
-    assert_includes html, "サーバーでエラーが発生しました"
-    assert_includes html, 'lang="ja"'
-    assert_not_includes html, "rails-default-error-page"
+    text_color = File.read(Rails.root.join("app/assets/stylesheets/tokens.css"))[/--text:\s*(#\h{6})/, 1]
+    assert_includes html.downcase, text_color.downcase, "404.html の文字色が tokens.css の --text とずれている"
+    assert_includes html, "prefers-color-scheme: dark"
+    %w[/ /words /search].each { |path| assert_includes html, %(href="#{path}") }
   end
 end

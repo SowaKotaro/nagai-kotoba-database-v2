@@ -15,13 +15,12 @@ class ThemeToggleTest < ApplicationSystemTestCase
     # ページを開かずに終わったテストでは触れないので無視してよい
   end
 
-  test "トグルを押すとダークになり、再訪問しても維持される" do
+  test "トグルでダークとライトを行き来でき、選んだテーマは再訪問しても維持される" do
     visit root_path
     wait_for_stimulus "theme"
-
     assert_equal LIGHT_BG, body_background, "初期状態は OS 設定(ヘッドレスは light)に従う"
 
-    toggle_theme
+    click_expecting(expect_css: ".theme-toggle__button[aria-checked='true']") { theme_button }
     assert_equal DARK_BG, body_background
     assert_equal "dark", page.evaluate_script("document.documentElement.dataset.theme")
     assert_equal "dark", page.evaluate_script("window.localStorage.getItem('theme')")
@@ -30,21 +29,15 @@ class ThemeToggleTest < ApplicationSystemTestCase
     visit root_path
     assert_equal DARK_BG, body_background
     assert_selector ".theme-toggle__button[aria-checked='true']"
-  end
 
-  test "もう一度押すとライトに戻る" do
-    visit root_path
+    # もう一度押すとライトに戻る
     wait_for_stimulus "theme"
-
-    toggle_theme
-    assert_equal DARK_BG, body_background
-
     click_expecting(expect_css: ".theme-toggle__button[aria-checked='false']") { theme_button }
     assert_equal LIGHT_BG, body_background
     assert_equal "light", page.evaluate_script("window.localStorage.getItem('theme')")
   end
 
-  test "手動で選んでいなければ OS のダーク設定に追従する" do
+  test "手動で選んでいなければ OS のダーク設定に追従し、トグルで上書きできる" do
     emulate_prefers_color_scheme "dark"
     visit root_path
     wait_for_stimulus "theme"
@@ -64,10 +57,6 @@ class ThemeToggleTest < ApplicationSystemTestCase
   private
     def theme_button
       find(".theme-toggle__button")
-    end
-
-    def toggle_theme
-      click_expecting(expect_css: ".theme-toggle__button[aria-checked='true']") { theme_button }
     end
 
     def body_background

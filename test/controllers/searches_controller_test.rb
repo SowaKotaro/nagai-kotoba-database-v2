@@ -1,30 +1,29 @@
 require "test_helper"
 
+# 詳細検索フォーム(/search)。結果は出さず、送信すると空条件を除いて単語一覧へリダイレクトする。
 class SearchesControllerTest < ActionDispatch::IntegrationTest
-  test "検索ページは未認証で開ける" do
-    get search_path
-    assert_response :success
-  end
-
-  test "結果は表示せず、検索フォームのみを描画する" do
+  test "検索ページは誰でも開け、結果は出さずにフォームだけを描く" do
     get search_path
     assert_response :success
     assert_select "form.search-form"
     assert_select ".entry-list", count: 0
   end
 
-  # --- 検索実行(送信)は単語一覧へのリダイレクト ---
-  test "検索を実行すると空条件を除いて単語一覧へリダイレクトする" do
-    get search_path, params: { commit: I18n.t("searches.submit"), q: "カレー",
-                               rhythm_pattern: "", char_type_pattern: "",
-                               first_char: [ "カ" ], last_char: [] }
-    assert_redirected_to words_path(q: "カレー", first_char: [ "カ" ])
-  end
-
-  test "ジャンル(複数選択)も単語一覧へ引き継がれる" do
-    get search_path, params: { commit: I18n.t("searches.submit"),
-                               genre_id: [ genres(:large_literature).id.to_s ] }
-    assert_redirected_to words_path(genre_id: [ genres(:large_literature).id ])
+  test "検索を実行すると空条件を除いた条件で単語一覧へリダイレクトする" do
+    genre_id = genres(:large_literature).id
+    kango_id = word_origins(:kango).id
+    {
+      { q: "カレー", rhythm_pattern: "", char_type_pattern: "", first_char: [ "カ" ], last_char: [] } =>
+        { q: "カレー", first_char: [ "カ" ] },
+      { genre_id: [ genre_id.to_s ] } => { genre_id: [ genre_id ] },
+      { word_origin_id: [ kango_id.to_s ] } => { word_origin_id: [ kango_id ] },
+      { char_type_pattern: "漢漢", char_type_partial: "1", char_type_ignore_case: "1" } =>
+        { char_type_pattern: "漢漢", char_type_partial: "1", char_type_ignore_case: "1" },
+      { regexp: "^ア.*ン$" } => { regexp: "^ア.*ン$" }
+    }.each do |params, expected|
+      get search_path, params: { commit: I18n.t("searches.submit") }.merge(params)
+      assert_redirected_to words_path(expected)
+    end
   end
 
   test "commit なし(リンクからの遷移)はリダイレクトせずフォームに条件を反映する" do
@@ -33,75 +32,54 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#q[value=?]", "カレー"
   end
 
-  test "文字種の入力キー(あ/ア/漢/1/A/a/@)が表示される" do
+  test "不正・長すぎる正規表現はリダイレクトせず、入力を残して理由を伝える" do
+    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "(ア" }
+    assert_response :success
+    assert_select "input#regexp[value=?]", "(ア"
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.syntax')}/
+
+    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "ア" * (SearchRegexp::MAX_LENGTH + 1) }
+    assert_response :success
+    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.too_long')}/
+  end
+
+  # --- 文字種(キーボード風の入力。キーを押す挙動は SearchCharTypeTest で見る) ---
+  test "文字種はキー・削除キー・コンソール表示で組み、既定は厳密(完全一致・大文字小文字を区別)" do
     get search_path
     %w[あ ア 漢 1 A a @].each do |char|
       assert_select "button.char-type-key[data-char-type-char-param=?]", char, text: char
     end
-  end
-
-  test "文字種の切替アイコン(Aa/ab)が既定=厳密(点灯)で表示される" do
-    get search_path
-    # 既定は完全一致・大文字小文字を区別 → どちらのアイコンも点灯(aria-pressed=true)
+    assert_select "button.char-type-key[data-char-type-target=lowerKey]:not([hidden])"
+    assert_select "button.char-type-key--backspace[data-action=?]", "char-type#remove"
+    # 送信値は hidden、組み立て表示はコンソール(display ターゲット)。手入力できる text 欄は無い
+    assert_select "input[type=hidden]#char_type_pattern"
+    assert_select ".char-type-display [data-char-type-target=display]"
+    assert_select "input[type=text]#char_type_pattern", count: 0
+    # 切替アイコン(Aa/ab)は点灯(aria-pressed=true)で、緩い側のときだけ "1" を持つ hidden は空
     assert_select "button.char-type-flag__btn[aria-pressed=true]", count: 2
-    # 緩い側のときだけ hidden に "1"。既定は厳密なので空
     assert_select "input[type=hidden][name=char_type_partial][value=?]", ""
     assert_select "input[type=hidden][name=char_type_ignore_case][value=?]", ""
   end
 
-  test "文字種の切替アイコンは指定に応じて消灯し hidden に反映される" do
+  test "緩い側の指定で開くと切替アイコンが消灯し、「a」キーは最初から隠れている" do
     get search_path, params: { char_type_pattern: "漢", char_type_partial: "1", char_type_ignore_case: "1" }
     assert_select "button.char-type-flag__btn[aria-pressed=false]", count: 2
     assert_select "input[type=hidden][name=char_type_partial][value=?]", "1"
     assert_select "input[type=hidden][name=char_type_ignore_case][value=?]", "1"
+    # 大文字小文字を区別しないとき「a」は「A」に畳まれるので、JS を待たずにサーバが隠しておく
+    assert_select "button.char-type-key[data-char-type-target=lowerKey][hidden]"
   end
 
-  test "文字種の区別トグルも単語一覧へ引き継がれる" do
-    get search_path, params: { commit: I18n.t("searches.submit"),
-                               char_type_pattern: "漢漢", char_type_partial: "1",
-                               char_type_ignore_case: "1" }
-    assert_redirected_to words_path(char_type_pattern: "漢漢",
-                                    char_type_partial: "1", char_type_ignore_case: "1")
-  end
-
-  test "文字種は削除ボタンとコンソール表示を持ち、手入力の text 欄は無い" do
-    get search_path
-    assert_select "button.char-type-key--backspace[data-action=?]", "char-type#remove"
-    # 送信値は hidden、組み立て表示はコンソール(display ターゲット)
-    assert_select "input[type=hidden]#char_type_pattern"
-    assert_select ".char-type-display [data-char-type-target=display]"
-    # 手入力できる text 欄は無い(ボタン専用=バリデーション兼用)
-    assert_select "input[type=text]#char_type_pattern", count: 0
-  end
-
-  test "語種フィルタ(check_chips)が表示される" do
+  test "語種・母音パターン・正規表現(畳んだ早見表つき)の入力欄がある" do
     get search_path
     word_origins(:kango, :eigo).each do |origin|
       assert_select "input[type=checkbox][name=?][value=?]", "word_origin_id[]", origin.id.to_s
     end
-  end
-
-  test "母音パターン検索の入力欄が表示される" do
-    get search_path
     assert_select "input#vowel_reading"
     assert_select ".field-hint", text: I18n.t("searches.vowel_pattern_hint")
-  end
 
-  test "語種(複数選択)も単語一覧へ引き継がれる" do
-    get search_path, params: { commit: I18n.t("searches.submit"),
-                               word_origin_id: [ word_origins(:kango).id.to_s ] }
-    assert_redirected_to words_path(word_origin_id: [ word_origins(:kango).id ])
-  end
-
-  # --- 正規表現 ---
-  test "正規表現の入力欄が表示される" do
-    get search_path
-    assert_select "input#regexp"
-  end
-
-  test "正規表現の書き方は既定で畳まれたヘルプに入り、記法の早見表を持つ" do
-    get search_path
-    # 畳まれている(open 属性なし)= 目立たせない。ホバー不要で開ける details
+    # 正規表現の書き方は既定で畳まれたヘルプに入れて目立たせず、入力欄と aria-describedby で結ぶ
+    assert_select "input#regexp[aria-describedby=?]", "regexp-help"
     assert_select "details.field-help#regexp-help"
     assert_select "details.field-help[open]", count: 0
     assert_select "summary.field-help__summary", text: /#{I18n.t('searches.regexp_help.summary')}/
@@ -110,43 +88,88 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
   end
 
-  test "正規表現の入力欄はヘルプと aria-describedby で結び付いている" do
-    get search_path
-    assert_select "input#regexp[aria-describedby=?]", "regexp-help"
+  # --- ジャンルの折り畳み(1,131件のチップをフラグメントキャッシュに載せている) ---
+  # テスト環境は既定でキャッシュ無効なので、そのままでは「キャッシュに載せたせいで壊れる」類のバグ
+  # (選択状態の混線・マスタ更新時の無効化漏れ)を検出できない。ここだけキャッシュを有効にして描く。
+
+  test "ジャンルの折り畳みは選んだ枝だけ開き、キャッシュしても選択が混線しない" do
+    novel = genres(:small_novel)
+    other = Genre.create!(name: "混線確認用の小分類", parent: genres(:medium_japanese), level: :small)
+
+    with_fragment_cache do
+      get search_path
+      assert_select "details.genre-fold", minimum: 1
+      assert_select "details.genre-fold[open]", count: 0
+      # 大分類チップは「◯◯ 全体」のラベルで出る
+      assert_select ".check-chip__face", text: I18n.t("searches.whole_genre", name: genres(:large_literature).name)
+
+      # 小「小説」を選ぶと、その枝(大「文学」・中「日本文学」)が開き、選択数が summary に出る
+      get search_path, params: { genre_id: [ novel.id ] }
+      assert_select "details.genre-fold[open]", count: 2
+      assert_select "details.genre-fold[open] .genre-fold__count", text: "1", count: 2
+      assert_genre_checked novel, true
+      assert_genre_checked other, false
+
+      # 別の選択で開き直しても、前のリクエストのキャッシュは返らない
+      get search_path, params: { genre_id: [ other.id ] }
+      assert_genre_checked other, true
+      assert_genre_checked novel, false
+
+      # 選択の順序が違っても同じ結果になる
+      get search_path, params: { genre_id: [ novel.id, other.id ] }
+      fragment = genre_filter_fragment
+      get search_path, params: { genre_id: [ other.id, novel.id ] }
+      assert_equal fragment, genre_filter_fragment
+
+      # 条件なしへ戻すと、どれも選ばれていない状態に戻る
+      get search_path
+      assert_genre_checked novel, false
+      assert_genre_checked other, false
+      assert_select "details.genre-fold[open]", count: 0
+    end
   end
 
-  test "正規表現も単語一覧へ引き継がれる" do
-    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "^ア.*ン$" }
-    assert_redirected_to words_path(regexp: "^ア.*ン$")
+  test "ジャンルを改名・追加・削除するとフィルタのキャッシュが作り直される" do
+    with_fragment_cache do
+      get search_path
+      assert_select ".check-chip__face", text: genres(:small_novel).name
+
+      genres(:small_novel).update!(name: "改名した小分類")
+      get search_path
+      assert_select ".check-chip__face", text: "改名した小分類"
+
+      added = Genre.create!(name: "追加した小分類", parent: genres(:medium_japanese), level: :small)
+      get search_path
+      assert_select ".check-chip__face", text: "追加した小分類"
+
+      added.destroy!
+      get search_path
+      assert_select ".check-chip__face", text: "追加した小分類", count: 0
+    end
   end
 
-  test "不正な正規表現ではリダイレクトせず、入力を残して理由を伝える" do
-    get search_path, params: { commit: I18n.t("searches.submit"), regexp: "(ア" }
-    assert_response :success
-    assert_select "input#regexp[value=?]", "(ア"
-    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.syntax')}/
+  private
+
+  # フラグメントキャッシュの書き込み先は Rails.cache ではなく、起動時に取り込んだ
+  # ActionController::Base.cache_store(テストでは NullStore)。差し替えるのはこちら。
+  def with_fragment_cache
+    original_perform_caching = ActionController::Base.perform_caching
+    original_store = ActionController::Base.cache_store
+    ActionController::Base.perform_caching = true
+    ActionController::Base.cache_store = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    ActionController::Base.perform_caching = original_perform_caching
+    ActionController::Base.cache_store = original_store
   end
 
-  test "長すぎる正規表現もリダイレクトせず理由を伝える" do
-    get search_path, params: { commit: I18n.t("searches.submit"),
-                               regexp: "ア" * (SearchRegexp::MAX_LENGTH + 1) }
-    assert_response :success
-    assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.too_long')}/
+  def assert_genre_checked(genre, checked)
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "genre_id[]", genre.id.to_s, count: checked ? 1 : 0
   end
 
-  test "ジャンルの折り畳みは選択なしではすべて畳まれている" do
-    get search_path
-    assert_select "details.genre-fold", minimum: 1
-    assert_select "details.genre-fold[open]", count: 0
-    # 大分類チップは「◯◯ 全体」のラベルで出る
-    assert_select ".check-chip__face", text: I18n.t("searches.whole_genre", name: genres(:large_literature).name)
-  end
-
-  test "選択したジャンルを含む折り畳みは開いた状態で描画され、選択数が summary に出る" do
-    get search_path, params: { genre_id: [ genres(:small_novel).id ] }
-    # 小「小説」を選択 → その枝(大「文学」・中「日本文学」)の折り畳みが両方 open
-    assert_select "details.genre-fold[open]", count: 2
-    assert_select "details.genre-fold[open] .genre-fold__count", text: "1", count: 2
-    assert_select "input[type=checkbox][name=?][value=?][checked]", "genre_id[]", genres(:small_novel).id.to_s
+  # CSRF トークンなど毎回変わる要素を巻き込まずに比べるため、区画だけを取り出す。
+  def genre_filter_fragment
+    response.body[/<div class="genre-filter".*?<\/fieldset>/m] ||
+      flunk("ジャンルフィルタの区画が描画されていない")
   end
 end

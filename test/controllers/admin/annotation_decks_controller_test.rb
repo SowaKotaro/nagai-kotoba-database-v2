@@ -11,15 +11,22 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 認可: 未認証は弾く ---
-  test "未認証だとデッキはログインへリダイレクト" do
+  test "未認証だとデッキの表示・まとめて保存・その場作成はできない" do
     get admin_annotation_deck_path
     assert_redirected_to new_session_path
-  end
 
-  test "未認証だとまとめて保存できない" do
     patch admin_annotation_deck_path, params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
     assert_redirected_to new_session_path
     assert_nil @haruhi.reload.annotated_at
+
+    annotation_proposals(:haruhi_proposal).update!(payload: {
+      "senses" => [ { "entity_type" => "架空種別" } ]
+    })
+    assert_no_difference -> { EntityType.count } do
+      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "entity_type"),
+            params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
+    end
+    assert_redirected_to new_session_path
   end
 
   # --- 表示 ---
@@ -29,7 +36,7 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotation_deck_path(proposed: 1)
   end
 
-  test "未対応の語をまとめて1画面に載せる" do
+  test "未対応の語をまとめて1画面に載せ、枚数は size で絞れる" do
     sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).applied! # 提案キューへの誘導を外す
     get admin_annotation_deck_path
@@ -38,11 +45,7 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     # 語ごとに deck[<語id>][...] で束ねて送る
     assert_select "textarea[name=?]", "deck[#{@haruhi.id}][word_senses_attributes][0][reading]"
     assert_select "textarea[name=?]", "deck[#{@bermuda.id}][word_senses_attributes][0][reading]"
-  end
 
-  test "枚数は size で絞れる" do
-    sign_in_as(Admin.take)
-    annotation_proposals(:haruhi_proposal).applied!
     get admin_annotation_deck_path(size: 1)
     assert_response :success
     assert_select ".deck-card", 1
@@ -195,17 +198,6 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("admin.annotations.create_master_failed"), flash[:alert]
     assert_select "textarea[name=?]", "deck[#{@haruhi.id}][word_senses_attributes][0][meaning]",
                   text: "入力中の意味"
-  end
-
-  test "未認証は create_master できない" do
-    annotation_proposals(:haruhi_proposal).update!(payload: {
-      "senses" => [ { "entity_type" => "架空種別" } ]
-    })
-    assert_no_difference -> { EntityType.count } do
-      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "entity_type"),
-            params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
-    end
-    assert_redirected_to new_session_path
   end
 
   private

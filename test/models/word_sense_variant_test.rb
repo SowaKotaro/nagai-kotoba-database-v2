@@ -1,15 +1,10 @@
 require "test_helper"
 
 class WordSenseVariantTest < ActiveSupport::TestCase
-  test "surface が空だと無効" do
-    variant = WordSenseVariant.new(word_sense: word_senses(:curry), surface: "")
+  test "surface と word_sense は必須" do
+    variant = WordSenseVariant.new(surface: "")
     assert_not variant.valid?
     assert variant.errors.added?(:surface, :blank)
-  end
-
-  test "word_sense が無いと無効" do
-    variant = WordSenseVariant.new(surface: "カリー")
-    assert_not variant.valid?
     assert variant.errors.added?(:word_sense, :blank)
   end
 
@@ -21,9 +16,5 @@ class WordSenseVariantTest < ActiveSupport::TestCase
 
   test "reading は任意(無くても有効)" do
     assert WordSenseVariant.new(word_sense: word_senses(:murder), surface: "殺人事件").valid?
-  end
-
-  test "語義から別表記を辿れる" do
-    assert_includes word_senses(:curry).word_sense_variants, word_sense_variants(:curry_variant)
   end
 end

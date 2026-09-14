@@ -1,7 +1,8 @@
 require "application_system_test_case"
 
 # アノテーション・コンソールの実機挙動。統合テストでは動かない Stimulus
-# (genre-picker の段階表示 / 提案の反映 / 用語解説パネル)をブラウザで担保する。
+# (ジャンルの段階表示とその場追加・語義カードの完了表示・特徴の範囲タップ・公開前の確認)をブラウザで担保する。
+# サーバが描くもの(提案の反映・用語解説・再調査用 JSON)は Admin::AnnotationsControllerTest で見る。
 class AdminAnnotationConsoleTest < ApplicationSystemTestCase
   setup do
     @word = words(:pending_haruhi)
@@ -28,7 +29,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     resize_window_to(*ApplicationSystemTestCase::DEFAULT_SCREEN_SIZE)
   end
 
-  test "ジャンルを大→中→小と選んで保存すると、注釈済みになり次の語へ進む" do
+  test "ジャンルを大→中→小と選んで保存すると、公開前の確認を経て注釈済みになり次の語へ進む" do
     visit admin_annotation_path(@word)
     wait_for_stimulus "genre-picker"
 
@@ -41,8 +42,8 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     end
     assert_equal genres(:small_novel).id.to_s, find(".js-genre-value", visible: false).value
 
-    # ジャンルだけで最低限が揃っていないので、保存に確認が挟まる(公開事故ガード・Issue 68)。
-    # 承認して公開し、次の未注釈(bermuda)へ進む。
+    # 最低限(読み・語種・ジャンル・品詞・エンティティ)が揃っていない語を公開しようとすると
+    # 確認が挟まる(未完了公開の事故ガード・Issue 68)。承認して公開し、次の未注釈(bermuda)へ進む。
     click_accepting_confirm(I18n.t("admin.annotations.publish_incomplete_confirm")) do
       find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
     end
@@ -52,20 +53,8 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_equal genres(:small_novel).id, word_senses(:pending).reload.genre_id
   end
 
-  # 最低限(読み・語種・ジャンル・品詞・エンティティ)が揃っていない語を「保存して次へ」で
-  # 公開しようとしたら確認が出る(未完了公開の事故ガード・Issue 68)。
-  test "未完了のまま保存しようとすると確認が出て、承認すれば公開される" do
-    visit admin_annotation_path(@word)
-    wait_for_stimulus "publish-guard"
-
-    # haruhi は読みだけで未完了。保存に確認が挟まり、承認すると公開される
-    click_accepting_confirm(I18n.t("admin.annotations.publish_incomplete_confirm")) do
-      find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
-    end
-    assert wait_until { @word.reload.annotated_at.present? }
-  end
-
-  test "保留にすると状態が保留になり、キューから外れて次の未対応へ進む" do
+  # 保留は公開しないので、公開前の確認(publish-guard)を通さずに送る。
+  test "保留にすると確認なしで保留になり、キューから外れて次の未対応へ進む" do
     visit admin_annotation_path(@word)
     wait_for_stimulus "genre-picker"
 
@@ -80,23 +69,27 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
   end
 
   # 最低限のアノテーション項目(読み・語種・ジャンル・品詞・エンティティ)が揃うと
-  # 語義カードの枠が緑(is-complete)になる。保存できるかどうかとは無関係の目印。
-  test "最低限の項目が揃うと語義カードが完了表示になり、ひとつ欠けると戻る" do
+  # 語義カードの枠が完了(is-complete)になる。保存できるかどうかとは無関係の目印。
+  test "最低限の項目が揃うと語義カードが完了表示になり、ジャンルが中分類止まりや読みが欠けると外れる" do
     visit admin_annotation_path(@word)
     wait_for_stimulus "sense-completeness"
 
-    # 初期状態は読みだけ。ジャンル・語種・品詞・エンティティが未設定
+    # 初期状態は読みだけ。語種・品詞・エンティティを選んでも、ジャンルが未設定なので完了にならない
     assert_no_selector ".ann-sense.is-complete"
-
     choose_hidden_input "input[type=checkbox][value='#{word_origins(:wago).id}']"
     choose_hidden_input "input[type=radio][value='#{parts_of_speech(:noun).id}']"
     choose_hidden_input "input[type=radio][value='#{entity_types(:book_title).id}']"
-    # ジャンルがまだ小分類まで決まっていないので完了にはならない
     assert_no_selector ".ann-sense.is-complete"
 
     within ".ann-genre" do
       click_expecting(expect_css: ".ann-chip", text: "日本文学") { find("button.ann-chip", exact_text: "文学") }
       click_expecting(expect_css: ".ann-chip", text: "小説") { find("button.ann-chip", exact_text: "日本文学") }
+    end
+    # 中分類止まりでは genre_id は空のままで、完了にならない
+    assert_equal "", find(".js-genre-value", visible: false).value
+    assert_no_selector ".ann-sense.is-complete"
+
+    within ".ann-genre" do
       click_expecting(expect_css: ".ann-chip.is-on", text: "小説") { find("button.ann-chip", exact_text: "小説") }
     end
     assert_selector ".ann-sense.is-complete"
@@ -104,53 +97,6 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     # 読みを消せば完了表示は外れる
     find(".ann-reading").set("")
     assert_no_selector ".ann-sense.is-complete"
-  end
-
-  test "ジャンルが中分類止まりでは語義カードは完了表示にならない" do
-    visit admin_annotation_path(@word)
-    wait_for_stimulus "sense-completeness"
-
-    choose_hidden_input "input[type=checkbox][value='#{word_origins(:wago).id}']"
-    choose_hidden_input "input[type=radio][value='#{parts_of_speech(:noun).id}']"
-    choose_hidden_input "input[type=radio][value='#{entity_types(:book_title).id}']"
-
-    within ".ann-genre" do
-      click_expecting(expect_css: ".ann-chip", text: "日本文学") { find("button.ann-chip", exact_text: "文学") }
-      click_expecting(expect_css: ".ann-chip", text: "小説") { find("button.ann-chip", exact_text: "日本文学") }
-    end
-    # 小分類を選ぶまで genre_id は空のまま
-    assert_equal "", find(".js-genre-value", visible: false).value
-    assert_no_selector ".ann-sense.is-complete"
-  end
-
-  test "用語解説パネルを開くと特徴の定義と例が読める" do
-    visit admin_annotation_path(@word)
-
-    # 閉じている間は定義文は見えない(チップの特徴名は見えている)
-    assert_no_text "無い音が間に加わる"
-
-    open_details ".ann-glossary"
-    assert_text "無い音が間に加わる"
-    assert_text "まんなか"
-  end
-
-  test "「提案を反映」で意味・ジャンル・属性がフォームに入る" do
-    visit admin_annotation_path(@word)
-    # JS の読み込み完了(=ページが落ち着くの)を待ってからクリックする
-    wait_for_stimulus "genre-picker"
-
-    assert_selector ".ann-proposal", text: "立項 5/5"
-
-    # 反映後は解決済みジャンルが現在パス表示になる(画面更新の完了シグナル)
-    click_expecting(expect_css: ".ann-genre__current", text: "小説", wait: 10) do
-      find(".ann-proposal a", text: I18n.t("admin.annotations.proposal.apply"))
-    end
-    # 意味・品詞・語種・別表記もプレフィルされている(フォーム初期値のみで未保存)
-    assert_includes find(".js-meaning").value, "谷川流"
-    assert find("input[type=radio][value='#{parts_of_speech(:noun).id}']", visible: false).checked?
-    assert find("input[type=checkbox][value='#{word_origins(:wago).id}']", visible: false).checked?
-    assert_selector "input[value='ハルヒ']"
-    assert_nil word_senses(:pending).reload.genre_id
   end
 
   test "提案の小分類が未登録でも、大・中まで一致すればピッカーがそこまで開く" do
@@ -186,8 +132,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
 
     within all(".ann-feature").last do
       # 特徴のラジオを選ぶ(ネイティブクリックの取りこぼしを避けて JS で選択・change 発火)。
-      radio = find("input[type=radio][value='#{feature.id}']", visible: false)
-      execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", radio)
+      choose_hidden_input "input[type=radio][value='#{feature.id}']"
       # tap ごとにストリップが再描画されセル参照が stale になるので都度引き直す。
       # セルのネイティブクリックはヘッドレスで取りこぼすため JS クリックで確実に発火させる。
       surface = ".ann-strip:not(.ann-strip--reading) .ann-cell"
@@ -259,32 +204,5 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
       # 追加した大分類が選ばれ、中分類の選択肢が開く
       assert_selector ".js-genre-medium .ann-add__btn"
     end
-  end
-
-  # 1語の再調査(/reannotation へ渡す JSON)。コンソールと同じ turbo フレームで
-  # 出入りするため、リンク → 表示 → 「この語に戻る」までブラウザで担保する。
-  test "「再調査用JSON」から1語ぶんの JSON を開き、コンソールへ戻れる" do
-    visit admin_annotation_path(@word)
-
-    click_expecting(expect_css: "textarea#reresearch_json") do
-      find("a.ann-word-meta__reresearch")
-    end
-    json = JSON.parse(find("textarea#reresearch_json", visible: :all).value)
-    assert_equal @word.id, json["word_id"]
-    assert_equal "proposal", json["current"]["source"] # 提案(下書き)が付いた語
-    assert_includes json["masters"]["parts_of_speech"], "名詞"
-
-    click_expecting(expect_css: "h1.ann-word", text: @word.surface) do
-      find("a", exact_text: I18n.t("admin.annotations.reresearch.back"))
-    end
-  end
-
-  private
-
-  # チップの input は視覚的に隠れているため、ネイティブクリックに頼らず
-  # 選択して change を発火させる(ヘッドレスでの取りこぼしを避ける)。
-  def choose_hidden_input(selector)
-    input = find(selector, visible: false)
-    execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", input)
   end
 end

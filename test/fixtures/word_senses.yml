@@ -30,7 +30,7 @@ pending:
   word: pending_haruhi
   reading: すずみやはるひのゆううつ
   rhythm_pattern: suzumiyaharuhinoyuuutsu
-  vowel_pattern: uuiaauioouuu
+  vowel_pattern: uuiaauiouuuu
   mora_count: 12
   ring_crossing_count: 12
   last_char: つ
@@ -39,7 +39,7 @@ pending2:
   word: pending_bermuda
   reading: バミューダトライアングル
   rhythm_pattern: bamyuudatoraianguru
-  vowel_pattern: auuaoaiauuu
+  vowel_pattern: auuaoaiauu
   mora_count: 11
   ring_crossing_count: 3
   last_char: ル

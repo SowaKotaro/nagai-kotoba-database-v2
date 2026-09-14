@@ -1,14 +1,28 @@
 require "application_system_test_case"
 
 class WordDetailMobileTest < ApplicationSystemTestCase
-  # 読みが長い語(= 円環交差数が大きい語)の詳細ページは、韻(ローマ字)・母音パターンが
-  # 区切りの無い長大な英字列になる。語義カードはグリッド項目なので、折り返せない文字列が
-  # あると min-width: auto で列幅ごと押し広げられ、モバイル幅で枠が画面からはみ出していた。
-  test "読みが長い語の詳細ページはモバイル幅でも横にはみ出さない" do
-    word = Word.create!(surface: "惑星ソラリスのラストの、びしょびしょの実家でびしょびしょの父親と抱き合うびしょびしょの主人公")
-    word.word_senses.create!(
-      reading: "ワクセイソラリスノラストノビショビショノジッカデビショビショノチチオヤトダキアウビショビショノシュジンコウ"
-    )
+  SURFACE = "惑星ソラリスのラストの、びしょびしょの実家でびしょびしょの父親と抱き合うびしょびしょの主人公".freeze
+  READING = "ワクセイソラリスノラストノビショビショノジッカデビショビショノチチオヤトダキアウビショビショノシュジンコウ".freeze
+
+  # ブラウザのセッション(ウィンドウ)は同一プロセス内の他テストと共有されるため、
+  # 縮めたままにすると後続のテストがモバイル表示になって落ちる。必ず元の幅へ戻す。
+  teardown do
+    resize_window_to(*ApplicationSystemTestCase::DEFAULT_SCREEN_SIZE)
+  end
+
+  # 読みが長い語(= 円環交差数が大きい語)の詳細ページは、韻(ローマ字)・母音パターンが区切りの無い
+  # 長大な英字列になる。語義カードはグリッド項目なので、折り返せない文字列があると min-width: auto で
+  # 列幅ごと押し広げられ、モバイル幅で枠が画面からはみ出していた(PR #114)。
+  #
+  # また WebKit(iPhone Safari)は「見出し語まるごとに読み 1 つ」のルビの途中では改行できず、読みが長い語では
+  # 見出しが 1 行のまま画面外へはみ出す。CSS で折り返させる手段が無いので、見出しと別表記の読みは
+  # ルビ配置をやめて上下 2 段に積んでいる(PR #116。components.css の .sense-heading ruby)。
+  # このテストは Chrome で動き、Chrome はルビの途中で改行できてはみ出し自体は再現しないため、
+  # 「読みが丸ごと表記の上に積まれていること」を見る。
+  test "読みが長い語の詳細ページはモバイル幅でも横にはみ出さず、読みは表記の上に丸ごと積まれる" do
+    word = Word.create!(surface: SURFACE)
+    sense = word.word_senses.create!(reading: READING)
+    sense.word_sense_variants.create!(surface: SURFACE.sub("抱き合う", "抱きあう"), reading: READING)
     word.mark_annotated
     word.save!
 
@@ -35,36 +49,9 @@ class WordDetailMobileTest < ApplicationSystemTestCase
     JS
     assert_operator overflow["over"], :<=, 0, "語義カードが画面右端からはみ出している"
     assert_empty overflow["inner"], "語義カード内に枠からはみ出した要素がある"
-  end
-
-  # WebKit(iPhone Safari)は「見出し語まるごとに読み 1 つ」のルビの途中では改行できず、
-  # 読みが長い語では見出しが 1 行のまま画面外へはみ出す。CSS で折り返させる手段が無いので、
-  # 見出しの読みはルビ配置をやめて上下 2 段に積んでいる(components.css の .sense-heading ruby)。
-  # このテストは Chrome で動く(Chrome はルビの途中で改行できるので、はみ出し自体は再現しない)。
-  # そのため「はみ出さないこと」ではなく「読みが丸ごと見出し語の上に積まれていること」を見る。
-  test "語義見出しと別表記の読みは表記の上に丸ごと積まれる" do
-    word = Word.create!(surface: "惑星ソラリスのラストの、びしょびしょの実家でびしょびしょの父親と抱き合うびしょびしょの主人公")
-    sense = word.word_senses.create!(
-      reading: "ワクセイソラリスノラストノビショビショノジッカデビショビショノチチオヤトダキアウビショビショノシュジンコウ"
-    )
-    sense.word_sense_variants.create!(
-      surface: "惑星ソラリスのラストの、びしょびしょの実家でびしょびしょの父親と抱きあうびしょびしょの主人公",
-      reading: "ワクセイソラリスノラストノビショビショノジッカデビショビショノチチオヤトダキアウビショビショノシュジンコウ"
-    )
-    word.mark_annotated
-    word.save!
-
-    resize_window_to(390, 844)
-    visit word_path(word)
 
     assert_reading_stacked ".sense-heading ruby", "語義見出し"
     assert_reading_stacked ".variant-list ruby", "別表記"
-  end
-
-  # ブラウザのセッション(ウィンドウ)は同一プロセス内の他テストと共有されるため、
-  # 縮めたままにすると後続のテストがモバイル表示になって落ちる。必ず元の幅へ戻す。
-  teardown do
-    resize_window_to(*ApplicationSystemTestCase::DEFAULT_SCREEN_SIZE)
   end
 
   private
