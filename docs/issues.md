@@ -83,14 +83,15 @@
 
 ## Issue 29: OGP 画像の動的生成(単語ごと)
 - 種別: feature
-- 状態: 未着手(収録が数百語を超え、共有が発生し始めてから)
+- 状態: 対応中(実装済み。本番サーバへの描画ツールと日本語書体の導入が残り)
 - 優先度: P2 ／ Impact: Med ／ Effort: High
 - 依存: なし(静的 og:image は Issue 14 で導入済み)
-- 背景・現状: og:image は全ページ共通の静的 1 枚のみで、単語ごとの画像ではない。「言葉そのものが主役」のデザインは OGP 画像との相性が良く、共有時の CTR を大きく左右する。
+- 背景・現状: og:image は全ページ共通の静的 1 枚のみで、単語ごとの画像ではなかった。「言葉そのものが主役」のデザインは OGP 画像との相性が良く、共有時の CTR を大きく左右する。
 - 内容:
-  - [ ] 単語詳細ごとに 1200×630 の画像を生成: `og-default.png` と同じ体裁(白地 + 横罫2本と縦罫3本の格子 + 左の袖に読みの五十音円環 + 右に表層形・読み・標識。アクセント色と太字は使わない)の SVG テンプレートを ERB で組み、libvips(`image_processing` gem 追加)か rsvg-convert で PNG 化。既定カードの組みは `script/og_default.py` にある
-  - [ ] 生成タイミングはアノテーション保存時 or 初回リクエスト時 + ファイルキャッシュ
-  - [ ] フォント埋め込みの検証
+  - [x] 単語詳細ごとに 1200×630 の共有カードを描く(`GET /words/:id/share_card.png`)。体裁は `og-default.png` と同じ格子(白地 + 横罫2本と縦罫3本 + 左の袖に読みの五十音円環 + 右に 表層形 → 読みと文字数 → 罫 → 標識。アクセント色と太字は使わない)。`WordShareCard` が寸法と文字の組みを決め、`app/views/share_cards/word.svg.erb` が SVG を描き、`ShareCardRenderer` が rsvg-convert で PNG に焼く(gem は増やさない)。rsvg-convert は文字を折り返さないので、行の割り方と級数は `ShareCardTypesetter` が Noto Sans CJK JP の字幅(実測)で見積もって決める
+  - [x] 生成は初回リクエスト時 + ファイルキャッシュ(`tmp/cache/share_cards/word-<id>-<版>.png`。本番は linked_dirs でデプロイをまたいで残る)。版は SVG の digest で、og:image の URL に `?v=` で付ける(表記・読み・意匠が変わると URL ごと変わり、SNS 側のキャッシュも切り替わる)。今の版の URL は 1 年 immutable、それ以外は 1 時間
+  - [x] 書体の検証: librsvg は SVG の @font-face を読まないので、サーバに入れた書体を fontconfig 経由で使う。本番と同じ Ubuntu 22.04 の librsvg 2.52.5 + fonts-noto-cjk で焼けることを確認した。rsvg-convert か日本語の書体が無い環境(CI・導入前の本番)では og:image は既定カードのまま
+  - [ ] **本番サーバに `librsvg2-bin` と `fonts-noto-cjk` を入れて Puma を再起動する**(deploy ユーザーに sudo が無いのでオーナー作業。入れるまでは既定カードのまま動く)
 - 期待効果: X・Slack・チャット AI での共有時の視認性・CTR 向上。
 
 ## Issue 31: Web フォントのセルフホスト化

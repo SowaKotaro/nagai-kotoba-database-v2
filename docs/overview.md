@@ -105,6 +105,7 @@
 | `/browse` | 50音・読みの文字数の索引（Issue 22）。件数は `PublishedSenseCounts` でキャッシュ |
 | `/genres` | ジャンル階層のハブ（Issue 21）。同上 |
 | `/words/random` | ランダムに1語へ飛ぶ（Issue 57 の一部） |
+| `/words/:id/share_card.png` | 単語ごとの共有カード（og:image。Issue 29）。初回に rsvg-convert で焼いて `tmp/cache/share_cards` に置く。描画ツールか日本語の書体が無い環境では既定カードへ回す |
 | `/llms.txt` `/llms-full.txt` | サイト案内と全収録データ（Issue 24・73） |
 | `/about` `/privacy` | サイト情報・プライバシーポリシー（Issue 20・42） |
 
@@ -173,6 +174,20 @@ bin/rails server              # 起動
   ```bash
   ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed   # ローカル DB のみに反映
   ```
+
+### 単語の共有カード（og:image）の描画
+- 単語詳細の og:image は語ごとの共有カード（`/words/:id/share_card.png`）。`ShareCardRenderer` が **rsvg-convert（librsvg の CLI）** で SVG を PNG に焼き、`tmp/cache/share_cards` に置いて使い回す。
+- 焼くには **rsvg-convert と日本語の書体**が要る（Ubuntu: `librsvg2-bin` / `fonts-noto-cjk`）。どちらかが無い環境（CI・既定のローカル）では og:image は `og-default.png` のままで、機能は止まらない。
+  **本番に入れたら Puma を再起動する**（有無の判定はプロセスごとに 1 回）。
+- sudo の無い環境で本番と同じ描画を試すには、パッケージを展開して使う（本番と同じ Ubuntu 22.04 の版が取れる）:
+  ```bash
+  apt-get download librsvg2-bin fonts-noto-cjk
+  dpkg-deb -x librsvg2-bin_*.deb rsvg && dpkg-deb -x fonts-noto-cjk_*.deb fonts
+  # fonts.conf: <fontconfig><dir>(展開先)/fonts/usr/share/fonts/opentype/noto</dir>
+  #             <include ignore_missing="yes">/etc/fonts/fonts.conf</include></fontconfig>
+  PATH="$PWD/rsvg/usr/bin:$PATH" FONTCONFIG_FILE="$PWD/fonts.conf" bin/rails server
+  ```
+- テスト: 実際に焼くテスト（`ShareCardRendererTest`）は rsvg-convert と書体がある環境だけで走り、無ければ skip する（mecab と同じ扱い）。
 
 ## 8. コミット前の必須チェック（CI と同一）
 ```bash

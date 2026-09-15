@@ -3,6 +3,11 @@
 <% lead = word_lead_sentence(@word) %>
 <% content_for :description, lead if lead.present? %>
 <% content_for :og_type, "article" %>
+<%# 共有カード(og:image)は語ごとに焼いた 1 枚。URL に版を付け、表記や意匠が変わったら SNS 側のキャッシュを切り替える %>
+<% if (share_card = word_share_card(@word)) %>
+  <% content_for :og_image, word_share_card_path(@word, format: :png, v: share_card.digest) %>
+  <% content_for :og_image_alt, t("words.share_card.alt", surface: @word.surface, reading: share_card.reading) %>
+<% end %>
 <%# 語義ごとの DefinedTerm(構造化データ。Issue 16) %>
 <%= word_json_ld(@word) %>
 

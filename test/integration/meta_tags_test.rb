@@ -47,6 +47,19 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='og:url'][content=?]", "#{HOST}/words/#{word.id}"
   end
 
+  test "単語詳細の og:image は語ごとの共有カード(版つき)で、焼けない環境では既定のカードのまま" do
+    word = words(:abc_murder)
+    stub_method(ShareCardRenderer, :available?, -> { true }) { get word_path(word) }
+    assert_select "meta[property='og:image'][content=?]",
+                  "#{HOST}/words/#{word.id}/share_card.png?v=#{WordShareCard.new(word).digest}"
+    assert_select "meta[property='og:image:alt'][content=?]",
+                  I18n.t("words.share_card.alt", surface: word.surface, reading: word_senses(:murder).reading)
+
+    stub_method(ShareCardRenderer, :available?, -> { false }) { get word_path(word) }
+    assert_select "meta[property='og:image'][content=?]", "#{HOST}/og-default.png"
+    assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
+  end
+
   test "canonical はクエリパラメータを含めず現在のパスのみを使う(既定の挙動)" do
     # /words は Issue 17 で canonical を正規化上書きするため、上書きしない /search で既定挙動を確認する。
     get search_path(q: "テスト", genre_id: 1)

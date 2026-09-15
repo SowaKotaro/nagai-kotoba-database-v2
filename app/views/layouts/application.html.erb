@@ -28,11 +28,11 @@
     <meta property="og:description" content="<%= page_description %>">
     <meta property="og:url" content="<%= canonical_url %>">
     <meta property="og:image" content="<%= page_og_image %>">
-    <%# 寸法は既定画像 og-default.png(1200×630)のもの。content_for(:og_image) で
-        別画像に差し替える場合は寸法もヘルパー化して連動させること %>
+    <%# 寸法は既定カード og-default.png と単語の共有カード(WordShareCard)に共通の 1200×630。
+        content_for(:og_image) で寸法の違う画像に差し替える場合は、寸法もヘルパー化して連動させること %>
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="<%= t("layouts.og_image_alt") %>">
+    <meta property="og:image:alt" content="<%= page_og_image_alt %>">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<%= page_title %>">
     <meta name="twitter:description" content="<%= page_description %>">

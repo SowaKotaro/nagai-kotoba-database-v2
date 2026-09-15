@@ -6,7 +6,8 @@
    横罫は画面端まで通し、縦罫3本(額の左右 + 袖と本体を分ける柱)は区画の全高に通す。
 
    実行: python3 script/og_default.py   (要 Pillow。日本語ゴシックと等幅を1本ずつ使う)
-   単語ごとのカード生成(docs/issues.md)を作るときは、この体裁をそのまま ERB + SVG に移す。"""
+   単語ごとの共有カードは、この体裁を ERB + SVG に移して app/views/share_cards/word.svg.erb(WordShareCard)で描いている。
+   格子・色・書体を変えるときは両方をそろえる。"""
 import math
 import os
 from PIL import Image, ImageDraw, ImageFont
