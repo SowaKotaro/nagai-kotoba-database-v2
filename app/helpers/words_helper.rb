@@ -15,6 +15,12 @@ module WordsHelper
     (lead.presence || word.surface).squish.truncate(X_SHARE_TEXT_LIMIT, omission: "…")
   end
 
+  # 単語ごとの共有カード(og:image)。焼ける環境の、読みのある語だけ(それ以外は nil で既定のカードのまま)。
+  def word_share_card(word)
+    card = WordShareCard.new(word)
+    card if card.drawable? && ShareCardRenderer.available?
+  end
+
   # 単語詳細の自己完結リード文(定義文)を決定的に組み立てる(Issue 18)。
   # 読み・文字数・モーラ・ジャンルという構造データを散文に起こし、
   # meta description(Issue 14)や JSON-LD の description(Issue 16)にも流用する。

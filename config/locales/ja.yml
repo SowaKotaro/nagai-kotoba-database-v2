@@ -110,6 +110,8 @@ ja:
       words_collected: "WORDS COLLECTED"
       characters: "CHARACTERS"
       kana_ring: "READING PATH / 50-ON RING"
+      # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
+      reading_characters: "READING / %{count} CHARACTERS"
       # 円環の標識2行目に置く値(弦が円の内側で交わった回数)
       crossings: "%{count} CROSSINGS"
       max: "MAX %{unit}"
@@ -350,6 +352,10 @@ ja:
         lead_html: '末尾の「<span class="shiritori__char">%{char}</span>」から始まる言葉'
         dead_end_html: '「<span class="shiritori__char">%{char}</span>」で終わるので、しりとりはここで終わり。次の一手はありません。'
         none_html: '「<span class="shiritori__char">%{char}</span>」から始まる言葉は、まだ収録されていません。'
+    # 単語ごとの共有カード(og:image。WordShareCard)
+    share_card:
+      reading_length: "（%{count}文字）"
+      alt: "「%{surface}」（読み %{reading}）の共有カード"
     lead:
       base: "「%{surface}」は、読み「%{reading}」（%{metrics}）の日本語の長い言葉。"
       # 語義ごとに読みが違う語(異読)は、字数・モーラが定まらないので読みだけを並べる

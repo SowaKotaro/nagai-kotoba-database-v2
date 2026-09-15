@@ -1,10 +1,12 @@
 Rails.application.routes.draw do
   resource :session
 
-  # 公開閲覧(誰でも閲覧可)。一覧・詳細のみ。書き込みは admin 名前空間に閉じる。
+  # 公開閲覧(誰でも閲覧可)。一覧・詳細と、詳細の共有カードのみ。書き込みは admin 名前空間に閉じる。
   # random は「ランダムに1語」導線。:id より前に来るよう collection で定義する。
   resources :words, only: %i[index show] do
     get :random, on: :collection
+    # 単語ごとの共有カード(og:image)。/words/:word_id/share_card.png
+    resource :share_card, only: :show, module: :words, format: true, constraints: { format: "png" }
   end
   # 公開の詳細検索フォーム。キーワードだけの検索はヘッダー等から words#index の q で行う。
   get "search", to: "searches#index", as: :search

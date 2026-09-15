@@ -33,6 +33,11 @@ module ApplicationHelper
     absolute_site_url(path)
   end
 
+  # og:image:alt。画像を差し替えたページ(単語の共有カード)は content_for(:og_image_alt) でその画像の説明を置く。
+  def page_og_image_alt
+    content_for?(:og_image_alt) ? content_for(:og_image_alt) : t("layouts.og_image_alt")
+  end
+
   # og:type。単語詳細などは content_for(:og_type) で "article" を指定できる。
   def page_og_type
     content_for?(:og_type) ? content_for(:og_type).to_s : "website"

@@ -1,0 +1,47 @@
+<%# 単語の共有カード(og:image)。寸法と文字の組みは WordShareCard が決め、ShareCardRenderer が
+    rsvg-convert で PNG に焼く。体裁は既定カード(public/og-default.png)と同じ格子で、
+    白地・太字なし・アクセント色なし(docs/design.md §5.1)。
+    色は tokens.css のライトの値をリテラルで持つ(画像は見る人のテーマに追従できないので、白地の 1 枚に決める)。
+    書体は本番サーバに入れる Noto Sans CJK JP(fonts-noto-cjk)と DejaVu Sans Mono(fonts-dejavu-core)。
+    文字は 1 行ずつ別の text にする(tspan を並べると、あいだの改行が空白として描かれて行頭がずれる) %>
+<% grid = WordShareCard %>
+<% sans = "Noto Sans CJK JP, Noto Sans JP, sans-serif" %>
+<% mono = "DejaVu Sans Mono, Liberation Mono, monospace" %>
+<svg xmlns="http://www.w3.org/2000/svg" width="<%= grid::WIDTH %>" height="<%= grid::HEIGHT %>" viewBox="0 0 <%= grid::WIDTH %> <%= grid::HEIGHT %>">
+  <rect width="<%= grid::WIDTH %>" height="<%= grid::HEIGHT %>" fill="#ffffff"/>
+
+  <%# 格子(--border)。横罫は画像の端まで、縦罫(額の左右と柱)は区画の全高に通す。本体の罫は読みと標識を分ける %>
+  <g fill="#dfe4ec">
+    <rect x="0" y="<%= grid::FRAME_TOP %>" width="<%= grid::WIDTH %>" height="1"/>
+    <rect x="0" y="<%= grid::FRAME_BOTTOM %>" width="<%= grid::WIDTH %>" height="1"/>
+    <% [ grid::FRAME_LEFT, grid::PILLAR, grid::FRAME_RIGHT ].each do |x| %>
+    <rect x="<%= x %>" y="<%= grid::FRAME_TOP %>" width="1" height="<%= grid::FRAME_BOTTOM - grid::FRAME_TOP %>"/>
+    <% end %>
+    <rect x="<%= grid::TEXT_LEFT %>" y="<%= card.rule_y %>" width="<%= grid::FRAME_RIGHT - grid::TEXT_LEFT %>" height="1"/>
+  </g>
+
+  <%# 左の袖: 読みを五十音の円環で一筆書きにした図。補助の円は --border-strong、線は --text-subtle、始点は --text-muted %>
+  <circle cx="<%= grid::RING_CENTER_X %>" cy="<%= grid::RING_CENTER_Y %>" r="<%= card.ring_radius %>"
+          fill="none" stroke="#c6ccd5" stroke-width="1.4"/>
+  <% if card.ring_points.size > 1 %>
+  <polyline points="<%= card.ring_points.map { |x, y| "#{x},#{y}" }.join(" ") %>"
+            fill="none" stroke="#63686c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <% end %>
+  <% if (start = card.ring_points.first) %>
+  <circle cx="<%= start[0] %>" cy="<%= start[1] %>" r="<%= card.ring_start_radius %>" fill="#5f6568"/>
+  <% end %>
+
+  <%# 右の本体: 表層形(--text) → 読みと文字数(--text-muted) → 罫 → 標識(--text-subtle の等幅) %>
+  <% card.surface_lines.each do |line| %>
+  <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= sans %>" font-size="<%= card.surface_font_size %>"
+        letter-spacing="<%= card.surface_tracking %>" fill="#232a31"><%= line.text %></text>
+  <% end %>
+  <% card.reading_lines.each do |line| %>
+  <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= sans %>" font-size="<%= card.reading_font_size %>"
+        letter-spacing="<%= card.reading_tracking %>" fill="#5f6568"><%= line.text %></text>
+  <% end %>
+  <% card.label_lines.each do |line| %>
+  <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= mono %>" font-size="<%= grid::LABEL_FONT_SIZE %>"
+        letter-spacing="<%= card.label_tracking %>" fill="#63686c"><%= line.text %></text>
+  <% end %>
+</svg>
