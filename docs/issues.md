@@ -81,19 +81,6 @@
   - [ ] 可能ならサーバ外への退避(別ホスト・オブジェクトストレージ等)を検討
 - 期待効果: データ消失リスクの解消。**インフラ変更のため実施前に内容を説明する**(CLAUDE.md 方針)。
 
-## Issue 29: OGP 画像の動的生成(単語ごと)
-- 種別: feature
-- 状態: 対応中(実装済み。本番サーバへの描画ツールと日本語書体の導入が残り)
-- 優先度: P2 ／ Impact: Med ／ Effort: High
-- 依存: なし(静的 og:image は Issue 14 で導入済み)
-- 背景・現状: og:image は全ページ共通の静的 1 枚のみで、単語ごとの画像ではなかった。「言葉そのものが主役」のデザインは OGP 画像との相性が良く、共有時の CTR を大きく左右する。
-- 内容:
-  - [x] 単語詳細ごとに 1200×630 の共有カードを描く(`GET /words/:id/share_card.png`)。体裁は `og-default.png` と同じ格子(白地 + 横罫2本と縦罫3本 + 左の袖に読みの五十音円環 + 右に 表層形 → 読みと文字数 → 罫 → 標識。アクセント色と太字は使わない)。`WordShareCard` が寸法と文字の組みを決め、`app/views/share_cards/word.svg.erb` が SVG を描き、`ShareCardRenderer` が rsvg-convert で PNG に焼く(gem は増やさない)。rsvg-convert は文字を折り返さないので、行の割り方と級数は `ShareCardTypesetter` が Noto Sans CJK JP の字幅(実測)で見積もって決める
-  - [x] 生成は初回リクエスト時 + ファイルキャッシュ(`tmp/cache/share_cards/word-<id>-<版>.png`。本番は linked_dirs でデプロイをまたいで残る)。版は SVG の digest で、og:image の URL に `?v=` で付ける(表記・読み・意匠が変わると URL ごと変わり、SNS 側のキャッシュも切り替わる)。今の版の URL は 1 年 immutable、それ以外は 1 時間
-  - [x] 書体の検証: librsvg は SVG の @font-face を読まないので、サーバに入れた書体を fontconfig 経由で使う。本番と同じ Ubuntu 22.04 の librsvg 2.52.5 + fonts-noto-cjk で焼けることを確認した。rsvg-convert か日本語の書体が無い環境(CI・導入前の本番)では og:image は既定カードのまま
-  - [ ] **本番サーバに `librsvg2-bin` と `fonts-noto-cjk` を入れて Puma を再起動する**(deploy ユーザーに sudo が無いのでオーナー作業。入れるまでは既定カードのまま動く)
-- 期待効果: X・Slack・チャット AI での共有時の視認性・CTR 向上。
-
 ## Issue 31: Web フォントのセルフホスト化
 - 種別: improvement
 - 状態: 未着手(woff2 サブセット取得が必要)
@@ -126,7 +113,7 @@
 - 背景・現状: 公開側にアカウント機能を作らない方針のため、再訪のきっかけが少ない。日替わりの「今日の一語」はトップに実装済みだが、サイト外へ届ける手段が無い。
 - 内容:
   - [ ] X API の無料枠・投稿制限・審査要件を調査(制約次第で方式・頻度を決める)
-  - [ ] 投稿文フォーマット設計(表層形 + リード文 + 単語詳細 URL。動的 OGP 画像(Issue 29)があれば効果増)
+  - [ ] 投稿文フォーマット設計(表層形 + リード文 + 単語詳細 URL。単語詳細の og:image は語ごとの共有カード(Issue 29、完了)なので、URL を付けるだけでその語のカードが出る)
   - [ ] 実装方式の選定: サーバ cron + rake タスク(冪等・失敗時は翌日に自然回復)を第一候補に
   - [ ] 認証情報は credentials / 環境変数で管理
 - 期待効果: SNS 経由の定常的な流入と再訪のきっかけ。フォローによる実質的な「購読」導線。
@@ -340,6 +327,7 @@
 - **Issue 25: 公開 JSON API** [feature] — 完了(PR #46)。`words#index/#show` の `.json`(jbuilder、CC BY 表記つき)。
 - **Issue 26: HTTP/fragment キャッシュ** [improvement] — 完了(PR #47)。`fresh_when`/ETag・ホーム統計の `Rails.cache`・`touch` 連鎖。fragment cache の残タスクは Issue 48 へ引き継ぎ、そちらも完了済み。
 - **Issue 28: 新着単語 Atom フィード** [feature] — 完了(PR #48)。注釈済み新着 20 件 + autodiscovery。
+- **Issue 29: OGP 画像の動的生成(単語ごと)** [feature] — 完了(PR #149)。単語詳細の og:image を語ごとの共有カード `/words/:id/share_card.png` に差し替え。既定カードと同じ格子に 読みの五十音円環・表層形・読みと文字数・標識を組み、`ShareCardRenderer` が rsvg-convert で PNG に焼いてファイルに置く(版は SVG の digest で、og:image の URL に `?v=` で付ける)。行の割り方と級数は `ShareCardTypesetter` が Noto Sans CJK JP の実測の字幅で決める。本番には 2026-09-15 に `librsvg2-bin` / `fonts-noto-cjk` を導入済み(描画ツールか日本語の書体が無い環境では既定カードに戻る)。
 - **Issue 30: シェア導線** [feature] — 完了(PR #49)。X 共有リンク + URL コピー(インライン SVG)。
 - **Issue 32: エラーページの日本語化・ブランド化** [improvement] — 完了(PR #50)。404/422/500 を自前デザインで。
 
@@ -347,7 +335,7 @@
 - **Issue 48: fragment cache の残り(browse・genres)** [improvement] — 完了。`PublishedSenseCounts`(`by_first_char` / `by_reading_length` / `by_genre`)に集約し、`/browse` の件数集計と `/genres` のツリーがこれを引く形になった。コード内の古い「Issue 26 で導入予定」コメントも解消済み。
 - **Issue 62: 五十音円環** [feature] — **統計ページの看板としては不採用**(2026-07-18。パッと見で何を示すか読めないため。頭文字→末尾文字の分布は行×行ヒートマップとして統計 §2 に吸収)。ただしその後、**単語詳細の「五十音円環」+ 円環交差数**という別の形で実装された(`app/models/kana_ring.rb` / `app/views/words/_kana_ring.html.erb`、交差数のランキングつき)。1語の読みを円環上の経路として描くもので、当初案(全語の遷移をコード図にする)とは別物。
 
-(Issue 27・29・31・33 は未完了節を参照)
+(Issue 27・31・33 は未完了節を参照)
 
 ## 管理者機能の改善(Issue 35〜41、2026-07-07 のオーナーフィードバックより)
 

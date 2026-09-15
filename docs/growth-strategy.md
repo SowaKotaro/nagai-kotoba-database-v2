@@ -79,7 +79,7 @@ goo辞書・Weblio・コトバンク等の総合辞書と正面から戦わず�
 - ◎ SEO 基盤: sitemap / robots / meta・canonical / JSON-LD / ファセットのインデックス方針(Issue 13〜18)
 - ◎ LLMO: llms.txt / 公開 JSON API(CC BY 4.0 表記つき) / 自己完結リード文(Issue 24・25・18)
 - ◎ シェア導線(X 共有・URL コピー、Issue 30)・静的 OGP 画像(Issue 14)
-- △ 単語ごとの共有カード(og:image)は実装済み。本番サーバに描画ツールと日本語書体を入れると有効になる(Issue 29)
+- ◎ 単語ごとの共有カード(og:image。Issue 29)
 - ✗ 「引用したくなるページ」= 統計ページ(→ 既存 Issue 34。被リンク獲得の種)
 - △ データ引用チャネル: CC BY 4.0 + API + llms.txt の布石は完了。研究・アプリでの利用実績づくりはこれから
 
