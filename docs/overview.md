@@ -178,7 +178,7 @@ bin/rails server              # 起動
 ### 単語の共有カード（og:image）の描画
 - 単語詳細の og:image は語ごとの共有カード（`/words/:id/share_card.png`）。`ShareCardRenderer` が **rsvg-convert（librsvg の CLI）** で SVG を PNG に焼き、`tmp/cache/share_cards` に置いて使い回す。
 - 焼くには **rsvg-convert と日本語の書体**が要る（Ubuntu: `librsvg2-bin` / `fonts-noto-cjk`）。どちらかが無い環境（CI・既定のローカル）では og:image は `og-default.png` のままで、機能は止まらない。
-  **本番に入れたら Puma を再起動する**（有無の判定はプロセスごとに 1 回）。
+  **本番サーバには 2026-09-15 に導入済み**。入れ直したときは Puma を再起動する（有無の判定はプロセスごとに 1 回）。
 - sudo の無い環境で本番と同じ描画を試すには、パッケージを展開して使う（本番と同じ Ubuntu 22.04 の版が取れる）:
   ```bash
   apt-get download librsvg2-bin fonts-noto-cjk
