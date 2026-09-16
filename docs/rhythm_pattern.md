@@ -42,3 +42,18 @@
 - `nil`・空文字は空文字列を返す。
 
 判定順（2文字→1文字）や促音・長音の処理順を変えると結果が変わりうるため、`RhythmPattern` の実装順序を維持すること。
+
+## この値から派生するもの
+
+- **`vowel_pattern`**: `rhythm_pattern` から母音（`aiueo`）だけを抜いた文字列
+  （[`VowelPattern`](../app/models/vowel_pattern.rb)）。`WordSense` の `before_validation` で
+  `rhythm_pattern` の**後に**生成するため、**両者の生成順を入れ替えない**。
+- **押韻検索**（`/search` の「母音パターン」）: フォームには読みをカナで入力してもらい、
+  `RhythmPattern` → `VowelPattern` を通してから `vowel_pattern` と部分一致させる
+  （例「トウキョウタワー」→ `ououaa`）。
+- **統計 §7 の母音遷移グラフ**: 拍位置を固定して `vowel_pattern` の部分文字列と突き合わせる
+  （`WordSense.vowel_transition_at`）。位置を問わない押韻検索とは別の条件。
+- **リズム検索**（`/search` の「リズムパターン」）: `rhythm_pattern` そのものへの部分一致。
+
+`rhythm_pattern` の規則を変えると `vowel_pattern` も全件変わるので、
+変更後は `bin/rails backfill:reading_metrics` で焼き直すこと。
