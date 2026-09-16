@@ -1,185 +1,186 @@
 # アプリ概要（最初に読むドキュメント）
 
-新しく参加する開発者（および Claude Code セッション）が、素早く全体像を掴むための案内。
-詳細は各リンク先を参照。方針・規約は [`CLAUDE.md`](../CLAUDE.md) が正。
+新しく参加する開発者（および Claude Code セッション）が全体像を掴むための案内。
+方針・規約は [`CLAUDE.md`](../CLAUDE.md) が正。各論はリンク先の文書が正。
+
+| 知りたいこと | 読む文書 |
+|---|---|
+| 守る規約・やってよいこと/いけないこと | [`CLAUDE.md`](../CLAUDE.md) |
+| テーブルの関係と設計判断 | [`data-model.md`](data-model.md)（カラムの正は `db/schema.rb`） |
+| UI を作る・変える | [`design.md`](design.md) |
+| 何を収録するか・表記と読みの決め方 | [`annotation-guidelines.md`](annotation-guidelines.md) |
+| これから作るもの | [`issues.md`](issues.md)（確定事項の記録も同じファイル） |
+| これまでに入れたもの | [`changelog.md`](changelog.md) |
+| 統計ページの紙面 | [`stats.md`](stats.md) |
+| 速度の話 | [`performance-report.md`](performance-report.md) |
+| ジャンルの一覧 | [`genres.md`](genres.md) |
+| Claude Code の調査コマンド | [`../research/README.md`](../research/README.md) |
+
+---
 
 ## 1. コンセプト
-- **日本語の単語を収集・解析・公開する Web アプリ**。
-- 単語ごとに「読み・意味・ジャンル・品詞・言語学的特徴」などを構造化して蓄積し、
-  読みの長さ・先頭/末尾文字・文字種パターン・リズム（ローマ字）・ジャンル階層などの
-  多彩な軸で**検索・絞り込み**できるようにするのが目的。
-- **公開方針**: 単語データの**閲覧は全世界に公開**。**登録・編集・削除は管理者(オーナー)のみ**。
-- 想定規模: 1万レコード程度。
+
+- **日本語の長い言葉を収集・解析・公開する Web アプリ**（<https://nagai-kotoba-database.jp>）。
+- 収録対象は **読みが 10 文字以上**の語。判定基準は [`annotation-guidelines.md`](annotation-guidelines.md)。
+- 語ごとに 読み・意味・ジャンル・品詞・エンティティ・語種・言語学的特徴・別表記 を構造化して蓄積し、
+  **読みの長さ・モーラ数・先頭/末尾文字・文字種パターン・リズム（ローマ字）・母音パターン・ジャンル階層**
+  といった多彩な軸で検索・絞り込みできるようにする。
+- ポジションは「読みの長さ・リズム・文字種で引ける、長い言葉に特化したデータベース」
+  （総合辞書と正面から戦わない。[`growth-strategy.md`](growth-strategy.md) §0）。
+- **公開方針**: 単語データの**閲覧は全世界に公開**。**登録・編集・削除は管理者（オーナー）のみ**。
+  公開側で唯一の書き込み経路は収録リクエスト（`/requests/new`）。
+- 想定規模: 1 万レコード程度。
 
 ## 2. 技術スタック
-- Ruby 3.4.2 / Rails 8.1
-- MySQL 8.x（mysql2）※照合順序は `utf8mb4_0900_ai_ci` に統一（MySQL 8 専用）
-- Puma / Hotwire(Turbo・Stimulus) / importmap-rails / Sprockets（ビルドツールは入れない方針）
-- テスト: **Minitest**（`test/` 配下。RSpec は不使用）
-- デプロイ: Capistrano（`cap production deploy`。後続で `deploy:seed` が自動実行）
-- CI: GitHub Actions（PR作成時・main への push 時。DB は `mysql:8.4`）
+
+- **Ruby 3.4.2 / Rails 8.1**（`config.load_defaults 8.1`）
+- **MySQL 8.x（mysql2）** — 照合順序は `utf8mb4_0900_ai_ci` 基準（読みまわりだけ `as_ci`。[`data-model.md`](data-model.md) §6）
+- Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
+- CSS は手書き（`tokens → base → layout → components` ＋ `admin.css` / `annotate.css`）
+- テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
+- デプロイ: **Capistrano**（`cap production deploy`。`deploy:migrate` の後に `deploy:seed` が自動実行）
+- CI: GitHub Actions（PR 作成時・main への push 時。DB は `mysql:8.4`）
+- タイムゾーンは `Tokyo`、既定ロケールは `:ja`（表示文言は `config/locales/ja.yml` に集約）
+- 外部サービスへの実行時依存は持たない（web フォント CDN・チャート CDN・外部 API いずれも無し。
+  唯一の同梱ライブラリが `vendor/javascript/plotly.min.js` で、統計ページ内でのみ遅延読み込みする）
 
 ## 3. 認証（管理者）
-- Rails 8 標準の認証基盤（`has_secure_password` + セッション）。
-- モデルは `Admin`、ログインは **`username`(ID) + パスワード**（メール不使用）。
+
+- Rails 8 標準の認証基盤（`has_secure_password` ＋ セッション）。モデルは `Admin`。
+- ログインは **`username`（ID）＋ パスワード**。**メールは使わない**（パスワード再設定機能も持たない）。
 - **サインアップ画面は無い**。管理者は `db/seeds.rb` が credentials か環境変数
-  （`ADMIN_USERNAME` / `ADMIN_PASSWORD`）から作成/更新する。パスワード再設定(メール)機能は持たない。
+  （`ADMIN_USERNAME` / `ADMIN_PASSWORD`）から冪等に作成／更新する。
+- セッションは 2 週間のスライディング失効（`Session::LIFETIME`）。
+- `Admin::BaseController` 配下は既定で認証必須。公開閲覧は名前空間の外に置き、
+  `allow_unauthenticated_access` で明示的に開放する。
 
-## 4. ドメインモデル（全体像）
-正は [`docs/schema.sql`](schema.sql)。関係の要点:
-- `word` : `word_sense` = **1 : 多**（同音異義語に対応）。
-- `genres` は**隣接リスト**（`parent_id`）で 大(level1)→中(level2)→小(level3) の3階層。
-  `word_senses.genre_id` は**末端(小分類)のみ**を指し、中・大は `parent_id` を辿って一意に導出する。
-  数値の分類コード列は持たない（名前＋階層のみ）。ジャンル一覧は [`docs/genres.md`](genres.md)。
-- `linguistic_features` は中間表 `word_sense_features` 経由で語義と**多対多**。特徴は単語の**該当部分ごと**に付与する（`target`＝表層の一部 / `target_reading`＝その読み）。
-- `entity_types` / `parts_of_speech` は単純マスタ（`name` のみ）。
-- **生成カラム**: `reading_length` / `first_char` / `last_char` は SQL の STORED 生成カラム。
-  `char_type_pattern`（漢/あ/ア/A/@）と `rhythm_pattern`（ローマ字）は **Ruby 側**で生成。
+## 4. データモデル（要点）
 
-## 5. 実装状況（2026-07 時点）
-段階的に実装中。計画とチェックリストは [`docs/issues.md`](issues.md)。
-- ✅ Issue 1: 設計ドキュメント整備・スキーマ方針確定
-- ✅ Issue 2: **ジャンル(genres)マスタ**（3階層・自己参照）… 本 branch `feature/add-genre` で実装
-  - `app/models/genre.rb`（enum `level`、`self_and_ancestors` / `root_genre`、整合性バリデーション）
-  - 大分類10件・中分類150件を seed 投入済み（カタログは `app/models/seed_catalog.rb`）
-  - 既存 admins/sessions も `utf8mb4_0900_ai_ci` に統一済み
-- ✅ Issue 3: **単純マスタ3種**（entity_types / parts_of_speech / linguistic_features）… `name` + `UNIQUE(name)` のみ
-  - `parts_of_speech` は不規則複数形のため inflections に屈折ルールを追加
-- ✅ Issue 4: words テーブル（surface / char_type_pattern 生成）
-- ✅ Issue 5: **word_senses テーブル**（語義。word に 1:多）
-  - STORED 生成カラム `reading_length` / `first_char` / `last_char`（SQL 側）
-  - `rhythm_pattern` は値オブジェクト `RhythmPattern`（ヘボン式・長音は母音展開）で `before_validation` 自動生成
-  - `genre_id` は小分類(level3)のみ許可するバリデーション
-- ✅ Issue 6: **word_sense_features**（語義 × 言語学的特徴の多対多）
-  - 特徴は単語の**該当部分ごと**に付与（`target`＝表層の一部 / `target_reading`＝その読み）。
-    例:「硫黄島からの手紙」に 連濁:硫黄島 / 熟字訓:硫黄 / 連濁:手紙
-  - 中間モデル `WordSenseFeature`、`UNIQUE(word_sense_id, linguistic_feature_id, target)` で三つ組の重複防止
-  - `WordSense has_many :linguistic_features, through:` / `LinguisticFeature` も逆から辿れる（参照中は削除不可）
-- ✅ Issue 7: **管理者用 CRUD**（`/admin/words`。認証必須の `Admin::` 名前空間）
-  - Word→語義→特徴(該当部分つき)の1画面フル入れ子フォーム（`accepts_nested_attributes_for` ＋ Stimulus `nested-form`）
-  - ジャンルは大→中→小の依存ドロップダウン（Stimulus `genre-cascade` ＋ `Admin::GenresController#children`）
-- ✅ Issue 8: **公開閲覧**（一覧・詳細）
-  - トップレベル `WordsController#index/#show` を `allow_unauthenticated_access` で開放（誰でも閲覧可）
-  - 詳細で語義・ジャンル階層・品詞・特徴（該当部分つき）を表示。一覧は gem 無しの軽量ページネーション
-- ✅ Issue 9: **検索・絞り込み**（公開 `GET /search`）
-  - `reading_length`（範囲）/先頭・末尾文字/`char_type_pattern`/`rhythm_pattern`（部分一致）/ジャンル階層/品詞/エンティティタイプ/言語学的特徴
-  - `WordSense` のスコープ群＋クエリオブジェクト `WordSenseSearch`。生成カラム/インデックスを活用
-  - `regexp`（表層形・読みの正規表現。MySQL の `REGEXP`）… 値オブジェクト `SearchRegexp`。
-    `REGEXP` は照合順序のかな同一視が効かないため、読みに当てるパターンだけカタカナへ畳む。
-    不正な式は検索前に弾き（構文チェックは MySQL に空文字を照合させて判定）、
-    照合の打ち切り（`regexp_time_limit` 超過）は空結果＋警告にフォールバックする
-- ⬜ Issue 10: マスタのインライン追加（単語登録画面から完結）
-- ✅ Issue 11: **拡張データ（読み指標・語種・別表記）** … データ層のみ（画面機能は別 Issue）
-  - `word_senses` に `mora_count`（モーラ数・拗音は1拍）/ `vowel_pattern`（母音パターン）を追加。値オブジェクト `MoraCount` / `VowelPattern` ＋ `before_validation` で reading から生成
-  - 語種マスタ `word_origins`（言語ごとに切り分け）＋ 語義との多対多 `word_sense_origins`（混種語対応）
-  - 別表記 `word_sense_variants`（語義に 1:多、読みも保持）
-  - バックフィルタスク `backfill:reading_metrics`
-- ✅ Issue 12: **高速アノテーション・コンソール**（`/admin/annotations`）… 既存 `/admin/words` と併存
-  - 1語集中キュー（`words.annotated_at` で未注釈を管理）。Turbo Frame で「保存して次へ」
-  - ドロップダウン全廃・チップ選択（`:has()`）／ジャンル段階表示／特徴は文字の範囲タップ（`feature-range`）／マスタその場追加（`inline-add`・`genre-picker`）／語義複製（`sense-cloner`）
-- ✅ Issue 79: **アノテーション・デッキ**（`/admin/annotation_deck`）… 1語コンソールと併存
-  - キューの先頭から既定10件をまとめて読み込み、**1回の送信でまとめて保存**（読み込みと保存の往復を 10 回 → 1 回に）
-  - カードは横一列（CSS の `scroll-snap`）。スマホは横スワイプ、PC は矢印・ドット・← → キーで送る（`deck`）
-  - 提案は開いた時点で全カードに反映済み。保存は語ごとに独立で、**通った語だけ公開**し、落ちた語はエラー付きでデッキに残る（`AnnotationDeckSave`）
-  - キューの規則（`?proposed` / `sort` / `review`）とマスタ読み込みは `Admin::AnnotationQueue`（concern）で1語コンソールと共有
-  - 提案欄の「新設候補の＋作成」もデッキで使える（2026-09-10）。デッキのフォームごと
-    `PATCH create_master` へ送り、送信内容から画面を組み直す（`AnnotationDeckForm`）ので**他カードの入力は消えない**
+詳細は [`data-model.md`](data-model.md)。カラム定義の正は `db/schema.rb`。
 
-- ✅ Issue 75: **収録リクエスト**（公開 `/requests/new` → 管理 `/admin/requests`）
-  - **公開側で唯一の書き込み経路**。1通に最大10語（行追加式）、連絡先欄は持たない
-  - 送信前の任意操作として「重複チェック」（`WordRequestDuplicateCheck`。既存 `Levenshtein` を流用し、
-    読みがあれば読み・無ければ表層形に当てる。公開語一覧は `Rails.cache` に載せる）
-  - 防御: ハニーポット / 時間トラップ（`WordRequestFormToken`）/ 送信は `word_requests` の
-    IP+`created_at` の COUNT で制限 / 重複チェックのみ Rails 標準の `rate_limit`
-  - 受付は環境変数 `REQUESTS_ENABLED`（既定 ON）で止められる
+- `words` : `word_senses` = **1 : 多**（同音異義語に対応）。
+- `genres` は**隣接リスト**（`parent_id`）で 大 → 中 → 小 の3階層。`word_senses.genre_id` は
+  **末端（小分類）のみ**を指し、中・大は親を辿って一意に導出する。
+- `linguistic_features` は `word_sense_features` 経由で語義と多対多。**単語の該当部分ごと**に付ける
+  （`target` / `target_reading` / `target_start`）。
+- `word_origins`（語種）も多対多（混種語に対応）。`word_sense_variants` は別表記。
+- 読み・表層形からの派生値は**すべて自動生成**する（SQL の STORED 生成カラム／Ruby の値オブジェクト／
+  `after_commit` での代表値の焼き直しの3通り）。
+- **公開されるのは `words.annotated_at` が立っている語だけ**。この日時が「収録日」として
+  公開面の日付・並び順にも使われる（`created_at` は使わない）。
 
-単語データは管理側の CRUD（`/admin/words`）・高速アノテーション（`/admin/annotations`・`/admin/annotation_deck`）・公開閲覧（`/words`）・検索（`/search`）まで実装済み。マスタのその場追加はコンソールで実現済み（Issue 10 相当）。
+## 5. 画面の一覧
 
-### 公開側のその他のページ（2026-08-11 時点）
-上の Issue 番号つきの一覧に載っていないものも含めた、現在ある公開ページ。
+### 公開側（誰でも閲覧可）
 
 | パス | 内容 |
 |---|---|
-| `/stats` | 収録統計（Issue 34）。`SiteStatistics` が8章ぶんを集計し `Rails.cache` に1日保持。紙面の正は [`docs/stats.md`](stats.md)。§1 のワードクラウド（形態素頻度）は事前集計（`bin/rails stats:morphemes` → `db/morpheme_frequencies.json`） |
-| `/rankings` | 各種ランキング（読みの長さ・円環交差数など）。指標は `words` に非正規化済み（[`performance-report.md`](performance-report.md)） |
-| `/browse` | 50音・読みの文字数の索引（Issue 22）。件数は `PublishedSenseCounts` でキャッシュ |
-| `/genres` | ジャンル階層のハブ（Issue 21）。同上 |
-| `/words/random` | ランダムに1語へ飛ぶ（Issue 57 の一部） |
-| `/words/:id/share_card.png` | 単語ごとの共有カード（og:image。Issue 29）。初回に rsvg-convert で焼いて `tmp/cache/share_cards` に置く。描画ツールか日本語の書体が無い環境では既定カードへ回す |
-| `/llms.txt` `/llms-full.txt` | サイト案内と全収録データ（Issue 24・73） |
-| `/about` `/privacy` | サイト情報・プライバシーポリシー（Issue 20・42） |
+| `/` | ホーム。サイト名の読みの円環 → 看板（検索）→ 今日の一語 → 新着 / 読みが長い |
+| `/words` | 単語一覧。絞り込み（ファセット）・並び替え・シャッフル・ページネーション |
+| `/words/:id` | 単語詳細。語義・関連データ・五十音円環・関連語・しりとりの次の一手 |
+| `/words/random` | ランダムに 1 語へ 302 |
+| `/words/:id/share_card.png` | 単語ごとの共有カード（og:image） |
+| `/search` | 詳細検索フォーム（13 条件）。実行すると条件付きの `/words` へ |
+| `/browse` | 50 音・読みの文字数の索引 |
+| `/genres` | ジャンル階層のハブ |
+| `/rankings` | 各種ランキング（読みの長さ・モーラ数・円環交差数など 11 種） |
+| `/stats` | 収録統計。数字の壁 ＋ 8 章。紙面の正は [`stats.md`](stats.md) |
+| `/requests/new` | 収録リクエスト（公開側で唯一の書き込み経路。`REQUESTS_ENABLED` で停止できる） |
+| `/about` `/privacy` | サイト情報・プライバシーポリシー |
+| `/words.json` `/words/:id.json` | 公開 JSON API（CC BY 4.0 表記つき） |
+| `/words.atom` | 新着単語の Atom フィード（注釈済み新着 20 件） |
+| `/llms.txt` `/llms-full.txt` | LLM 向けのサイト案内と、全収録データの全文版 |
+| `/sitemap.xml` `/robots.txt` | どちらも動的生成。`Sitemap:` 行は canonical ホストに連動 |
+| `/up` | ヘルスチェック（Rails 標準） |
 
-単語詳細には、関連語（`RelatedWords`）・しりとりの次の一手（`ShiritoriWords`）・五十音円環と交差数（`KanaRing`）が入っている。
-公開側はダークモード（OS 設定追従＋ヘッダーのトグル）に対応済み。
+公開側はダークモードに対応（OS 設定追従 ＋ ヘッダーのトグル）。
+アカウント機能（サインアップ・いいね等）は**今後も作らない**。
 
-## 6. 主要ファイル / ディレクトリ
-- `app/models/` … `admin` / `session` / `current` / `genre` / `word` / `word_sense` / `word_sense_feature` /
-  `entity_type` / `part_of_speech` / `linguistic_feature` / `word_origin` / `word_sense_origin`（語種の多対多）/
-  `word_sense_variant`（別表記）/ 値オブジェクト `char_type_pattern` / `rhythm_pattern` / `mora_count` / `vowel_pattern` /
-  `levenshtein`（読みの類似度）/ フォームオブジェクト `bulk_word_registration`（箇条書き一括登録の解析→登録）/
-  クエリオブジェクト `word_sense_search`（検索条件の組み立て）
-- `app/services/` … `reading_extractor`（MeCab CLI を Open3 で呼び、表層形→読みを自動取得）
-- `app/controllers/` … `application_controller` / `home_controller` / `sessions_controller` /
-  `words_controller`（公開閲覧の一覧・詳細）/ `searches_controller`（公開の検索・絞り込み）/
-  `admin/`（`base` / `words` / `genres`。管理者専用 CRUD。名前空間 `Admin` は `Admin` モデルが保持）/
-  `concerns/authentication.rb`（認証。閲覧公開は `allow_unauthenticated_access` で開放）
-- `app/javascript/controllers/` … Stimulus。`nested_form`（行の動的追加/削除）/ `genre_cascade`（大中小の依存選択）/
-  アノテーション用: `queue_nav`（キーボード送り）/ `inline_add`（マスタその場追加）/ `feature_range`（特徴の範囲タップ）/
-  `genre_picker`（ジャンル段階表示＋その場追加）/ `sense_cloner`（語義の複製追加）/
-  `deck`（まとめて注釈のカード送りと完了数の集計）
-- `db/schema.rb` … スキーマの正（直接編集せずマイグレーション経由で更新）
-- `db/seeds.rb` … 管理者とマスタを冪等に投入。マスタの名前リストとリネーム追従マップは
-  `app/models/seed_catalog.rb` が単一の正（タグ統括管理の「seed」印と共有。運用ルールも同ファイル参照）
-- `config/locales/ja.yml` … 既定ロケール `:ja`。表示文言はここに集約（ハードコードしない）
-- `docs/` … `overview.md`(本書) / `schema.sql` / `issues.md` / `genres.md` /
-  [`performance-report.md`](performance-report.md)（速度のボトルネック調査と対処の記録。
-  並び替え・ランキングの指標を `words` に非正規化した経緯、全件出力のキャッシュ設計、
-  残課題。**速度の話に手を付ける前にこれを読む**）
+### 管理側（`/admin` 配下・認証必須）
 
-## 7. ローカル開発環境の立ち上げ（重要・非自明）
-ローカルの MariaDB では `utf8mb4_0900_ai_ci` が使えないため、
-**CI/本番と同じ MySQL 8.4 を Docker で用意**して接続する。
-```bash
-docker compose up -d          # MySQL 8.4 を起動（ホスト側ポート 3307。既存 3306 と競合回避）
-bin/rails db:prepare          # DB 作成・マイグレーション・seed
-bin/rails server              # 起動
+| パス | 内容 |
+|---|---|
+| `/admin` | ダッシュボード。収録状況と各画面への入口 |
+| `/admin/words` | 一覧（検索・注釈状態/タグの絞り込み・一括適用・削除） |
+| `/admin/words/new` | **一括登録（3ステップ）**: 入力（箇条書き）→ 読み → 重複チェック → 登録 |
+| `/admin/annotations` | **アノテーション・コンソール**（1 語集中キュー。保存して次へ） |
+| `/admin/annotation_deck` | **アノテーション・デッキ**（既定 10 件をまとめて開き、1 回の送信で保存） |
+| `/admin/annotation_proposals` | Claude Code 連携。調査用データの書き出し／提案 JSON の取り込み |
+| `/admin/bulk_proposal_approval` | 厳格ゲートを満たす提案の一括承認（プレビュー → 承認・公開） |
+| `/admin/tags` | **タグ統括管理**。5 種のマスタの一覧・リネーム・削除・統合 |
+| `/admin/requests` | 公開側から届いた収録リクエストの確認・一括処理 |
+
+- 管理画面は**「しずか」を引き継がない**。HTML は公開側と共有したまま、`body.is-admin` の下で
+  トークンだけ上書きする（[`design.md`](design.md) §10）。
+- 単語の編集画面は無い。表層形の訂正も含めてアノテーション・コンソールに統合済み。
+
+## 6. コードの地図
+
 ```
-- `config/database.yml` の development/test は既定で `127.0.0.1:3307` に接続
-  （`DATABASE_HOST` / `DATABASE_PORT` で上書き可）。production は従来どおり socket + 環境変数。
+app/models/          ActiveRecord ＋ 値オブジェクト ＋ フォーム/クエリオブジェクト
+  ├ 本体            word / word_sense / word_sense_feature / word_sense_origin / word_sense_variant
+  ├ マスタ          genre / entity_type / part_of_speech / linguistic_feature / word_origin
+  ├ 認証            admin / session / current
+  ├ 値オブジェクト  char_type_pattern / rhythm_pattern / vowel_pattern / mora_count / last_char /
+  │                 levenshtein / search_regexp / kana_ring / kana_row / radial_chart / word_sort /
+  │                 word_ranking / share_card_typesetter / word_share_card
+  ├ クエリ/集計      word_sense_search / site_statistics / published_sense_counts / word_sense_metrics /
+  │                 related_words / shiritori_words / morpheme_cloud / morpheme_frequencies
+  ├ アノテーション   annotation_proposal / annotation_proposal_import / proposal_application /
+  │                 annotation_masters / annotation_deck_form / annotation_deck_save /
+  │                 bulk_annotation / bulk_proposal_approval / proposed_master_creation /
+  │                 annotation_research_export / feature_research_export / reannotation_export
+  ├ リクエスト      word_request / word_request_item / word_request_duplicate_check / word_request_form_token
+  └ その他          seed_catalog（マスタ seed の単一の正）/ tag_kind / linguistic_feature_glossary
+app/services/        reading_extractor（MeCab CLI）/ morpheme_extractor / share_card_renderer（rsvg-convert）
+app/controllers/     公開（words / searches / browse / genres / rankings / stats / pages / llms /
+                     sitemaps / robots / word_requests / home）＋ admin/ 名前空間
+app/javascript/      Stimulus のみ（importmap）。1 コントローラ 1 目的
+app/assets/          手書き CSS（tokens → base → layout → components ＋ admin / annotate）
+db/schema.rb         スキーマの正（マイグレーション経由で更新）
+db/seeds.rb          管理者とマスタを冪等に投入（名前リストは SeedCatalog が単一の正）
+db/morpheme_frequencies.json  統計 §1 ワードクラウドの事前集計結果（コミットするデータファイル）
+config/locales/ja.yml 表示文言（ハードコードしない）
+config/linguistic_features_glossary.yml  言語学的特徴の用語解説（seed のマスタ名と 1 : 1）
+lib/tasks/           backfill（派生値の再生成・検証）/ stats（形態素頻度）/ dev_samples（開発用ダミー）
+script/og_default.py 既定の共有カード public/og-default.png の生成
+tools/claude-ai-skill/build.sh  claude.ai 用の /reannotation スキル束を生成
+```
 
-### 一括登録（3ステップ）と読みの自動取得
-- 管理者の一括登録（`/admin/words/new`）は3ステップ: **入力**（箇条書き）→ **読み**（step2）→ **重複**（step3）→ 登録。
-  画面上部にフェーズ表示（`_steps.html.erb`）。重複判定は step2 で確定した読みに対して行う（誤読の取りこぼし防止）。
-- step2 は箇条書きの表層形から **MeCab CLI** で読みを自動取得する
-  （`app/services/reading_extractor.rb` が `mecab -Oyomi` を Open3 で呼ぶ）。
-- 辞書は既定で **mecab-ipadic-neologd**。環境変数 `MECAB_DICT` でパスを上書き可。辞書が無ければ既定辞書へフォールバック。
-- **mecab が未インストールの環境では読みは空欄**になり、確認画面で手入力する（機能は止まらない）。
-- そのため **本番サーバ（Capistrano）と CI（GitHub Actions）で読みを自動取得するには、`mecab` 本体＋neologd 辞書の導入が別途必要**。
-  テストは `ReadingExtractor.call` をスタブするため mecab 無しでも通る。
+## 7. ローカル開発環境
 
-### 読み強化（オフライン調査 / アプリと切り離し）
-- MeCab は誤読しうる（例「花は桜木人は武士」の 人＝ヒト を ジン と誤読）。これを独立ソースで正すため、
-  **オフライン調査スキル** `.claude/skills/word-reading-research/` を用意（アプリの実行時には LLM/API を呼ばない方針）。
-- 使い方: 別セッションの Claude Code に単語（表層形のみ）を渡すと、Web検索で裏取りして「最も一般的な表記＋読み（カタカナ）」を
-  `schema.json` の形式で JSON 出力する。**MeCab の読みは入力に含めない**（追認バイアス回避）。
-- 調査系スキル（`/notation`・`/reading`・`/annotation`）の入出力ファイルは `research/inputs`・`research/outputs`
-  に置く（中身は gitignore 済み）。3つの流れは [`research/README.md`](../research/README.md) を参照。
-- 1語だけ注釈をやり直す `/reannotation` は例外で、**JSON を会話に貼って起動し、結果もチャットに返す**
-  （携帯から回すため）。入力はアノテーション・コンソールの「再調査用JSON →」（`ReannotationExport`）でコピーする。
-  claude.ai（スマホアプリ含む）の素のチャットで使うバンドルは `bash tools/claude-ai-skill/build.sh` で
-  リポジトリの原本から生成する（出力は `tmp/nagai-kotoba-reannotation.zip`。原本を直したら再実行して差し替える）。
-- step2 の「調査結果（JSON）を反映」欄にその JSON を貼ると、MeCab の暫定読みと突き合わせて行ごとに
-  一致／不一致／調査のみを表示し、候補チップ（Stimulus `reading-choice`）で読みを確定できる。
-- 管理者は seed が credentials / 環境変数から作成する。ローカルで任意の値にするには:
-  ```bash
-  ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed   # ローカル DB のみに反映
-  ```
+ローカルの MariaDB では `utf8mb4_0900_ai_ci` が使えないため、**CI・本番と同じ MySQL 8.4 を
+Docker で用意**して接続する。
 
-### 単語の共有カード（og:image）の描画
-- 単語詳細の og:image は語ごとの共有カード（`/words/:id/share_card.png`）。`ShareCardRenderer` が **rsvg-convert（librsvg の CLI）** で SVG を PNG に焼き、`tmp/cache/share_cards` に置いて使い回す。
-- 焼くには **rsvg-convert と日本語の書体**が要る（Ubuntu: `librsvg2-bin` / `fonts-noto-cjk`）。どちらかが無い環境（CI・既定のローカル）では og:image は `og-default.png` のままで、機能は止まらない。
-  **本番サーバには 2026-09-15 に導入済み**。入れ直したときは Puma を再起動する（有無の判定はプロセスごとに 1 回）。
-- sudo の無い環境で本番と同じ描画を試すには、パッケージを展開して使う（本番と同じ Ubuntu 22.04 の版が取れる）:
+```bash
+docker compose up -d   # MySQL 8.4 を起動（ホスト側 3307。既存 3306 との衝突を避けるため）
+bin/rails db:prepare   # DB 作成 → マイグレーション → seed
+bin/rails server
+```
+
+- development / test は既定で `127.0.0.1:3307`（`DATABASE_HOST` / `DATABASE_PORT` で上書き可）。
+  production は socket ＋ 環境変数。
+- 管理者をローカルで任意の値にする: `ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed`
+- デザイン確認用のダミーデータ: `bin/rails dev:sample_data`（開発環境専用・冪等）
+- **開発環境はキャッシュが既定で無効**（`:null_store`）。`/stats`・`/rankings`・`/llms-full.txt`
+  が「本番より遅い」ときはまずこれを疑う。`bin/rails dev:cache` で本番相当に切り替わる。
+
+### 任意の外部コマンド（無くても機能は止まらない）
+
+| コマンド | 使う場所 | 無いとどうなるか |
+|---|---|---|
+| `mecab`（＋ mecab-ipadic-neologd） | 一括登録 step2 の読み自動取得（`ReadingExtractor`） | 読みが空欄になり、確認画面で手入力する |
+| `mecab`（既定辞書 ipadic） | 統計 §1 の形態素頻度の事前集計（`bin/rails stats:morphemes`） | 集計を更新できない（本番は JSON を読むだけなので影響なし） |
+| `rsvg-convert` ＋ 日本語の書体 | 単語ごとの共有カード（`ShareCardRenderer`） | og:image が既定カード `og-default.png` のままになる |
+
+- 読みの取得は **neologd**、形態素の分解は**既定辞書**を使う。neologd は「涼宮ハルヒの憂鬱」を
+  丸ごと 1 語で持つので、部品を数える用途では逆効果になる（目的が逆なので辞書の選択も逆）。
+- 辞書の場所は `MECAB_DICT` で上書きできる。無ければ既定辞書へフォールバックする。
+- これらに依存するテストは、コマンドが無い環境では skip する（CI もこの扱い）。
+- **本番サーバには rsvg-convert と Noto CJK を導入済み**（2026-09-15）。入れ直したら Puma を
+  再起動する（有無の判定はプロセスごとに 1 回だけ行うため）。
+- sudo の無い環境で本番と同じ描画を試すには、パッケージを展開して使う:
+
   ```bash
   apt-get download librsvg2-bin fonts-noto-cjk
   dpkg-deb -x librsvg2-bin_*.deb rsvg && dpkg-deb -x fonts-noto-cjk_*.deb fonts
@@ -187,9 +188,33 @@ bin/rails server              # 起動
   #             <include ignore_missing="yes">/etc/fonts/fonts.conf</include></fontconfig>
   PATH="$PWD/rsvg/usr/bin:$PATH" FONTCONFIG_FILE="$PWD/fonts.conf" bin/rails server
   ```
-- テスト: 実際に焼くテスト（`ShareCardRendererTest`）は rsvg-convert と書体がある環境だけで走り、無ければ skip する（mecab と同じ扱い）。
 
-## 8. コミット前の必須チェック（CI と同一）
+## 8. 環境変数
+
+| 変数 | 既定 | 効果 |
+|---|---|---|
+| `INDEXING_ENABLED` | 未設定 | **未設定 = 全ページ noindex**。設定すると通常ページの robots メタが消える（解禁スイッチ） |
+| `REQUESTS_ENABLED` | `true` | `false` で収録リクエストの受付を止め、導線ごと隠す |
+| `CANONICAL_HOST` | `https://nagai-kotoba-database.jp` | canonical / OGP / sitemap の絶対 URL の基点（末尾スラッシュ無し） |
+| `GA4_MEASUREMENT_ID` | 未設定 | 設定すると GA4 の gtag を出力する（Turbo 対応の page_view 送信） |
+| `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
+| `MECAB_DICT` | 未設定 | MeCab の辞書パス。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
+| `DATABASE_HOST` / `DATABASE_PORT` | `127.0.0.1` / `3307` | development / test の接続先（CI は 3306） |
+| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | — | リポジトリの `database.yml` と `deploy.rb` が参照するが、**本番では使われていない**（下記） |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | credentials | `db:seed` が作る管理者。環境変数が優先 |
+| `RAILS_MASTER_KEY` | `config/master.key` | credentials の復号鍵 |
+| `WEB_CONCURRENCY` | `1` | Puma のワーカー数。**増やすとキャッシュと `rate_limit` が worker 間で分裂する**（`:memory_store` のため） |
+| `SURFACES_FILE` | 未設定 | `bin/rails stats:morphemes` に本番相当の入力（1 行 1 語）を渡す |
+
+本番はこれらを Puma の systemd unit（override.conf）に置いている。
+
+> **本番 DB の接続情報は環境変数ではない。** `config/database.yml` は Capistrano の `linked_files`
+> に入っているので、本番で読まれるのは**サーバ上の共有ファイル**で、そこにパスワードが直書きされている。
+> リポジトリ側の `production:` ブロックと `deploy.rb` の `default_env` は実質使われていない
+> （2026-09-16 に確認。[`issues.md`](issues.md) 確定事項 28）。
+
+## 9. コミット前の必須チェック（CI と同一）
+
 ```bash
 bundle exec rubocop
 bundle exec brakeman --no-pager
@@ -198,7 +223,13 @@ bin/importmap audit
 bin/rails test test:system
 ```
 
-## 9. 進め方の規約
-- **1 Issue = 1 ブランチ = 1 PR** を原則とする（[`docs/issues.md`](issues.md) 参照）。
-- ブランチ名は `feature/<内容>`。**Issue/PR 番号は入れない**（Issue と PR で採番カウンタが共通のためズレる）。
-- 返答・コミットメッセージ・コードコメントは日本語。
+これが通らないコードは「未完成」とみなす。システムテストは WSL では Chrome の版まわりで
+不安定になりやすいので、実行方法は `CLAUDE.md` とセッションのメモを参照する。
+
+## 10. 進め方の規約
+
+- **1 Issue = 1 ブランチ = 1 PR** を原則とする（[`issues.md`](issues.md)）。
+  小粒な改善は Issue を立てずに PR だけで進めてよい（その場合も完了記録は `issues.md` に残す）。
+- ブランチ名は `feature/<内容>`。**Issue / PR 番号は入れない**（Issue と PR で採番カウンタが
+  共通なので、付けた番号が必ずずれる）。
+- 返答・コミットメッセージ・コードコメントは**日本語**。
