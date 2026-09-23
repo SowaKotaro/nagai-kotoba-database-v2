@@ -53,8 +53,10 @@ class WordsController < ApplicationController
     # format.html? での判定は Accept: */*(curl・クローラ)が false になり、
     # HTML テンプレートだけ描画されて 500 になるため使わない。
     unless request.format.json?
-      @related_word_groups = RelatedWords.new(@word).groups
-      @shiritori = ShiritoriWords.new(@word)
+      # 両区画の語は WordBatch で1回にまとめて読み込む(Issue 87)
+      batch = WordBatch.new
+      @related_word_groups = RelatedWords.new(@word, batch: batch).groups
+      @shiritori = ShiritoriWords.new(@word, batch: batch)
     end
   end
 

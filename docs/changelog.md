@@ -309,6 +309,7 @@
 - **Issue 98: 小粒のコード改善** [improvement] — 完了(PR #153)。`resource :session` を `only: %i[new create destroy]` に(存在しない `update` へのルートを削除)／`--success` に「面の上に置かない」を注記／`SearchRegexp#valid_syntax?` の判定を `Rails.cache` に1日覚える／`.figure-number` の `font-weight: 700` を `@supports (-webkit-text-stroke)` の内側へ移し、線で描けない環境では 400 の塗りにする。
   - **見送った 2 件**: `WordSenseSearch#unknown_master_ids?` の COUNT 統合(指定された軸の数しか走らず、通常は 1 本)と、`admin/annotations#set_navigation` の前後だけの取得(並べ替え〈Issue 67〉の多列ソートで前後を引くのは書き換えのリスクに見合わず、キューも高々数百件)。
 - **Issue 86: 関連語・しりとりが常に「最小 id の6件」を返す** [improvement] — 完了(PR #154)。`WordWindow` で**その語の id を起点に窓をずらして**6件取る(起点より大きい側 → 足りなければ先頭へ回り込む。決定的で、2 クエリともインデックスが効く)。関連語・しりとりのどちらかから一度でもリンクされる公開語が **56.7% → 100%**(開発 DB の公開 1,467 語で実測)。
+- **Issue 87: 単語詳細の SQL を減らす(関連語・しりとりの preload 重複)** [improvement] — 完了(PR #155)。区画ごとに `Word.where(id:).includes(...)` を引いていたのを、`WordBatch` に id を預けて**1回でまとめて読み込む**形に。ビューの `.any?` による `EXISTS` も消えた。`/words/51` で **31 本 → 21 本**(開発 DB)。30 語ぶんの HTML が変更前と完全一致することを確認。
 
 ---
 
