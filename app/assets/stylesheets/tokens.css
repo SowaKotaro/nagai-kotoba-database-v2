@@ -96,7 +96,9 @@
      同じ「静けさ」を明度だけ反転させる。青みをわずかに残した濃色。 */
   --dark-bg: #191d22;
   --dark-bg-soft: #12161a;
-  --dark-bg-tint: #1c2530;
+  /* 選択中の面は --dark-surface より明るい側に置く(暗い側だと面の上で沈む)。
+     --dark-surface との差 ΔRGB 22・--dark-text-subtle を載せて 4.55:1(2026-09-23 実測。Issue 93) */
+  --dark-bg-tint: #242e40;
   --dark-surface: #232930;
   --dark-text: #e3e7ea;
   --dark-text-muted: #98a0a5;
