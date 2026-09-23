@@ -13,9 +13,13 @@ class ShiritoriWords
   # しりとりが終わる文字(基本46字へ畳んだ表記)。
   DEAD_END_CHAR = "ン"
 
-  def initialize(word)
+  # batch を関連語(RelatedWords)と共有すると、両区画の語を1回で読み込む(Issue 87)。
+  # そのため候補の id はここで確定させて預けておく(描画より前に預けないと2回読みになる)。
+  def initialize(word, batch: WordBatch.new)
     @word = word
+    @batch = batch
     @sense = word.word_senses.min_by(&:id)
+    @word_ids = @batch.reserve(candidate_word_ids)
   end
 
   # 次の一手の起点になる文字(= 代表語義の末尾文字)。語義が無ければ nil。
@@ -35,21 +39,15 @@ class ShiritoriWords
 
   # 次の一手の候補(該当が無ければ空)。
   def words
-    @words ||= load_words
+    @batch.words_for(@word_ids)
   end
 
   private
 
-  def load_words
-    return Word.none if head_char.blank? || dead_end?
+  def candidate_word_ids
+    return [] if head_char.blank? || dead_end?
 
     candidates = WordSense.published.first_char_is(head_char).where.not(word_id: @word.id)
-    word_ids = WordWindow.word_ids(candidates, pivot_id: @word.id, limit: LIMIT)
-    return Word.none if word_ids.empty?
-
-    # 一覧行(words/_entry_row)がジャンルのパンくず・エンティティも出すので先読みする
-    Word.where(id: word_ids)
-        .includes(word_senses: [ :entity_type, { genre: { parent: :parent } } ])
-        .order(:surface)
+    WordWindow.word_ids(candidates, pivot_id: @word.id, limit: LIMIT)
   end
 end

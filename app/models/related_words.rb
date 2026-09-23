@@ -2,15 +2,20 @@
 # 代表(最小id)の語義を起点に、同じ小分類ジャンル / 同じ読みの文字数 の語を
 # 各数件返す。自身は除外し、インデックス済みカラムのみ・決定的な順序で引く。
 # どの数件を出すかは語ごとに窓をずらす(WordWindow。Issue 86)
-# (N+1 を避けるため関連は includes 済み)。
+# 語の読み込みは WordBatch に預け、しりとりの区画とまとめて1回で引く(Issue 87)。
 # 「同じ先頭文字」は語義カードの末尾文字タグと ShiritoriWords が担うため持たない。
 class RelatedWords
   LIMIT = 6
 
-  Group = Struct.new(:key, :facet_params, :words)
+  Group = Struct.new(:key, :facet_params, :word_ids, :batch) do
+    def words
+      batch.words_for(word_ids)
+    end
+  end
 
-  def initialize(word)
+  def initialize(word, batch: WordBatch.new)
     @word = word
+    @batch = batch
     @sense = word.word_senses.min_by(&:id)
   end
 
@@ -18,7 +23,7 @@ class RelatedWords
   def groups
     return [] if @sense.nil?
 
-    [ genre_group, reading_length_group ].compact
+    @groups ||= [ genre_group, reading_length_group ].compact
   end
 
   private
@@ -43,10 +48,6 @@ class RelatedWords
     word_ids = WordWindow.word_ids(sense_scope, pivot_id: @word.id, limit: LIMIT)
     return nil if word_ids.empty?
 
-    words = Word.where(id: word_ids)
-                # 一覧行(words/_entry_row)がジャンルのパンくずを出すので、祖先まで先読みする
-                .includes(word_senses: [ :entity_type, { genre: { parent: :parent } } ])
-                .order(:surface)
-    Group.new(key, facet_params, words)
+    Group.new(key, facet_params, @batch.reserve(word_ids), @batch)
   end
 end
