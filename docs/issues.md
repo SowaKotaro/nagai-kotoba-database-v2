@@ -40,21 +40,6 @@
 
 # 未完了イシュー(優先度順)
 
-## Issue 84: 文書整理で見つかったコードの古い記述を掃除する
-- 種別: improvement
-- 状態: 未着手(**次に着手**。2026-09-16 オーナー指示「次の PR でまとめて処理しましょう」)
-- 優先度: P2 ／ Impact: Low ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-09-16 の文書整理で、**コード側のコメント・設定に、実態と食い違う記述が残っている**ことが分かった。いずれも動作には影響しないが、次に読む人(と Claude)を誤らせる。
-- 内容:
-  - [ ] `config/routes.rb`: 削除済みの `/admin/design_mocks` の説明コメントが残り、直後のタグ統括管理のコメントと繋がって読めてしまう
-  - [ ] 廃止した呼び名**「蔵版目録」**を消す(2026-09-16 オーナー判断で完全廃止)。`config/routes.rb` / `app/controllers/stats_controller.rb` / `app/views/shared/_header.html.erb` / `app/views/stats/_number_wall.html.erb`
-  - [ ] `config/locales/ja.yml`: 撤去済みの画像プレースホルダのコメント(「全幅の画像帯(4枚)」など)が孤立して残っている
-  - [ ] `app/assets/stylesheets/components.css`: 「4.65s → 2.2s へ速めた」というコメントが実際の値(4650ms)と食い違う。**4.65 秒が正**(2026-09-16 オーナー判断)なのでコメントの方を直す
-  - [ ] `app/models/seed_catalog.rb` L234: 参照先を `config/linguistic_feature_glossary.yml` と書いているが、実ファイルは `linguistic_features_glossary.yml`(複数形)
-  - [ ] `.gitignore`: `research/` の作業ファイルを `/research/.tmp-*` で除外しているが `research/.harvest_check_tmp.txt` が漏れている。パターンを足すか、ファイル名を `.tmp-` 始まりに揃える
-- 期待効果: コメントを信じて間違った前提で作業する事故の防止。**ロジックは変えない**。
-
 ## Issue 85: ジャンル一覧ドキュメントの自動生成と差分検出
 - 種別: improvement
 - 状態: 未着手(方式はオーナー承認済み。**CI に手を入れるので着手前に内容を説明する**)
@@ -409,21 +394,6 @@
   - [ ] `/rankings` の各板の HTML(集計は `WordRanking#top` で `Rails.cache` 済み、描画は毎回)
   - [ ] 検証は `ActionController::Base.cache_store` を差し替えて行う
 - 期待効果: 描画に CPU を握られている画面の2回目以降を軽くする。
-
-## Issue 98: 小粒のコード改善(存在しないルート・トークン注記・クエリの無駄)
-- 種別: improvement
-- 状態: 未着手(**Issue 84 と同じ PR でまとめて片付けてよい**)
-- 優先度: P2 ／ Impact: Low ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-09-17 の改善調査(C-4〜C-9)より。いずれも単独で番号を取るほどではないが、見つけたものを散逸させないために1つに束ねる。
-- 内容:
-  - [ ] **C-4** `config/routes.rb:2` の `resource :session` を `only: %i[new create destroy]` にする(存在しない `sessions#update` へ `PATCH/PUT /session` が向いている。公開済みの URL は変わらない)
-  - [ ] **C-5** `--success` は面の上で AA 未達(白地 4.89:1 / `--bg-soft` 上 4.08:1)。`tokens.css:27` のコメントに「面の上に置かない」を書き、`--chart` と同じ扱いにする
-  - [ ] **C-6** `SearchRegexp#valid_syntax?`(`search_regexp.rb:50`)が検索のたびに `SELECT '' REGEXP ?` を投げる。同一パターンはプロセス内で覚える
-  - [ ] **C-7** `WordSenseSearch#unknown_master_ids?`(`word_sense_search.rb:156`)がマスタ種別ごとに `COUNT` を最大5本発行する。1クエリにまとめる
-  - [ ] **C-8** `admin/annotations#set_navigation`(`annotations_controller.rb:190`)がキューの全 id を毎回 pluck する。前後の語だけを2クエリで引く
-  - [ ] **C-9** `.figure-number` だけ `font-weight: 700`(`components.css:1888`)。`-webkit-text-stroke` 非対応環境では太字の塗りとして出て design.md §2 と食い違う。フォールバック時は 400 に落とすか、design.md に例外として明記するかを決める
-- 期待効果: 小さな食い違いと無駄なクエリの解消。
 
 ## Issue 99: スキップリンクを置く
 - 種別: improvement

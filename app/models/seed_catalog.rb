@@ -231,7 +231,7 @@ class SeedCatalog
   # 方針: 傘語(音便 など)は置かず、具体的な種類(葉)だけを並べる。
   #   ― 音便は4種に分ける。オノマトペは擬音語/擬態語の2種とし、上位語が認知されやすいため
   #     ラベルに「オノマトペ(...)」を残す(この項目だけの例外)。
-  # 特徴を追加したら用語解説(config/linguistic_feature_glossary.yml)も更新すること。
+  # 特徴を追加したら用語解説(config/linguistic_features_glossary.yml)も更新すること。
   LINGUISTIC_FEATURES = [
     # --- 読みの変化(連濁系) ---
     "連濁",        # 例: 硫黄島(いおうジマ) ― 後部要素の頭が濁音になる
