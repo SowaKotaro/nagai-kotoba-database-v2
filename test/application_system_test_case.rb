@@ -132,7 +132,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     visit new_session_path
     fill_in "username", with: admin.username
     fill_in "password", with: password
-    click_on I18n.t("sessions.new.submit")
+    # ネイティブクリックだと送信ボタンに届かずログイン画面に留まることがある(2026-09-23 に再現)。
+    # 送信は何度押しても結果が同じとは限らない(遅れて届くと二重送信になる)ので、JS の click() だけで押す。
+    execute_script("arguments[0].click()", find_button(I18n.t("sessions.new.submit")))
     # ログイン完了(リダイレクト)を待ってから次の操作へ進む
     assert_no_current_path new_session_path
   end
