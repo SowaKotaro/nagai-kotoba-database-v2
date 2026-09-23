@@ -1,6 +1,6 @@
 ---
 name: word-expansion-research
-description: nagai-kotoba-database-v2 の収録語を増やすための「単語の補完・補足」オフライン調査。research/inputs/expansion.txt(種語のリスト)を読み、各語の上位概念(作品・アーティスト・シリーズ等)を WebSearch で突き止め、そこから取れる収集軸のうち最も有望なものを自ら選定した上で、同じ上位概念・同じ軸に属する単語(例: 泥門デビルバッツ → アイシールド21 の他のチーム名)をまとめて収集し、research/outputs/expansion.txt に書き出す。有望な軸が無い種語は無理に拡張しない。「単語を補完して」「同じ系統の単語を集めて」「この単語の仲間を一気に取ってきて」「research/inputs/expansion.txt を調べて」と言われたときに使う。表記の正規化・読み・注釈は扱わない(それらは word-notation-research / word-reading-research / word-annotation-research)。
+description: nagai-kotoba-database-v2 の収録語を増やすための「単語の補完・補足」オフライン調査。research/inputs/expansion.txt(種語のリスト)を読み、各語の上位概念(作品・アーティスト・シリーズ等)を WebSearch で突き止め、そこから取れる収集軸のうち最も有望なものを自ら選定した上で、同じ上位概念・同じ軸に属する単語(例: 泥門デビルバッツ → アイシールド21 の他のチーム名)をまとめて収集し、research/outputs/expansion.txt(人が読む版)と expansion.json(管理画面「登録予定単語」に取り込む版)に書き出す。有望な軸が無い種語は無理に拡張しない。「単語を補完して」「同じ系統の単語を集めて」「この単語の仲間を一気に取ってきて」「research/inputs/expansion.txt を調べて」と言われたときに使う。表記の正規化・読み・注釈は扱わない(それらは word-notation-research / word-reading-research / word-annotation-research)。
 ---
 
 # 単語の補完・補足（候補の一括収集・オフライン）
@@ -15,8 +15,11 @@ nagai-kotoba-database-v2 に**まだ登録されていない単語の候補を�
 ## フロー
 1. **入力**: `research/inputs/expansion.txt` を読む。1行＝1語（種語）。
    行頭の番号/記号（`1.` `-` `・`）は無視。空行は無視。表層形はスペースを含みうる（例「Dead by Daylight」）＝**行全体を1語**として扱う。
+   **行頭が `#<数字>`（例 `#123 泥門デビルバッツ`）のときは、その数字を種語の ID として控え、残りを種語とする**
+   （管理画面「登録予定単語」の書き出し形式。ID は JSON 出力でそのまま返す）。
 2. **調査**: 種語ごとに 上位概念 → 収集軸の選定 → 同系統の語 の順に WebSearch で調べる（下記）。
-3. **出力**: `research/outputs/expansion.txt` に書き出す（**上書き**）。
+3. **出力**: `research/outputs/expansion.txt`（人が読む版）と `research/outputs/expansion.json`（管理画面に取り込む版）の
+   **2つ**を書き出す（どちらも**上書き**）。
 
 ## 調べること / 調べないこと
 - **調べる**: 種語と**同じ系統の未登録語（候補）を列挙すること**だけ。
@@ -132,7 +135,34 @@ NASA エイリアンズ（欧文表記が混在。表記確定が必要）
   アルバム名の軸も同様に短い。有望な軸が無いため無理に拡張しない。
 ```
 
+## 取り込み用 JSON（`research/outputs/expansion.json`）
+
+管理画面「登録予定単語」の各段の画面（expand / notation）に貼るための JSON。**説明文は入れず JSON だけ**を書く。
+txt と同じ内容を、種語ごとに束ねて書く。
+
+```json
+{
+  "version": "1",
+  "seeds": [
+    {
+      "id": 123,
+      "input": "泥門デビルバッツ",
+      "words": ["泥門デビルバッツ", "神龍寺ナーガ", "白秋ダイナソアーズ"],
+      "note": "上位概念: 漫画『アイシールド21』/ 軸: チーム名 / confidence: high"
+    },
+    { "id": 124, "input": "初恋クレイジー", "words": [], "note": "拡張見送り: 有望な軸なし" }
+  ]
+}
+```
+
+- `id`: 入力行頭の `#<数字>`。**入力にあった ID は必ずすべて返す**（拡張を見送った種語も `words: []` で返す。
+  返さなかった種語は管理画面で「結果の無い語」として expand の段に残ったままになる）。入力に ID が無い行は `id` を省く（取り込めない）。
+- `input`: 入力の種語そのまま。
+- `words`: txt 上部リストのうちその種語から集めた語（**種語自身を含めてよい**。取り込み側で除く）。
+  **除外した語は入れない**（`--- 除外した語 ---` は txt にだけ書く）。
+- `note`: 系統・注記を1〜2文で（上位概念・収集軸・confidence・他に取れる軸）。管理画面のメモに入る。
+
 ## この後の流れ
-候補リスト（`research/outputs/expansion.txt` 上部）は、そのまま `word-notation-research` の入力
-`research/inputs/notation.txt` に渡す（**補完 → 表記 → 読み → 登録 → 注釈**）。
-表記の正規化・読みの確定・重複チェックはすべて後工程が担う。
+`research/outputs/expansion.json` を管理画面「登録予定単語」の expand の画面（`/admin/candidates/expand`）に貼る。
+集めた語が種語の下に並んで入る（すでに入っている語・収録済みの語は取り込み側が弾く）。
+以降の 選別 → duplicate → notation（`/notation`）は管理画面の流れに沿って進める。

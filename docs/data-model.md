@@ -24,6 +24,9 @@ words ──< word_senses                       表層形 1 : 多 語義（同�
 
 word_requests ──< word_request_items        公開側からの収録リクエスト（1 通 : 多 語）
 
+word_candidates ──> word_candidates (seed_id) 登録予定単語（/expand で生えた語は元の語を指す）
+                ──> words (word_id)           登録済みになった語
+
 genres ──< genres (parent_id)               大 → 中 → 小 の隣接リスト（自己参照）
 ```
 
@@ -46,6 +49,7 @@ genres ──< genres (parent_id)               大 → 中 → 小 の隣接リ
 | `word_sense_variants` | 別表記。語義に 1 : 多。読みも変わりうるので `reading` を持つ |
 | `annotation_proposals` | Claude Code の調査結果の下書き。`payload`（JSON）と `status`。語に 1 件（`UNIQUE(word_id)`） |
 | `word_requests` / `word_request_items` | 公開側からの収録リクエスト。通（送信 1 回 ＋ IP・UA・リファラー）と語（1 件 ＋ 状態）に分ける |
+| `word_candidates` | 登録予定単語。登録前の前処理（upload → expand → duplicate → notation → done → 登録済み。脇に 要判断 / 重複 / 不要）の段を `status` で持つ。expand で増えた語は `seed_id`（元の語）と `root_id`（系統の根）を持ち、一覧で元の語の直後に並ぶ。不要にした語も消さず、`UNIQUE(surface)` で「一度見た語」の集合を兼ねる |
 | `admins` / `sessions` | 管理者認証（`has_secure_password` ＋ セッション。ログインは `username`） |
 
 ### 語種は「外来語」で束ねない
@@ -163,6 +167,7 @@ bin/rails backfill:sense_metrics   # words の代表値を全件焼き直す
 | `word_senses` | `reading` / `first_char` / `last_char` |
 | `word_sense_variants` | `surface` / `reading` |
 | `word_request_items` | `surface` / `reading` |
+| `word_candidates` | `surface` / `original_surface` |
 
 - 生成カラムの照合順序は表の既定に従うため、`first_char` のように**明示が要る**。
 - 新しく読み・表層形を持つカラムを足すときは、**`as_ci` を明示すること**（忘れると清濁が畳まれる）。

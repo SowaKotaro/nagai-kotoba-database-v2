@@ -1,0 +1,8 @@
+<%# 調査スキルの出力 JSON の貼り付け欄(expand・notation の段で共用)。 %>
+<%= form_with url: url, method: :post do |form| %>
+  <div class="field">
+    <%= form.label :json, t("admin.word_candidates.import.json_label", output: output) %>
+    <%= form.text_area :json, value: @json, rows: 8, class: "bulk-input", placeholder: t("admin.word_candidates.import.json_placeholder") %>
+  </div>
+  <%= form.submit t("admin.word_candidates.import.submit"), class: "btn btn--sm" %>
+<% end %>

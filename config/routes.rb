@@ -68,6 +68,22 @@ Rails.application.routes.draw do
     resources :requests, only: :index, controller: "word_requests" do
       post :bulk, on: :collection
     end
+    # 登録予定単語の前処理。流れは upload → expand → duplicate → notation。
+    # 各段の画面(show)・調査結果の取り込み(import)・段の最後の「まとめて次へ」(update)。
+    # /candidates/:id(個別の編集)より前に置く(expand などを :id と取り違えないため)。
+    namespace :candidates do
+      resource :expansion, path: "expand", only: %i[show update] do
+        post :import
+      end
+      resource :duplicate_check, path: "duplicate", only: %i[show update]
+      resource :notation, path: "notation", only: %i[show update] do
+        post :import
+      end
+    end
+    # 一覧(絞り込み → 語を選んで処理)・upload(new/create)・表層形とメモの手直し(edit/update)。
+    resources :word_candidates, path: "candidates", only: %i[index new create edit update] do
+      post :bulk, on: :collection
+    end
     # Claude Code 連携(Issue 38): 調査用データの書き出しと、提案 JSON の取り込み。
     resources :annotation_proposals, only: %i[new create] do
       get :export, on: :collection

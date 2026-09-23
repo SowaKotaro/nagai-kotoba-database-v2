@@ -11,7 +11,8 @@ argument-hint: "[任意: 収集軸の指定（例 キャラクター名）／入
 - 引数の解釈: 引数が**ファイルパスに見えるなら入力パス**として使う。**それ以外の語句は収集軸**
   （例 `キャラクター名` `楽曲名` `必殺技名`）として使い、軸の選定をせずその軸で収集する。
   空なら既定（入力 `research/inputs/expansion.txt`／収集軸はスキルが調査して有望な軸を選定）。
-- 出力ファイル: `research/outputs/expansion.txt`（上書き）。
+- 出力ファイル: `research/outputs/expansion.txt` と `research/outputs/expansion.json`（どちらも上書き）。
+  入力行頭の `#<数字>` は管理画面の ID なので、JSON の `id` にそのまま返すこと。
 - `.claude/skills/word-expansion-research/SKILL.md` の手順に厳密に従うこと
   （上位概念の特定と収集軸の選定 → 実在する一覧を出典に列挙 → 4原則・明らかに短い語でふるい分け →
   1種語×1軸あたり30語の上限 → 出典URL と confidence 付きの注記）。

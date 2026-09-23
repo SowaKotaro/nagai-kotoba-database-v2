@@ -55,6 +55,12 @@
     <span class="admin-card__tag"><%= t("admin.dashboard.requests_tag", count: @pending_request_count) %></span>
   <% end %>
 
+  <%= link_to admin_word_candidates_path, class: "admin-card" do %>
+    <span class="admin-card__title"><%= icon "funnel" %><%= t("admin.dashboard.candidates_title") %></span>
+    <span class="admin-card__desc"><%= t("admin.dashboard.candidates_desc") %></span>
+    <span class="admin-card__tag"><%= t("admin.dashboard.candidates_tag", count: @candidate_in_progress_count) %></span>
+  <% end %>
+
   <%= link_to admin_tags_path, class: "admin-card" do %>
     <span class="admin-card__title"><%= icon "tag" %><%= t("admin.dashboard.tags_title") %></span>
     <span class="admin-card__desc"><%= t("admin.dashboard.tags_desc") %></span>

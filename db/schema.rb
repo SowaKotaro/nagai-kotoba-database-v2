@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_041734) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -68,6 +68,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_041734) do
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.index ["admin_id"], name: "index_sessions_on_admin_id"
+  end
+
+  create_table "word_candidates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "confidence", limit: 10, comment: "notation の確からしさ high / medium / low"
+    t.datetime "created_at", null: false
+    t.integer "entry_score", limit: 1, comment: "notation の立項スコア 1〜5"
+    t.datetime "expanded_at", comment: "expand の結果を取り込んだ時刻(expand で増えた語は作成時刻)"
+    t.datetime "notated_at", comment: "notation の結果を取り込んだ時刻"
+    t.string "note", limit: 1000, comment: "メモ(不要にした理由・調査の注記など)"
+    t.string "original_surface", null: false, collation: "utf8mb4_0900_as_ci", comment: "upload した時点の表層形"
+    t.bigint "root_id", comment: "expand の系統の根(一覧を「元の語 → 増えた語」の順に並べるため。根自身は NULL)"
+    t.bigint "seed_id", comment: "expand で増えた語の、元になった語"
+    t.integer "status", default: 10, null: false, comment: "10:upload 20:expand 30:duplicate 40:notation 50:done 60:登録済み 80:要判断 85:重複 90:不要"
+    t.datetime "status_changed_at", comment: "ステータスを最後に動かした時刻"
+    t.string "surface", null: false, collation: "utf8mb4_0900_as_ci", comment: "現在の表層形(notation で置き換わる)"
+    t.datetime "updated_at", null: false
+    t.bigint "word_id", comment: "一括登録で収録された語"
+    t.index ["root_id"], name: "idx_word_candidates_root"
+    t.index ["seed_id"], name: "idx_word_candidates_seed"
+    t.index ["status", "id"], name: "idx_word_candidates_status"
+    t.index ["surface"], name: "idx_word_candidates_surface", unique: true, length: 191
+    t.index ["word_id"], name: "idx_word_candidates_word"
   end
 
   create_table "word_origins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -211,6 +233,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_041734) do
   add_foreign_key "annotation_proposals", "words", name: "fk_annotation_proposals_word"
   add_foreign_key "genres", "genres", column: "parent_id"
   add_foreign_key "sessions", "admins"
+  add_foreign_key "word_candidates", "word_candidates", column: "root_id", name: "fk_word_candidates_root", on_delete: :nullify
+  add_foreign_key "word_candidates", "word_candidates", column: "seed_id", name: "fk_word_candidates_seed", on_delete: :nullify
+  add_foreign_key "word_candidates", "words", name: "fk_word_candidates_word", on_delete: :nullify
   add_foreign_key "word_request_items", "word_requests", name: "fk_word_request_items_request"
   add_foreign_key "word_sense_features", "linguistic_features", name: "fk_wsf_linguistic_feature"
   add_foreign_key "word_sense_features", "word_senses", name: "fk_wsf_word_sense"
