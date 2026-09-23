@@ -46,12 +46,15 @@ class SearchRegexp
   # 構文チェックは MySQL 自身に空文字を照合させて行う。
   # REGEXP は ICU の方言で Ruby の Regexp とは受け付ける構文がずれるため、
   # Regexp.new での事前検証だと通るはずの式を弾いたり、その逆が起きたりする。
+  # 同じ式の判定結果は変わらないので覚えておき、ページ送りのたびに問い合わせない。
   def valid_syntax?
-    ApplicationRecord.connection.select_value(
-      ApplicationRecord.sanitize_sql_array([ "SELECT '' REGEXP ?", for_reading ])
-    )
-    true
-  rescue ActiveRecord::StatementInvalid
-    false
+    Rails.cache.fetch([ "search_regexp/valid_syntax", for_reading ], expires_in: 1.day) do
+      ApplicationRecord.connection.select_value(
+        ApplicationRecord.sanitize_sql_array([ "SELECT '' REGEXP ?", for_reading ])
+      )
+      true
+    rescue ActiveRecord::StatementInvalid
+      false
+    end
   end
 end

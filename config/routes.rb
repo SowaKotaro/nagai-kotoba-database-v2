@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
-  resource :session
+  # SessionsController にあるのは new / create / destroy だけ。存在しない update へのルートを生やさない。
+  resource :session, only: %i[new create destroy]
 
   # 公開閲覧(誰でも閲覧可)。一覧・詳細と、詳細の共有カードのみ。書き込みは admin 名前空間に閉じる。
   # random は「ランダムに1語」導線。:id より前に来るよう collection で定義する。
@@ -24,7 +25,7 @@ Rails.application.routes.draw do
   # 50音・読みの文字数の索引(ブラウズ導線)。Issue 22。
   get "browse", to: "browse#index", as: :browse
 
-  # 収録統計「蔵版目録」(Issue 34)。数字と分布でコレクションを見せる公開ページ。
+  # 収録統計(Issue 34)。数字と分布でコレクションを見せる公開ページ。
   get "stats", to: "stats#index", as: :stats
 
   # 各種ランキングのハブ。枠ごとの「もっと見る」は words#index?sort=... へ渡す。
@@ -98,8 +99,6 @@ Rails.application.routes.draw do
       # 再調査用 JSON(現在の内容 + マスタ)をコピーする画面。
       get :reresearch, on: :member
     end
-    # デザイン案モック(知人への意見募集用)。DB に触らない完全静的のモックで、
-    # docs/design.md のデザインルールは適用しない(この配下だけの例外)。
     # タグ統括管理: マスタ(ジャンル/エンティティ/品詞/語種/特徴)の一覧・リネーム・削除・統合。
     # :kind は TagKind のホワイトリストで解決する(任意モデルを掴ませない)。
     resources :tags, only: :index

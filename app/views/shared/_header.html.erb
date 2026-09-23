@@ -33,7 +33,7 @@
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
         <%# ランキング。読みの長さをはじめ、さまざまな観点のランキングを束ねたハブ %>
         <%= link_to t("layouts.nav.ranking"), rankings_path, class: ("is-current" if request.path == rankings_path) %>
-        <%# 収録統計「蔵版目録」(Issue 34) %>
+        <%# 収録統計(Issue 34) %>
         <%= link_to t("layouts.nav.stats"), stats_path, class: ("is-current" if request.path == stats_path) %>
 
         <%# 「検索」はプルダウン。配下にジャンル・索引・詳細検索を束ねる %>

@@ -46,4 +46,26 @@ class SearchRegexpTest < ActiveSupport::TestCase
   test "長さの判定は構文チェックより先(長い壊れた式でも :too_long)" do
     assert_equal :too_long, SearchRegexp.new("(#{'ア' * SearchRegexp::MAX_LENGTH}").error
   end
+
+  test "同じ式の構文チェックは覚えておき、2回目は MySQL に問い合わせない(壊れた式も同じ)" do
+    with_memory_cache do
+      assert_nil SearchRegexp.new("^ア.*ン$").error
+      assert_equal :syntax, SearchRegexp.new("(ア").error
+
+      assert_no_queries do
+        assert_nil SearchRegexp.new("^ア.*ン$").error
+        assert_equal :syntax, SearchRegexp.new("(ア").error
+      end
+    end
+  end
+
+  private
+
+  def with_memory_cache
+    original = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    Rails.cache = original
+  end
 end

@@ -1885,17 +1885,19 @@ a.tag:hover .genre-hub__count {
 .figure-number {
   display: block;
   font-family: var(--font-display);
-  font-weight: 700;
   font-size: clamp(44px, 5.5vw, 68px);
   line-height: 0.9;
   letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
-  /* -webkit-text-stroke が無い環境では塗りのまま見えるようにしておく */
+  /* -webkit-text-stroke が無い環境では塗りのまま見えるようにしておく。
+     塗りで出るときは太字にしない(design.md §2「太字を使わない」)。 */
   color: var(--border-strong);
 }
 
 @supports (-webkit-text-stroke: 1px currentColor) {
   .figure-number {
+    /* 1px の線で輪郭を描くので、字面の太い 700 で骨格を確保する(塗らないので太字には見えない) */
+    font-weight: 700;
     color: transparent;
     -webkit-text-stroke: 1px var(--text-muted);
   }
@@ -2071,8 +2073,8 @@ a.tag:hover .genre-hub__count {
     stroke-dasharray: var(--ring-length);
     stroke-dashoffset: var(--ring-length);
     /* 読みを1字ずつ辿る線なので、速度は変えず一定で引く(ペンの動きに合わせる)。
-       2026-09-04 に**線を引くところだけ**速めた(4.65s → 2.2s。オーナー指示)。
-       円が浮かぶ・始点が点く の 2 つと、外周の回転は元の速さのまま */
+       4.65 秒が正(2026-09-04 に 2.2 秒へ速める指示があったが適用せず、今の速さを正とした。
+       docs/issues.md 確定事項 27) */
     animation: ring-mark-draw 4650ms linear 920ms forwards;
   }
 

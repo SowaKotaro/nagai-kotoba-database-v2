@@ -48,6 +48,8 @@
 /research/harvest-cron.log
 # 収穫・調査の途中経過を置くだけの一時ファイル。コミットしない。
 /research/.tmp-*
+# /harvest が実行中に書き出す候補の確認用リスト(ファイル名が実行ごとに揺れる)。
+/research/.harvest_*
 
 # 過去サイトからcurlで取得した単語データ
 /docs/words.csv
