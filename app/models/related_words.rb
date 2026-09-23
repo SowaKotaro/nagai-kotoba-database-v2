@@ -1,6 +1,7 @@
 # 単語詳細の「関連語」を組み立てるクエリオブジェクト(Issue 23)。
 # 代表(最小id)の語義を起点に、同じ小分類ジャンル / 同じ読みの文字数 の語を
-# 各数件返す。自身は除外し、インデックス済みカラムのみ・決定的な順序で引く
+# 各数件返す。自身は除外し、インデックス済みカラムのみ・決定的な順序で引く。
+# どの数件を出すかは語ごとに窓をずらす(WordWindow。Issue 86)
 # (N+1 を避けるため関連は includes 済み)。
 # 「同じ先頭文字」は語義カードの末尾文字タグと ShiritoriWords が担うため持たない。
 class RelatedWords
@@ -39,7 +40,7 @@ class RelatedWords
   end
 
   def build(key, facet_params, sense_scope)
-    word_ids = sense_scope.order(:word_id).distinct.limit(LIMIT).pluck(:word_id)
+    word_ids = WordWindow.word_ids(sense_scope, pivot_id: @word.id, limit: LIMIT)
     return nil if word_ids.empty?
 
     words = Word.where(id: word_ids)

@@ -1,5 +1,6 @@
 # 単語詳細の「しりとり 〜次の一手〜」を組み立てるクエリオブジェクト。
 # 代表(最小id)の語義の末尾文字を先頭文字に持つ公開語を数件返す。
+# どの数件を出すかは語ごとに窓をずらす(WordWindow。毎回同じ手が返ると遊びにならない。Issue 86)。
 #
 # しりとりの慣習にあたる文字の畳み込みは、大半を既存の仕組みが担っている:
 #   - 末尾の長音符「ー」は last_char の生成時にスキップ済み(app/models/last_char.rb)
@@ -42,8 +43,8 @@ class ShiritoriWords
   def load_words
     return Word.none if head_char.blank? || dead_end?
 
-    word_ids = WordSense.published.first_char_is(head_char).where.not(word_id: @word.id)
-                        .order(:word_id).distinct.limit(LIMIT).pluck(:word_id)
+    candidates = WordSense.published.first_char_is(head_char).where.not(word_id: @word.id)
+    word_ids = WordWindow.word_ids(candidates, pivot_id: @word.id, limit: LIMIT)
     return Word.none if word_ids.empty?
 
     # 一覧行(words/_entry_row)がジャンルのパンくず・エンティティも出すので先読みする
