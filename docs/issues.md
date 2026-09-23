@@ -341,18 +341,6 @@
   - [ ] 検証は `ActionController::Base.cache_store` を差し替えて行う
 - 期待効果: 描画に CPU を握られている画面の2回目以降を軽くする。
 
-## Issue 99: スキップリンクを置く
-- 種別: improvement
-- 状態: 未着手
-- 優先度: P2 ／ Impact: Low ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-09-17 の改善調査(B-4)より。`layouts/application.html.erb` と `shared/_header.html.erb` にスキップリンクが無く、キーボードだけで使う人はどのページでもヘッダー(ブランド・ナビ・検索フォーム)ぶんのタブ移動を毎回やり直す。アクセシビリティは総じて良好で、残る穴はここだけ。
-- 内容:
-  - [ ] `<body>` 直後に `<a href="#main" class="skip-link">` を置き、フォーカス時だけ画面左上に出す
-  - [ ] `<main>` に `id="main"` と `tabindex="-1"` を付ける
-  - [ ] 文言は `ja.yml`(`layouts.skip_to_main`)へ。見た目は既存のピルのボタンを使う(新しい部品を増やさない)
-- 期待効果: キーボード利用者が本文へ1手で届く。
-
 ## Issue 100: 母集団が成立していないランキング枠を出さない
 - 種別: improvement
 - 状態: 未着手

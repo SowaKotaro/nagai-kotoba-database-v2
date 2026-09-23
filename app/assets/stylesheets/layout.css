@@ -262,6 +262,33 @@
   color: var(--text);
 }
 
+/* --- 本文へのスキップリンク(Issue 99) ------------------------------------
+   見た目は既存のピルのボタン(.btn)のまま。フォーカスされていない間は
+   .visually-hidden と同じ方法で隠し、フォーカスで画面左上に出す。 */
+.skip-link:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-4);
+  z-index: 100;
+}
+
+/* スキップリンクで飛んだ先(main)は枠を出さない。操作できる要素ではないため */
+main.container:focus {
+  outline: none;
+}
+
 /* --- メインコンテナ --- */
 main.container {
   max-width: var(--content-width);
