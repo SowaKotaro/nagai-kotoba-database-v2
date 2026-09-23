@@ -34,6 +34,7 @@ class SearchesController < ApplicationController
     # 届くため両方許可する。vowel_reading は母音パターン検索用の生カナ入力。
     params.permit(
       :q, :regexp, :reading_length_min, :reading_length_max,
+      :dakuten_min, :small_kana_min, :chouon_min,
       :char_type_pattern, :char_type_partial, :char_type_ignore_case,
       :rhythm_pattern, :vowel_reading, :genre_id, :word_origin_id,
       genre_id: [], first_char: [], last_char: [], word_origin_id: [],

@@ -33,6 +33,10 @@ module SearchesHelper
       conditions << [ t("words.show.reading_length"), t("words.show.chars", count: search.reading_length) ]
     end
     conditions << [ t("words.show.mora_count"), t("words.show.mora", count: search.mora_count) ] if search.mora_count
+    WordSenseSearch::SOUND_COUNT_FILTERS.each_key do |key|
+      minimum = search.public_send(key)
+      conditions << [ t("searches.sound_counts.#{key}"), t("searches.sound_counts.at_least", count: minimum) ] if minimum
+    end
     conditions << [ t("searches.first_char"), search.first_char.join("・") ] if search.first_char.present?
     conditions << [ t("searches.last_char"), search.last_char.join("・") ] if search.last_char.present?
     if search.effective_genres.any?

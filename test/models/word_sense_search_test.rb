@@ -245,6 +245,28 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [ word_senses(:curry).id ], ids(mora_count: "3")
   end
 
+  # --- 音の成分の個数(「◯つ以上」。words の max_*_count に当てる) ---
+  test "濁点の数の下限で絞れ、ちょうどの数を含み、超えると空になる" do
+    # さつじんじけん の濁点は「じ」2つ、カレー は 0
+    assert_equal [ word_senses(:murder).id ], ids(dakuten_min: "2")
+    assert_equal [], ids(dakuten_min: "3")
+  end
+
+  test "長音符・小書きのかなの数の下限で絞れる" do
+    assert_equal [ word_senses(:curry).id ], ids(chouon_min: "1")
+    assert_equal [], ids(small_kana_min: "1")
+  end
+
+  test "音の成分は 0・負数・数字でない値を無視する" do
+    assert_equal WordSense.published.pluck(:id).sort, ids(dakuten_min: "0", small_kana_min: "-1", chouon_min: "abc")
+  end
+
+  test "音の成分は引き継ぎ用のクエリに含まれ、インデックス許可ファセットにはならない" do
+    search = WordSenseSearch.new(dakuten_min: "3", chouon_min: "1")
+    assert_equal({ dakuten_min: 3, chouon_min: 1 }, search.to_query_params)
+    assert_nil search.indexable_facet
+  end
+
   test "語種で絞れる" do
     assert_equal [ word_senses(:murder).id ], ids(word_origin_id: word_origins(:kango).id)
   end

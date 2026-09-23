@@ -79,6 +79,12 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.active-facet__clear[href=?]", words_path
   end
 
+  test "音の成分で絞ると該当語だけが並び、条件チップに「◯つ以上」と出る" do
+    get words_path(dakuten_min: 2)
+    assert_select ".entry-row__surface", count: 1, text: words(:abc_murder).surface
+    assert_select ".condition-chip__value", text: I18n.t("searches.sound_counts.at_least", count: 2)
+  end
+
   test "不正な page は1ページ目として扱う" do
     get words_path(page: "-5")
     assert_response :success

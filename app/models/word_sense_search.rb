@@ -8,6 +8,14 @@ class WordSenseSearch
   # 拍位置の上限。ここを開けておくと、意味の無い位置ぶんだけ URL が湧く
   # (どれも 0 件で、しかも無限に作れる)。実在する読みの長さに合わせて閉じておく。
   VOWEL_TRANSITION_MAX_POSITION = 30
+  # 音の成分の個数で絞る条件(「◯つ以上」)と、指標を持つ words のカラム(Issue 92)。
+  # 並び替え・ランキング(WordSort::RANKING_METRICS)と同じカラムを引く。語の代表値(語義のうち最大)なので、
+  # 条件は「その数以上を含む語義を持つ語」になる。カラム名はここに書き切り、外部入力を混ぜない。
+  SOUND_COUNT_FILTERS = {
+    dakuten_min: :max_dakuten_count,
+    small_kana_min: :max_small_kana_count,
+    chouon_min: :max_chouon_count
+  }.freeze
 
   def initialize(params)
     @params = params || {}
@@ -24,6 +32,11 @@ class WordSenseSearch
     relation = relation.reading_length_at_most(reading_length_max) if reading_length_max
     relation = relation.reading_length_is(reading_length) if reading_length
     relation = relation.mora_count_is(mora_count) if mora_count
+    SOUND_COUNT_FILTERS.each do |key, column|
+      # published が words を join 済みなので、words のカラムに範囲条件を掛けるだけで済む
+      minimum = public_send(key)
+      relation = relation.where(words: { column => minimum.. }) if minimum
+    end
     relation = relation.first_char_is(first_char) if first_char.present?
     relation = relation.last_char_is(last_char) if last_char.present?
     if char_type_pattern.present?
@@ -53,6 +66,9 @@ class WordSenseSearch
   def reading_length_max = positive_integer(:reading_length_max)
   def reading_length = positive_integer(:reading_length)
   def mora_count = positive_integer(:mora_count)
+  def dakuten_min = positive_integer(:dakuten_min)
+  def small_kana_min = positive_integer(:small_kana_min)
+  def chouon_min = positive_integer(:chouon_min)
   # 大文字小文字を区別しないときは「a」と「A」が同義になるため「A」に畳んで返す。
   # 検索結果は変わらないが、フォームの表示と引き継ぐ URL が一意になる。
   def char_type_pattern
@@ -103,6 +119,9 @@ class WordSenseSearch
       reading_length_max: reading_length_max,
       reading_length: reading_length,
       mora_count: mora_count,
+      dakuten_min: dakuten_min,
+      small_kana_min: small_kana_min,
+      chouon_min: chouon_min,
       first_char: first_char.presence,
       last_char: last_char.presence,
       genre_id: genre_id.presence,
