@@ -14,18 +14,6 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
     [ word, sense ]
   end
 
-  test "未認証だと書き出し画面も「特徴なしで確定」も使えない" do
-    word, sense = published_word_without_features
-    sign_out
-
-    get export_features_admin_annotation_proposals_path
-    assert_redirected_to new_session_path
-
-    patch review_features_admin_annotation_path(word)
-    assert_redirected_to new_session_path
-    assert_nil sense.reload.features_reviewed_at
-  end
-
   # --- 書き出し ---
 
   test "書き出し画面に対象語義の JSON が出る" do

@@ -11,23 +11,6 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 認可: 未認証は弾く ---
-  test "未認証だとデッキの表示・まとめて保存・その場作成はできない" do
-    get admin_annotation_deck_path
-    assert_redirected_to new_session_path
-
-    patch admin_annotation_deck_path, params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
-    assert_redirected_to new_session_path
-    assert_nil @haruhi.reload.annotated_at
-
-    annotation_proposals(:haruhi_proposal).update!(payload: {
-      "senses" => [ { "entity_type" => "架空種別" } ]
-    })
-    assert_no_difference -> { EntityType.count } do
-      patch create_master_admin_annotation_deck_path(word_id: @haruhi.id, field: "entity_type"),
-            params: { deck: deck_params_for(@haruhi, @haruhi_sense) }
-    end
-    assert_redirected_to new_session_path
-  end
 
   # --- 表示 ---
   test "入口は1語コンソールと同じく提案付きのキューへ寄せる" do

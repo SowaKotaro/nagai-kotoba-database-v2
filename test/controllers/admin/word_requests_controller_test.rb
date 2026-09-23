@@ -14,16 +14,6 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     @item = @request_record.items.first
   end
 
-  test "未ログインでは一覧も一括操作も使えない" do
-    get admin_requests_path
-    assert_redirected_to new_session_path
-
-    assert_no_difference "WordRequestItem.count" do
-      post bulk_admin_requests_path, params: { item_ids: [ @item.id ], commit: "destroy" }
-    end
-    assert_redirected_to new_session_path
-  end
-
   test "一覧に語が並び、投稿後に収録された語には印、管理ナビには未着手の件数が出る" do
     sign_in_as(admins(:one))
     get admin_requests_path

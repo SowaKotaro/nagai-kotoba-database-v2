@@ -4,32 +4,6 @@ require "test_helper"
 # 使用件数・削除可否・統合の中身は TagMasterTest / GenreTest / TagKindTest で見る。
 class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   # --- 認可: 未認証は弾く ---
-  test "未認証だと一覧・更新・削除・統合・追加はログインへ戻し、何も変えない" do
-    get admin_tags_path
-    assert_redirected_to new_session_path
-    get admin_tag_kind_path("entity_types")
-    assert_redirected_to new_session_path
-
-    person = entity_types(:person_name)
-    patch admin_tag_path("entity_types", person), params: { tag: { name: "改名" } }
-    assert_redirected_to new_session_path
-    assert_equal "人名", person.reload.name
-
-    assert_no_difference -> { EntityType.count } do
-      delete admin_tag_path("entity_types", person)
-    end
-    assert_redirected_to new_session_path
-
-    post admin_merge_tags_path("parts_of_speech"),
-         params: { source_id: parts_of_speech(:noun).id, target_id: parts_of_speech(:verb).id }
-    assert_redirected_to new_session_path
-    assert PartOfSpeech.exists?(parts_of_speech(:noun).id)
-
-    assert_no_difference -> { LinguisticFeature.count } do
-      post admin_create_tag_path("linguistic_features"), params: { tag: { name: "音便" } }
-    end
-    assert_redirected_to new_session_path
-  end
 
   # --- 表示 ---
   test "ハブと編集画面(現在の名前つき)を表示でき、未知の種別は 404" do

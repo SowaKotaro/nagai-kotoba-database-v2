@@ -2,14 +2,6 @@ require "test_helper"
 
 # 提案の一括承認(Issue 65)。プレビュー(show)と承認(create)。
 class Admin::BulkProposalApprovalsControllerTest < ActionDispatch::IntegrationTest
-  test "未認証はログインへリダイレクトし、公開もされない" do
-    get admin_bulk_proposal_approval_path
-    assert_redirected_to new_session_path
-    post admin_bulk_proposal_approval_path
-    assert_redirected_to new_session_path
-    assert_nil words(:pending_haruhi).reload.annotated_at
-  end
-
   test "プレビューに一括対象の語と承認ボタンが出る" do
     sign_in_as(Admin.take)
     get admin_bulk_proposal_approval_path

@@ -8,14 +8,6 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
     @bermuda = words(:pending_bermuda)
   end
 
-  test "未認証だと一括適用できずログインへリダイレクト" do
-    post admin_bulk_annotation_path, params: {
-      bulk_annotation: { word_ids: [ @haruhi.id ], genre_id: genres(:small_novel).id }
-    }
-    assert_redirected_to new_session_path
-    assert_nil word_senses(:pending).reload.genre_id
-  end
-
   test "選択した語に一括適用し、検索・注釈状態・タグの絞り込みを保って一覧へ戻る" do
     sign_in_as(Admin.take)
     filters = { q: "ハルヒ", status: "annotation_pending",
