@@ -16,7 +16,7 @@ class WordRanking
   # icon          : 見出しに添えるインライン SVG 名
   # minimum       : この値未満の語はランキングに載せない(0本の長音符などを並べない)
   # format        : 値の表示書式(:integer / :decimal)
-  # 該当語が1つも無い枠(アノテーション待ちの特徴など)はページ側で丸ごと省く。
+  # 載る語が TOP_LIMIT 件以下の枠(= 該当語が全員載ってしまい順位表にならない枠)はページに出さない(board)。
   DEFINITIONS = [
     { key: "length_desc",           icon: "ruler",      minimum: 1 },
     { key: "mora_desc",             icon: "metronome",  minimum: 1 },
@@ -57,6 +57,14 @@ class WordRanking
   # 値が同じ語は同順位にし、その分だけ次の順位を飛ばす(競技順位)。
   def top(limit: TOP_LIMIT)
     Rails.cache.fetch("#{CACHE_KEY}/#{key}/#{limit}", expires_in: CACHE_TTL) { build_top(limit) }
+  end
+
+  # ランキングページに出す上位 TOP_LIMIT 件。載らない語が1つも無い(該当語が TOP_LIMIT 件以下の)枠は
+  # 順位表として成立しないので空を返す(2026-09-17 時点で「語義が多い順」は該当 10 語で全員が載っていた。
+  # Issue 100)。収録が進めば自然に出てくるので、枠そのものは消さない。
+  def board
+    rows = top(limit: TOP_LIMIT + 1)
+    rows.size > TOP_LIMIT ? rows.first(TOP_LIMIT) : []
   end
 
   private

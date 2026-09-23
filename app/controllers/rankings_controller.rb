@@ -4,9 +4,9 @@ class RankingsController < ApplicationController
   allow_unauthenticated_access only: :index
 
   def index
-    # 該当語が1件も無い枠(アノテーション待ちの特徴・別表記など)は丸ごと出さない。
+    # 順位表として成立しない枠(該当語が少なく全員が載ってしまう枠)は丸ごと出さない。
     @boards = WordRanking.all.filter_map do |ranking|
-      rows = ranking.top
+      rows = ranking.board
       [ ranking, rows ] if rows.any?
     end
   end
