@@ -90,4 +90,25 @@ class WordRankingTest < ActiveSupport::TestCase
   test "上位の件数は limit で絞れる" do
     assert_equal 1, board("length_desc").top(limit: 1).size
   end
+
+  test "ページに出す上位は、該当語が TOP_LIMIT 件を超えたときだけ上位 TOP_LIMIT 件を返す" do
+    ranking = board("length_desc")
+    assert_empty ranking.board, "2語しか無いうちは全員が載るので順位表にしない"
+
+    publish_words(WordRanking::TOP_LIMIT - 2) # 公開語をちょうど TOP_LIMIT 件にする
+    assert_empty ranking.board, "ちょうど TOP_LIMIT 件でも全員が載る"
+
+    publish_words(1, offset: WordRanking::TOP_LIMIT)
+    assert_equal WordRanking::TOP_LIMIT, ranking.board.size
+  end
+
+  private
+
+  # 濁点・小書き・長音を含まない読みの公開語を count 語つくる
+  def publish_words(count, offset: 0)
+    count.times do |i|
+      word = Word.create!(surface: "順位の母集団#{offset + i}", annotated_at: Time.current)
+      word.word_senses.create!(reading: "ナナナナナ" + "ア" * (offset + i))
+    end
+  end
 end

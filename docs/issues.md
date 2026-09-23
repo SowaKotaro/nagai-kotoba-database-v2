@@ -341,17 +341,6 @@
   - [ ] 検証は `ActionController::Base.cache_store` を差し替えて行う
 - 期待効果: 描画に CPU を握られている画面の2回目以降を軽くする。
 
-## Issue 100: 母集団が成立していないランキング枠を出さない
-- 種別: improvement
-- 状態: 未着手
-- 優先度: P2 ／ Impact: Low ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-09-17 の改善調査(D-1)より。`/rankings` の `sense_count_desc`(語義が多い順)は該当が **10 語**しかなく、`TOP_LIMIT` 10 件に全員が載って順位表にならない。`ring_crossing_asc` も交差0 の語が **9 語**。
-- 内容:
-  - [ ] `WordRanking`(`word_ranking.rb:156` の `DEFINITIONS`)に母集団の下限を足す。`WordRanking#top` の結果が `TOP_LIMIT` 未満なら枠ごと省く、が最も簡単(ビュー側の「該当語が無い枠は省く」を広げる)
-  - [ ] 枠は消さずに「まだ出さない」扱いにする(収録が進めば自然に成立する)
-- 期待効果: 順位表として意味のある枠だけが並ぶ。`/rankings?sort=` は `words#index` の URL なので公開済みの URL は壊れない。
-
 ## Issue 101: 詳細検索フォームの転送量(246KB)を減らす
 - 種別: improvement
 - 状態: 未着手(案1は「全条件を見せる」方針と衝突しうるので**オーナー判断が要る**)

@@ -1,7 +1,7 @@
 <%# ランキング1枠。細罫のパネルに、見出し行 → 順位表 の順で組む。
     順位は等幅(上位3位だけ色を付ける)、語は太字、右端に指標値。
     「もっと見る」は同じ並びキーの単語一覧へ渡し、そこから先は通常のページ送りで全件辿れる。
-    locals: ranking(WordRanking), rows(#top の結果) %>
+    locals: ranking(WordRanking), rows(#board の結果) %>
 <section class="rank-board" id="rank-<%= ranking.key.dasherize %>">
   <div class="rank-board__header">
     <div class="rank-board__head-main">
