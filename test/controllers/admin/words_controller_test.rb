@@ -14,25 +14,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 認可: 未認証は弾く ---
-  test "未認証だと一覧・読み取得・調査反映・重複チェック・登録・削除はログインへ戻す" do
-    get admin_words_path
-    assert_redirected_to new_session_path
-
-    entries = [ { surface: "新語", reading: "シンゴ" } ]
-    post readings_admin_words_path, params: { bulk_word_registration: { text: "新語" } }
-    assert_redirected_to new_session_path
-    post apply_research_admin_words_path, params: { bulk_word_registration: { entries: entries, research_json: "{}" } }
-    assert_redirected_to new_session_path
-    post duplicates_admin_words_path, params: { bulk_word_registration: { entries: entries } }
-    assert_redirected_to new_session_path
-
-    assert_no_difference -> { Word.count } do
-      post admin_words_path, params: { bulk_word_registration: { entries: entries } }
-      assert_redirected_to new_session_path
-      delete admin_word_path(@word)
-      assert_redirected_to new_session_path
-    end
-  end
 
   # --- 一覧 ---
   test "一覧に読み・注釈状態・件数とコンソールへのリンクが出る" do

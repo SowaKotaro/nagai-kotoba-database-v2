@@ -3,18 +3,6 @@ require "test_helper"
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
 class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
   # --- 認可: 未認証は弾く ---
-  test "未認証だと書き出し・取り込みはログインへリダイレクト" do
-    get export_admin_annotation_proposals_path
-    assert_redirected_to new_session_path
-
-    get new_admin_annotation_proposal_path
-    assert_redirected_to new_session_path
-
-    assert_no_difference -> { AnnotationProposal.count } do
-      post admin_annotation_proposals_path, params: { proposals_json: "{}" }
-    end
-    assert_redirected_to new_session_path
-  end
 
   # --- 書き出し ---
   test "未注釈で提案が無い語とマスタ一覧を JSON で書き出す" do

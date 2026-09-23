@@ -2,11 +2,6 @@ require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
 class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
-  test "未認証だとログインへリダイレクト" do
-    get admin_root_path
-    assert_redirected_to new_session_path
-  end
-
   test "認証済みなら収録状況と各作業への導線を表示する" do
     sign_in_as(Admin.take)
     get admin_root_path

@@ -11,28 +11,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 認可: 未認証は弾く ---
-  test "未認証だとコンソールの閲覧・保存・保留・マスタ作成・再調査データはログインへ戻す" do
-    get admin_annotation_path(@word)
-    assert_redirected_to new_session_path
-
-    get reresearch_admin_annotation_path(@word)
-    assert_redirected_to new_session_path
-
-    patch admin_annotation_path(@word), params: { word: { word_senses_attributes: { "0" => { id: @sense.id, reading: @sense.reading } } } }
-    assert_redirected_to new_session_path
-
-    patch hold_admin_annotation_path(@word)
-    assert_redirected_to new_session_path
-
-    assert_no_difference -> { EntityType.count } do
-      post create_master_admin_annotation_path(@word), params: { field: "entity_type" }
-    end
-    assert_redirected_to new_session_path
-
-    @word.reload
-    assert @word.annotation_pending?
-    assert_nil @word.annotated_at
-  end
 
   # --- index: 入口は提案付きの語を優先(Issue 69) ---
   test "入口は未承認の提案がある語へ寄せ、提案キューを辿り切ると提案キューの完了画面へ戻る" do

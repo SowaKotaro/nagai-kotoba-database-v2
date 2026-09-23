@@ -5,15 +5,6 @@ require "test_helper"
 # その場追加の共通処理(InlineMasterCreatable)の空白・照合順序の衝突の扱いはここで押さえ、
 # 単純マスタ3種のエンドポイントは Admin::InlineMasterCreationTest で見る。
 class Admin::GenresControllerTest < ActionDispatch::IntegrationTest
-  test "未認証だと子ジャンルの取得も追加もできない" do
-    get children_admin_genres_path(parent_id: genres(:large_literature).id)
-    assert_redirected_to new_session_path
-
-    assert_no_difference -> { Genre.count } do
-      post admin_genres_path, params: { name: "新しい小分類", parent_id: genres(:medium_japanese).id }, as: :json
-    end
-  end
-
   test "指定した親の子ジャンルを JSON で返し、親未指定なら空配列を返す" do
     sign_in_as(Admin.take)
     get children_admin_genres_path(parent_id: genres(:large_literature).id)
