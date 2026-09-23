@@ -8,7 +8,8 @@ argument-hint: "[任意: 入力ファイルパス。既定 research/inputs/notat
 
 - 引数: $ARGUMENTS
 - 入力ファイル: 上の引数が空でなければそれを入力パスに使う。空なら既定の `research/inputs/notation.txt`。
-- 出力ファイル: `research/outputs/notation.txt`（上書き）。
+- 出力ファイル: `research/outputs/notation.txt` と `research/outputs/notation.json`（どちらも上書き）。
+  入力行頭の `#<数字>` は管理画面の ID なので、JSON の `id` にそのまま返すこと（入力の全語を返す）。
 - `.claude/skills/word-notation-research/SKILL.md` の手順に厳密に従うこと
   （annotation-guidelines §3 準拠の表記選定、固有名詞・ことわざ等の WebSearch 裏取り、confidence 付き注記）。
 

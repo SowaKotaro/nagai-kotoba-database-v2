@@ -30,6 +30,7 @@ ja:
       word_sense_feature: "語義の言語学的特徴"
       word_request: "収録リクエスト"
       word_request_item: "リクエストされた言葉"
+      word_candidate: "登録予定単語"
     attributes:
       genre:
         parent: "親ジャンル"
@@ -65,6 +66,10 @@ ja:
         surface: "言葉"
         reading: "読み"
         admin_memo: "メモ"
+      word_candidate:
+        surface: "表層形"
+        note: "メモ"
+        status: "状態"
     errors:
       models:
         genre:
@@ -427,6 +432,7 @@ ja:
       annotations: "アノテーション"
       words: "単語の管理"
       requests: "リクエスト"
+      candidates: "登録予定単語"
       tags: "タグ管理"
       view_site: "公開サイトへ"
     word_requests:
@@ -473,6 +479,173 @@ ja:
         applied: "%{count} 件の状態を更新しました。"
         destroyed: "%{count} 件を削除しました。"
         limited: "一度に渡せるのは %{count} 件までのため、先頭から %{count} 件を渡しました。"
+    word_candidates:
+      title: "登録予定単語"
+      # 4段(upload / expand / duplicate / notation)はスキル名に合わせて英語のまま出す。
+      statuses:
+        upload: "upload"
+        expand: "expand"
+        duplicate: "duplicate"
+        notation: "notation"
+        done: "done"
+        registered: "登録済み"
+        pending: "要判断"
+        duplicated: "重複"
+        rejected: "不要"
+      # 一覧をステータスで絞り込んだときに出す、その語に次にすること。
+      hints:
+        upload: "expand に回す語と、そのまま duplicate に回す語を選ぶ。同じ系統の語（例: 同じ作品のチーム名）は1つだけ expand に回すと、調査が重ならず /expand の負荷も抑えられる。要らない語は「不要」に。"
+        expand: "expand の段にいる語。結果を取り込んだ語は、元の語の下に増えた語が並ぶ。要らない語はここで「不要」にしてから、expand の画面で duplicate へ送る。"
+        duplicate: "duplicate の段にいる語。duplicate の画面で、重なる語を「重複」にして残りを notation へ送る。"
+        notation: "notation の段にいる語。notation の画面で /notation 用に書き出し、結果を取り込む。"
+        done: "前処理が終わった語。notation の画面の「done の語」をコピーして一括登録に貼る。登録されると「登録済み」になる。"
+        registered: "一括登録で収録された語。"
+        pending: "判断を保留した語。決めたら「upload に戻す」か「不要にする」。"
+        duplicated: "収録済みの語や、ほかの登録予定単語と重なっていた語。"
+        rejected: "要らないと判断した語。消さずに残し、同じ語がもう一度入ってくるのを防ぐ。"
+      flow:
+        label: "前処理の流れ"
+        count: "%{count} 語"
+        steps:
+          upload:
+            desc: "単語を貼り付ける"
+            where: "ブラウザ"
+          expand:
+            desc: "同系統の語を増やす"
+            where: "ローカル"
+          duplicate:
+            desc: "重複を除く"
+            where: "ブラウザ"
+          notation:
+            desc: "表記を統一する"
+            where: "ローカル"
+      score: "立項 %{score}（%{confidence}）"
+      surface:
+        original: "元: %{surface}"
+      copy_box:
+        count: "%{count} 語"
+        copy: "コピー"
+        copied: "コピーしました"
+      export:
+        hint: "コピーして %{input} に保存（上書き）し、ローカルの Claude Code で %{command} を実行する。"
+      import:
+        json_label: "%{output} の中身"
+        json_placeholder: "{ \"version\": \"1\", ... }"
+        submit: "取り込む"
+        invalid_json: "JSON を読み取れませんでした。形式を確認してください。"
+      index:
+        lead: "登録前の単語の一覧。ステータスで絞り込み、語を選んで行いたい処理を押すと、その段の画面へ移る。"
+        filter_label: "ステータスで絞り込む"
+        filter_all: "すべて %{count}"
+        actions_label: "選択した語を"
+        actions:
+          to_expand: "expand に回す"
+          to_duplicate: "duplicate に回す"
+          to_pending: "要判断にする"
+          to_rejected: "不要にする"
+          to_upload: "upload に戻す"
+        total: "%{count} 語"
+        empty: "該当する単語はありません。"
+        col_surface: "表層形"
+        col_status: "ステータス"
+        col_note: "メモ"
+        select_all: "すべて選択"
+        select_item: "「%{surface}」を選択"
+      bulk:
+        no_action: "処理を選んでください。"
+        no_selection: "単語が選択されていません。"
+        applied: "%{count} 語を「%{status}」にしました。"
+      new:
+        title: "upload"
+        legend: "登録予定単語"
+        hint: "1行1語で貼り付ける。行頭の「1.」「-」「・」などは取り除く。一度に %{max} 行まで。すでに入っている語（不要にした語を含む）は入れ直さない。"
+        label: "単語（箇条書き）"
+        placeholder: "1. 泥門デビルバッツ\n2. 天上天下唯我独尊"
+        submit: "upload"
+        back: "登録予定単語の一覧へ"
+      create:
+        empty: "単語が入力されていません。"
+        too_many: "一度に追加できるのは %{max} 行までです。"
+        created: "%{count} 語を upload しました。次は一覧で expand に回す語と duplicate に回す語を選ぶ"
+        existing: "すでに「%{status}」にある語 %{count}"
+      edit:
+        title: "登録予定単語を編集"
+        original: "元の表記: %{surface}"
+        save: "保存"
+        cancel: "戻る"
+      update:
+        updated: "「%{surface}」を保存しました。"
+      intake:
+        not_unique: "先頭の191文字が既存の登録予定単語と同じため追加できません"
+      # 取り込み結果の要約(件数のある項目だけを出す)。
+      import_results:
+        seeds: "expand した語 %{count}"
+        created: "新しく入れた語 %{count}"
+        existing: "すでに入っていた語 %{count}"
+        registered: "収録済みのため見送った語 %{count}"
+        normalized: "表記を確定した語 %{count}"
+        renamed: "うち表記を置き換えた語 %{count}"
+        held: "立項スコアが低く要判断にした語 %{count}"
+        duplicate: "統一後に重複した語 %{count}"
+        split: "分割した語 %{count}"
+        stale: "取り込み済み・段が違うため見送った語 %{count}"
+        unknown: "見つからなかった ID %{count}"
+        errors: "入れられなかった語 %{count}"
+        nothing: "取り込める語はありませんでした。"
+        stale_reason: "取り込み済みか、段が違うため見送り"
+        unknown_reason: "該当する登録予定単語が無い"
+        duplicate_note: "表記統一後の「%{surface}」が「%{other}」と重複"
+        split_note: "分割: %{surfaces}"
+    candidates:
+      expansions:
+        show:
+          lead: "一覧で expand に回した語を /expand で調べ、同じ系統の語を増やす。"
+          export_title: "1. 書き出す"
+          export_empty: "書き出す語はありません（一覧で upload の語を選んで「expand に回す」）。"
+          import_title: "2. 結果を取り込む"
+          results_title: "3. 取り込み済みの語を duplicate へ送る"
+          results_hint_html: "元の語の下に、増えた語が並ぶ。要らない語は %{link} で「不要」にしてから送る。"
+          results_link: "一覧"
+          results_empty: "まだ結果を取り込んだ語はありません。"
+          finish: "これら %{count} 語を一括で duplicate に変更"
+        update:
+          empty: "送る語がありません（結果を取り込んだ語だけを送る）。"
+          moved: "%{count} 語を duplicate に変更しました。"
+      duplicate_checks:
+        show:
+          lead: "収録済みの語・別表記・ほかの登録予定単語と、表層形を粗く比べた結果（かなの種類・全角半角・空白・中黒・記号の違いは無視）。一致した語は最初からチェックしてある。読みでの厳密な照合は一括登録の step3 で行う。"
+          col_exclude: "重複"
+          col_surface: "表層形"
+          col_matches: "一致"
+          exclude_item: "「%{surface}」を重複にする"
+          no_match: "一致なし"
+          match_word: "収録済み"
+          match_variant: "収録済みの別表記"
+          finish: "チェックした語を「重複」に、残りを一括で notation に変更"
+          empty: "duplicate の段に語はありません。"
+        update:
+          empty: "送る語がありません。"
+          moved: "%{duplicated} 語を「重複」に、%{count} 語を notation に変更しました。"
+      notations:
+        show:
+          lead: "/notation で正式な表記に統一する。取り込んだ結果を確認し、done に送った語が一括登録に貼るリストになる。"
+          export_title: "1. 書き出す"
+          export_empty: "書き出す語はありません。"
+          import_title: "2. 結果を取り込む"
+          results_title: "3. 取り込み済みの語を done へ送る"
+          results_hint: "立項スコア2以下は「要判断」、統一後に重なった語は「重複」、分割案があった語は「不要」になり分割後の語が duplicate に入っている。表記の手直しは語をクリック。"
+          results_empty: "まだ結果を取り込んだ語はありません。"
+          col_surface: "表層形"
+          col_score: "立項スコア"
+          col_note: "メモ"
+          finish: "これら %{count} 語を一括で done に変更"
+          done_title: "done の語（一括登録に貼るリスト）"
+          done_hint_html: "コピーして %{link} の step1 に貼る。登録されると「登録済み」になり、このリストから消える。"
+          done_link: "単語を登録"
+          done_empty: "done の語はありません。"
+        update:
+          empty: "送る語がありません（結果を取り込んだ語だけを送る）。"
+          moved: "%{count} 語を done に変更しました。"
     dashboard:
       title: "管理コンソール"
       eyebrow: "オーナー用"
@@ -499,6 +672,9 @@ ja:
       requests_title: "リクエストの管理"
       requests_desc: "公開ページのフォームから届いた「収録してほしい言葉」を確認し、採用するものを一括登録へ渡します。"
       requests_tag: "未着手 %{count} 件"
+      candidates_title: "登録予定単語"
+      candidates_desc: "登録前の単語を upload → expand → duplicate → notation の流れで前処理します。どの語がどこまで進んだかがここで分かります。"
+      candidates_tag: "前処理中 %{count} 語"
       tags_title: "タグ管理"
       tags_desc: "ジャンル・エンティティ・品詞・語種・特徴などのタグを一覧し、名前の変更・削除・統合を行います。"
       tags_tag: "マスタ整理"

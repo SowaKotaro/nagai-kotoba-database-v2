@@ -1,6 +1,6 @@
 ---
 name: word-notation-research
-description: nagai-kotoba-database-v2 に登録しようとしている単語(候補)の「最も一般的な表記」を調べ、あわせて「立項に足る語か」を判定する登録前のオフライン下調べ。research/inputs/notation.txt(番号付きの単語リスト)を読み、各語の最も一般的な表記を確定し、収録の4原則に照らした立項スコアを付けて research/outputs/notation.txt に書き出す。「登録前の表記を調べて」「research/inputs/notation.txt を調べて」「最も一般的な表記を調べて」「立項に足るか見て」と言われたときに使う。読み・意味・ジャンル等は扱わない(それらは word-reading-research / word-annotation-research)。
+description: nagai-kotoba-database-v2 に登録しようとしている単語(候補)の「最も一般的な表記」を調べ、あわせて「立項に足る語か」を判定する登録前のオフライン下調べ。research/inputs/notation.txt(番号付きの単語リスト)を読み、各語の最も一般的な表記を確定し、収録の4原則に照らした立項スコアを付けて research/outputs/notation.txt(人が読む版)と notation.json(管理画面「登録予定単語」に取り込む版)に書き出す。「登録前の表記を調べて」「research/inputs/notation.txt を調べて」「最も一般的な表記を調べて」「立項に足るか見て」と言われたときに使う。読み・意味・ジャンル等は扱わない(それらは word-reading-research / word-annotation-research)。
 ---
 
 # 最も一般的な表記の下調べ（登録前・オフライン）
@@ -13,9 +13,12 @@ nagai-kotoba-database-v2 に登録しようとしている単語の候補につ�
 ## フロー
 1. **入力**: `research/inputs/notation.txt` を読む。1行＝1語（表層形）。
    行頭の番号/記号（`1.` `-` `・`）は無視。空行は無視。表層形はスペースを含みうる（例「Dead by Daylight」）＝**行全体を1語**として扱う。
+   **行頭が `#<数字>`（例 `#123 ゴールドマンサックス`）のときは、その数字を語の ID として控え、残りを表層形とする**
+   （管理画面「登録予定単語」の書き出し形式）。ID があるときは、txt の番号にもその ID を使う。
 2. **調査**: 各語の最も一般的な表記を決める（下記の基準）。確信が持てない語は WebSearch で裏取りする。
    裏取りの過程で得た情報から、**立項に足る語か**も判定する（下記）。
-3. **出力**: `research/outputs/notation.txt` に書き出す（**上書き**）。
+3. **出力**: `research/outputs/notation.txt`（人が読む版）と `research/outputs/notation.json`（管理画面に取り込む版）の
+   **2つ**を書き出す（どちらも**上書き**）。
 
 ## 調べること / 調べないこと
 - **調べる**:
@@ -167,7 +170,38 @@ nagai-kotoba-database-v2 に登録しようとしている単語の候補につ�
     1語として維持（§1.2.1）。entry_score: 5 / confidence: high
 ```
 
+## 取り込み用 JSON（`research/outputs/notation.json`）
+
+管理画面「登録予定単語」の各段の画面（expand / notation）に貼るための JSON。**説明文は入れず JSON だけ**を書く。
+**入力の全語を1件ずつ**返す（上部リストから外した語も、立項スコア・分割案つきで返す）。
+
+```json
+{
+  "version": "1",
+  "words": [
+    { "id": 204, "input": "ゴールドマンサックス", "surface": "ゴールドマン・サックス", "entry_score": 5, "confidence": "high",
+      "note": "金融機関。Wikipedia・コトバンク見出しは中黒入り" },
+    { "id": 205, "input": "とてつもなく大きな", "surface": "とてつもなく大きな", "entry_score": 1, "confidence": "low",
+      "note": "修飾句の断片。妥当性を欠く" },
+    { "id": 206, "input": "経済・経営学部", "surface": "経済・経営学部", "entry_score": 2, "confidence": "medium",
+      "note": "連結形の定着を確認できず", "split": ["経済学部", "経営学部"] }
+  ]
+}
+```
+
+- `id`: 入力行頭の `#<数字>`。**入力にあった ID は必ずすべて返す**（返さなかった語は「結果の無い語」として notation の段に残る）。
+- `input`: 入力の表層形そのまま。`surface`: 確定した最も一般的な表記（変えないならそのまま）。
+- `entry_score`: 立項スコア 1〜5（整数）。**2 以下は取り込み側で「要判断」に回る**（捨てずに残す扱いは txt と同じ）。
+- `confidence`: `high` / `medium` / `low`。`note`: 注記節の内容を1〜2文で（管理画面のメモに入る）。
+- `split`: **連結に疑義がある語だけ**、分割後の語の配列を入れる（2語以上）。取り込み側は元の語を「不要」にし、
+  分割後の語を duplicate の段から入れ直す。
+
 ## この後の流れ
+`research/outputs/notation.json` を管理画面「登録予定単語」の notation の画面（`/admin/candidates/notation`）に貼る。
+表記が置き換わる（統一後の表記が既存の語と重なった語は「重複」に回る）。オーナーが確認して done に送った語が、
+一括登録に貼るリストになる（以降は通常の 読み（`/reading`）→ 一括登録）。
+
+### txt の使い道と、立項スコアの位置付け
 確定した表記リスト（`research/outputs/notation.txt` 上部）は、そのまま一括登録の入力や、
 `word-reading-research` の入力 `research/inputs/reading.txt` に渡せる（表記 → 読み → 登録 → アノテーションの前段）。
 立項スコア2以下の語は上部リストから外してあるので、**後工程にはふるいを通った語だけが流れる**。

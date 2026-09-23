@@ -1,0 +1,69 @@
+<% content_for :title, "notation" %>
+
+<h1 class="page-title">notation</h1>
+<p class="field-hint"><%= t(".lead") %></p>
+
+<%= render "admin/word_candidates/flow", current: "notation" %>
+
+<% if flash.now[:alert] %>
+  <p class="form-alert"><%= flash.now[:alert] %></p>
+<% end %>
+
+<section class="candidate-step">
+  <h2 class="section-label"><%= t(".export_title") %></h2>
+  <% if @export.candidates.any? %>
+    <p class="field-hint"><%= t("admin.word_candidates.export.hint", input: @export.target[:input], command: @export.target[:command]) %></p>
+    <%= render "admin/word_candidates/copy_box", text: @export.text, count: @export.candidates.size, field: :notation_input %>
+  <% else %>
+    <p class="empty-note"><%= t(".export_empty") %></p>
+  <% end %>
+</section>
+
+<section class="candidate-step">
+  <h2 class="section-label"><%= t(".import_title") %></h2>
+  <%= render "admin/candidates/import_form", url: import_admin_candidates_notation_path, output: @export.target[:output] %>
+</section>
+
+<section class="candidate-step">
+  <h2 class="section-label"><%= t(".results_title") %></h2>
+  <% if @results.any? %>
+    <p class="field-hint"><%= t(".results_hint") %></p>
+    <div class="table-scroll">
+      <table class="data-table admin-candidates-table">
+        <thead>
+          <tr>
+            <th><%= t(".col_surface") %></th>
+            <th><%= t(".col_score") %></th>
+            <th><%= t(".col_note") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @results.each_with_index do |candidate, i| %>
+            <tr>
+              <td><%= render "admin/word_candidates/surface", candidate: candidate, previous: (@results[i - 1] if i.positive?) %></td>
+              <td class="admin-candidates-table__score-cell">
+                <%= t("admin.word_candidates.score", score: candidate.entry_score || "—", confidence: candidate.confidence.presence || "—") %>
+              </td>
+              <td class="admin-candidates-table__note"><%= candidate.note %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="actions candidate-finish">
+      <%= button_to t(".finish", count: @results.size), admin_candidates_notation_path, method: :patch, class: "btn btn--primary" %>
+    </div>
+  <% else %>
+    <p class="empty-note"><%= t(".results_empty") %></p>
+  <% end %>
+</section>
+
+<section class="candidate-step" id="done">
+  <h2 class="section-label"><%= t(".done_title") %></h2>
+  <% if @done.any? %>
+    <p class="field-hint"><%= t(".done_hint_html", link: link_to(t(".done_link"), new_admin_word_path)) %></p>
+    <%= render "admin/word_candidates/copy_box", text: @done.map(&:surface).join("\n"), count: @done.size, field: :done_list %>
+  <% else %>
+    <p class="empty-note"><%= t(".done_empty") %></p>
+  <% end %>
+</section>

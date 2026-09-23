@@ -1,0 +1,33 @@
+<% content_for :title, t(".title") %>
+
+<h1 class="page-title"><%= t(".title") %></h1>
+
+<p class="field-hint">
+  <%= render "badge", status: @candidate.status %>
+  <% if @candidate.original_surface != @candidate.surface %>
+    / <%= t(".original", surface: @candidate.original_surface) %>
+  <% end %>
+</p>
+
+<% if @candidate.errors.any? %>
+  <ul class="form-errors">
+    <% @candidate.errors.full_messages.each do |message| %>
+      <li><%= message %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= form_with model: @candidate, url: admin_word_candidate_path(@candidate) do |form| %>
+  <div class="field">
+    <%= form.label :surface %>
+    <%= form.text_field :surface, maxlength: WordCandidate::MAX_SURFACE_LENGTH %>
+  </div>
+  <div class="field">
+    <%= form.label :note %>
+    <%= form.text_area :note, rows: 3, maxlength: WordCandidate::MAX_NOTE_LENGTH %>
+  </div>
+  <div class="actions">
+    <%= form.submit t(".save"), class: "btn btn--primary" %>
+    <%= link_to t(".cancel"), admin_word_candidates_path(status: @candidate.status), class: "btn btn--sm" %>
+  </div>
+<% end %>

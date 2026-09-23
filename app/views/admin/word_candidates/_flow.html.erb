@@ -1,0 +1,17 @@
+<%# 前処理の流れ(upload → expand → duplicate → notation)を横に並べる。一括登録のステップ表示と同じ見せ方。
+    各段は、その段の画面へのリンク(件数はその段にいる語の数)。current はいま開いている段。 %>
+<% counts = candidate_status_counts %>
+<ol class="candidate-flow" aria-label="<%= t("admin.word_candidates.flow.label") %>">
+  <% WordCandidate::FLOW_STEPS.each do |step| %>
+    <li class="candidate-flow__item <%= "is-current" if step == current %>">
+      <%= link_to candidate_step_path(step), class: "candidate-flow__link", "aria-current": (step == current ? "step" : nil) do %>
+        <span class="candidate-flow__name"><%= step %></span>
+        <span class="candidate-flow__desc"><%= t("admin.word_candidates.flow.steps.#{step}.desc") %></span>
+        <span class="candidate-flow__meta">
+          <span class="candidate-flow__where"><%= t("admin.word_candidates.flow.steps.#{step}.where") %></span>
+          <%= t("admin.word_candidates.flow.count", count: counts.fetch(step, 0)) %>
+        </span>
+      <% end %>
+    </li>
+  <% end %>
+</ol>

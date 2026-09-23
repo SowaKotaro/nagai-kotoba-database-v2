@@ -5204,6 +5204,198 @@ a.entity-treemap__cell:hover {
   color: var(--text-muted);
 }
 
+/* --- 管理: 登録予定単語(前処理 upload → expand → duplicate → notation) --- */
+
+/* 流れ図。一括登録のステップ表示と同じく横に並べ、段と段を矢印でつなぐ。
+   各段はその段の画面へのリンクで、段にいる語の数を添える */
+.candidate-flow {
+  display: flex;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.candidate-flow__item {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 132px;
+  gap: var(--space-2);
+}
+
+.candidate-flow__item:not(:last-child)::after {
+  content: "→";
+  color: var(--text-subtle);
+}
+
+.candidate-flow__link {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.candidate-flow__link:hover {
+  background: var(--bg-soft);
+}
+
+.candidate-flow__item.is-current .candidate-flow__link {
+  border-color: var(--text);
+  background: var(--bg-soft);
+}
+
+.candidate-flow__name {
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+.candidate-flow__desc,
+.candidate-flow__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.candidate-flow__where {
+  margin-right: var(--space-1);
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+/* ステータスのバッジ。段ごとに色相を分け、地は色を薄く溶かした面にする(ライト・ダークとも読めるよう中間の明度) */
+.candidate-badge {
+  --badge: #6b7280;
+  display: inline-block;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--badge) 45%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--badge) 14%, var(--surface));
+  color: color-mix(in srgb, var(--badge) 80%, var(--text));
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.candidate-badge--upload { --badge: #6b7280; }
+.candidate-badge--expand { --badge: #2f6fb3; }
+.candidate-badge--duplicate { --badge: #a86b00; }
+.candidate-badge--notation { --badge: #7a4bb5; }
+.candidate-badge--done { --badge: #2e7d4f; }
+.candidate-badge--registered { --badge: #2e7d4f; }
+.candidate-badge--pending { --badge: #c0561b; }
+.candidate-badge--duplicated,
+.candidate-badge--rejected { --badge: #8a8f98; }
+
+/* ステータスの絞り込み。バッジに件数を添えて並べる */
+.candidate-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  font-size: 13px;
+}
+
+.candidate-filter__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.candidate-filter__item[aria-current="page"] {
+  outline: 1px solid var(--text);
+  color: var(--text);
+}
+
+.candidate-filter__count {
+  font-size: 12px;
+}
+
+/* 表層形。expand で増えた語は元の語の下に字下げし、1語目に「↳」 */
+.candidate-surface--child {
+  display: inline-block;
+  padding-left: var(--space-5);
+  position: relative;
+}
+
+.candidate-surface__branch {
+  position: absolute;
+  left: var(--space-1);
+  color: var(--text-subtle);
+}
+
+.candidate-surface__sub {
+  display: block;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.candidate-tree {
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+  line-height: 1.8;
+}
+
+.candidate-step {
+  margin-bottom: var(--space-6);
+}
+
+/* 段の最後の「まとめて次へ」ボタン。表や一覧から少し離す */
+.candidate-finish {
+  margin-top: var(--space-4);
+}
+
+.admin-candidates-table__note,
+.admin-candidates-table__score {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.admin-candidates-table__score {
+  display: block;
+  white-space: nowrap;
+}
+
+.admin-candidates-table__status,
+.admin-candidates-table__exclude {
+  white-space: nowrap;
+}
+
+.admin-candidates-table__exclude {
+  width: 4em;
+  text-align: center;
+}
+
+.admin-candidates-table__score-cell {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-candidates-table__matches {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-candidates-table tr.is-matched td {
+  background: color-mix(in srgb, #a86b00 8%, var(--surface));
+}
+
 /* ===== 統計 §1 ワードクラウド(Issue 78) =====
    よく現れる形態素を「活字の大きさ＝頻度」で組む。最頻の1語を中心に据え、
    残りはばらばらに置いて隙間を詰める(オーナー指示 2026-08-11 / 2026-09-10)。
