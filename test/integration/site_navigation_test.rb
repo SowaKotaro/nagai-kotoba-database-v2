@@ -18,4 +18,11 @@ class SiteNavigationTest < ActionDispatch::IntegrationTest
     assert_select "footer a[href=?]", about_path, text: I18n.t("layouts.nav.about")
     assert_select "footer a[href=?]", privacy_path, text: I18n.t("layouts.nav.privacy")
   end
+
+  test "ヘッダーより前に本文へのスキップリンクがあり、飛び先の main がフォーカスを受けられる" do
+    get words_path
+
+    assert_select "body > a.skip-link:first-child[href='#main']", text: I18n.t("layouts.skip_to_main")
+    assert_select "main#main[tabindex='-1']"
+  end
 end

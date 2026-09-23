@@ -88,13 +88,17 @@
       行間・大きな角丸)をこのクラスの下で上書きする(app/assets/stylesheets/admin.css)。
       HTML の構成は公開側と共有したまま、見え方だけを切り替える %>
   <body class="<%= "is-admin" if request.path.start_with?("/admin") %>">
+    <%# キーボードで最初に届く位置に、ヘッダー(ブランド・ナビ・検索)を飛ばして本文へ移る
+        リンクを置く。フォーカスされたときだけ見える(Issue 99) %>
+    <a href="#main" class="btn skip-link"><%= t("layouts.skip_to_main") %></a>
     <%= render "shared/header" %>
     <%# 管理画面だけに出す共通サブナビ(Issue 35) %>
     <%= render "admin/nav" if admin_page? %>
 
     <%# トップだけは全幅の帯で組むため、ページ側からクラスを差し込めるようにする
         (container--flush = 幅と左右の余白を外し、帯が画面端まで届くようにする) %>
-    <main class="container <%= yield(:main_class) %>">
+    <%# id はスキップリンクの飛び先。tabindex="-1" で、飛んだあとの Tab が本文の続きから進む %>
+    <main id="main" tabindex="-1" class="container <%= yield(:main_class) %>">
       <%# フラッシュはここで一元表示する(各ビューでは表示しない)。
           Turbo Stream の応答から差し替えられるよう、器に id を持たせる %>
       <div id="flash"><%= render "shared/flash" %></div>

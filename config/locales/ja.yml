@@ -136,6 +136,7 @@ ja:
 
   layouts:
     brand: "長い言葉のデータベース"
+    skip_to_main: "本文へ移動"
     search_placeholder: "単語を検索"
     search_submit: "検索"
     breadcrumbs_home: "ホーム"
