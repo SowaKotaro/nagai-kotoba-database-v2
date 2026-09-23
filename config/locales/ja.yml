@@ -260,6 +260,15 @@ ja:
     length_at_least: "%{count}文字以上"
     length_at_most: "%{count}文字以下"
     length_between: "%{min}文字以上%{max}文字以下"
+    # 音の成分の個数で絞る(Issue 92)。値は words の max_*_count(語義のうち最大)
+    sound_counts:
+      legend: "音の成分"
+      hint: "読みに含む数で絞ります(「◯つ以上」)。空欄なら絞りません。"
+      dakuten_min: "濁点・半濁点"
+      small_kana_min: "小書きのかな"
+      chouon_min: "長音符"
+      at_least: "%{count}つ以上"
+      unit: "つ以上"
     whole_genre: "%{name} 全体"
     submit: "この条件で検索"
     clear: "条件をクリア"

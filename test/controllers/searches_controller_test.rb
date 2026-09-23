@@ -19,7 +19,8 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
       { word_origin_id: [ kango_id.to_s ] } => { word_origin_id: [ kango_id ] },
       { char_type_pattern: "漢漢", char_type_partial: "1", char_type_ignore_case: "1" } =>
         { char_type_pattern: "漢漢", char_type_partial: "1", char_type_ignore_case: "1" },
-      { regexp: "^ア.*ン$" } => { regexp: "^ア.*ン$" }
+      { regexp: "^ア.*ン$" } => { regexp: "^ア.*ン$" },
+      { dakuten_min: "3", small_kana_min: "", chouon_min: "0" } => { dakuten_min: 3 }
     }.each do |params, expected|
       get search_path, params: { commit: I18n.t("searches.submit") }.merge(params)
       assert_redirected_to words_path(expected)
@@ -76,6 +77,10 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[type=checkbox][name=?][value=?]", "word_origin_id[]", origin.id.to_s
     end
     assert_select "input#vowel_reading"
+    # 音の成分は3つとも「◯つ以上」の数値欄で、条件を引き継いで開くと値が入っている
+    get search_path, params: { dakuten_min: "4" }
+    assert_select "fieldset.sound-count-field input[type=number]", count: 3
+    assert_select "input#dakuten_min[value=?]", "4"
     assert_select ".field-hint", text: I18n.t("searches.vowel_pattern_hint")
 
     # 正規表現の書き方は既定で畳まれたヘルプに入れて目立たせず、入力欄と aria-describedby で結ぶ

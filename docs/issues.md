@@ -141,19 +141,6 @@
 - 期待効果: このサイトを使う典型的な場面(言葉を思い出せない)に応えられる。
 - 補足: 1万語に近づいたら FULLTEXT(ngram parser)への移行を検討する(Issue 53 と同じ判断軸)。
 
-## Issue 92: 濁点・小書きかな・長音の数を検索条件にする
-- 種別: feature
-- 状態: 未着手
-- 優先度: P1 ／ Impact: Med ／ Effort: Low
-- 依存: なし
-- 背景・現状: 2026-09-17 の改善調査(B-2)より。`words.max_dakuten_count`(最大 10・1以上 1,283 語)/ `max_small_kana_count`(最大 8・1,019 語)/ `max_chouon_count`(最大 5・679 語)は**カラムも降順の複合インデックスもあり、並び替え・ランキングでは使えるのに検索条件には無い**(`word_sense_search.rb:18-43`)。「濁点が5つ以上の言葉」が引けない。
-- 内容:
-  - [ ] `WordSenseSearch` に `dakuten_min` / `small_kana_min` / `chouon_min` を足す(`reading_length_min` と同じ作法。`words` 側のカラムなので `joins(:word).where(words: { max_dakuten_count: n.. })`)
-  - [ ] `/search` のフォームに**3つまとめて1区画**(「音の成分で絞る」など)で足し、「読みの長さ」区画の隣に置く
-  - [ ] **`INDEXABLE_FACET_KEYS`(`word_sense_search.rb:136`)には足さない**(値域が狭く薄い面が 33 増えるだけ。`noindex` のまま検索の道具として持つ)
-  - [ ] 境界値(0・最大値・負数・非数値)を検索のテストで縛る
-- 期待効果: ラップ・作詞(growth-strategy.md §2)で「濁点が多い=強い響き」を直接引ける。実装はフォームと条件の追加だけ。
-
 ## Issue 83: 収録リクエストのステータスを登録完了で自動遷移させる
 - 種別: improvement
 - 状態: 未着手

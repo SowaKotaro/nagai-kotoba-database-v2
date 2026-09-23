@@ -1327,6 +1327,46 @@ a.tag:hover .genre-hub__count {
   width: 100%;
 }
 
+/* 音の成分(濁点・小書きのかな・長音符の「◯つ以上」)。3行を横に流し、狭幅では折り返す */
+.sound-count-field__rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+}
+
+.sound-count-field__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+}
+
+.sound-count-field__input {
+  width: 5em;
+}
+
+.sound-count-field__unit {
+  color: var(--text-muted);
+}
+
+.sound-count-field .field-hint {
+  margin: var(--space-3) 0 0;
+}
+
+/* 狭幅では縦に積むので、入力欄の左端を揃える */
+@media (max-width: 560px) {
+  .sound-count-field__rows {
+    display: grid;
+    grid-template-columns: max-content 5em max-content;
+    align-items: center;
+    gap: var(--space-3) var(--space-2);
+  }
+
+  .sound-count-field__row {
+    display: contents;
+  }
+}
+
 /* 押したキーの文字種が並ぶ表示欄。VSCode の検索窓のように、先頭に「>」プロンプト、
    左に組み立て中のパターン、右端に切替アイコン(text-aa / "ab")を置く。手入力不可の読み取り専用。
    枠線は他の入力欄と同じ(--border-strong、focus でアクセント色)。 */
@@ -1516,7 +1556,8 @@ a.tag:hover .genre-hub__count {
 
 .slider-field,
 .kana-field,
-.chips-field {
+.chips-field,
+.sound-count-field {
   border: none;
   padding: 0;
   margin: 0;

@@ -55,6 +55,23 @@
     </div>
   </fieldset>
 
+  <%# 音の成分: 濁点・小書きのかな・長音符をいくつ以上含むか(Issue 92)。
+      3つとも「◯つ以上」の同じ形なので1区画にまとめ、読みの長さの隣に置く %>
+  <fieldset class="sound-count-field">
+    <legend class="field-legend"><%= icon "quotes" %><%= t("searches.sound_counts.legend") %></legend>
+    <div class="sound-count-field__rows">
+      <% WordSenseSearch::SOUND_COUNT_FILTERS.each_key do |key| %>
+        <div class="sound-count-field__row">
+          <%= label_tag key, t("searches.sound_counts.#{key}"), class: "sound-count-field__label" %>
+          <%= number_field_tag key, @search.public_send(key), min: 1, max: 20, inputmode: "numeric",
+                class: "sound-count-field__input", aria: { describedby: "sound-count-hint" } %>
+          <span class="sound-count-field__unit"><%= t("searches.sound_counts.unit") %></span>
+        </div>
+      <% end %>
+    </div>
+    <p class="field-hint" id="sound-count-hint"><%= t("searches.sound_counts.hint") %></p>
+  </fieldset>
+
   <%= render "kana_grid", name: "first_char", selected: @search.first_char,
         legend: t("searches.first_char"), legend_icon: "skip_back" %>
   <%= render "kana_grid", name: "last_char", selected: @search.last_char,

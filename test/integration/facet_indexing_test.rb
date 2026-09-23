@@ -44,7 +44,7 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
     assert_select "meta[name=robots][content=?]", "noindex,follow"
     assert_select "h1.page-title", text: I18n.t("words.index.title") # 見出しは既定のまま
 
-    [ words_path(q: "カレー"), words_path(reading_length_min: 7), search_path ].each do |path|
+    [ words_path(q: "カレー"), words_path(reading_length_min: 7), words_path(dakuten_min: 2), search_path ].each do |path|
       get path
       assert_response :success
       assert_select "meta[name=robots][content=?]", "noindex,follow", true, "#{path} が noindex,follow でない"
