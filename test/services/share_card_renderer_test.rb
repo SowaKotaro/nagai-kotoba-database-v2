@@ -37,6 +37,19 @@ class ShareCardRendererTest < ActiveSupport::TestCase
     end
   end
 
+  test "ほかのリクエストが焼いている最中は待たずに nil を返す(置いてある版はそのまま返す)" do
+    cached = renderer.fetch(name: "word-1", version: "v1", svg: "<svg/>")
+
+    ShareCardRenderer::RENDER_LOCK.synchronize do
+      assert_nil renderer.fetch(name: "word-2", version: "v1", svg: "<svg/>")
+      assert_equal cached, renderer.fetch(name: "word-1", version: "v1", svg: "<svg/>")
+    end
+    assert_equal [ "word-1-v1.png" ], Dir.children(@directory)
+
+    # 手が空けば焼ける
+    assert renderer.fetch(name: "word-2", version: "v1", svg: "<svg/>")
+  end
+
   test "rsvg-convert で 1200×630 の PNG に焼ける" do
     skip "rsvg-convert か日本語の書体が無いため skip" unless ShareCardRenderer.available?
 

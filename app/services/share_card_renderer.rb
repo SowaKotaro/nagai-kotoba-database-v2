@@ -16,6 +16,10 @@ class ShareCardRenderer
   TIMEOUT = 10
   DEFAULT_DIRECTORY = Rails.root.join("tmp/cache/share_cards")
   PNG_SIGNATURE = "\x89PNG\r\n\x1A\n".b.freeze
+  # 焼くのはプロセス内で同時に 1 本まで(Issue 89)。共有カードの URL は誰でも叩けるので、
+  # 未生成の語を並べて叩かれると、Puma のスレッドの数だけ rsvg-convert が並んで CPU を握られる。
+  # 先客がいれば待たずに nil を返し、呼び出し側は既定のカードに回す(クローラは後で取り直す)。
+  RENDER_LOCK = Mutex.new
 
   # rsvg-convert が動き、日本語の書体が入っているか。プロセスごとに 1 回だけ調べる
   # (本番で導入したら Puma を再起動する)。
@@ -46,18 +50,30 @@ class ShareCardRenderer
   # name の版 version の PNG(バイト列)を返す。まだ焼いていなければ svg を焼いて置く。焼けなければ nil。
   def fetch(name:, version:, svg:)
     path = @directory.join("#{name}-#{version}.png")
-    unless path.exist?
-      FileUtils.mkdir_p(@directory)
-      return unless render(svg, path)
+    return unless path.exist? || render_exclusively(name, svg, path)
 
-      remove_other_versions(name, keep: path)
-    end
     path.binread
   rescue Errno::ENOENT
     nil # 読む直前に、別のリクエストが新しい版を焼いてこの版を消した
   end
 
   private
+
+  def render_exclusively(name, svg, path)
+    return false unless RENDER_LOCK.try_lock
+
+    begin
+      return true if path.exist? # 待っている間ではなく、直前に別のリクエストが焼き終えていた
+
+      FileUtils.mkdir_p(@directory)
+      return false unless render(svg, path)
+
+      remove_other_versions(name, keep: path)
+      true
+    ensure
+      RENDER_LOCK.unlock
+    end
+  end
 
   # 書き終えたファイルだけを置く(同時に取りに来たリクエストに書きかけを渡さない)。
   def render(svg, path)

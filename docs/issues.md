@@ -93,32 +93,25 @@
   - [ ] 可能ならサーバ外への退避(別ホスト・オブジェクトストレージ等)を検討
 - 期待効果: データ消失リスクの解消。**インフラ変更のため実施前に内容を説明する**(CLAUDE.md 方針)。
 
-## Issue 88: 一覧の描画を軽くする(icon ヘルパーと行のキャッシュ)
+## Issue 88: 一覧の描画を軽くする(行のフラグメントキャッシュ)
 - 種別: improvement
-- 状態: 未着手
-- 優先度: P1 ／ Impact: Med ／ Effort: Low
-- 依存: なし([`performance-report.md`](performance-report.md) §2-B・§8.5 の未対処分の続き)
-- 背景・現状: 2026-09-17 の改善調査(A-5)より。`/words`(100件)は 87ms のうち **SQL 6ms・ビュー描画 約 72ms**。1リクエストで `words/_entry_row` 101 回・`shared/_genre_path` 200 回・`shared/icons/_arrow_right` 204 回と、**`render` が 500 回以上**走っている。`icon` ヘルパー(`icons_helper.rb:6`)が SVG 1個ごとに `render` を呼ぶ実装のため。
+- 状態: 未着手(**キャッシュの失効条件と容量を決めてから**。下記)
+- 優先度: P2 ／ Impact: Low〜Med ／ Effort: Med
+- 依存: なし([`performance-report.md`](performance-report.md) §2-B の続き)
+- 背景・現状: 2026-09-17 の改善調査(A-5)では「`/words` の 8 割がビュー描画で、主因は `icon` ヘルパーが SVG ごとに `render` を呼ぶこと」としていたが、**2026-09-23 にテンプレートをキャッシュする本番相当の条件(`ActionView::Resolver.caching = true`)で測り直すと前提が違った**。開発 DB・20 回平均で、`/words`(100 行)のビュー描画 53ms のうち:
+  | 区間 | 時間 | 回数 |
+  |---|---:|---:|
+  | `words/_entry_row`(行全体) | 44.1ms | 100 |
+  | └ `shared/_genre_path` | 17.6ms | 100 |
+  | └ `shared/icons/_arrow_right` | **1.4ms** | 102 |
+
+  **icon を定数文字列にする案は試作して効果が 1ms 未満だったので取り下げた**(表示される HTML は同一だった)。時間を使っているのは行ごとの `link_to` と URL 生成(パンくずだけで1行5本)。
 - 内容:
-  - [ ] `icon` ヘルパーをパーシャル経由から**定数の SVG 文字列**に変える(読み込み時に1回だけ読む)
-  - [ ] `words/_entry_row` を語ごとのフラグメントキャッシュ(`cache word`)にする。キーワード検索の「別表記が一致」注記(`local_assigns[:query]` を使う部分)は**キャッシュの外に出す**
+  - [ ] `words/_entry_row` を語ごとのフラグメントキャッシュにする。キーワード検索の「別表記が一致」注記(`local_assigns[:query]`)はキャッシュの外に出す
+  - [ ] **失効条件を決める**: キーを `word` だけにすると、ジャンル・エンティティの**名前の変更**(マスタは語を touch しない)が一覧に反映されない。`Word#cache_dependencies`(詳細ページの ETag で使っているもの)をキーに含めるか、マスタ更新時にまとめて失効させるか
+  - [ ] **容量を決める**: 本番の `:memory_store` は既定 32MB で、1行 約 1.3KB × 1万語 ≒ 13MB を他の集計キャッシュと取り合う。サイズを明示するか、行キャッシュを入れないか
   - [ ] キャッシュの検証は `ActionController::Base.cache_store` を差し替えて行う(CLAUDE.md のテスト方針)
-  - [ ] **本番へ入れる前にメモリ使用量を測る**(`:memory_store` はプロセス内。`WEB_CONCURRENCY` を増やすとワーカーごとに重複する)
-- 期待効果: 一覧・検索結果・ランキング・関連語と、行を並べる画面すべてに効く。GIL 構成では CPU を握る時間の削減がそのまま待ち時間の削減になる(速度レポート §5)。
-
-## Issue 89: 共有カード(rsvg-convert)にレートリミットと同時実行制限を付ける
-- 種別: improvement
-- 状態: 未着手
-- 優先度: P1 ／ Impact: Med ／ Effort: Low
-- 依存: なし(Issue 53 の対象にこの経路は入っていない)
-- 背景・現状: 2026-09-17 の改善調査(A-6)より。`/words/:id/share_card.png` は誰でも取得でき、未生成の語ではその場で `rsvg-convert` を外部プロセスとして起動する(`share_card_renderer.rb:81`、タイムアウト 10 秒)。Puma は1プロセス・5スレッドなので、未生成の id を並べて叩けば**最大5つの `rsvg-convert` が最大10秒ずつ走り**、1,467 語ぶんの初回を一斉に踏ませられる。
-- 内容:
-  - [ ] `share_cards#show` に Rails 8 標準の `rate_limit`(IP ごと、分あたり20回程度。`word_requests_controller.rb:27` と同じ書き方)
-  - [ ] `ShareCardRenderer` の同時実行数を1に絞る(`Mutex` か、焼くファイル名でのファイルロック)
-  - [ ] (余裕があれば)アノテーション完了時に `ActiveJob`(`:async`)で焼いておく
-- 期待効果: 単一 VPS の CPU を外から握られる経路を塞ぐ。
-- 補足: 厳しくしすぎると SNS のプレビューが出ないことがある。`ShareCardRenderer.available?` が false の環境(既定カードへ 302)には影響しない。
-
+- 期待効果: 行を並べる画面(一覧・検索結果・ランキング・関連語)の描画時間の削減。GIL 構成では CPU を握る時間の削減がそのまま待ち時間の削減になる(速度レポート §5)。
 ## Issue 90: 統計ページの Plotly(1.33MB gzip)を自前 SVG に置き換える
 - 種別: improvement
 - 状態: 未着手(**着手前に小さな試作を見せる**)
@@ -321,12 +314,14 @@
 
 ## Issue 94: llms.txt 系・sitemap・words.json にレートリミットを付ける
 - 種別: improvement
-- 状態: 未着手
+- 状態: 未着手(**本番サーバの nginx 設定の確認が先**。下記)
 - 優先度: P2 ／ Impact: Med ／ Effort: Low
 - 依存: なし(Issue 53 の一部を先行して切り出したもの)
 - 背景・現状: 2026-09-17 の改善調査(A-7)より。`llms-full.txt` は公開 1,467 語で **1.64MB**、冷キャッシュでの生成に 747ms。1万語では約 11MB になる。`race_condition_ttl` で再生成は1本に絞られるが、**送出そのもの**は絞られない(`llms_controller.rb:17-24`)。
 - 内容:
+  - [ ] **先に確かめる**: 本番の nginx が Cloudflare の実 IP(`CF-Connecting-IP` か `real_ip`)を Rails に渡しているか。渡していないと `request.remote_ip` が Cloudflare の中継 IP になり、IP ごとの制限が**利用者をまとめて止める**(既存の `sessions#create`・収録リクエストのレートリミットも同じ前提に乗っている)。共有カード(Issue 89)で IP ごとの制限を見送ったのもこのため
   - [ ] `llms.txt` / `llms-full.txt` / `sitemap.xml` / `words.json` に IP ごとの `rate_limit` を**緩めに**入れる
+  - [ ] 実 IP が取れたら、共有カードの**未生成時の描画**にも IP ごとの上限を足すか検討する(Issue 89 の残り)
   - [ ] アクセスログで実際の取得頻度を見てから調整する
   - [ ] (規模が要求したら)`llms-full.txt` の分割を検討する。llms.txt の慣習から外れるので、**分割よりレートリミットが先**
 - 期待効果: LLM クローラの同時取得で Puma を数秒握られる状態を防ぐ。
@@ -361,7 +356,7 @@
 - 種別: improvement
 - 状態: 未着手
 - 優先度: P2 ／ Impact: Med ／ Effort: Low
-- 依存: Issue 88(一覧の行キャッシュを先に入れ、メモリ使用量を見てから広げる)
+- 依存: Issue 88(失効条件と容量の決め方を揃える)
 - 背景・現状: 2026-09-17 の改善調査(C-3)より。ビュー内の `cache` ブロックは `searches/_genre_filter.html.erb:16` の**1箇所だけ**。Issue 26/48 は集計結果を `Rails.cache` に載せる形で解決しており、描画結果はどのページでもキャッシュしていない。いまのボトルネックは SQL ではなく描画(Issue 88)。
 - 内容:
   - [ ] 単語詳細の関連語・しりとり区画(キー `[word, PublishedWordsDigest]`)
