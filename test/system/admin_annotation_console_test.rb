@@ -171,7 +171,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
 
       # 中分類の「＋追加」に、既にある「日本文学」を入れる
       within ".js-genre-medium" do
-        click_expecting(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
+        click_via_js(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
         assert_no_difference -> { Genre.count } do
           find(".ann-add__input").send_keys("日本文学", :enter)
           assert_selector ".ann-add__msg", text: I18n.t("admin.inline_add.client.selected_existing")
@@ -195,7 +195,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
 
     within all(".js-sense").last do
       within ".js-genre-large" do
-        click_expecting(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
+        click_via_js(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
         assert_difference -> { Genre.large.count } => 1 do
           find(".ann-add__input").send_keys("架空の大分類", :enter)
           assert_selector ".ann-chip.is-on", exact_text: "架空の大分類"

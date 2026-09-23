@@ -308,6 +308,7 @@
 - **Issue 84: 文書整理で見つかったコードの古い記述の掃除** [improvement] — 完了(PR #153)。削除済み `/admin/design_mocks` のコメント、廃止した呼び名「蔵版目録」(確定事項 29)、撤去済み画像プレースホルダの訳文コメント、印の描画速度のコメント(4.65 秒が正。確定事項 27)、glossary のファイル名の誤記を直し、`.gitignore` に `/research/.harvest_*` を足した。
 - **Issue 98: 小粒のコード改善** [improvement] — 完了(PR #153)。`resource :session` を `only: %i[new create destroy]` に(存在しない `update` へのルートを削除)／`--success` に「面の上に置かない」を注記／`SearchRegexp#valid_syntax?` の判定を `Rails.cache` に1日覚える／`.figure-number` の `font-weight: 700` を `@supports (-webkit-text-stroke)` の内側へ移し、線で描けない環境では 400 の塗りにする。
   - **見送った 2 件**: `WordSenseSearch#unknown_master_ids?` の COUNT 統合(指定された軸の数しか走らず、通常は 1 本)と、`admin/annotations#set_navigation` の前後だけの取得(並べ替え〈Issue 67〉の多列ソートで前後を引くのは書き換えのリスクに見合わず、キューも高々数百件)。
+- **Issue 86: 関連語・しりとりが常に「最小 id の6件」を返す** [improvement] — 完了(PR #154)。`WordWindow` で**その語の id を起点に窓をずらして**6件取る(起点より大きい側 → 足りなければ先頭へ回り込む。決定的で、2 クエリともインデックスが効く)。関連語・しりとりのどちらかから一度でもリンクされる公開語が **56.7% → 100%**(開発 DB の公開 1,467 語で実測)。
 
 ---
 

@@ -62,6 +62,17 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     assert_selector expect_css, **expect_options
   end
 
+  # JS の click() だけで押す(ネイティブクリックを使わない)。
+  # click_expecting は反応が無いとき JS click で押し直すが、このヘッドレス環境では
+  # 届かなかったはずのネイティブクリックが**後の操作(send_keys など)のあとに遅れて届く**ことがある。
+  # 「＋追加」のように、押し直されると直後の結果表示を消してしまう操作はこちらで押す。
+  def click_via_js(expect_css:, **expect_options, &element_finder)
+    element = element_finder.call
+    page.scroll_to(element, align: :center)
+    page.execute_script("arguments[0].click()", element)
+    assert_selector expect_css, **expect_options
+  end
+
   # turbo_confirm 付きの操作を実行して承認する。実ダイアログには依存しない:
   # Chrome 150.0.7871.114 以降、WebDriver コマンド中に開いたダイアログは
   # unhandled_prompt_behavior に関わらず自動で閉じられることがあり(.115 で確認)、
