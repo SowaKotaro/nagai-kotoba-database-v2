@@ -1,8 +1,8 @@
-# 登録予定単語の upload(前処理の1段目)。箇条書きテキストを upload の語として入れるフォームオブジェクト。
+# 登録予定単語の追加(仕分けの画面の貼り付け欄)。箇条書きテキストを仕分け待ちの語として入れるフォームオブジェクト。
 #
 # 既に入っている語(不要にした語を含む)は作り直さず、どの状態にいたかを件数で返す
 # (表層形のユニーク制約が「一度見た語」の集合を兼ねるため)。
-# 収録済みの語も入れる(expand の元にする使い方があるため。重複は duplicate の段で見つかる)。
+# 収録済みの語も入れる(拡張の元にする使い方があるため。重複は仕分けの画面の照合で見つかり、除外が選ばれた状態で並ぶ)。
 class WordCandidateIntake
   include ActiveModel::Model
 
@@ -38,13 +38,10 @@ class WordCandidateIntake
     if (existing = WordCandidate.find_by(surface: surface))
       result.existing[existing.status] += 1
     else
-      WordCandidate.create!(surface: surface, status: :upload)
+      WordCandidate.create!(surface: surface, status: :triage)
       result.created += 1
     end
-  rescue ActiveRecord::RecordInvalid => e
-    result.errors << "#{surface}: #{e.record.errors.full_messages.join('、')}"
-  rescue ActiveRecord::RecordNotUnique
-    # 先頭 191 字(prefix index)が既存の語と同じ長い語。極めて稀なので行のエラーとして返す。
-    result.errors << "#{surface}: #{I18n.t('admin.word_candidates.intake.not_unique')}"
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => e
+    result.errors << "#{surface}: #{WordCandidate.save_error_message(e)}"
   end
 end

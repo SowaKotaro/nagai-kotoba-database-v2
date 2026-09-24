@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -74,13 +74,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
     t.string "confidence", limit: 10, comment: "notation の確からしさ high / medium / low"
     t.datetime "created_at", null: false
     t.integer "entry_score", limit: 1, comment: "notation の立項スコア 1〜5"
-    t.datetime "expanded_at", comment: "expand の結果を取り込んだ時刻(expand で増えた語は作成時刻)"
+    t.datetime "expanded_at", comment: "拡張の元にして /expand の結果を取り込んだ時刻(集めた語自身は NULL)"
     t.datetime "notated_at", comment: "notation の結果を取り込んだ時刻"
     t.string "note", limit: 1000, comment: "メモ(不要にした理由・調査の注記など)"
     t.string "original_surface", null: false, collation: "utf8mb4_0900_as_ci", comment: "upload した時点の表層形"
     t.bigint "root_id", comment: "expand の系統の根(一覧を「元の語 → 増えた語」の順に並べるため。根自身は NULL)"
     t.bigint "seed_id", comment: "expand で増えた語の、元になった語"
-    t.integer "status", default: 10, null: false, comment: "10:upload 20:expand 30:duplicate 40:notation 50:done 60:登録済み 80:要判断 85:重複 90:不要"
+    t.integer "status", default: 10, null: false, comment: "10:仕分け待ち 20:拡張待ち 40:表記待ち 45:表記の確認待ち 50:登録待ち 60:登録済み 80:保留 85:重複 90:不要"
     t.datetime "status_changed_at", comment: "ステータスを最後に動かした時刻"
     t.string "surface", null: false, collation: "utf8mb4_0900_as_ci", comment: "現在の表層形(notation で置き換わる)"
     t.datetime "updated_at", null: false

@@ -1,0 +1,29 @@
+<%# 確認の一覧の上の帯: 印での絞り込みと、キーボードの案内。
+    絞り込みは見え方だけを変える(隠れた行も、選んである処理のまま一緒に確定される)。
+    reviews は同じフォームで確定する一覧(仕分けは本体と保留の2つ)。 %>
+<% flag_counts = reviews.map(&:flag_counts).inject({}) { |sum, counts| sum.merge(counts) { |_, a, b| a + b } } %>
+<div class="cand-toolbar">
+  <div class="cand-filter" role="group" aria-label="<%= t("admin.word_candidates.toolbar.filter_label") %>">
+    <button type="button" class="cand-filter__chip" aria-pressed="true"
+            data-decision-list-target="filter" data-action="decision-list#filter" data-flag="">
+      <%= t("admin.word_candidates.toolbar.all") %><span class="cand-filter__count"><%= number_with_delimiter(reviews.sum(&:size)) %></span>
+    </button>
+    <% WordCandidateReview::FLAGS.each do |flag| %>
+      <% next unless flag_counts[flag].to_i.positive? %>
+      <button type="button" class="cand-filter__chip" aria-pressed="false"
+              data-decision-list-target="filter" data-action="decision-list#filter" data-flag="<%= flag %>">
+        <%= t("admin.word_candidates.flags.#{flag}") %><span class="cand-filter__count"><%= number_with_delimiter(flag_counts[flag]) %></span>
+      </button>
+    <% end %>
+  </div>
+  <p class="cand-toolbar__keys">
+    <%= icon "keyboard" %>
+    <span><kbd>↑</kbd><kbd>↓</kbd> <%= t("admin.word_candidates.toolbar.keys.move") %></span>
+    <% choices.each do |decision| %>
+      <span><kbd><%= candidate_decision_key(decision).upcase %></kbd> <%= t("admin.word_candidates.decisions.#{decision}") %></span>
+    <% end %>
+    <span><kbd>F2</kbd> <%= t("admin.word_candidates.word.edit") %></span>
+    <span><kbd>Shift</kbd>+<%= t("admin.word_candidates.toolbar.keys.click") %> <%= t("admin.word_candidates.toolbar.keys.range") %></span>
+    <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> <%= t("admin.word_candidates.toolbar.keys.submit") %></span>
+  </p>
+</div>

@@ -1,33 +1,28 @@
-<% content_for :title, t(".title") %>
+<%= render "admin/candidates/header", current: nil, title: t(".title"),
+      lead: t(".lead", surface: @candidate.original_surface) %>
 
-<h1 class="page-title"><%= t(".title") %></h1>
-
-<p class="field-hint">
-  <%= render "badge", status: @candidate.status %>
-  <% if @candidate.original_surface != @candidate.surface %>
-    / <%= t(".original", surface: @candidate.original_surface) %>
-  <% end %>
-</p>
-
-<% if @candidate.errors.any? %>
-  <ul class="form-errors">
-    <% @candidate.errors.full_messages.each do |message| %>
-      <li><%= message %></li>
+<%# 確認の画面では、この frame が行の「語」の部分に入る(一覧のほかの行の選択は保ったまま)。
+    保存・取りやめるとどちらも 1語の画面(show)の同じ frame に戻る %>
+<%= turbo_frame_tag dom_id(@candidate, :word), class: "cand-row__word" do %>
+  <%= form_with model: @candidate, url: admin_word_candidate_path(@candidate), class: "cand-edit" do |form| %>
+    <% if @candidate.errors.any? %>
+      <ul class="form-errors">
+        <% @candidate.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
     <% end %>
-  </ul>
-<% end %>
-
-<%= form_with model: @candidate, url: admin_word_candidate_path(@candidate) do |form| %>
-  <div class="field">
-    <%= form.label :surface %>
-    <%= form.text_field :surface, maxlength: WordCandidate::MAX_SURFACE_LENGTH %>
-  </div>
-  <div class="field">
-    <%= form.label :note %>
-    <%= form.text_area :note, rows: 3, maxlength: WordCandidate::MAX_NOTE_LENGTH %>
-  </div>
-  <div class="actions">
-    <%= form.submit t(".save"), class: "btn btn--primary" %>
-    <%= link_to t(".cancel"), admin_word_candidates_path(status: @candidate.status), class: "btn btn--sm" %>
-  </div>
+    <div class="cand-edit__field">
+      <%= form.label :surface, class: "cand-edit__label" %>
+      <%= form.text_field :surface, maxlength: WordCandidate::MAX_SURFACE_LENGTH, autofocus: true, class: "cand-edit__surface" %>
+    </div>
+    <div class="cand-edit__field">
+      <%= form.label :note, class: "cand-edit__label" %>
+      <%= form.text_area :note, rows: 2, maxlength: WordCandidate::MAX_NOTE_LENGTH, class: "cand-edit__note" %>
+    </div>
+    <div class="cand-edit__actions">
+      <%= form.button t(".save"), type: "submit", class: "btn btn--sm btn--primary" %>
+      <%= link_to t(".cancel"), admin_word_candidate_path(@candidate), class: "btn btn--sm cand-edit__cancel" %>
+    </div>
+  <% end %>
 <% end %>

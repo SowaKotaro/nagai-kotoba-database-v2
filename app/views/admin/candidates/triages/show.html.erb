@@ -1,0 +1,46 @@
+<%= render "admin/candidates/header", current: "triage",
+      title: t("admin.word_candidates.stages.triage.name"), lead: t(".lead") %>
+
+<%# 追加(貼り付け)。仕分ける語が無いとき・貼った内容を出し直すときは開いておき、それ以外は畳んで一覧を先に見せる %>
+<details class="cand-intake" <%= "open" if @review.empty? || !@intake.text.nil? %>>
+  <summary class="cand-intake__summary"><%= t(".intake.summary") %></summary>
+  <%= form_with model: @intake, url: admin_candidates_triage_path, method: :post, scope: :word_candidate_intake,
+        class: "cand-intake__form", data: { controller: "submit-shortcut", action: "keydown->submit-shortcut#submit" } do |form| %>
+    <%= form.label :text, t(".intake.label"), class: "visually-hidden" %>
+    <%= form.text_area :text, rows: 6, class: "cand-intake__text", placeholder: t(".intake.placeholder") %>
+    <div class="cand-import__actions">
+      <%= form.button type: "submit", class: "btn btn--sm" do %>
+        <%= t(".intake.submit") %><span class="cand-bar__kbd">Ctrl+Enter</span>
+      <% end %>
+      <p class="cand-import__after"><%= t(".intake.hint", max: number_with_delimiter(WordCandidateIntake::MAX_LINES)) %></p>
+    </div>
+  <% end %>
+</details>
+
+<% if @review.empty? && @held.empty? %>
+  <p class="cand-empty"><%= t(".empty") %></p>
+<% else %>
+  <%# 語ごとの選択は、このフォームに form 属性で結び付ける(一覧の中の「直す」フォームと入れ子にしないため) %>
+  <%= form_with url: admin_candidates_triage_path, method: :patch, id: "cand-decisions", class: "cand-decisions" do %><% end %>
+  <div class="cand-review" data-controller="decision-list" data-decision-list-form-value="cand-decisions"
+       data-action="change->decision-list#changed click->decision-list#clicked keydown->decision-list#keydown keydown@window->decision-list#submitShortcut turbo:frame-render->decision-list#frameRendered">
+    <%= render "admin/candidates/toolbar", reviews: [ @review, @held ], choices: @review.choices %>
+
+    <% if @review.empty? %>
+      <p class="cand-empty"><%= t(".empty_triage") %></p>
+    <% else %>
+      <%= render "admin/candidates/review", review: @review, form: "cand-decisions" %>
+    <% end %>
+
+    <% unless @held.empty? %>
+      <%# 保留(あとで決める)にした語。既定は保留のままなので、開かずに確定しても動かない %>
+      <details class="cand-held" id="held" <%= "open" if @review.empty? || params[:held].present? %>>
+        <summary class="cand-held__summary"><%= t(".held", count: @held.size) %></summary>
+        <%= render "admin/candidates/review", review: @held, form: "cand-decisions" %>
+      </details>
+    <% end %>
+
+    <%= render "admin/candidates/bar", choices: @review.choices, form: "cand-decisions", submit_label: t(".submit"),
+          counts: (@review.rows + @held.rows).map(&:default).tally %>
+  </div>
+<% end %>

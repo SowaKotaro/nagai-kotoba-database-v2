@@ -1,43 +1,14 @@
-<% content_for :title, "expand" %>
+<%= render "admin/candidates/header", current: "expand",
+      title: t("admin.word_candidates.stages.expand.name"), lead: t(".lead") %>
 
-<h1 class="page-title">expand</h1>
-<p class="field-hint"><%= t(".lead") %></p>
-
-<%= render "admin/word_candidates/flow", current: "expand" %>
-
-<% if flash.now[:alert] %>
-  <p class="form-alert"><%= flash.now[:alert] %></p>
-<% end %>
-
-<section class="candidate-step">
-  <h2 class="section-label"><%= t(".export_title") %></h2>
-  <% if @export.candidates.any? %>
-    <p class="field-hint"><%= t("admin.word_candidates.export.hint", input: @export.target[:input], command: @export.target[:command]) %></p>
-    <%= render "admin/word_candidates/copy_box", text: @export.text, count: @export.candidates.size, field: :expand_input %>
-  <% else %>
-    <p class="empty-note"><%= t(".export_empty") %></p>
-  <% end %>
-</section>
-
-<section class="candidate-step">
-  <h2 class="section-label"><%= t(".import_title") %></h2>
-  <%= render "admin/candidates/import_form", url: import_admin_candidates_expansion_path, output: @export.target[:output] %>
-</section>
-
-<section class="candidate-step">
-  <h2 class="section-label"><%= t(".results_title") %></h2>
-  <% if @results.any? %>
-    <p class="field-hint"><%= t(".results_hint_html", link: link_to(t(".results_link"), admin_word_candidates_path(status: "expand"))) %></p>
-    <ul class="candidate-tree">
-      <% @results.each_with_index do |candidate, i| %>
-        <li><%= render "admin/word_candidates/surface", candidate: candidate, previous: (@results[i - 1] if i.positive?) %></li>
-      <% end %>
-    </ul>
-    <div class="actions candidate-finish">
-      <%= button_to t(".finish", count: @results.size), admin_candidates_expansion_path, method: :patch,
-            class: "btn btn--primary" %>
-    </div>
-  <% else %>
-    <p class="empty-note"><%= t(".results_empty") %></p>
-  <% end %>
-</section>
+<ol class="cand-steps-local">
+  <li class="cand-step">
+    <h2 class="cand-step__title"><%= t(".export_title") %></h2>
+    <%= render "admin/candidates/export", export: @export, empty: t(".export_empty") %>
+  </li>
+  <li class="cand-step">
+    <h2 class="cand-step__title"><%= t(".import_title") %></h2>
+    <%= render "admin/candidates/import_form", url: import_admin_candidates_expansion_path,
+          output: @export.target[:output], after: t(".import_after") %>
+  </li>
+</ol>

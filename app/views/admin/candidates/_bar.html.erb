@@ -1,0 +1,16 @@
+<%# 確認の一覧の下端に貼り付くバー。選んである処理ごとの語数(何も触らずに確定したらこうなる)と、確定ボタン。
+    件数は選択を変えるたびに JS が数え直す(counts はサーバで数えた初期値)。
+    確定ボタンは右端に置く(スマホで折り返しても画面下端の中ほどに来ないように。docs/design.md §10.1.2)。 %>
+<div class="cand-bar">
+  <ul class="cand-bar__counts">
+    <% choices.each do |decision| %>
+      <li class="cand-bar__count cand-bar__count--<%= decision %>">
+        <%= t("admin.word_candidates.decisions.#{decision}") %>
+        <span class="cand-bar__num" data-decision-list-target="count" data-decision="<%= decision %>"><%= counts.fetch(decision, 0) %></span>
+      </li>
+    <% end %>
+  </ul>
+  <button type="submit" form="<%= form %>" class="btn btn--primary cand-bar__submit">
+    <%= submit_label %><span class="cand-bar__kbd">Ctrl+Enter</span>
+  </button>
+</div>

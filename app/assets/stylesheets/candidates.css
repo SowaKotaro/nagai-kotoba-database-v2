@@ -1,0 +1,922 @@
+/* =====================================================================
+ 登録予定単語(管理者専用): 仕分け → 拡張 → 表記 → 登録待ち。docs/design.md §10 準拠。
+ 作業画面なので「拾わせる」組み。色は状態と操作にだけ使う:
+   処理の色 … 拡張 = --admin-accent / 保留 = --admin-warn / 除外 = --danger / 採用 = 色なし(淡い面)
+ 数百行を上から流し見て、例外の行(拡張・保留・除外)だけが色で浮くようにする。
+ 並んだ要素どうしの罫は gap: 1px の隙間で見せる(親を罫の色で塗り、子を面の色で塗る)。
+ ===================================================================== */
+
+/* --- 4段の見出し(仕分け・拡張・表記・登録待ち)。数字を主役にする --- */
+.cand-steps {
+  margin: 0 0 var(--space-5);
+}
+
+.cand-steps__list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.cand-steps__item {
+  display: flex;
+  background: var(--surface);
+}
+
+/* 段そのものがリンク。上端の罫で現在地を示す(管理ナビと同じくアクセント色) */
+.cand-steps__link {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-top: 3px solid transparent;
+}
+
+.cand-steps__link:hover {
+  background: var(--bg-soft);
+}
+
+.cand-steps__link[aria-current="page"] {
+  border-top-color: var(--admin-accent);
+  background: var(--bg-tint);
+}
+
+.cand-steps__head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.cand-steps__no {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cand-steps__name {
+  font-size: 14px;
+}
+
+.cand-steps__count {
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cand-steps__unit {
+  margin-left: 2px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* 語の無い段は数字を沈める(どこに語が溜まっているかを一目で取れるように) */
+.cand-steps__link.is-empty .cand-steps__count {
+  color: var(--text-subtle);
+}
+
+/* その段で次にすること。ローカルで回すスキルは名前(/expand)をそのまま出す */
+.cand-steps__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-subtle);
+  overflow-wrap: anywhere;
+}
+
+/* ブラウザで確かめる語が待っている(表記の確認待ち) */
+.cand-steps__todo {
+  font-size: 12px;
+  color: var(--admin-warn);
+}
+
+.cand-steps__aside {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+}
+
+.cand-steps__aside a[aria-current="page"] {
+  color: var(--text);
+}
+
+/* --- 各画面の頭 --- */
+.cand-head {
+  margin-bottom: var(--space-4);
+}
+
+.cand-head .page-title {
+  margin-bottom: var(--space-1);
+}
+
+.cand-head__lead {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.cand-empty {
+  margin: var(--space-3) 0;
+  color: var(--text-subtle);
+}
+
+/* --- 追加(貼り付け)。畳めば1行 --- */
+.cand-intake {
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cand-intake__summary {
+  padding: var(--space-2) var(--space-3);
+  font-size: 14px;
+  color: var(--admin-accent);
+  cursor: pointer;
+}
+
+.cand-intake[open] .cand-intake__summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.cand-intake__form {
+  padding: var(--space-3);
+}
+
+.cand-intake__text,
+.cand-import__text {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* --- 段の中の手順(書き出す → 取り込む → 確かめる)。罫で区切って上から順に置く --- */
+.cand-steps-local {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cand-step {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.cand-step__title {
+  margin: 0 0 var(--space-3);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.cand-step__hint {
+  margin: 0 0 var(--space-3);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* 書き出し: コピーのボタンが主役。中身は必要なときだけ開く */
+.cand-export {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cand-export__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.cand-export__count {
+  margin: 0;
+  font-size: 14px;
+}
+
+.cand-export__num {
+  margin: 0 2px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cand-export__how {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cand-export__how code,
+.cand-import__label code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--bg-soft);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.cand-export__peek {
+  margin-top: var(--space-2);
+}
+
+.cand-export__peek summary {
+  font-size: 12px;
+  color: var(--text-subtle);
+  cursor: pointer;
+}
+
+.cand-export__text {
+  width: 100%;
+  margin-top: var(--space-2);
+  background: var(--bg-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* 取り込み */
+.cand-import__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cand-import__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.cand-import__after {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* --- 確認の一覧 --- */
+
+/* 連続タップでダブルタップ拡大が起きないようにする(ピンチは残す。アノテーションと同じ) */
+.cand-review {
+  touch-action: manipulation;
+}
+
+/* 帯: 絞り込みとキーボードの案内 */
+.cand-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.cand-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.cand-filter__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cand-filter__chip:hover {
+  color: var(--text);
+}
+
+.cand-filter__chip[aria-pressed="true"] {
+  border-color: var(--text);
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.cand-filter__count {
+  font-size: 12px;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.cand-toolbar__keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cand-toolbar__keys kbd,
+.cand-choice__key {
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* タッチの端末・狭い幅ではキーボードの案内を出さない */
+@media (hover: none), (max-width: 767px) {
+  .cand-toolbar__keys {
+    display: none;
+  }
+}
+
+/* 一覧の器。行・系統の境目は 1px の隙間(親の罫の色)で見せる */
+.cand-list,
+.cand-family {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.cand-list {
+  border: 1px solid var(--border);
+}
+
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す */
+.cand-family[hidden],
+.cand-row[hidden] {
+  display: none;
+}
+
+/* 系統の見出し。面を一段沈め、系統の区切りにする */
+.cand-family__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px var(--space-3);
+  padding: 6px var(--space-3);
+  background: var(--bg-soft);
+}
+
+.cand-family__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.cand-family__count {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cand-family__actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.cand-family__action {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cand-family__action:hover {
+  border-color: var(--text-subtle);
+  color: var(--text);
+}
+
+.cand-family__note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 行: 左に語、右に処理の選択。左端の太い線で選んである処理を示す(採用は線なし) */
+.cand-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid transparent;
+  background: var(--surface);
+  /* キーボードで移ったとき、下端のバーに隠れないよう余白を見込んで見せる */
+  scroll-margin: var(--space-6) 0 112px;
+}
+
+.cand-row--child {
+  padding-left: calc(var(--space-3) + 20px);
+}
+
+.cand-row[data-decision="expand"] {
+  border-left-color: var(--admin-accent);
+}
+
+.cand-row[data-decision="hold"] {
+  border-left-color: var(--admin-warn);
+}
+
+.cand-row[data-decision="reject"] {
+  border-left-color: var(--danger);
+}
+
+.cand-row[data-decision="reject"] .cand-word__surface {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* キーボードで今いる行 */
+.cand-row:has(:focus-visible) {
+  background: var(--bg-tint);
+}
+
+/* 語の部分(turbo-frame) */
+.cand-row__word {
+  display: block;
+  min-width: 0;
+}
+
+.cand-word__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+}
+
+.cand-word__surface {
+  font-size: 16px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.cand-word__tag {
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cand-word__edit {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cand-word__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-3);
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.cand-word__was {
+  color: var(--text-muted);
+}
+
+.cand-word__match,
+.cand-word__score.is-doubtful {
+  color: var(--admin-warn);
+}
+
+/* メモは2行で切る(全文は title で出る) */
+.cand-word__note {
+  display: -webkit-box;
+  flex-basis: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--text-subtle);
+}
+
+/* 処理の選択。ラジオを隠し、ラベルを隙間 1px で並べたボタンの組にする */
+.cand-choice {
+  display: inline-grid;
+  grid-auto-columns: minmax(3.5em, auto);
+  grid-auto-flow: column;
+  gap: 1px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--border-strong);
+}
+
+.cand-choice__option {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  /* Shift+クリックで範囲をそろえるとき、文字の選択が広がらないように */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cand-choice__option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.cand-choice__label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.cand-choice__option:hover .cand-choice__label {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+/* 採用(大半の行)は淡い面にとどめ、例外の処理だけを色のベタにする */
+.cand-choice__option input:checked + .cand-choice__label {
+  background: var(--bg-tint);
+  color: var(--text);
+}
+
+.cand-choice__option--expand input:checked + .cand-choice__label {
+  background: var(--admin-accent);
+  color: #fff;
+}
+
+.cand-choice__option--hold input:checked + .cand-choice__label {
+  background: var(--admin-warn);
+  color: #fff;
+}
+
+.cand-choice__option--reject input:checked + .cand-choice__label {
+  background: var(--danger);
+  color: #fff;
+}
+
+.cand-choice__option input:focus-visible + .cand-choice__label {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: -3px;
+}
+
+/* キーは、キーボードで今いる行にだけ出す(数百行に並べると騒がしいため)。
+   行の中で「直す」を開いて文字を打っている間は出さない(打った文字は欄に入り、処理は選ばれない) */
+.cand-choice__key {
+  display: none;
+}
+
+.cand-choice:has(input:focus-visible) .cand-choice__key {
+  display: inline-block;
+}
+
+/* タッチの端末ではキーの案内を出さない(帯の案内・確定ボタンの Ctrl+Enter と同じ) */
+@media (hover: none) {
+  .cand-choice:has(input:focus-visible) .cand-choice__key {
+    display: none;
+  }
+}
+
+.cand-choice__option input:checked + .cand-choice__label .cand-choice__key {
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+}
+
+/* 保留(あとで決める)の語。既定は畳む */
+.cand-held {
+  margin-top: var(--space-4);
+}
+
+.cand-held__summary {
+  padding: var(--space-2) 0;
+  font-size: 14px;
+  color: var(--admin-warn);
+  cursor: pointer;
+}
+
+/* 下端に貼り付くバー: 処理ごとの語数と確定ボタン */
+.cand-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-3);
+  padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cand-bar__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cand-bar__num {
+  margin-left: 4px;
+  font-size: 18px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cand-bar__count--expand .cand-bar__num {
+  color: var(--admin-accent);
+}
+
+.cand-bar__count--hold .cand-bar__num {
+  color: var(--admin-warn);
+}
+
+.cand-bar__count--reject .cand-bar__num {
+  color: var(--danger);
+}
+
+/* 確定は折り返しても右端(スマホで画面下端の中ほどに来ないように。docs/design.md §10.1.2) */
+.cand-bar__submit {
+  margin-left: auto;
+}
+
+.cand-bar__kbd {
+  margin-left: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+@media (hover: none) {
+  .cand-bar__kbd {
+    display: none;
+  }
+}
+
+/* --- 行の中の手直し(turbo-frame の中の編集フォーム) --- */
+.cand-edit {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.cand-edit__label {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cand-edit__surface,
+.cand-edit__note {
+  width: 100%;
+}
+
+.cand-edit__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* --- 登録待ち --- */
+.cand-handoff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.cand-ready {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.cand-ready__list {
+  margin: 0;
+  padding-left: 2.2em;
+  columns: 2 16em;
+  column-gap: var(--space-5);
+  font-size: 14px;
+}
+
+.cand-ready__item {
+  padding: 1px 0;
+  break-inside: avoid;
+}
+
+.cand-ready__was {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* --- すべての語 --- */
+.cand-status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-4);
+  margin-bottom: var(--space-3);
+  font-size: 13px;
+}
+
+.cand-status-tabs__tab {
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.cand-status-tabs__tab[aria-current="page"] {
+  border-bottom-color: var(--admin-accent);
+}
+
+.cand-status-tabs__count {
+  margin-left: 4px;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.cand-search {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.cand-search__input {
+  flex: 1;
+}
+
+.cand-list-count {
+  margin: 0 0 var(--space-2);
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.cand-list-count__limit {
+  margin-left: var(--space-2);
+  color: var(--admin-warn);
+}
+
+.cand-move {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.cand-move__label {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cand-table {
+  width: 100%;
+}
+
+.cand-table__check {
+  width: 2.5em;
+}
+
+.cand-table__child .cand-table__surface {
+  padding-left: 20px;
+}
+
+.cand-table__sub {
+  display: block;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cand-table__note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 状態の文字。色は意味を持つものだけ(保留 = 要対応 / 登録待ち・登録済み = 達成 / 除外 = 沈める) */
+.cand-status {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cand-status--held {
+  color: var(--admin-warn);
+}
+
+.cand-status--ready,
+.cand-status--registered {
+  color: var(--success);
+}
+
+.cand-status--duplicated,
+.cand-status--rejected {
+  color: var(--text-subtle);
+}
+
+/* --- 1語の画面 --- */
+.cand-detail__word {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cand-detail {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px var(--space-4);
+  margin: 0 0 var(--space-5);
+  font-size: 14px;
+}
+
+.cand-detail__item {
+  display: contents;
+}
+
+.cand-detail dt {
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.cand-detail dd {
+  margin: 0;
+}
+
+/* --- 狭い幅: 行は語の下に選択を全幅で置き、押しやすい高さにする --- */
+@media (max-width: 767px) {
+  .cand-steps__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cand-steps__link {
+    padding: 6px var(--space-2) var(--space-2);
+  }
+
+  .cand-steps__count {
+    font-size: 18px;
+  }
+
+  .cand-steps__hint,
+  .cand-steps__no {
+    display: none;
+  }
+
+  .cand-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cand-choice {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .cand-choice__label {
+    min-height: 44px;
+    font-size: 14px;
+  }
+}

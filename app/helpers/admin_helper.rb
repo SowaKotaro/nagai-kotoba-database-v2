@@ -11,7 +11,7 @@ module AdminHelper
 
   # 共通ナビの現在地(:dashboard / :register / :annotations / :words)。該当なしは nil。
   def admin_nav_current
-    # 登録予定単語の各段(Admin::Candidates::)は一覧と同じ現在地にする
+    # 登録予定単語の各段(Admin::Candidates::)と1語の画面(word_candidates)は同じ現在地にする
     return :candidates if controller_path.start_with?("admin/candidates/")
 
     case controller_name

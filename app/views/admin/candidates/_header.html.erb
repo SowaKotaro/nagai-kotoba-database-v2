@@ -1,0 +1,7 @@
+<%# 各画面の頭: 4段の見出し(現在地)と、画面の名前・この画面ですること。 %>
+<% content_for :title, t("admin.word_candidates.page_title", page: title) %>
+<%= render "admin/candidates/stepper", current: current %>
+<header class="cand-head">
+  <h1 class="page-title"><%= title %></h1>
+  <p class="cand-head__lead"><%= lead %></p>
+</header>
