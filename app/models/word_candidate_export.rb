@@ -16,18 +16,37 @@ class WordCandidateExport
 
   attr_reader :step
 
-  def initialize(step)
+  # limit を渡すと、待っている語の先頭からその語数だけを書き出す(Claude Code の利用上限に当たらないよう、
+  # 数十語ずつスキルに渡すため)。取り込んだ語は待ちから抜けるので、次に書き出すと続きの語が出る。
+  def initialize(step, limit: nil)
     @step = step.to_s
+    @limit = limit
   end
 
   def target = TARGETS.fetch(@step)
 
-  # その段でスキルの結果を待っている語。
+  # その段でスキルの結果を待っている語(limit があれば先頭からその語数)。
   def candidates
-    @candidates ||= WordCandidate.where(status: target[:status]).in_tree_order.to_a
+    @candidates ||= waiting.in_tree_order.limit(@limit).to_a
+  end
+
+  # その段でスキルの結果を待っている語の総数。
+  def total_count
+    @total_count ||= @limit ? waiting.count : candidates.size
+  end
+
+  # limit のために書き出していない語があるか。
+  def limited?
+    total_count > candidates.size
   end
 
   def text
     candidates.map { |candidate| target[:with_ids] ? "##{candidate.id} #{candidate.surface}" : candidate.surface }.join("\n")
+  end
+
+  private
+
+  def waiting
+    WordCandidate.where(status: target[:status])
   end
 end

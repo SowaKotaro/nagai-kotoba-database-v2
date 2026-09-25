@@ -1,17 +1,23 @@
 <%# ローカルの調査スキルへ渡す書き出し(拡張・表記・登録待ちで共用)。コピーのボタンを主役にし、
     中身は必要なときだけ開いて見る(数百行を毎回画面に広げない)。
     状態の名前は「すべての語」のその状態へのリンク(誤って回した語を見つけて仕分けに戻せるように)。
+    語数を絞って書き出したときは、待っている語の総数を添える(拡張で数十語ずつ渡すとき)。
     export は WordCandidateExport、empty はその段に語が無いときの案内。 %>
 <% target = export.target %>
 <% if export.candidates.any? %>
+  <% status_link = link_to(candidate_status_label(target[:status]), admin_candidates_list_path(status: target[:status])) %>
   <div class="cand-export" data-controller="clipboard"
        data-clipboard-text-value="<%= export.text %>"
        data-clipboard-copied-label-value="<%= t("admin.word_candidates.export.copied") %>">
     <div class="cand-export__bar">
       <p class="cand-export__count">
-        <%= t("admin.word_candidates.export.count_html",
-              status: link_to(candidate_status_label(target[:status]), admin_candidates_list_path(status: target[:status])),
-              count: number_with_delimiter(export.candidates.size)) %>
+        <% if export.limited? %>
+          <%= t("admin.word_candidates.export.count_limited_html", status: status_link,
+                total: number_with_delimiter(export.total_count), count: number_with_delimiter(export.candidates.size)) %>
+        <% else %>
+          <%= t("admin.word_candidates.export.count_html", status: status_link,
+                count: number_with_delimiter(export.candidates.size)) %>
+        <% end %>
       </p>
       <button type="button" class="btn btn--sm cand-export__copy" data-action="clipboard#copy">
         <span data-clipboard-target="label"><%= t("admin.word_candidates.export.copy") %></span>

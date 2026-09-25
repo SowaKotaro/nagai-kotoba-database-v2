@@ -4,11 +4,23 @@
 <ol class="cand-steps-local">
   <li class="cand-step">
     <h2 class="cand-step__title"><%= t(".export_title") %></h2>
+    <% if @export.total_count.positive? %>
+      <%# 一度に渡す語数(拡張待ちの先頭から)。変えたら書き出し直す %>
+      <%= form_with url: admin_candidates_expansion_path, method: :get, class: "cand-limit" do |form| %>
+        <%= form.label :limit, t(".limit_label"), class: "cand-limit__label" %>
+        <%= form.number_field :limit, value: @limit, min: 1,
+              max: Admin::Candidates::ExpansionsController::EXPORT_MAX_LIMIT, class: "cand-limit__input" %>
+        <span class="cand-limit__unit"><%= t("admin.word_candidates.unit") %></span>
+        <%= form.button t(".limit_submit"), type: "submit", class: "btn btn--sm", name: nil %>
+        <p class="cand-limit__hint"><%= t(".limit_hint") %></p>
+      <% end %>
+    <% end %>
     <%= render "admin/candidates/export", export: @export, empty: t(".export_empty") %>
   </li>
   <li class="cand-step">
     <h2 class="cand-step__title"><%= t(".import_title") %></h2>
-    <%= render "admin/candidates/import_form", url: import_admin_candidates_expansion_path,
+    <%# 読めない JSON で出し直すときに語数を保つよう、送り先に limit を載せる %>
+    <%= render "admin/candidates/import_form", url: import_admin_candidates_expansion_path(limit: @limit),
           output: @export.target[:output], after: t(".import_after") %>
   </li>
 </ol>

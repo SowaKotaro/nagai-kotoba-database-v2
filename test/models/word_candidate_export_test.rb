@@ -12,4 +12,17 @@ class WordCandidateExportTest < ActiveSupport::TestCase
     assert_equal "##{notating.id} ゴールドマンサックス", WordCandidateExport.new("notation").text
     assert_equal "登録待ちの言葉", WordCandidateExport.new("reading").text
   end
+
+  test "limit を渡すと待っている語の先頭からその語数だけを書き出し、待っている語の総数も分かる" do
+    first, second, _third = %w[一番目の言葉 二番目の言葉 三番目の言葉].map { |surface| WordCandidate.create!(surface: surface, status: :expanding) }
+
+    limited = WordCandidateExport.new("expand", limit: 2)
+    assert_equal "##{first.id} 一番目の言葉\n##{second.id} 二番目の言葉", limited.text
+    assert_equal 3, limited.total_count
+    assert_predicate limited, :limited?
+
+    # 待っている語が limit 以下なら、すべてを書き出す(絞っていない扱い)
+    assert_not_predicate WordCandidateExport.new("expand", limit: 3), :limited?
+    assert_equal 3, WordCandidateExport.new("expand").total_count
+  end
 end

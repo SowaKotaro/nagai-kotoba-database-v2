@@ -184,6 +184,32 @@
   color: var(--text-muted);
 }
 
+/* 一度に渡す語数(拡張の書き出しを数十語ずつに絞る)。書き出しの上に1行で置く */
+.cand-limit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.cand-limit__label,
+.cand-limit__unit {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cand-limit__input {
+  width: 6em;
+}
+
+.cand-limit__hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
 /* 書き出し: コピーのボタンが主役。中身は必要なときだけ開く */
 .cand-export {
   padding: var(--space-3);
@@ -201,6 +227,11 @@
 .cand-export__count {
   margin: 0;
   font-size: 14px;
+}
+
+/* 件数の文が長くなっても(「100 語のうち、先頭の 30 語」)ボタンは縮めない */
+.cand-export__copy {
+  flex: none;
 }
 
 .cand-export__num {

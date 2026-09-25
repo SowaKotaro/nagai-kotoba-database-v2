@@ -7,7 +7,8 @@ class Admin::Candidates::BaseController < Admin::BaseController
   private
 
   # 調査スキルの出力 JSON を取り込み、次に見る画面へ移る。読めない JSON はフォームを出し直す。
-  def run_import(importer_class, redirect_to_path)
+  # waiting はスキルの結果を待つステータス。数十語ずつ渡したとき、まだ待っている語数を知らせに添える。
+  def run_import(importer_class, redirect_to_path, waiting:)
     result = importer_class.new(params[:json]).call
     unless result
       flash.now[:alert] = t("admin.word_candidates.import.invalid_json")
@@ -16,7 +17,8 @@ class Admin::Candidates::BaseController < Admin::BaseController
       return render :show, status: :unprocessable_content
     end
 
-    redirect_to redirect_to_path, notice: import_summary(result), alert: result.messages.first(20).join(" / ").presence
+    notice = [ import_summary(result), remaining_summary(waiting) ].compact.join(" / ")
+    redirect_to redirect_to_path, notice: notice, alert: result.messages.first(20).join(" / ").presence
   end
 
   # 取り込み結果の要約(件数のある項目だけを並べる)。
@@ -25,6 +27,15 @@ class Admin::Candidates::BaseController < Admin::BaseController
       count = result.counts[key]
       t("admin.word_candidates.import_results.#{key}", count: count) if count.positive?
     end.join(" / ").presence || t("admin.word_candidates.import_results.nothing")
+  end
+
+  # まだスキルの結果を待っている語数(「拡張待ちの残り 70 語」)。残っていなければ nil。
+  def remaining_summary(status)
+    count = WordCandidate.where(status: status).count
+    return unless count.positive?
+
+    t("admin.word_candidates.import_results.remaining",
+      status: t("admin.word_candidates.statuses.#{status}"), count: count)
   end
 
   # 画面で語ごとに選んだ処理(decisions[ID] = 処理)を当て、移した先ごとの語数を返す。

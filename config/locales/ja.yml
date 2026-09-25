@@ -562,6 +562,7 @@ ja:
       duplicate_note: "重複: 「%{other}」"
       export:
         count_html: "%{status} <span class=\"cand-export__num\">%{count}</span>語"
+        count_limited_html: "%{status} %{total} 語のうち、先頭の <span class=\"cand-export__num\">%{count}</span>語"
         copy: "コピー"
         copied: "コピーしました"
         how_html: "コピーして %{input} に保存し、Claude Code で %{command} を実行する。"
@@ -585,6 +586,7 @@ ja:
         stale: "取り込み済み・段が違うため見送った語 %{count}"
         unknown: "見つからなかった ID %{count}"
         errors: "入れられなかった語 %{count}"
+        remaining: "%{status}の残り %{count} 語"
         nothing: "取り込める語はありませんでした。"
         stale_reason: "取り込み済みか、段が違うため見送り"
         unknown_reason: "該当する登録予定単語が無い"
@@ -632,8 +634,11 @@ ja:
           lead: "拡張待ちの語を /expand に渡し、同じ系統の語を集める。取り込むと、元の語と集めた語が仕分けに系統ごとに並ぶ。"
           export_title: "/expand に渡す"
           export_empty: "拡張待ちの語はありません（仕分けで「拡張」を選ぶとここに来る）。"
+          limit_label: "一度に渡す語数"
+          limit_submit: "書き出し直す"
+          limit_hint: "Claude Code の利用上限に当たらないよう、数十語ずつ渡す。取り込んだ語は拡張待ちから抜けるので、次に書き出すと続きの語が出る。"
           import_title: "結果を取り込む"
-          import_after: "取り込むと仕分けへ移る。有望な軸が無く拡張を見送った語も、仕分けに戻る。"
+          import_after: "取り込むと仕分けへ移る。有望な軸が無く拡張を見送った語も仕分けに戻り、書き出さなかった語は拡張待ちに残る。"
       notations:
         show:
           lead: "表記待ちの語を /notation に渡して最も一般的な表記にそろえ、返ってきた表記と立項スコアを確かめる。採用した語は登録待ちになる。"

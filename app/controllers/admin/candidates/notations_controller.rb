@@ -6,7 +6,7 @@ class Admin::Candidates::NotationsController < Admin::Candidates::BaseController
   end
 
   def import
-    run_import(WordCandidateNotationImport, admin_candidates_notation_path(anchor: "review"))
+    run_import(WordCandidateNotationImport, admin_candidates_notation_path(anchor: "review"), waiting: "notating")
   end
 
   def update
