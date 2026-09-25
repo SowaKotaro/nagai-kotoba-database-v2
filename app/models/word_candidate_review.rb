@@ -2,7 +2,8 @@
 #
 # 初期の選択は「何も触らずに確定したらこうなる」を表す。オーナーは例外の行だけを選び直して確定する
 # (300語を1語ずつチェックさせないため)。
-#   仕分け(:triage)    : 保留にしていた語は保留 / 照合で一致した語は除外 / それ以外は採用
+#   仕分け(:triage)    : 保留にしていた語は保留 / 照合で一致した語は除外 / upload したままの語は拡張
+#                        (ほとんどを拡張に回すため) / それ以外(/expand で集めた語・拡張の元にした語など)は採用
 #   表記の確認(:notation): 照合で一致した語は除外 / 立項に疑義がある語は保留 / それ以外は採用
 class WordCandidateReview
   # 画面ごとに選べる処理(WordCandidate::DECISIONS の部分集合)。拡張は、まだ誰も判断していない語にだけ出す。
@@ -92,6 +93,7 @@ class WordCandidateReview
     return "hold" if candidate.held?
     return "reject" if flags.include?("duplicate")
     return "hold" if flags.include?("doubtful")
+    return "expand" if context == :triage && candidate.fresh_upload?
 
     "keep"
   end

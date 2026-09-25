@@ -8,6 +8,7 @@
 # ステータスは段の名前ではなく「次に何を待っているか」で表す(名前だけで次の一手が分かるように)。
 # - 仕分け待ち(triage): 誰もまだ判断していない語。upload した語・/expand で集まった語・分割でできた語が入る。
 #   語ごとに 拡張 / 採用 / 保留 / 除外 を選んで一度に確定する(WordCandidateDecisions)。
+#   upload したままの語は、ほとんどを拡張に回すので最初から「拡張」を選んでおく。
 #   重複の照合は画面に並べるたびに行い、一致した語は最初から「除外」を選んでおく(独立した段は持たない)。
 # - 拡張待ち(expanding) / 表記待ち(notating): ローカルのスキルに渡して結果を待っている語。
 # - 表記の確認待ち(notated): /notation の結果を取り込んだ語。表記と立項スコアを見て 採用 / 保留 / 除外 を選ぶ。
@@ -94,6 +95,12 @@ class WordCandidate < ApplicationRecord
     when "hold" then "held"
     when "reject" then duplicate ? "duplicated" : "rejected"
     end
+  end
+
+  # upload したままの語か: /expand で集めた語・分割でできた語ではなく、拡張も表記もまだの元の語
+  # (仕分けで最初から拡張を選んでおく語。拡張の元にした語・集めた語は、拡張し直さないので含めない)。
+  def fresh_upload?
+    seed_id.nil? && expanded_at.nil? && notated_at.nil?
   end
 
   # 表層形が upload(または expand)で入った時点から変わったか(表記の確認で「元の表記」を添えるため)。

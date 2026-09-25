@@ -5,15 +5,19 @@ class WordCandidateReviewTest < ActiveSupport::TestCase
     WordCandidateReview.new(candidates, context: context)
   end
 
-  test "仕分け: 保留の語は保留、重複の疑いがある語は除外、それ以外は採用を最初から選んでおく" do
-    plain = WordCandidate.create!(surface: "新しい言葉")
+  test "仕分け: upload したままの語は拡張、重複の疑いがある語は除外、保留の語は保留、それ以外は採用を最初から選んでおく" do
+    fresh = WordCandidate.create!(surface: "新しい言葉")
     duplicate = WordCandidate.create!(surface: "カレー・ライス")
     held = WordCandidate.create!(surface: "迷っている言葉", status: :held)
+    # 拡張の元にした語・集めた語・表記を確かめ済みの語は、拡張し直さないので採用
+    seed = WordCandidate.create!(surface: "泥門デビルバッツ", expanded_at: Time.current)
+    child = WordCandidate.create!(surface: "神龍寺ナーガ", **seed.expansion_attributes)
+    notated = WordCandidate.create!(surface: "確かめた言葉", notated_at: Time.current)
 
-    rows = review([ plain, duplicate, held ]).rows
+    rows = review([ fresh, duplicate, held, seed, child, notated ]).rows
 
-    assert_equal %w[keep reject hold], rows.map(&:default)
-    assert_equal [ [], [ "duplicate" ], [] ], rows.map(&:flags)
+    assert_equal %w[expand reject hold keep keep keep], rows.map(&:default)
+    assert_equal [ [], [ "duplicate" ], [], [], [], [] ], rows.map(&:flags)
     assert_equal %w[expand keep hold reject], review([]).choices
   end
 

@@ -32,6 +32,7 @@ class Admin::Candidates::TriagesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(admins(:one))
     seed = WordCandidate.create!(surface: "泥門デビルバッツ", expanded_at: Time.current)
     child = WordCandidate.create!(surface: "神龍寺ナーガ", **seed.expansion_attributes)
+    fresh = WordCandidate.create!(surface: "天上天下唯我独尊")
     duplicate = WordCandidate.create!(surface: "カレー・ライス")
     held = WordCandidate.create!(surface: "迷っている言葉", status: :held)
 
@@ -43,9 +44,11 @@ class Admin::Candidates::TriagesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".cand-row--child##{ActionView::RecordIdentifier.dom_id(child)}"
     end
     assert_select "input[name='decisions[#{seed.id}]'][value=keep][checked]"
+    assert_select "input[name='decisions[#{fresh.id}]'][value=expand][checked]"
     assert_select "input[name='decisions[#{duplicate.id}]'][value=reject][checked]"
     assert_select "##{ActionView::RecordIdentifier.dom_id(duplicate)} .cand-word__match a[href=?]", word_path(words(:curry))
     assert_select "details#held:not([open]) input[name='decisions[#{held.id}]'][value=hold][checked]"
+    assert_select ".cand-bar__num[data-decision=expand]", text: "1"
     assert_select ".cand-bar__num[data-decision=keep]", text: "2"
   end
 

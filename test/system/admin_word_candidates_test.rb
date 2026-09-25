@@ -7,19 +7,20 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
   test "仕分けの一覧をキーボードとマウスで選び直し、Ctrl+Enter で確定する" do
     seed = WordCandidate.create!(surface: "泥門デビルバッツ", expanded_at: Time.current)
     children = %w[神龍寺ナーガ 白秋ダイナソアーズ 盤戸スパイダーズ].map { |surface| WordCandidate.create!(surface: surface, **seed.expansion_attributes) }
+    # upload したままの語(既定は拡張)
     singles = %w[天上天下唯我独尊 王城ホワイトナイツ 独立行政法人国立文化財機構].map { |surface| WordCandidate.create!(surface: surface) }
     duplicate = WordCandidate.create!(surface: "カレー・ライス") # 収録済みの「カレーライス」と重なる(既定は除外)
 
     system_sign_in
     visit admin_candidates_triage_path
     wait_for_stimulus "decision-list"
-    assert_decisions "kkkkkkkr", expand: 0, keep: 7, hold: 0, reject: 1
+    assert_decisions "kkkkeeer", expand: 3, keep: 4, hold: 0, reject: 1
 
     # 系統の見出しの「すべて除外」で、その系統の行をそろえる
     click_via_js(expect_css: ".cand-row[data-decision=reject]", count: 5) do
       find(".cand-family .cand-family__action[data-decision=reject]")
     end
-    assert_decisions "rrrrkkkr", expand: 0, keep: 3, hold: 0, reject: 5
+    assert_decisions "rrrreeer", expand: 3, keep: 0, hold: 0, reject: 5
 
     # キーで選ぶと次の行へ進む(↑ で戻れる)
     focus_decision(seed)
@@ -29,7 +30,7 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
     press "ArrowUp"
     press "x"
     assert_equal "decisions[#{children[1].id}]", active_element_name
-    assert_decisions "errrkkkr", expand: 1, keep: 3, hold: 0, reject: 4
+    assert_decisions "errreeer", expand: 4, keep: 0, hold: 0, reject: 4
 
     # Shift+クリックで、直前に選んだ行からその行までを同じ処理にそろえる
     execute_script("arguments[0].click()", decision_input(singles[0], "hold"))
