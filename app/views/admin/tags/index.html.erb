@@ -4,12 +4,16 @@
 <h1 class="page-title"><%= t("admin.tags.title") %></h1>
 <p class="section-label"><%= t("admin.tags.lead") %></p>
 
-<div class="admin-dash-grid">
+<%# 種別ごとの入口。カードの組みはダッシュボードと共通(components.css の .admin-card) %>
+<ul class="admin-dash-grid">
   <% @kinds.each do |kind| %>
-    <%= link_to admin_tag_kind_path(kind.key), class: "admin-card" do %>
-      <span class="admin-card__title"><%= kind.label %></span>
-      <span class="admin-card__desc"><%= t("admin.tags.kind_desc.#{kind.key}") %></span>
-      <span class="admin-card__tag"><%= t("admin.tags.count", count: number_with_delimiter(kind.total_count)) %></span>
-    <% end %>
+    <li class="admin-card">
+      <%= link_to admin_tag_kind_path(kind.key), class: "admin-card__link" do %>
+        <span class="admin-card__title"><%= kind.label %></span>
+      <% end %>
+      <%= icon "arrow_right", "admin-card__arrow" %>
+      <p class="admin-card__desc"><%= t("admin.tags.kind_desc.#{kind.key}") %></p>
+      <p class="admin-card__meta"><%= t("admin.tags.count", count: number_with_delimiter(kind.total_count)) %></p>
+    </li>
   <% end %>
-</div>
+</ul>

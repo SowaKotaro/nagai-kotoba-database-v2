@@ -5,15 +5,12 @@ class AdminNavTest < ActionDispatch::IntegrationTest
   test "管理各画面に共通ナビが出て、現在地に aria-current が付く" do
     sign_in_as(Admin.take)
 
-    # ダッシュボード
+    # ダッシュボード。ダッシュボードに続けて、作業をオーナー指定の順に並べる(2026-09-26)
     get admin_root_path
-    assert_select ".admin-nav" do
-      assert_select "a[aria-current=page][href=?]", admin_root_path
-      assert_select "a[href=?]", new_admin_word_path
-      assert_select "a[href=?]", admin_annotations_path
-      assert_select "a[href=?]", admin_words_path
-      assert_select "a[href=?]", root_path
-    end
+    assert_select ".admin-nav a[aria-current=page][href=?]", admin_root_path
+    assert_equal [ admin_root_path, new_admin_word_path, admin_annotations_path, admin_candidates_triage_path,
+                   admin_words_path, admin_tags_path, admin_requests_path ],
+                 css_select(".admin-nav a").map { |link| link["href"] }
 
     # 登録フロー(admin/words だが「単語を登録」が現在地になる)
     get new_admin_word_path

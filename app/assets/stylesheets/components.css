@@ -2321,45 +2321,100 @@ a.tag:hover .genre-hub__count {
   }
 }
 
-/* --- 管理コンソール(ダッシュボード): 細罫の入口カード --- */
+/* --- 管理画面の入口カード(ダッシュボード・タグ管理): 1px の罫で割った 1 枚のパネル ---
+   カードどうしの罫は border ではなく gap: 1px の隙間で見せる(親を罫の色で塗り、各カードを面の色で塗る)。
+   grid ではなく折り返す flex で並べる: 枚数が列数で割り切れなくても、最終段のカードが伸びて段を埋めるので、
+   空きに罫の色が面になって覗かない(タグ管理は 5 枚) */
 .admin-dash-grid {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-bottom: var(--space-6);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  background: var(--border);
 }
 
+/* カードの中に別のリンク(まとめて注釈)を置くことがあるので、カードそのものは <a> にしない。
+   見出しのリンクの ::after をカード一面に広げて、どこを押しても入れるようにする */
 .admin-card {
+  position: relative;
+  flex: 1 1 240px;
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
   padding: var(--space-5);
-  text-decoration: none;
-  color: inherit;
+  background: var(--surface);
   transition: background var(--transition);
 }
 
-.admin-card:hover {
-  background: var(--bg-tint);
+.admin-card__link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--text);
   text-decoration: none;
 }
 
+.admin-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* フォーカスの輪はカード一面に出す(見出しの文字だけを囲むと、押せる範囲と食い違う) */
+.admin-card__link:focus-visible {
+  outline: none;
+}
+
+.admin-card__link:focus-visible::after {
+  outline: 2px solid var(--text-muted);
+  outline-offset: -2px;
+}
+
+.admin-card__icon {
+  width: 22px;
+  height: 22px;
+}
+
 .admin-card__title {
-  font-size: 16px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+/* 右上の矢印で「入口」であることを示す。色は hover で変える(admin.css) */
+.admin-card__arrow {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  color: var(--text-subtle);
 }
 
 .admin-card__desc {
-  margin-top: var(--space-2);
-  font-size: 14px;
-  line-height: 1.8;
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  line-height: 1.7;
   color: var(--text-muted);
 }
 
-.admin-card__tag {
-  margin-top: var(--space-4);
+/* 下端の一言(件数など)。段の中で一番背の高いカードに揃うよう、下へ押しつける */
+.admin-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin: auto 0 0;
+  padding-top: var(--space-4);
   font-size: 12px;
   color: var(--text-subtle);
+}
+
+/* 一面に広げた見出しのリンクより手前に出して、こちらを押せるようにする */
+.admin-card__sublink {
+  position: relative;
+  z-index: 1;
 }
 
 /* --- 単語の管理一覧(Issue 36): 検索 + 注釈状態タブ + テーブル --- */

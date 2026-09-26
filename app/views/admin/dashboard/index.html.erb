@@ -3,6 +3,8 @@
 <div class="page-eyebrow"><span><%= t("admin.dashboard.eyebrow") %></span></div>
 <h1 class="page-title"><%= t("admin.dashboard.title") %></h1>
 
+<%# 収録状況。4 つの数を 1px の罫で割った 1 枚のパネルに並べ、最下段に注釈の進捗を置く %>
+<p class="section-label"><%= t("admin.dashboard.stats.label") %></p>
 <dl class="stats-grid">
   <div class="stats-grid__item">
     <dt><%= t("admin.dashboard.stats.words") %></dt>
@@ -12,7 +14,7 @@
     <dt><%= t("admin.dashboard.stats.annotated") %></dt>
     <dd><%= number_with_delimiter(@annotated_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_word") %></span></dd>
   </div>
-  <div class="stats-grid__item">
+  <div class="stats-grid__item <%= "stats-grid__item--pending" if @unannotated_count.positive? %>">
     <dt><%= t("admin.dashboard.stats.unannotated") %></dt>
     <dd><%= number_with_delimiter(@unannotated_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_word") %></span></dd>
   </div>
@@ -20,54 +22,37 @@
     <dt><%= t("admin.dashboard.stats.senses") %></dt>
     <dd><%= number_with_delimiter(@sense_count) %><span class="stats-grid__unit"><%= t("admin.dashboard.stats.unit_sense") %></span></dd>
   </div>
+  <%# 帯の長さも切り捨てた % で描く(1 語でも残っていれば満ちない)。値は隣の数字で読めるので帯は読み上げない %>
+  <div class="stats-grid__item stats-grid__item--progress">
+    <dt><%= t("admin.dashboard.stats.progress") %></dt>
+    <dd>
+      <span class="admin-meter" style="--meter: <%= @annotated_percent %>%" aria-hidden="true"></span>
+      <span class="admin-meter__value"><%= number_to_percentage(@annotated_percent, precision: 0) %></span>
+    </dd>
+  </div>
 </dl>
 
 <p class="section-label"><%= t("admin.dashboard.actions_label") %></p>
 
-<div class="admin-dash-grid">
-  <%= link_to new_admin_word_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "pencil_simple" %><%= t("admin.dashboard.register_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.register_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.register_tag") %></span>
+<%# 各作業の入口。並びと見出しは共通ナビと同じ(admin_sections が正)。
+    カードの中に「まとめて注釈」の別リンクを置くため、カードそのものは <a> にせず、
+    見出しのリンクをカード一面に広げて全体を押せるようにする(components.css) %>
+<ul class="admin-dash-grid">
+  <% admin_sections.each do |section| %>
+    <% pending = @pending_counts[section.key] %>
+    <li class="admin-card">
+      <%= link_to section.path, class: "admin-card__link" do %>
+        <%= icon section.icon, "admin-card__icon" %>
+        <span class="admin-card__title"><%= t("admin.nav.#{section.key}") %></span>
+      <% end %>
+      <%= icon "arrow_right", "admin-card__arrow" %>
+      <p class="admin-card__desc"><%= t("admin.dashboard.sections.#{section.key}.desc") %></p>
+      <p class="admin-card__meta <%= "admin-card__meta--pending" if pending.to_i.positive? %>">
+        <span><%= t("admin.dashboard.sections.#{section.key}.meta", count: pending) %></span>
+        <% if section.key == :annotations %>
+          <%= link_to t("admin.dashboard.deck"), admin_annotation_deck_path, class: "admin-card__sublink" %>
+        <% end %>
+      </p>
+    </li>
   <% end %>
-
-  <%= link_to admin_annotations_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "pen_nib" %><%= t("admin.dashboard.annotate_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.annotate_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.annotate_tag", count: @unannotated_count) %></span>
-  <% end %>
-
-  <%= link_to admin_annotation_deck_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "list_checks" %><%= t("admin.dashboard.deck_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.deck_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.deck_tag") %></span>
-  <% end %>
-
-  <%= link_to admin_words_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "books" %><%= t("admin.dashboard.manage_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.manage_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.manage_tag") %></span>
-  <% end %>
-
-  <%= link_to admin_requests_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "bell_ringing" %><%= t("admin.dashboard.requests_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.requests_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.requests_tag", count: @pending_request_count) %></span>
-  <% end %>
-
-  <%= link_to admin_candidates_triage_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "funnel" %><%= t("admin.dashboard.candidates_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.candidates_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.candidates_tag", count: @candidate_in_progress_count) %></span>
-  <% end %>
-
-  <%= link_to admin_tags_path, class: "admin-card" do %>
-    <span class="admin-card__title"><%= icon "tag" %><%= t("admin.dashboard.tags_title") %></span>
-    <span class="admin-card__desc"><%= t("admin.dashboard.tags_desc") %></span>
-    <span class="admin-card__tag"><%= t("admin.dashboard.tags_tag") %></span>
-  <% end %>
-</div>
-
-<p class="search-switch">
-  <%= link_to t("admin.dashboard.view_site"), root_path %>
-</p>
+</ul>

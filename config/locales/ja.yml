@@ -432,17 +432,16 @@ ja:
       similar_title: "似ている言葉があります"
       none_title: "登録が確認されませんでした"
   admin:
+    # 共通ナビの文言。作業のラベルはダッシュボードのカードの見出しも兼ねる(並びは AdminHelper#admin_sections)
     nav:
       aria: "管理メニュー"
-      label: "管理"
       dashboard: "ダッシュボード"
-      register: "単語を登録"
+      register: "単語の登録"
       annotations: "アノテーション"
-      words: "単語の管理"
-      requests: "リクエスト"
       candidates: "登録予定単語"
+      words: "単語の管理"
       tags: "タグ管理"
-      view_site: "公開サイトへ"
+      requests: "リクエスト"
     word_requests:
       title: "収録リクエスト"
       statuses:
@@ -699,35 +698,37 @@ ja:
       title: "管理コンソール"
       eyebrow: "オーナー用"
       stats:
+        label: "収録状況"
         words: "総単語数"
         annotated: "注釈済み・公開"
         unannotated: "未注釈"
         senses: "語義数"
         unit_word: "語"
         unit_sense: "件"
+        progress: "注釈の進捗"
       actions_label: "作業"
-      register_title: "単語を登録"
-      register_desc: "表層形と読みをまとめて入力し、一括で登録します。ジャンル等は後でアノテーションで付与します。"
-      register_tag: "テキスト入力"
-      annotate_title: "アノテーション"
-      annotate_desc: "登録済みの語にジャンル・品詞・エンティティ・特徴などをボタン操作で付与します。"
-      annotate_tag: "未注釈 %{count} 語"
-      deck_title: "まとめて注釈"
-      deck_desc: "キューの先頭から10件をまとめて開き、横スワイプで送りながら注釈を付けて、最後に一度だけ保存します。"
-      deck_tag: "10件ずつ"
-      manage_title: "単語の管理"
-      manage_desc: "登録済みの単語の一覧・編集・削除。"
-      manage_tag: "一覧・編集"
-      requests_title: "リクエストの管理"
-      requests_desc: "公開ページのフォームから届いた「収録してほしい言葉」を確認し、採用するものを一括登録へ渡します。"
-      requests_tag: "未着手 %{count} 件"
-      candidates_title: "登録予定単語"
-      candidates_desc: "登録前の単語を 仕分け → 拡張（/expand）→ 表記（/notation）→ 登録待ち の流れで前処理します。語ごとに行き先を選んで、まとめて確定します。"
-      candidates_tag: "処理待ち %{count} 語"
-      tags_title: "タグ管理"
-      tags_desc: "ジャンル・エンティティ・品詞・語種・特徴などのタグを一覧し、名前の変更・削除・統合を行います。"
-      tags_tag: "マスタ整理"
-      view_site: "公開サイトを見る →"
+      # 作業のカード。見出しは共通ナビの文言(admin.nav.*)を使う。meta はカード下端の一言(%{count} は未着手の件数)
+      sections:
+        register:
+          desc: "表層形と読みをまとめて入力し、一括で登録します。ジャンル等は後でアノテーションで付与します。"
+          meta: "テキスト入力"
+        annotations:
+          desc: "登録済みの語にジャンル・品詞・エンティティ・特徴などをボタン操作で付与します。"
+          meta: "未注釈 %{count} 語"
+        candidates:
+          desc: "登録前の単語を 仕分け → 拡張（/expand）→ 表記（/notation）→ 登録待ち の流れで前処理します。語ごとに行き先を選んで、まとめて確定します。"
+          meta: "処理待ち %{count} 語"
+        words:
+          desc: "登録済みの単語の一覧・編集・削除。"
+          meta: "一覧・編集"
+        tags:
+          desc: "ジャンル・エンティティ・品詞・語種・特徴などのタグを一覧し、名前の変更・削除・統合を行います。"
+          meta: "マスタ整理"
+        requests:
+          desc: "公開ページのフォームから届いた「収録してほしい言葉」を確認し、採用するものを一括登録へ渡します。"
+          meta: "未着手 %{count} 件"
+      # アノテーションのカードに添える、デッキ(既定 10 件をまとめて開いて一度に保存する)への近道
+      deck: "まとめて注釈"
     tags:
       title: "タグ管理"
       eyebrow: "マスタの統括"

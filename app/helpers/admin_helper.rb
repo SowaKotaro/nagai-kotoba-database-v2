@@ -9,7 +9,7 @@ module AdminHelper
     controller.is_a?(Admin::BaseController)
   end
 
-  # 共通ナビの現在地(:dashboard / :register / :annotations / :words)。該当なしは nil。
+  # 共通ナビの現在地(:dashboard か admin_sections の key)。該当なしは nil。
   def admin_nav_current
     # 登録予定単語の各段(Admin::Candidates::)と1語の画面(word_candidates)は同じ現在地にする
     return :candidates if controller_path.start_with?("admin/candidates/")
@@ -25,11 +25,29 @@ module AdminHelper
     end
   end
 
-  # 収録リクエスト(Issue 75)の共通ナビのラベル。未着手が溜まっていることに
+  # 管理画面の作業の入口。key は現在地(admin_nav_current)と i18n(admin.nav.*)のキーを兼ねる。
+  AdminSection = Data.define(:key, :path, :icon)
+
+  # 共通ナビとダッシュボードのカードは、どちらもこの並びで出す(2026-09-26 オーナー指定)。
+  # 片方だけ並べ替えると同じ作業が画面ごとに違う位置に出るので、並びはここだけで持つ。
+  def admin_sections
+    [
+      AdminSection.new(:register, new_admin_word_path, "pencil_simple"),
+      AdminSection.new(:annotations, admin_annotations_path, "pen_nib"),
+      AdminSection.new(:candidates, admin_candidates_triage_path, "funnel"),
+      AdminSection.new(:words, admin_words_path, "books"),
+      AdminSection.new(:tags, admin_tags_path, "tag"),
+      AdminSection.new(:requests, admin_requests_path, "bell_ringing")
+    ]
+  end
+
+  # 共通ナビのラベル。収録リクエスト(Issue 75)だけは、未着手が溜まっていることに
   # 管理画面へ来たときに気づけるよう、件数をバッジで添える(通知メールは持たない方針)。
-  def admin_requests_nav_label
+  def admin_nav_label(section)
+    label = t("admin.nav.#{section}")
+    return label unless section == :requests
+
     count = WordRequestItem.pending.count
-    label = t("admin.nav.requests")
     return label if count.zero?
 
     safe_join([ label, tag.span(count, class: "admin-nav__badge") ])
