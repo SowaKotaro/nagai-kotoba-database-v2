@@ -100,61 +100,44 @@
   --admin-warn: #b45309;     /* 未対応・要判断の件数 */
 }
 
-/* ── グリッドの境界を見せる ─────────────────────────────────
-   カードが枠も面も持たないと、どこからどこまでが 1 枚か分からない
-   (2026-09-07 オーナー指摘「グリッドの境界が見えないのでわかりにくい」) */
-.is-admin .admin-card {
-  border: 1px solid var(--border);
-}
-
+/* ── 入口のカード(ダッシュボード・タグ管理) ───────────────────
+   カードの境目は 1px の罫で割る(components.css。2026-09-07 オーナー指摘「グリッドの境界が見えない」への対応を、
+   2026-09-26 に 1 枚のパネルを割る組みへ改めた)。
+   押せるものの印はアクセント色: アイコンは常に、右上の矢印は hover のときに。
+   hover の面はアクセントをごく薄く混ぜた色にする(--bg-soft だと、要対応の色の文字が 4.2:1 で AA を割る) */
 .is-admin .admin-card:hover {
-  border-color: var(--admin-accent);
-  background: var(--bg-soft);
+  background: color-mix(in srgb, var(--admin-accent) 6%, var(--surface));
 }
 
-/* カードの頭は「アイコン + 見出し」。形でも中身を取れるようにする */
-.is-admin .admin-card__title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text);
-}
-
-.is-admin .admin-card__title .icon {
-  flex: none;
+.is-admin .admin-card__icon,
+.is-admin .admin-card:hover .admin-card__arrow {
   color: var(--admin-accent);
 }
 
-/* 説明文は 1 段落として読ませる。見出しとの差を色で付ける */
-.is-admin .admin-card__desc {
-  line-height: 1.7;
-  color: var(--text-muted);
-}
-
-/* カード下端の件数。カードの高さが揃うよう下に押しつけ、罫で本文と分ける */
-.is-admin .admin-card__tag {
-  margin-top: auto;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
+/* 手を付けていない件数が残っているカードだけ、下端の一言を「要対応」の色にする */
+.is-admin .admin-card__meta--pending {
+  color: var(--admin-warn);
 }
 
 /* ── 数字を主役にする ───────────────────────────────────────
    ラベルと数字が同じ級数・同じ濃さだと、拾うのに一手間かかる。
-   ラベルは小さく薄く、数字は大きく濃く、上下に積んで対にする */
+   ラベルは小さく薄く、数字は大きく濃く、上下に積んで対にする。
+   4 つの数は作業のカードと同じく 1px の罫で割った 1 枚のパネルに収め、最下段に注釈の進捗を置く */
 .is-admin .stats-grid {
-  margin: var(--space-5) 0;
-  padding: var(--space-4) 0;
-  border-block: 1px solid var(--border);
-  gap: var(--space-4) var(--space-7);
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--border);
+  background: var(--border);
 }
 
 .is-admin .stats-grid__item {
   flex-direction: column;
   align-items: flex-start;
-  gap: 0;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
 }
 
 .is-admin .stats-grid__item dt {
@@ -162,15 +145,73 @@
   color: var(--text-subtle);
 }
 
+/* 1 つずつ置く大きな数字は比例幅の数字で組む(等幅の数字は桁を縦に揃えるときだけ。大きいと字間が間延びする) */
 .is-admin .stats-grid__item dd {
-  font-size: 22px;
-  line-height: 1.3;
+  font-size: 30px;
+  line-height: 1.2;
+  font-variant-numeric: normal;
   color: var(--text);
 }
 
 .is-admin .stats-grid__unit {
-  font-size: 12px;
+  margin-left: var(--space-1);
+  font-size: 13px;
   color: var(--text-subtle);
+}
+
+/* 未注釈が残っているときだけ、数字を「要対応」の色にする */
+.is-admin .stats-grid__item--pending dd {
+  color: var(--admin-warn);
+}
+
+/* 注釈の進捗。パネルの全幅を 1 行で使う(ラベル・帯・%) */
+.is-admin .stats-grid__item--progress {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+}
+
+.is-admin .stats-grid__item--progress dd {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 帯。満ちた部分はアクセント、残りは同じ色相の淡い段にして、同じ色の濃淡で「どこまで満ちたか」を読ませる */
+.is-admin .admin-meter {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--admin-accent) 16%, var(--surface));
+}
+
+.is-admin .admin-meter::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--meter, 0%);
+  background: var(--admin-accent);
+}
+
+/* % の桁が変わっても帯の長さが揺れないよう、幅を 4 桁ぶん取って右に寄せる */
+.is-admin .admin-meter__value {
+  flex: none;
+  min-width: 4ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .is-admin .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* 区画の見出し(「作業」など)。本文と同じ濃さだと段が読めない */
@@ -218,20 +259,21 @@
 
 /* ── 押せるものを青で示す ───────────────────────────────────
    管理画面のリンクは「読み物の中のリンク」ではなく操作の入口なので、下線ではなく色で示す */
-.is-admin main a:not(.btn):not(.admin-card):not(.tag):not(.chip):not(.genre-path a) {
+.is-admin main a:not(.btn):not(.admin-card__link):not(.tag):not(.chip):not(.genre-path a) {
   color: var(--admin-accent);
   text-decoration: none;
 }
 
-.is-admin main a:not(.btn):not(.admin-card):hover {
+.is-admin main a:not(.btn):not(.admin-card__link):hover {
   text-decoration: underline;
 }
 
 /* ── 現在地をはっきりさせる ─────────────────────────────────
-   状態タブ・管理ナビの選択中は、下線だけでなく色でも示す */
+   状態タブ・管理ナビの選択中は、下線だけでなく色でも示す。
+   管理ナビの下線は帯の下罫にぴったり重なる(layout.css) */
 .is-admin .admin-status-tabs a[aria-current],
 .is-admin .admin-status-tabs .is-current,
-.is-admin .admin-nav a.is-current {
+.is-admin .admin-nav__link[aria-current="page"] {
   color: var(--admin-accent);
   border-color: var(--admin-accent);
 }
