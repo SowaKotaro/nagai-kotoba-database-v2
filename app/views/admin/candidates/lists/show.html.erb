@@ -1,0 +1,99 @@
+<%= render "admin/candidates/header", current: "all",
+      title: t("admin.word_candidates.stages.all"), lead: t(".lead") %>
+
+<%# 状態で絞り込む(流れの順)。件数を添える %>
+<nav class="cand-status-tabs" aria-label="<%= t(".filter_label") %>">
+  <%= link_to admin_candidates_list_path(q: @query.presence), class: "cand-status-tabs__tab", "aria-current": (@status.nil? ? "page" : nil) do %>
+    <%= t(".filter_all") %><span class="cand-status-tabs__count"><%= number_with_delimiter(candidate_status_counts.values.sum) %></span>
+  <% end %>
+  <% WordCandidate.statuses.each_key do |status| %>
+    <%= link_to admin_candidates_list_path(status: status, q: @query.presence), class: "cand-status-tabs__tab",
+          "aria-current": (@status == status ? "page" : nil) do %>
+      <%= candidate_status_label(status) %><span class="cand-status-tabs__count"><%= number_with_delimiter(candidate_status_counts.fetch(status, 0)) %></span>
+    <% end %>
+  <% end %>
+</nav>
+
+<%= form_with url: admin_candidates_list_path, method: :get, class: "cand-search" do |form| %>
+  <%= hidden_field_tag :status, @status if @status %>
+  <%= form.label :q, t(".search_label"), class: "visually-hidden" %>
+  <%= form.text_field :q, value: @query, placeholder: t(".search_placeholder"), class: "cand-search__input" %>
+  <%= form.button t(".search"), type: "submit", class: "btn btn--sm", name: nil %>
+<% end %>
+
+<% if @candidates.empty? %>
+  <p class="cand-empty"><%= t(".empty") %></p>
+<% else %>
+  <p class="cand-list-count">
+    <%= t(".total", count: number_with_delimiter(@total_count)) %>
+    <% if @total_count > @candidates.size %>
+      <span class="cand-list-count__limit"><%= t(".limited", count: number_with_delimiter(@candidates.size)) %></span>
+    <% end %>
+  </p>
+
+  <%# 選んだ語をまとめて移す。フォームは表の外に置き、行の checkbox と下端のバーの移すボタンは form 属性で結び付ける %>
+  <%= form_with url: admin_candidates_list_path, method: :patch, id: "cand-move" do %>
+    <%= hidden_field_tag :status, @status if @status %>
+    <%= hidden_field_tag :q, @query if @query.present? %>
+  <% end %>
+
+  <%# 行のどこを押しても選べる(Shift+クリック・選択の列をなぞって範囲)。選んだ語は下端のバーで移す(row-select) %>
+  <%= tag.div class: "cand-select", data: candidate_list_select_data do %>
+    <div class="table-scroll">
+      <table class="data-table cand-table">
+        <thead>
+          <tr>
+            <th class="cand-table__check"><span class="visually-hidden"><%= t(".col_select") %></span></th>
+            <th><%= t(".col_surface") %></th>
+            <th><%= t(".col_status") %></th>
+            <th><%= t(".col_note") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @candidates.each do |candidate| %>
+            <tr class="cand-table__row <%= "cand-table__child" if candidate.seed_id %>" data-row-select-target="row">
+              <td class="cand-table__check">
+                <%# 登録済みの語は一括登録で収録された語なので動かせない %>
+                <label class="row-check">
+                  <input type="checkbox" name="candidate_ids[]" value="<%= candidate.id %>" form="cand-move"
+                         aria-label="<%= t("admin.word_candidates.select.row", surface: candidate.surface) %>"
+                         <%= "disabled" if candidate.registered? %>>
+                  <span class="row-check__box" aria-hidden="true"></span>
+                </label>
+              </td>
+              <td class="cand-table__surface">
+                <%= link_to candidate.surface, admin_word_candidate_path(candidate) %>
+                <% if candidate.surface_changed_since_intake? %>
+                  <span class="cand-table__sub"><%= t("admin.word_candidates.word.was", surface: candidate.original_surface) %></span>
+                <% end %>
+              </td>
+              <td class="cand-table__status">
+                <span class="cand-status cand-status--<%= candidate.status %>"><%= candidate_status_label(candidate.status) %></span>
+              </td>
+              <td class="cand-table__note"><%= candidate.note %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# 下端に貼り付くバー。選んでいないときは案内と「すべて選ぶ」、選んでいるときは語数と移すボタン。
+        JS が無いときは移すボタンだけを出す(「選んだ語を」+ ボタン。checkbox を選んで送れる) %>
+    <div class="cand-bar" data-row-select-target="bar">
+      <div class="cand-bar__selection" data-row-select-target="idle" hidden>
+        <span class="cand-bar__hint"><%= t("admin.word_candidates.select.hint") %><span class="cand-bar__hint-pointer"><%= t("admin.word_candidates.select.hint_shift") %></span></span>
+        <button type="button" class="btn btn--sm" data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
+      </div>
+      <div class="cand-bar__selection" data-row-select-target="selecting">
+        <span class="cand-bar__selected" data-row-select-target="count"><%= t(".move_label") %></span>
+        <span class="cand-bar__actions">
+          <% WordCandidate::MOVES.each do |move| %>
+            <%= button_tag t(".moves.#{move}"), type: "submit", name: "move", value: move, form: "cand-move", class: "btn btn--sm" %>
+          <% end %>
+        </span>
+        <button type="button" class="cand-link-button" data-js-only data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
+        <button type="button" class="cand-link-button" data-js-only data-action="row-select#clear"><%= t("admin.word_candidates.select.clear") %></button>
+      </div>
+    </div>
+  <% end %>
+<% end %>

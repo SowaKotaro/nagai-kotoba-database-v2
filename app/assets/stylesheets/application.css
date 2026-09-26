@@ -8,6 +8,7 @@
  *= require layout
  *= require components
  *= require annotate
+ *= require candidates
  *= require admin
  *= require_self
  */

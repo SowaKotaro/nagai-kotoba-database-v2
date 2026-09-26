@@ -1,0 +1,39 @@
+<%# 行の「語」の部分: 表層形と、判断の手がかり(元の表記・立項スコア・照合で一致した相手・メモ)。
+    turbo-frame の中身で、「直す」を押すとこの部分だけが編集フォームに替わる(admin/word_candidates/edit)。
+    root は系統の元の語の行か(一覧では系統のまとまりから、1語の画面では集めた語の有無から決める)。
+    in_list は確認の一覧の中か。一覧では行の中のリンクを Tab で止めない(Tab で行から行へ移れるように。
+    「直す」は F2 で開ける) %>
+<% link_tabindex = local_assigns[:in_list] ? -1 : nil %>
+<div class="cand-word">
+  <p class="cand-word__line">
+    <span class="cand-word__surface"><%= candidate.surface %></span>
+    <% if root %>
+      <span class="cand-word__tag"><%= t("admin.word_candidates.word.root") %></span>
+    <% end %>
+    <% if candidate.expanded_at %>
+      <span class="cand-word__tag"><%= t("admin.word_candidates.word.expanded") %></span>
+    <% end %>
+    <%= link_to t("admin.word_candidates.word.edit"), edit_admin_word_candidate_path(candidate), class: "cand-word__edit",
+          tabindex: link_tabindex, "aria-label": t("admin.word_candidates.word.edit_label", surface: candidate.surface) %>
+  </p>
+  <% if candidate.surface_changed_since_intake? || candidate.entry_score || matches.any? || candidate.note.present? %>
+    <ul class="cand-word__meta">
+      <% if candidate.surface_changed_since_intake? %>
+        <li class="cand-word__was"><%= t("admin.word_candidates.word.was", surface: candidate.original_surface) %></li>
+      <% end %>
+      <% if candidate.entry_score %>
+        <li class="cand-word__score <%= "is-doubtful" if candidate.doubtful_entry? %>">
+          <%= t("admin.word_candidates.word.score", score: candidate.entry_score, confidence: candidate.confidence.presence || "—") %>
+        </li>
+      <% end %>
+      <% matches.each do |match| %>
+        <li class="cand-word__match">
+          <%= t("admin.word_candidates.word.match_html", kind: candidate_match_kind(match), link: candidate_match_link(match, tabindex: link_tabindex)) %>
+        </li>
+      <% end %>
+      <% if candidate.note.present? %>
+        <li class="cand-word__note" title="<%= candidate.note %>"><%= candidate.note %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

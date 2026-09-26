@@ -1,0 +1,32 @@
+<%= render "admin/candidates/header", current: nil, title: @candidate.surface,
+      lead: t(".lead", status: candidate_status_label(@candidate.status)) %>
+
+<%# 確認の画面では、この frame が行の「語」の部分に入る(直したあと・取りやめたあとに戻る先) %>
+<%= turbo_frame_tag dom_id(@candidate, :word), class: "cand-row__word cand-detail__word" do %>
+  <%= render "admin/candidates/word", candidate: @candidate, matches: @matches, root: @candidate.expansions.exists? %>
+<% end %>
+
+<dl class="cand-detail">
+  <div class="cand-detail__item">
+    <dt><%= t(".status") %></dt>
+    <dd><span class="cand-status cand-status--<%= @candidate.status %>"><%= candidate_status_label(@candidate.status) %></span></dd>
+  </div>
+  <% if @candidate.seed %>
+    <div class="cand-detail__item">
+      <dt><%= t(".seed") %></dt>
+      <dd><%= link_to @candidate.seed.surface, admin_word_candidate_path(@candidate.seed) %></dd>
+    </div>
+  <% end %>
+  <% if @candidate.word %>
+    <div class="cand-detail__item">
+      <dt><%= t(".word") %></dt>
+      <dd><%= link_to @candidate.word.surface, word_path(@candidate.word) %></dd>
+    </div>
+  <% end %>
+  <div class="cand-detail__item">
+    <dt><%= t(".updated_at") %></dt>
+    <dd><%= l((@candidate.status_changed_at || @candidate.updated_at).to_date, format: :short) %></dd>
+  </div>
+</dl>
+
+<p><%= link_to t(".back"), admin_candidates_list_path(q: @candidate.surface) %></p>

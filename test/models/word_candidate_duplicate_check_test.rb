@@ -10,12 +10,12 @@ class WordCandidateDuplicateCheckTest < ActiveSupport::TestCase
     assert_not_equal WordCandidateDuplicateCheck.key("ハレ"), WordCandidateDuplicateCheck.key("バレ")
   end
 
-  test "収録済みの語・別表記・他の候補に一致した相手を返し、自分自身は含めない" do
-    target = WordCandidate.create!(surface: "カレー・ライス", status: :duplicate)
-    variant = WordCandidate.create!(surface: "カリー", status: :duplicate)
+  test "収録済みの語・別表記・並べていないほかの語(不要にした語を含む)に一致した相手を返す" do
+    target = WordCandidate.create!(surface: "カレー・ライス")
+    variant = WordCandidate.create!(surface: "カリー")
     other = WordCandidate.create!(surface: "ゴールドマンサックス", status: :rejected)
-    mine = WordCandidate.create!(surface: "ゴールドマン・サックス", status: :duplicate)
-    lonely = WordCandidate.create!(surface: "どこにも無い言葉", status: :duplicate)
+    mine = WordCandidate.create!(surface: "ゴールドマン・サックス")
+    lonely = WordCandidate.create!(surface: "どこにも無い言葉")
 
     matches = WordCandidateDuplicateCheck.new([ target, variant, mine, lonely ]).call
 
@@ -23,5 +23,22 @@ class WordCandidateDuplicateCheckTest < ActiveSupport::TestCase
     assert_equal [ :variant ], matches[variant.id].map(&:kind)
     assert_equal [ other ], matches[mine.id].map(&:candidate)
     assert_empty matches[lonely.id]
+  end
+
+  test "並べた語どうしは先の語を正とし、後ろの語だけを重複とみなす(両方を落とさない)" do
+    first = WordCandidate.create!(surface: "ゴールドマンサックス")
+    second = WordCandidate.create!(surface: "ゴールドマン・サックス")
+
+    matches = WordCandidateDuplicateCheck.new([ first, second ]).call
+
+    assert_empty matches[first.id]
+    assert_equal [ first ], matches[second.id].map(&:candidate)
+  end
+
+  test "登録済みの登録予定単語は相手にしない(収録済みの語として当たるため、同じ語を2度出さない)" do
+    WordCandidate.create!(surface: words(:curry).surface, status: :registered, word: words(:curry))
+    target = WordCandidate.create!(surface: "カレーライス!")
+
+    assert_equal [ :word ], WordCandidateDuplicateCheck.new([ target ]).call[target.id].map(&:kind)
   end
 end

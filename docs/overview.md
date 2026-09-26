@@ -109,7 +109,7 @@
 | `/admin/bulk_proposal_approval` | 厳格ゲートを満たす提案の一括承認（プレビュー → 承認・公開） |
 | `/admin/tags` | **タグ統括管理**。5 種のマスタの一覧・リネーム・削除・統合 |
 | `/admin/requests` | 公開側から届いた収録リクエストの確認・一括処理 |
-| `/admin/candidates` | **登録予定単語**。一覧（ステータスで絞り込み → 語を選んで処理）と upload。前処理の各段は `/admin/candidates/expand`・`/duplicate`・`/notation` |
+| `/admin/candidates` | **登録予定単語**。入口は仕分け（貼り付けて追加し、語ごとに 拡張 / 採用 / 保留 / 除外 を選んで一度に確定）。前処理の各段は `/admin/candidates/expand`（拡張）・`/notation`（表記と、その確認）・`/ready`（登録待ち → 一括登録へ）、状態で絞り込む一覧は `/all` |
 
 - 管理画面は**「しずか」を引き継がない**。HTML は公開側と共有したまま、`body.is-admin` の下で
   トークンだけ上書きする（[`design.md`](design.md) §10）。
@@ -133,7 +133,8 @@ app/models/          ActiveRecord ＋ 値オブジェクト ＋ フォーム/ク
   │                 annotation_research_export / feature_research_export / reannotation_export
   ├ リクエスト      word_request / word_request_item / word_request_duplicate_check / word_request_form_token
   ├ 登録予定単語    word_candidate / word_candidate_intake / word_candidate_duplicate_check /
-  │                 word_candidate_export / word_candidate_expansion_import / word_candidate_notation_import
+  │                 word_candidate_review / word_candidate_decisions / word_candidate_export /
+  │                 word_candidate_expansion_import / word_candidate_notation_import
   └ その他          research_json（調査 JSON の貼り付けを読む）/ seed_catalog（マスタ seed の単一の正）/ tag_kind / linguistic_feature_glossary
 app/services/        reading_extractor（MeCab CLI）/ morpheme_extractor / share_card_renderer（rsvg-convert）
 app/controllers/     公開（words / searches / browse / genres / rankings / stats / pages / llms /

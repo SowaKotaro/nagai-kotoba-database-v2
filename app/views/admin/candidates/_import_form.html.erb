@@ -1,8 +1,14 @@
-<%# 調査スキルの出力 JSON の貼り付け欄(expand・notation の段で共用)。 %>
-<%= form_with url: url, method: :post do |form| %>
-  <div class="field">
-    <%= form.label :json, t("admin.word_candidates.import.json_label", output: output) %>
-    <%= form.text_area :json, value: @json, rows: 8, class: "bulk-input", placeholder: t("admin.word_candidates.import.json_placeholder") %>
+<%# 調査スキルの出力 JSON の貼り付け欄(拡張・表記で共用)。貼って Ctrl+Enter でも取り込める。
+    after は取り込んだあとにどうなるかの一文。 %>
+<%= form_with url: url, method: :post, class: "cand-import",
+      data: { controller: "submit-shortcut", action: "keydown->submit-shortcut#submit" } do |form| %>
+  <%= form.label :json, t("admin.word_candidates.import.label_html", output: tag.code(output)), class: "cand-import__label" %>
+  <%= form.text_area :json, value: @json, rows: 5, class: "cand-import__text", spellcheck: false,
+        placeholder: t("admin.word_candidates.import.placeholder") %>
+  <div class="cand-import__actions">
+    <%= form.button type: "submit", class: "btn btn--sm" do %>
+      <%= t("admin.word_candidates.import.submit") %><span class="cand-bar__kbd">Ctrl+Enter</span>
+    <% end %>
+    <p class="cand-import__after"><%= after %></p>
   </div>
-  <%= form.submit t("admin.word_candidates.import.submit"), class: "btn btn--sm" %>
 <% end %>

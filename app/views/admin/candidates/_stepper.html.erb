@@ -1,0 +1,32 @@
+<%# 登録予定単語の4段(仕分け → 拡張 → 表記 → 登録待ち)。各段はその画面へのリンクで、段にいる語の数を添える。
+    段の下の小さな字は、その段で次にすること(ローカルで回すスキルの名前か、ブラウザでの操作)。
+    表記の段は /notation の結果を確かめる語があれば、その数を出す。右端に保留とすべての語への導線。
+    current は開いている段("triage" など)。段に属さない画面は nil。 %>
+<nav class="cand-steps" aria-label="<%= t("admin.word_candidates.stages.label") %>">
+  <ol class="cand-steps__list">
+    <% WordCandidate::STAGES.each_key.with_index(1) do |stage, number| %>
+      <% count = candidate_stage_count(stage) %>
+      <li class="cand-steps__item">
+        <%= link_to candidate_stage_path(stage),
+              class: "cand-steps__link #{"is-empty" if count.zero?}", "aria-current": (stage == current ? "page" : nil) do %>
+          <span class="cand-steps__head">
+            <span class="cand-steps__no"><%= number %></span>
+            <span class="cand-steps__name"><%= t("admin.word_candidates.stages.#{stage}.name") %></span>
+          </span>
+          <span class="cand-steps__count"><%= number_with_delimiter(count) %><span class="cand-steps__unit"><%= t("admin.word_candidates.unit") %></span></span>
+          <% if stage == "notation" && (reviewing = candidate_status_counts.fetch("notated", 0)).positive? %>
+            <span class="cand-steps__todo"><%= t("admin.word_candidates.stages.notation.reviewing", count: number_with_delimiter(reviewing)) %></span>
+          <% else %>
+            <span class="cand-steps__hint"><%= t("admin.word_candidates.stages.#{stage}.hint") %></span>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+  <p class="cand-steps__aside">
+    <%= link_to t("admin.word_candidates.stages.held", count: number_with_delimiter(candidate_status_counts.fetch("held", 0))),
+          admin_candidates_triage_path(held: 1, anchor: "held") %>
+    <%= link_to t("admin.word_candidates.stages.all"), admin_candidates_list_path,
+          "aria-current": (current == "all" ? "page" : nil) %>
+  </p>
+</nav>

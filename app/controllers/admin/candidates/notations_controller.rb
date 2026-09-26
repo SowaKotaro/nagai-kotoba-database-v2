@@ -1,28 +1,27 @@
-# notation の段: /notation 用に書き出し、結果を取り込み、確認した語をまとめて done へ送る。
-# done の語は一括登録へ貼るためのリストとしてコピーできる(登録されると「登録済み」になる)。
+# 表記: 表記待ちの語を /notation 用に書き出し、結果を取り込み、返ってきた表記と立項スコアを確かめて
+# 語ごとに 採用 / 保留 / 除外 を選んで確定する。採用した語は登録待ちになる。
 class Admin::Candidates::NotationsController < Admin::Candidates::BaseController
   def show
-    load_step
+    load_stage
   end
 
   def import
-    run_import(WordCandidateNotationImport)
+    run_import(WordCandidateNotationImport, admin_candidates_notation_path(anchor: "review"), waiting: "notating")
   end
 
-  # 取り込み済みの語をまとめて done へ。まだ結果の無い語は残る。
   def update
-    candidates = WordCandidate.notation.where.not(notated_at: nil).to_a
-    return redirect_to admin_candidates_notation_path, alert: t(".empty") if candidates.empty?
+    counts = apply_decisions(statuses: %w[notated], choices: WordCandidateReview::CHOICES[:notation])
+    notice = decisions_summary(counts)
+    return redirect_to admin_candidates_notation_path, alert: t(".nothing") unless notice
 
-    move_all(candidates, :done)
-    redirect_to admin_candidates_notation_path(anchor: "done"), notice: t(".moved", count: candidates.size)
+    next_path = counts["ready"].positive? ? admin_candidates_registration_path : admin_candidates_notation_path
+    redirect_to next_path, notice: notice
   end
 
   private
 
-  def load_step
+  def load_stage
     @export = WordCandidateExport.new("notation")
-    @results = WordCandidate.notation.where.not(notated_at: nil).in_tree_order.to_a
-    @done = WordCandidate.done.in_tree_order.to_a
+    @review = WordCandidateReview.new(WordCandidate.notated.in_tree_order, context: :notation)
   end
 end

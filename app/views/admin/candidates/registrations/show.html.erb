@@ -1,0 +1,41 @@
+<%= render "admin/candidates/header", current: "ready",
+      title: t("admin.word_candidates.stages.ready.name"), lead: t(".lead") %>
+
+<% if @export.candidates.empty? %>
+  <p class="cand-empty"><%= t(".empty") %></p>
+<% else %>
+  <ol class="cand-steps-local">
+    <li class="cand-step">
+      <h2 class="cand-step__title"><%= t(".reading_title") %></h2>
+      <%= render "admin/candidates/export", export: @export, empty: nil %>
+    </li>
+    <li class="cand-step">
+      <h2 class="cand-step__title"><%= t(".register_title") %></h2>
+      <%# 一括登録の step1(箇条書き)を飛ばし、読みの確認(step2)を直接開く。
+          step2 は送信に対して画面を描画する(リダイレクトしない)ので Turbo を切る(一括登録の各段と同じ) %>
+      <%= form_with url: readings_admin_words_path, method: :post, scope: :bulk_word_registration,
+            class: "cand-handoff", data: { turbo: false } do |form| %>
+        <%= form.hidden_field :text, value: @export.candidates.map(&:surface).join("\n") %>
+        <%= form.button type: "submit", class: "btn btn--primary" do %>
+          <%= t(".register", count: number_with_delimiter(@export.candidates.size)) %><%= icon "arrow_right" %>
+        <% end %>
+        <p class="cand-import__after"><%= t(".register_hint") %></p>
+      <% end %>
+    </li>
+  </ol>
+
+  <section class="cand-ready">
+    <h2 class="cand-step__title"><%= t(".list_title") %></h2>
+    <p class="cand-step__hint"><%= t(".list_hint_html", link: link_to(t(".list_link"), admin_candidates_list_path(status: "ready"))) %></p>
+    <ol class="cand-ready__list">
+      <% @export.candidates.each do |candidate| %>
+        <li class="cand-ready__item">
+          <%= link_to candidate.surface, admin_word_candidate_path(candidate) %>
+          <% if candidate.surface_changed_since_intake? %>
+            <span class="cand-ready__was"><%= t("admin.word_candidates.word.was", surface: candidate.original_surface) %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ol>
+  </section>
+<% end %>

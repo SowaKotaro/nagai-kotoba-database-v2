@@ -8,7 +8,7 @@
     <%= admin_nav_link t("admin.nav.annotations"), admin_annotations_path, :annotations %>
     <%= admin_nav_link t("admin.nav.words"), admin_words_path, :words %>
     <%= admin_nav_link admin_requests_nav_label, admin_requests_path, :requests %>
-    <%= admin_nav_link t("admin.nav.candidates"), admin_word_candidates_path, :candidates %>
+    <%= admin_nav_link t("admin.nav.candidates"), admin_candidates_triage_path, :candidates %>
     <%= admin_nav_link t("admin.nav.tags"), admin_tags_path, :tags %>
     <%= link_to root_path, class: "admin-nav__link admin-nav__link--site" do %>
       <%= t("admin.nav.view_site") %><%= icon "arrow_right" %>
