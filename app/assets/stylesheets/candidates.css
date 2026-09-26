@@ -309,7 +309,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2) var(--space-4);
   margin-bottom: var(--space-2);
 }
@@ -353,6 +352,7 @@
 
 .cand-toolbar__keys {
   display: flex;
+  margin-left: auto;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
@@ -423,11 +423,7 @@
   color: var(--text-subtle);
 }
 
-.cand-family__actions {
-  display: flex;
-  gap: var(--space-1);
-}
-
+/* 「この系統を選ぶ」。系統の行をすべて選んでいるときは押された状態にする */
 .cand-family__action {
   min-height: 28px;
   padding: 0 10px;
@@ -445,6 +441,11 @@
   color: var(--text);
 }
 
+.cand-family__action[aria-pressed="true"] {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
 .cand-family__note {
   flex-basis: 100%;
   margin: 0;
@@ -452,21 +453,27 @@
   color: var(--text-muted);
 }
 
-/* 行: 左に語、右に処理の選択。左端の太い線で、例外の処理(保留・除外)を選んである行を示す */
+/* 行: 左端に選択の列、真ん中に語、右に処理の選択。行のどこを押しても選べる(row-select)。
+   左端の太い線で、例外の処理(保留・除外)を選んである行を示す */
 .cand-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-2) var(--space-3);
+  column-gap: var(--space-3);
+  padding-right: var(--space-3);
   border-left: 3px solid transparent;
   background: var(--surface);
+  cursor: pointer;
   /* キーボードで移ったとき、下端のバーに隠れないよう余白を見込んで見せる */
   scroll-margin: var(--space-6) 0 112px;
 }
 
-.cand-row--child {
-  padding-left: calc(var(--space-3) + 20px);
+.cand-row .cand-choice {
+  margin: var(--space-2) 0;
+}
+
+.cand-row--child .cand-row__word {
+  padding-left: 20px;
 }
 
 .cand-row[data-decision="hold"] {
@@ -482,15 +489,94 @@
   text-decoration: line-through;
 }
 
-/* キーボードで今いる行 */
-.cand-row:has(:focus-visible) {
-  background: var(--bg-tint);
+/* 選んでいる行(row-select)。表の hover の面(--bg-soft)と見分けられるよう、アクセント色を薄く混ぜた面にする */
+.cand-row[data-selected="true"],
+.cand-table tbody tr[data-selected="true"] {
+  background: color-mix(in srgb, var(--admin-accent) 14%, var(--surface));
+}
+
+/* キーボードで今いる行(処理のラジオにフォーカスがある行)。選んでいる行の面と重ならないよう、枠で示す */
+.cand-row:has(.cand-choice input:focus-visible) {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: -2px;
 }
 
 /* 語の部分(turbo-frame) */
 .cand-row__word {
   display: block;
   min-width: 0;
+  padding: var(--space-2) 0;
+}
+
+/* --- 行の選択の列(仕分け・表記の確認・すべての語で共用。row-select) ---
+   行の高さいっぱい・幅 44px を当たり判定にする。checkbox は列いっぱいに透明に敷き、印は描き起こす。
+   なぞって範囲を選ぶため、この列ではタッチでスクロールさせない */
+.row-check {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.row-check input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.row-check__box {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--surface);
+}
+
+.row-check:hover .row-check__box {
+  border-color: var(--admin-accent);
+}
+
+.row-check input:checked + .row-check__box {
+  border-color: var(--admin-accent);
+  background: var(--admin-accent);
+}
+
+/* 印(チェック)は枠線を傾けて描く(画像を持たない)。塗りの上なので白 */
+.row-check input:checked + .row-check__box::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 11px;
+  margin: 1px auto 0;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.row-check input:focus-visible + .row-check__box {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+/* 選べない行(すべての語の登録済み) */
+.row-check:has(input:disabled) {
+  cursor: default;
+}
+
+.row-check input:disabled + .row-check__box {
+  border-style: dashed;
+  opacity: 0.5;
 }
 
 .cand-word__line {
@@ -711,6 +797,73 @@
   color: var(--danger);
 }
 
+/* 選んでいるとき(row-select)の表示: 選んだ語数と、まとめて当てるボタン。すべての語では選んでいないときの案内も */
+.cand-bar__selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す */
+.cand-bar [hidden] {
+  display: none;
+}
+
+.cand-bar__selected {
+  font-size: 14px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cand-bar__hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* タッチの端末では Shift+クリックの案内を出さない */
+@media (hover: none) {
+  .cand-bar__hint-pointer {
+    display: none;
+  }
+}
+
+.cand-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.cand-bar__action--expand {
+  color: var(--admin-accent);
+}
+
+.cand-bar__action--hold {
+  color: var(--admin-warn);
+}
+
+.cand-bar__action--reject {
+  color: var(--danger);
+}
+
+/* 文字だけのボタン(すべて選ぶ・選択を外す)。押せるものなのでアクセント色 */
+.cand-link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--admin-accent);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* JS が無いと働かない操作(すべて選ぶ 等)は、row-select がつながるまで出さない */
+[data-controller~="row-select"]:not([data-row-select-ready]) [data-js-only] {
+  display: none;
+}
+
 /* 確定は折り返しても右端(スマホで画面下端の中ほどに来ないように。docs/design.md §10.1.2) */
 .cand-bar__submit {
   margin-left: auto;
@@ -829,25 +982,30 @@
   color: var(--admin-warn);
 }
 
-.cand-move {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.cand-move__label {
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
 .cand-table {
   width: 100%;
 }
 
-.cand-table__check {
-  width: 2.5em;
+/* 表の左端の選択の列。セルいっぱいを当たり判定にする(行のほかの場所を押しても選べる) */
+.cand-table .cand-table__check {
+  position: relative;
+  width: 44px;
+  padding: 0;
+}
+
+.cand-table .cand-table__check .row-check {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  min-height: 0;
+}
+
+.cand-table__row {
+  cursor: pointer;
+}
+
+.cand-table__row:has(input:disabled) {
+  cursor: default;
 }
 
 .cand-table__child .cand-table__surface {
@@ -914,7 +1072,7 @@
   margin: 0;
 }
 
-/* --- 狭い幅: 行は語の下に選択を全幅で置き、押しやすい高さにする --- */
+/* --- 狭い幅: 行は語の下に処理の選択を全幅で置き、押しやすい高さにする(選択の列は2段ぶんの高さ) --- */
 @media (max-width: 767px) {
   .cand-steps__list {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -934,7 +1092,16 @@
   }
 
   .cand-row {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .cand-row .row-check {
+    grid-row: span 2;
+  }
+
+  .cand-row .cand-choice {
+    grid-column: 2;
+    margin-top: 0;
   }
 
   .cand-choice {
@@ -946,5 +1113,14 @@
   .cand-choice__label {
     min-height: 44px;
     font-size: 14px;
+  }
+
+  /* 下端のバーのボタンも指で押しやすい高さにする(文字だけのボタンは上下に当たり判定を広げる) */
+  .cand-bar__action {
+    min-height: 40px;
+  }
+
+  .cand-link-button {
+    padding: var(--space-2) 0;
   }
 }

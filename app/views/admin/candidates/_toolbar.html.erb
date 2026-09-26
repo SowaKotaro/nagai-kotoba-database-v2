@@ -1,5 +1,5 @@
-<%# 確認の一覧の上の帯: 印での絞り込みと、キーボードの案内。
-    絞り込みは見え方だけを変える(隠れた行も、選んである処理のまま一緒に確定される)。
+<%# 確認の一覧の上の帯: 印での絞り込み・すべて選ぶ・キーボードの案内。
+    絞り込みは見え方だけを変える(隠れた行も、選んである処理のまま一緒に確定される。行の選択は外す)。
     reviews は同じフォームで確定する一覧(仕分けは本体と保留の2つ)。 %>
 <% flag_counts = reviews.map(&:flag_counts).inject({}) { |sum, counts| sum.merge(counts) { |_, a, b| a + b } } %>
 <div class="cand-toolbar">
@@ -16,14 +16,17 @@
       </button>
     <% end %>
   </div>
+  <button type="button" class="cand-link-button" data-js-only data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
   <p class="cand-toolbar__keys">
     <%= icon "keyboard" %>
     <span><kbd>↑</kbd><kbd>↓</kbd> <%= t("admin.word_candidates.toolbar.keys.move") %></span>
     <% choices.each do |decision| %>
       <span><kbd><%= candidate_decision_key(decision).upcase %></kbd> <%= t("admin.word_candidates.decisions.#{decision}") %></span>
     <% end %>
+    <span><kbd>Space</kbd> <%= t("admin.word_candidates.toolbar.keys.select") %></span>
+    <span><kbd>Shift</kbd>+<kbd>↑</kbd><kbd>↓</kbd>・<kbd>Shift</kbd>+<%= t("admin.word_candidates.toolbar.keys.click") %> <%= t("admin.word_candidates.toolbar.keys.range") %></span>
+    <span><kbd>Esc</kbd> <%= t("admin.word_candidates.select.clear") %></span>
     <span><kbd>F2</kbd> <%= t("admin.word_candidates.word.edit") %></span>
-    <span><kbd>Shift</kbd>+<%= t("admin.word_candidates.toolbar.keys.click") %> <%= t("admin.word_candidates.toolbar.keys.range") %></span>
     <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> <%= t("admin.word_candidates.toolbar.keys.submit") %></span>
   </p>
 </div>

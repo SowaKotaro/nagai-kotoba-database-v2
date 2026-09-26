@@ -1,8 +1,10 @@
-<%# 確認の一覧の下端に貼り付くバー。選んである処理ごとの語数(何も触らずに確定したらこうなる)と、確定ボタン。
-    件数は選択を変えるたびに JS が数え直す(counts はサーバで数えた初期値)。
+<%# 確認の一覧の下端に貼り付くバー。
+    何も選んでいないとき: 選んである処理ごとの語数(何も触らずに確定したらこうなる)。JS が選択に合わせて数え直す
+    (counts はサーバで数えた初期値)。
+    行を選んでいるとき(row-select): 選んだ語数と、その行をまとめてそろえる処理のボタン。
     確定ボタンは右端に置く(スマホで折り返しても画面下端の中ほどに来ないように。docs/design.md §10.1.2)。 %>
-<div class="cand-bar">
-  <ul class="cand-bar__counts">
+<div class="cand-bar" data-row-select-target="bar">
+  <ul class="cand-bar__counts" data-row-select-target="idle">
     <% choices.each do |decision| %>
       <li class="cand-bar__count cand-bar__count--<%= decision %>">
         <%= t("admin.word_candidates.decisions.#{decision}") %>
@@ -10,6 +12,19 @@
       </li>
     <% end %>
   </ul>
+  <div class="cand-bar__selection" data-row-select-target="selecting" hidden>
+    <span class="cand-bar__selected" data-row-select-target="count"></span>
+    <span class="cand-bar__actions">
+      <% choices.each do |decision| %>
+        <button type="button" class="btn btn--sm cand-bar__action cand-bar__action--<%= decision %>"
+                data-action="decision-list#applyToSelection" data-decision="<%= decision %>">
+          <%= t("admin.word_candidates.decisions.#{decision}") %>
+        </button>
+      <% end %>
+    </span>
+    <button type="button" class="cand-link-button" data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
+    <button type="button" class="cand-link-button" data-action="row-select#clear"><%= t("admin.word_candidates.select.clear") %></button>
+  </div>
   <button type="submit" form="<%= form %>" class="btn btn--primary cand-bar__submit">
     <%= submit_label %><span class="cand-bar__kbd">Ctrl+Enter</span>
   </button>

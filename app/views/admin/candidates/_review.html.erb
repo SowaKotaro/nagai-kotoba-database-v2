@@ -1,22 +1,19 @@
 <%# 確認の一覧(仕分け・表記の確認で共用)。upload した順に並べ、同じ元の語から増えた語は系統として括る。
-    系統の見出しの「すべて採用 / すべて除外」は、その系統の見えている行だけをそろえる(data-decision-scope)。
+    系統の見出しの「この系統を選ぶ」は、その系統の見えている行をまとめて選ぶ(data-row-group。処理は下端のバーで)。
     元の語が一覧に無い系統(分割して不要にした語など)は、見出しに元の語のメモを出す。 %>
 <div class="cand-list">
   <% review.groups.each do |group| %>
     <% if group.family? %>
-      <section class="cand-family" data-decision-scope aria-label="<%= t("admin.word_candidates.family.label", root: group.root.surface) %>">
+      <section class="cand-family" data-row-group aria-label="<%= t("admin.word_candidates.family.label", root: group.root.surface) %>">
         <header class="cand-family__head">
           <p class="cand-family__title">
             <span class="cand-family__name"><%= t("admin.word_candidates.family.name", root: group.root.surface) %></span>
             <span class="cand-family__count"><%= t("admin.word_candidates.family.count", count: group.rows.size) %></span>
           </p>
-          <span class="cand-family__actions">
-            <% %w[keep reject].each do |decision| %>
-              <button type="button" class="cand-family__action" data-action="decision-list#applyToScope" data-decision="<%= decision %>">
-                <%= t("admin.word_candidates.family.apply_#{decision}") %>
-              </button>
-            <% end %>
-          </span>
+          <button type="button" class="cand-family__action" aria-pressed="false" data-js-only
+                  data-row-select-target="groupToggle" data-action="row-select#toggleGroup">
+            <%= t("admin.word_candidates.family.select") %>
+          </button>
           <% if group.root.note.present? && !group.root_row?(group.rows.first) %>
             <p class="cand-family__note"><%= group.root.note %></p>
           <% end %>

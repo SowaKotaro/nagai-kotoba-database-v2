@@ -1,21 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 
+// 文字を打つ場所(処理のキーや Ctrl+Enter を横取りしない)。
+const EDITABLE = "input[type=text], input[type=search], input[type=number], textarea, [contenteditable]"
+
 // 登録予定単語の確認の一覧(仕分け・表記の確認)で、語ごとの処理(拡張 / 採用 / 保留 / 除外)を選ぶ操作を速くする。
-// 選択そのものはラジオなので、JS が無くても選んで確定できる。ここで足すのは次のとおり:
+// 選択そのものはラジオなので、JS が無くても選んで確定できる。行を選んでまとめて処理する操作は row-select と組む。
+// ここで足すのは次のとおり:
 // - 件数: 選択が変わるたびに、下端のバーの処理ごとの語数を数え直す(行の data-decision も合わせる)
 // - キーボード: ↑↓(Enter / Shift+Enter)で行を移る。行のキー(ラジオの data-key)で処理を選ぶと次の行へ進む。
-//   ←→ はラジオの標準のまま(同じ行の中で選び直す)。Ctrl+Enter(Mac は ⌘+Enter)で確定する
-// - Shift+クリック: 直前に選んだ行からその行までを、同じ処理にそろえる
-// - まとめて: 系統の見出しのボタンで、その系統の見えている行をそろえる
+//   選んでいる行(row-select)があれば、キーはその行すべてに効く。←→ はラジオの標準のまま(同じ行の中で選び直す)。
+//   Ctrl+Enter(Mac は ⌘+Enter)で確定する
+// - まとめて: 下端のバーの処理のボタンで、選んでいる行をすべて同じ処理にそろえる
 // - 絞り込み: 印(重複の疑い 等)で行を絞る。隠れた行も、選んである処理のまま一緒に確定される
 // - 手直し: F2 で行の「直す」を開き、Esc で取りやめる。行に戻ったら、その行の選択にフォーカスを戻す
+// 選んでいる行にまとめて当てたとき・絞り込んだときは、decision-list:applied / decision-list:filtered を出す
+// (row-select が選択を外す)。
 export default class extends Controller {
   static targets = ["row", "count", "filter"]
   static values = { form: String }
 
   connect() {
-    // 範囲選択の起点(直前に選んだ行)
-    this.anchor = null
     this.refreshCounts()
     this.focusFirstRow()
   }
@@ -25,29 +29,7 @@ export default class extends Controller {
     const input = this.decisionInput(event.target)
     if (!input) return
 
-    const row = this.rowOf(input)
-    row.dataset.decision = input.value
-    this.anchor = row
-    this.refreshCounts()
-  }
-
-  // Shift+クリックで、起点の行からクリックした行までを同じ処理にそろえる。
-  // クリックした行そのものの選択はブラウザの既定の動作に任せる(ここで先に選んでおくので change は出ない)。
-  clicked(event) {
-    if (!event.shiftKey || !this.anchor) return
-
-    const option = event.target.closest(".cand-choice__option")
-    const input = option?.querySelector("input[type=radio]")
-    if (!input) return
-
-    const rows = this.visibleRows()
-    const row = this.rowOf(input)
-    const from = rows.indexOf(this.anchor)
-    const to = rows.indexOf(row)
-    if (from < 0 || to < 0) return
-
-    rows.slice(Math.min(from, to), Math.max(from, to) + 1).forEach((target) => this.choose(target, input.value))
-    this.anchor = row
+    this.rowOf(input).dataset.decision = input.value
     this.refreshCounts()
   }
 
@@ -56,6 +38,8 @@ export default class extends Controller {
 
     const input = this.decisionInput(event.target)
     if (!input || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return
+    // Shift+↑↓ は範囲を選ぶ操作(row-select に任せる)
+    if (event.shiftKey && (event.key === "ArrowDown" || event.key === "ArrowUp")) return
 
     const row = this.rowOf(input)
     if (event.key === "F2") {
@@ -72,19 +56,42 @@ export default class extends Controller {
       if (!target) return
 
       event.preventDefault()
+      const selected = this.selectedRows()
+      if (selected.length > 0) {
+        this.applyToRows(selected, target.value)
+        return
+      }
       this.choose(row, target.value)
-      this.anchor = row
       this.refreshCounts()
       this.focusRow(row, 1)
     }
   }
 
-  // 系統の見出し(data-decision-scope)のボタン: その系統の見えている行を、ボタンの処理にそろえる。
-  applyToScope(event) {
-    const scope = event.currentTarget.closest("[data-decision-scope]") || this.element
-    const value = event.currentTarget.dataset.decision
-    this.visibleRows().filter((row) => scope.contains(row)).forEach((row) => this.choose(row, value))
-    this.refreshCounts()
+  // window で受けるキー: Ctrl+Enter(⌘+Enter)で確定する。行の外にフォーカスがあっても、選んでいる行があれば
+  // 処理のキーをその行すべてに当てる(行を押して選んだあと、そのままキーで処理できるように)。
+  // 貼り付け欄などの入力中は、その欄に任せる。行の中で受けたキー(keydown)は済んでいるので見ない。
+  windowKeydown(event) {
+    if (event.defaultPrevented || event.isComposing) return
+    if (event.target instanceof Element && event.target.closest(EDITABLE)) return
+
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault()
+      document.getElementById(this.formValue)?.requestSubmit()
+      return
+    }
+    if (event.altKey || event.ctrlKey || event.metaKey || event.key.length !== 1) return
+
+    const selected = this.selectedRows()
+    const target = this.element.querySelector(`input[type=radio][data-key="${CSS.escape(event.key.toLowerCase())}"]`)
+    if (selected.length === 0 || !target) return
+
+    event.preventDefault()
+    this.applyToRows(selected, target.value)
+  }
+
+  // 下端のバーの処理のボタン(選んでいる行があるとき): 選んでいる行をすべて、押した処理にそろえる。
+  applyToSelection(event) {
+    this.applyToRows(this.selectedRows(), event.currentTarget.dataset.decision)
   }
 
   // 印で行を絞る(data-flag が空なら全部を出す)。行が1つも見えない系統は見出しごと隠す。
@@ -94,9 +101,10 @@ export default class extends Controller {
     this.rowTargets.forEach((row) => {
       row.hidden = flag !== "" && !row.dataset.flags.split(" ").includes(flag)
     })
-    this.element.querySelectorAll("[data-decision-scope]").forEach((scope) => {
-      scope.hidden = !this.rowTargets.some((row) => !row.hidden && scope.contains(row))
+    this.element.querySelectorAll("[data-row-group]").forEach((group) => {
+      group.hidden = !this.rowTargets.some((row) => !row.hidden && group.contains(row))
     })
+    this.dispatch("filtered")
   }
 
   // 行の「語」の部分(turbo-frame)が表示に戻ったら、その行の選択にフォーカスを戻す(キーボードで続けられるように)。
@@ -107,16 +115,18 @@ export default class extends Controller {
     row.querySelector("input[type=radio]:checked")?.focus({ preventScroll: true })
   }
 
-  // Ctrl+Enter(⌘+Enter)で確定する。貼り付け欄などの入力中は、その欄のフォームに任せる。
-  submitShortcut(event) {
-    if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey) || event.defaultPrevented) return
-    if (event.target instanceof Element && event.target.closest("textarea, input[type=text], input[type=search]")) return
+  // --- 内部 ---
 
-    event.preventDefault()
-    document.getElementById(this.formValue)?.requestSubmit()
+  applyToRows(rows, value) {
+    rows.forEach((row) => this.choose(row, value))
+    this.refreshCounts()
+    this.dispatch("applied")
   }
 
-  // --- 内部 ---
+  // row-select で選んでいる行。
+  selectedRows() {
+    return this.rowTargets.filter((row) => row.dataset.selected === "true")
+  }
 
   // 行の中で開いた「直す」を Esc で取りやめる(取りやめのリンクを押したのと同じ)。
   cancelEdit(target) {

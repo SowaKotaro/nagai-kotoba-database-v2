@@ -14,6 +14,9 @@ class Admin::Candidates::ListsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".cand-table tbody tr", 1
     assert_select ".cand-table a[href=?]", admin_word_candidate_path(rejected)
+    # 行の checkbox と下端のバーの移すボタンは表の外のフォームに結び付く(JS が無くても選んで移せる)
+    assert_select ".row-check input[type=checkbox][name='candidate_ids[]'][form=cand-move][value=?]", rejected.id.to_s
+    assert_select ".cand-bar button[type=submit][name=move][form=cand-move]", WordCandidate::MOVES.size
 
     get admin_candidates_list_path(q: "仕分け")
     assert_select ".cand-table tbody tr", 1

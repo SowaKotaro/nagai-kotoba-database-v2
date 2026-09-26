@@ -22,8 +22,7 @@
 <% else %>
   <%# 語ごとの選択は、このフォームに form 属性で結び付ける(一覧の中の「直す」フォームと入れ子にしないため) %>
   <%= form_with url: admin_candidates_triage_path, method: :patch, id: "cand-decisions", class: "cand-decisions" do %><% end %>
-  <div class="cand-review" data-controller="decision-list" data-decision-list-form-value="cand-decisions"
-       data-action="change->decision-list#changed click->decision-list#clicked keydown->decision-list#keydown keydown@window->decision-list#submitShortcut turbo:frame-render->decision-list#frameRendered">
+  <%= tag.div class: "cand-review", data: candidate_review_data("cand-decisions") do %>
     <%= render "admin/candidates/toolbar", reviews: [ @review, @held ], choices: @review.choices %>
 
     <% if @review.empty? %>
@@ -42,5 +41,5 @@
 
     <%= render "admin/candidates/bar", choices: @review.choices, form: "cand-decisions", submit_label: t(".submit"),
           counts: (@review.rows + @held.rows).map(&:default).tally %>
-  </div>
+  <% end %>
 <% end %>

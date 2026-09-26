@@ -536,8 +536,9 @@ ja:
         all: "すべて"
         keys:
           move: "行を移る"
+          select: "行を選ぶ"
           click: "クリック"
-          range: "で範囲をそろえる"
+          range: "範囲を選ぶ"
           submit: "確定"
       choice:
         legend: "「%{surface}」をどうするか"
@@ -545,8 +546,15 @@ ja:
         label: "「%{root}」の系統"
         name: "「%{root}」の系統"
         count: "%{count} 語"
-        apply_keep: "すべて採用"
-        apply_reject: "すべて除外"
+        select: "この系統を選ぶ"
+      # 行を選んで、下端のバーでまとめて処理する(仕分け・表記の確認・すべての語で共用)。
+      select:
+        row: "「%{surface}」を選ぶ"
+        selected: "%{count} 語を選択中"
+        all: "すべて選ぶ"
+        clear: "選択を外す"
+        hint: "行を押すと選べる。左端をなぞると範囲を選べる"
+        hint_shift: "（Shift+クリックでも）"
       word:
         root: "元の語"
         expanded: "拡張済み"
@@ -679,8 +687,7 @@ ja:
             triage: "仕分けに戻す"
             held: "保留にする"
             rejected: "不要にする"
-          select_all: "すべて選択"
-          select_item: "「%{surface}」を選択"
+          col_select: "選ぶ"
           col_surface: "表層形"
           col_status: "状態"
           col_note: "メモ"

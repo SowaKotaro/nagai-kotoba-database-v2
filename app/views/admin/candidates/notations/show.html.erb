@@ -18,13 +18,12 @@
     <% else %>
       <p class="cand-step__hint"><%= t(".review_hint") %></p>
       <%= form_with url: admin_candidates_notation_path, method: :patch, id: "cand-decisions", class: "cand-decisions" do %><% end %>
-      <div class="cand-review" data-controller="decision-list" data-decision-list-form-value="cand-decisions"
-           data-action="change->decision-list#changed click->decision-list#clicked keydown->decision-list#keydown keydown@window->decision-list#submitShortcut turbo:frame-render->decision-list#frameRendered">
+      <%= tag.div class: "cand-review", data: candidate_review_data("cand-decisions") do %>
         <%= render "admin/candidates/toolbar", reviews: [ @review ], choices: @review.choices %>
         <%= render "admin/candidates/review", review: @review, form: "cand-decisions" %>
         <%= render "admin/candidates/bar", choices: @review.choices, form: "cand-decisions", submit_label: t(".submit"),
               counts: @review.rows.map(&:default).tally %>
-      </div>
+      <% end %>
     <% end %>
   </li>
 </ol>

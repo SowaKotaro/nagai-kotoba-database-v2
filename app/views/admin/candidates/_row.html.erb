@@ -1,10 +1,17 @@
-<%# 確認の一覧の1行。左に語、右に処理の選択(ラジオをボタン状に並べた「拡張 / 採用 / 保留 / 除外」)。
+<%# 確認の一覧の1行。左端に選択の列(行を選んで、下端のバーでまとめて処理する。row-select)、真ん中に語、
+    右に処理の選択(ラジオをボタン状に並べた「拡張 / 採用 / 保留 / 除外」)。
     初期の選択は WordCandidateReview が決めた既定(何も触らずに確定したらこうなる)。
     ラジオは form 属性で一覧の外のフォームに結び付ける(行の中の「直す」フォームと入れ子にしないため)。
+    選択の checkbox は送らない(名前を持たない)。Tab は処理のラジオで止め、行の選択は Space で切り替える。
     data-decision は選択中の処理(行の色分け・件数に使う。JS が選択に合わせて書き換える)。 %>
 <% candidate = row.candidate %>
 <div class="cand-row <%= "cand-row--child" if child %>" id="<%= dom_id(candidate) %>"
-     data-decision-list-target="row" data-decision="<%= row.default %>" data-flags="<%= row.flags.join(" ") %>">
+     data-decision-list-target="row" data-row-select-target="row"
+     data-decision="<%= row.default %>" data-flags="<%= row.flags.join(" ") %>">
+  <label class="row-check">
+    <input type="checkbox" tabindex="-1" aria-label="<%= t("admin.word_candidates.select.row", surface: candidate.surface) %>">
+    <span class="row-check__box" aria-hidden="true"></span>
+  </label>
   <%= turbo_frame_tag dom_id(candidate, :word), class: "cand-row__word" do %>
     <%= render "admin/candidates/word", candidate: candidate, matches: row.matches, root: root, in_list: true %>
   <% end %>
