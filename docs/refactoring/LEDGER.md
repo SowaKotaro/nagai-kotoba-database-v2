@@ -77,12 +77,12 @@
 | A-01 | 派生値をビュー・ヘルパ・JS で再計算していないかの網羅確認: `app/helpers/stats_helper.rb`・`app/javascript/controllers/feature_range_controller.js` | 539 | high | 済 | `6f59f21` | B-01 から。B-02・B-03 のどちらでも覆われていなかった。JS 側は target_start の計算がサーバの規則と合っているかだけを見る 。指摘 7 件（A01-1〜7）。A01-1・A01-2 は外部振る舞いに関わる（target_start の検証が無い）。A01-5 の 818px はリーダーが裏取りした |
 | A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 未着手 | | B-01 から（冒頭しか見ていない） |
 | A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 533 | high | 見送り | `4610ead` | B-01 から。CFG-05〜CFG-07 で覆われていた（`audits/db-config.md` の棚卸しを参照） |
-| A-04 | 管理ビューの精読: `app/views/admin/` の candidates・tags・annotation_decks・bulk_proposal_approvals・annotation_proposals・word_candidates の全ファイルと、annotations の `_proposal*`・`_feature_fields`・`_new_master`・`_variant_fields` | 1,296 | high | 未着手 | | B-02 から（grep で拾っただけ） |
+| A-04 | 管理ビューの精読: `app/views/admin/` の candidates・tags・annotation_decks・bulk_proposal_approvals・annotation_proposals・word_candidates の全ファイルと、annotations の `_proposal*`・`_feature_fields`・`_new_master`・`_variant_fields` | 1,296 | high | 済 | このコミット | B-02 から（grep で拾っただけ）。35 ファイルを読み通し、指摘 15 件。A04-1（特徴の再調査の書き出しで、日本語のみの絞り込みが外せない）はリーダーが確認した管理画面の不具合 |
 | A-05 | 統計・共有パーシャルの精読: stats の `_origins`・`_sound_breakdown`・`_sound_matrix`・`_vowel_graph`・`_feature_ranking`・`_entity_cell`、shared の `_kana_ring_art`・`_radial_art`・`_brand_mark`、共有カードの SVG。あわせて stats.md §4〜§8 と実装の照合 | 約 650 | high | 未着手 | | B-02・B-08 から |
 | A-06 | マスタを新設する経路の正規化と検証: `ProposedMasterCreation`・`TagKind`・`Genre`・`concerns/tag_master.rb`（C-20 の裏取り） | 301 | high | 未着手 | | B-02 から |
 | A-07 | 逆方向の照合: ビュー・ヘルパ・i18n・JS が付けるクラス名のうち、CSS に定義が無いものを洗い出す（例: `.stats-header`・`.flash--notice`・`.proposal-json`）。スクリプトで機械的に出して、意図的なもの（JS のフック用など）と残骸に分ける | 全ビュー・JS | high | 未着手 | | B-04 から |
 | A-08 | 注釈スキルの `schema.json`・`example.json` と `AnnotationProposalImport::PAYLOAD_KEYS`・`ProposalApplication` の突き合わせ（M-05 の食い違いに 4 か所目が無いか） | 369 | high | 未着手 | | B-07 から |
-| A-09 | data-model §8「一覧・検索・sitemap・API・統計のすべてが公開スコープを通る」の全経路の確認。公開側のコントローラ・ビュー・ヘルパ・統計の各クエリが `Word.annotated` / `WordSense.published` を通るかを洗い出す | 約 3,000 | high | 済 | このコミット | B-07 から。未公開語の漏れに関わるので優先度が高い。指摘 3 件。公開判定そのものの漏れは無い。公開を取り消した語がキャッシュに最大 1 日残る（A09-1）が、sitemap・llms-full については性能のための意図的な割り切りとコメントに書かれている。許容するかを P-04 でオーナーに聞く |
+| A-09 | data-model §8「一覧・検索・sitemap・API・統計のすべてが公開スコープを通る」の全経路の確認。公開側のコントローラ・ビュー・ヘルパ・統計の各クエリが `Word.annotated` / `WordSense.published` を通るかを洗い出す | 約 3,000 | high | 済 | `9c45384` | B-07 から。未公開語の漏れに関わるので優先度が高い。指摘 3 件。公開判定そのものの漏れは無い。公開を取り消した語がキャッシュに最大 1 日残る（A09-1）が、sitemap・llms-full については性能のための意図的な割り切りとコメントに書かれている。許容するかを P-04 でオーナーに聞く |
 | A-10 | design.md の未照合の節（§5.1 フッターの細部・§5.6 入力部品・§6 タップ領域・§7・§9.2〜9.3・§10.1.2〜10.1.3）と CSS・レイアウトの照合 | 約 300（文書）＋該当 CSS | high | 未着手 | | B-07・B-08 から |
 | A-11 | annotation-guidelines.md と、注釈・再注釈・読み・拡張・収穫の各 SKILL.md、SeedCatalog のマスタの突き合わせ | 289（文書）＋スキル | high | 未着手 | | B-05・B-08 から |
 
@@ -97,7 +97,7 @@ test 10,177 / docs 7,446 / .claude 1,419
 | P-01 | 棚卸しと補完監査の結果をもとに、計画書を改訂する（目的・正典パターン・改修項目・実行順序・実施しないこと）。陳腐化した指摘を外し、行番号をいまの HEAD に合わせる | max | 未着手 | | |
 | P-02 | 反証レビュー: サブエージェント 1 体に計画書を読ませ、「振る舞いを変えてしまう項目」「前提が誤っている項目」「抜けている依存関係」を挙げさせる。成果物は `audits/plan-review.md` | max | 未着手 | | |
 | P-03 | レビューの指摘を計画書に反映し、§5 の表に改修項目を全部書き写す（ID・群・1 行の内容・推奨 effort） | max | 未着手 | | |
-| P-04 | **オーナーの承認**（計画書 §10 の質問に答えてもらう。あわせて、公開を取り消した語がキャッシュに最大 1 日残るのを許容するか（A09-1）、言語的特徴だけの再調査の書き出しを使っているか（SPEC-19・DOC-11）も聞く）。承認されるまで段階 4 に進まない | — | 未着手 | | |
+| P-04 | **オーナーの承認**（計画書 §10 の質問に答えてもらう。あわせて、公開を取り消した語がキャッシュに最大 1 日残るのを許容するか（A09-1）、言語的特徴だけの再調査の書き出しを使っているか（SPEC-19・DOC-11。使っているなら A04-1 の不具合も直すか）も聞く）。承認されるまで段階 4 に進まない | — | 未着手 | | |
 
 ## 5. 段階 4: 実行
 
