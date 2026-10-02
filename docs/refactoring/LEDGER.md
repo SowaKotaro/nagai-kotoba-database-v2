@@ -75,10 +75,10 @@
 | ID | 対象 | 規模（行） | 推奨 effort | 状態 | コミット | 備考 |
 |---|---|---:|---|---|---|---|
 | A-01 | 派生値をビュー・ヘルパ・JS で再計算していないかの網羅確認: `app/helpers/stats_helper.rb`・`app/javascript/controllers/feature_range_controller.js` | 539 | high | 済 | `6f59f21` | B-01 から。B-02・B-03 のどちらでも覆われていなかった。JS 側は target_start の計算がサーバの規則と合っているかだけを見る 。指摘 7 件（A01-1〜7）。A01-1・A01-2 は外部振る舞いに関わる（target_start の検証が無い）。A01-5 の 818px はリーダーが裏取りした |
-| A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 済 | このコミット | B-01 から（冒頭しか見ていない）。指摘 10 件（すべてリスク低）。コメントは概ね正確。A02-1・A02-10 は潜在的な不具合で §7.1 行き |
+| A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 済 | `0f0b541` | B-01 から（冒頭しか見ていない）。指摘 10 件（すべてリスク低）。コメントは概ね正確。A02-1・A02-10 は潜在的な不具合で §7.1 行き |
 | A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 533 | high | 見送り | `4610ead` | B-01 から。CFG-05〜CFG-07 で覆われていた（`audits/db-config.md` の棚卸しを参照） |
 | A-04 | 管理ビューの精読: `app/views/admin/` の candidates・tags・annotation_decks・bulk_proposal_approvals・annotation_proposals・word_candidates の全ファイルと、annotations の `_proposal*`・`_feature_fields`・`_new_master`・`_variant_fields` | 1,296 | high | 済 | `96551ce` | B-02 から（grep で拾っただけ）。35 ファイルを読み通し、指摘 15 件。A04-1（特徴の再調査の書き出しで、日本語のみの絞り込みが外せない）はリーダーが確認した管理画面の不具合 |
-| A-05 | 統計・共有パーシャルの精読: stats の `_origins`・`_sound_breakdown`・`_sound_matrix`・`_vowel_graph`・`_feature_ranking`・`_entity_cell`、shared の `_kana_ring_art`・`_radial_art`・`_brand_mark`、共有カードの SVG。あわせて stats.md §4〜§8 と実装の照合 | 約 650 | high | 未着手 | | B-02・B-08 から |
+| A-05 | 統計・共有パーシャルの精読: stats の `_origins`・`_sound_breakdown`・`_sound_matrix`・`_vowel_graph`・`_feature_ranking`・`_entity_cell`、shared の `_kana_ring_art`・`_radial_art`・`_brand_mark`、共有カードの SVG。あわせて stats.md §4〜§8 と実装の照合 | 約 650 | high | 済 | このコミット | B-02・B-08 から。stats.md §4〜§8 の 47 項目を照合（一致 39・不一致 5・一部一致 3）。指摘 12 件。エスケープの漏れは無し |
 | A-06 | マスタを新設する経路の正規化と検証: `ProposedMasterCreation`・`TagKind`・`Genre`・`concerns/tag_master.rb`（C-20 の裏取り） | 301 | high | 済 | `e5d57c0` | B-02 から。指摘 7 件。C-20 は確認済みに格上げ（ただし本番の経路は seed を入れて 4 系統で、外部振る舞いへの影響は「あり（管理画面だけ）」に訂正）。照合順序をリーダーが MySQL 8.4.10 で実測した |
 | A-07 | 逆方向の照合: ビュー・ヘルパ・i18n・JS が付けるクラス名のうち、CSS に定義が無いものを洗い出す（例: `.stats-header`・`.flash--notice`・`.proposal-json`）。スクリプトで機械的に出して、意図的なもの（JS のフック用など）と残骸に分ける | 全ビュー・JS | high | 未着手 | | B-04 から |
 | A-08 | 注釈スキルの `schema.json`・`example.json` と `AnnotationProposalImport::PAYLOAD_KEYS`・`ProposalApplication` の突き合わせ（M-05 の食い違いに 4 か所目が無いか） | 369 | high | 未着手 | | B-07 から |
