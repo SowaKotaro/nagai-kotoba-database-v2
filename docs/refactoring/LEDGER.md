@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 2: 棚卸しと補完監査 |
-| 次の一手 | B-01（`audits/models.md` の棚卸し） |
+| 次の一手 | B-02（`audits/controllers-views.md` の棚卸し） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -57,7 +57,7 @@
 
 | ID | 対象 | 推奨 effort | 状態 | コミット | 備考 |
 |---|---|---|---|---|---|
-| B-01 | `audits/models.md`（M- 21 件） | high | 未着手 | | |
+| B-01 | `audits/models.md`（M- 21 件） | high | 済 | このコミット | 陳腐化 0・重複 3 組・要確認 5（うち M-07 は実測で決着済み）。A-01〜A-03 を足した |
 | B-02 | `audits/controllers-views.md`（C- 23 件） | high | 未着手 | | |
 | B-03 | `audits/javascript.md`（J- 20 件） | high | 未着手 | | |
 | B-04 | `audits/stylesheets.md`（S- 13 件） | high | 未着手 | | |
@@ -73,7 +73,9 @@
 
 | ID | 対象 | 規模（行） | 推奨 effort | 状態 | コミット | 備考 |
 |---|---|---:|---|---|---|---|
-| — | （棚卸しの結果で足す） | | | | | |
+| A-01 | 派生値をビュー・ヘルパ・JS で再計算していないかの網羅確認: `app/helpers/stats_helper.rb`・`app/javascript/controllers/feature_range_controller.js` | 539 | high | 未着手 | | B-01 から。B-02・B-03 の棚卸しで覆われていると分かれば見送り |
+| A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 未着手 | | B-01 から（冒頭しか見ていない） |
+| A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 未計測 | high | 未着手 | | B-01 から。B-05 の棚卸しで覆われていると分かれば見送り |
 
 参考（2026-10-02 時点の行数）: app/models 5,965 / app/services 324 / app/controllers 2,016 / app/helpers 1,157 /
 app/views 5,243 / app/javascript 2,219 / app/assets/stylesheets 8,127 / config 2,445 / lib 243 /
