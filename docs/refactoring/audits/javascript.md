@@ -436,3 +436,24 @@
 - test/integration・test/helpers が固定している data 属性（確認したのは test/controllers の grep 結果だけ）。
 - docs/issues.md・changelog.md の JS 関連の確定事項との照合（照合したのは overview・design・stats だけ）。
 - ドロワーとキャレット以外の CSS の reduced-motion 対応の全体。
+
+## 棚卸し（ce74da5）
+
+- 前提: `git diff a04f375..ce74da5 -- app config lib db test vendor` は空。行番号はそのまま使える。
+- **陳腐化: 0 件。**
+- **重複**（計画書 §9 で同じ改修項目に束ねてある）:
+  - J-07 ↔ C-17（スライダーの境界値の直書き。C3-20）
+  - J-19 ↔ M-15・C-16（未使用。R2-03）
+- **要確認**: J-06d（全角空白での 1 字ずれ）、J-09（「戻る」でドロワーが開いたまま）、J-10（ボタン上の Enter）。
+  いずれも計画書では §7.1（振る舞いの変更）に回してあり、この改修では直さない。ブラウザでの再現も、この改修ではしない。
+- **未確認の範囲のうち、この棚卸しで決着したもの**:
+  - `SiteStatistics::DISTRIBUTION_OVERFLOW_MIN` の値: `app/models/site_statistics.rb:147` で `30`。J-07 の提案どおり、スライダーの上限の持ち主にできる。
+  - J-20 の「Plotly は importmap audit の対象外」: `config/importmap.rb` に Plotly の pin は無い（`genre_sunburst_controller.js:9` が `vendor/javascript/plotly.min.js` を自前で読む）。**推測から確認済みに格上げ**。
+  - stimulus-loading の識別子とファイル名の対応: 計画書 §2 で統合担当が確認済み（`_controller` で終わるファイルだけを登録する）。
+  - B-02 から預かった「Stimulus の controller 名と JS の対応」: この記録の冒頭の一覧（全コントローラ・使用箇所・テスト）で覆われている。
+- **ほかの単位に任せるもの**:
+  - 未通読のビュー（admin/candidates/_word・admin/word_candidates/edit・lists/show・annotations/_proposal*）は A-04 に含まれる。searches/_kana_grid・_check_chips は data-controller が無いことを確認済みなので見ない。
+  - test/integration・test/helpers が固定している data 属性は B-06。
+  - issues.md・changelog.md との照合は B-08。
+  - CSS の reduced-motion 対応は B-04。
+- A-01 の JS 側: この記録は feature_range の target_start の計算を扱っていない（J-06 は別の規則）。A-01 に残す。
