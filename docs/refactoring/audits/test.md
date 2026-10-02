@@ -550,3 +550,31 @@ assert の無いテスト、`assert_nothing_raised` だけのテスト: **該当
 - test/integration/words_api_test.rb
 - test/controllers/word_requests_controller_test.rb
 - lib/tasks/backfill.rake（とセットで test/tasks/backfill_task_test.rb）
+
+## 棚卸し（4610ead）
+
+- 前提: `git diff a04f375..4610ead -- app config lib db test` は空。行番号はそのまま使える。
+- **陳腐化: 0 件。**
+- **重複**（計画書 §9 で同じ改修項目に束ねてある）:
+  - T-06 ↔ M-01・CFG-02（backfill。C3-12）
+  - T-15 ↔ M-15・C-16（未使用。R2-01）
+  - T-01・T-03・T-04・T-05 ↔ 他の監査の「先に必要な特性テスト」（段階 0 の T0-01〜T0-04 に束ねてある）
+- **要確認**:
+  - T-09: system テストでどの入力手段が安定するか。オーナーの運用記録では「キー入力は JS で keydown を送る（ネイティブのキー入力はヘッドレス Chrome に届かない）」「confirm の検証は click_accepting_confirm」となっている。正典の文面は P-01 でこれを出発点にして決め、実行で確かめる。
+  - T-16: ReadingExtractor の厳密な読みのテストが neologd を前提にしているかは未確認。C3-04 の着手前に、辞書ごとの出力を確かめる。
+  - T-17: 文言の直書きの件数は代表例だけ。C3-11 で 1 件ずつ当たる。
+- **未確認の範囲のうち、この棚卸しで決着したもの**:
+  - transactional test の中で after_commit が動く前提（`test/test_helper.rb:16-17`）: `test/models/word_sense_metrics_test.rb:41` が、語義を作ったあとの `reading_density`（after_commit で焼き直す `max_reading_length` に依存する）を確かめていて、ベースライン（計画書 §1）では失敗 0 で通っている。**動いている**。
+  - B-03 から預かった「test/integration・test/helpers が固定している data 属性」: `grep -rnoh 'data-[a-z-]*' test/integration test/helpers` は 0 件。data 属性はこの 2 か所では固定されていない。
+  - B-04 から預かった「system テストが固定している CSS 上の性質」: `theme_toggle_test.rb:8-9` が body の地の色（ライト `rgb(255, 255, 255)`、ダーク `rgb(35, 41, 48)`）を、`word_detail_mobile_test.rb:34-53` が語義カードの横はみ出しと、ルビの上下 2 段積みを固定している。tokens.css の `--surface` / `--dark-surface` を変える項目は、このテストに当たる。
+  - B-05 から預かった 3 点:
+    - indexing_switch_test は `test/integration/indexing_switch_test.rb` にある（facet の分は `facet_indexing_test.rb`）。CFG-08 の解釈を変える件は §7.1 なので、中身の精読は要らない。
+    - User-Agent の切り詰めのテストは**無い**（`word_requests_controller_test.rb:51` は短い値の一致だけ）。P-01 で段階 0 に足すかを決める。
+    - system テストの Google Fonts の遮断（`application_system_test_case.rb:28`）は、下の T-20 にした。
+- **新しい指摘**:
+  - **[T-20] system テストが、もう読んでいない Google Fonts を遮断している**（観点: C・A ／ 確度: 確認済み）。
+    `test/application_system_test_case.rb:26-28` は「Web フォント（Google Fonts）を読み込ませない」として、fonts.googleapis.com と fonts.gstatic.com を 127.0.0.1 に向けている。
+    しかし `grep -rn 'fonts.googleapis\|fonts.gstatic' app config` は 0 件で、アプリは web フォントを読まない（CLAUDE.md「web フォントは読まない」）。
+    コメントは、読み込む前提の理由を書いたまま残っている。消すか、コメントを「念のための保険」に直すかを P-01 で決める（消しても振る舞いは変わらない見込み。リスク 低）。
+- **P-01 で決めること**: lib/tasks/stats.rake・dev_samples.rake・db/seeds.rb にテストを足すかどうか。この監査は「無い」ことしか確かめていない。
+- **見送るもの**（特性テストを書く段階 0 で、書きながら突き合わせれば足りる）: 公開ページのビュー全要素と assert_select の突き合わせ、/search の 13 条件の name 属性、JSON API の実際の出力、語義の無い公開語の og:image のメタ。

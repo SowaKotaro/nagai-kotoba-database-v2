@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 2: 棚卸しと補完監査 |
-| 次の一手 | B-06（`audits/test.md` の棚卸し） |
+| 次の一手 | B-07（`audits/docs-guides.md` の棚卸し） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -61,8 +61,8 @@
 | B-02 | `audits/controllers-views.md`（C- 23 件） | high | 済 | `ce74da5` | 陳腐化 0・重複 4 組・要確認 3。A-04〜A-06 を足した |
 | B-03 | `audits/javascript.md`（J- 20 件） | high | 済 | `8da8a6f` | 陳腐化 0・重複 2 組・要確認 3（すべて §7.1 行き）。J-20 を確認済みに格上げ。新しい A 行は無し |
 | B-04 | `audits/stylesheets.md`（S- 13 件） | high | 済 | `21483dd` | 陳腐化 0・重複 3 組・要確認 3。S-09 の前提を routes で確認した。A-07 を足した |
-| B-05 | `audits/db-config.md`（CFG- 18 件） | high | 済 | このコミット | 陳腐化 0・重複 5 組・要確認 3。main にブランチ保護が無いことを確認した。A-03 を見送りにした |
-| B-06 | `audits/test.md`（T- 19 件） | high | 未着手 | | |
+| B-05 | `audits/db-config.md`（CFG- 18 件） | high | 済 | `4610ead` | 陳腐化 0・重複 5 組・要確認 3。main にブランチ保護が無いことを確認した。A-03 を見送りにした |
+| B-06 | `audits/test.md`（T- 19 件） | high | 済 | このコミット | 陳腐化 0・重複 3 組・要確認 3。他の単位から預かった 6 点を決着させた。新しい指摘 T-20 を足した。新しい A 行は無し |
 | B-07 | `audits/docs-guides.md`（DOC- 16 件） | high | 未着手 | | |
 | B-08 | `audits/docs-specs.md`（SPEC- 24 件） | high | 未着手 | | |
 
@@ -75,7 +75,7 @@
 |---|---|---:|---|---|---|---|
 | A-01 | 派生値をビュー・ヘルパ・JS で再計算していないかの網羅確認: `app/helpers/stats_helper.rb`・`app/javascript/controllers/feature_range_controller.js` | 539 | high | 未着手 | | B-01 から。B-02・B-03 のどちらでも覆われていなかった。JS 側は target_start の計算がサーバの規則と合っているかだけを見る |
 | A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 未着手 | | B-01 から（冒頭しか見ていない） |
-| A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 533 | high | 見送り | `このコミット` | B-01 から。CFG-05〜CFG-07 で覆われていた（`audits/db-config.md` の棚卸しを参照） |
+| A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 533 | high | 見送り | `4610ead` | B-01 から。CFG-05〜CFG-07 で覆われていた（`audits/db-config.md` の棚卸しを参照） |
 | A-04 | 管理ビューの精読: `app/views/admin/` の candidates・tags・annotation_decks・bulk_proposal_approvals・annotation_proposals・word_candidates の全ファイルと、annotations の `_proposal*`・`_feature_fields`・`_new_master`・`_variant_fields` | 1,296 | high | 未着手 | | B-02 から（grep で拾っただけ） |
 | A-05 | 統計・共有パーシャルの精読: stats の `_origins`・`_sound_breakdown`・`_sound_matrix`・`_vowel_graph`・`_feature_ranking`・`_entity_cell`、shared の `_kana_ring_art`・`_radial_art`・`_brand_mark`、共有カードの SVG | 450 | high | 未着手 | | B-02 から |
 | A-06 | マスタを新設する経路の正規化と検証: `ProposedMasterCreation`・`TagKind`・`Genre`・`concerns/tag_master.rb`（C-20 の裏取り） | 301 | high | 未着手 | | B-02 から |
