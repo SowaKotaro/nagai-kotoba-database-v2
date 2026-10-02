@@ -301,3 +301,31 @@
 - docs/overview.md
 - docs/data-model.md
 - config/deploy.rb
+
+## 棚卸し（21483dd）
+
+- 前提: `git diff a04f375..21483dd -- app config lib db test script tools` は空。行番号はそのまま使える。
+  変わったのは、この記録が「未コミットの作業中の変更」として評価を見送った 4 ファイル（README.md・.claude/commands/expand.md・word-expansion-research の SKILL.md と reading_length.rb）だけ。いずれもコミット済みになった（83e36d2・f7b88da）。中身の評価は B-07 に任せる。
+- **陳腐化: 0 件。**
+- **重複**（計画書 §9 で同じ改修項目に束ねてある）:
+  - CFG-01・CFG-05 ↔ DOC-01（デプロイの実態。D1-01）
+  - CFG-02 ↔ M-01・M-02・DOC-05・T-06（派生値と backfill。C3-12・D1-04）
+  - CFG-03・CFG-04 ↔ M-07・DOC-04（照合順序。D1-03）
+  - CFG-09 ↔ DOC-02（合格判定コマンド。D1-02）
+  - CFG-10 ↔ J-01（importmap のコメント。D1-15）
+- **要確認**:
+  - CFG-04: MySQL の挙動は計画書 §1 の実測でおおむね決着済み。残りは T0-06 の特性テストで固める。
+  - CFG-15（puma.rb の分岐に効果が無い）: Puma の仕様からの推測で、起動しての確認はしていない。分岐の削除は §7.2 に回してあるが、**D1-17 でコメントを書くときに、書く内容をこの推測に頼らない**こと（確かめられない事実はコメントに書かない）。
+  - CFG-09 の db:prepare の動き・CFG-14 の `/cable`・CFG-18 のゼロからの db:migrate: どれも、文書やコメントに書く前に実行して確かめる。手順は P-01 で該当項目に「要確認」として付ける。
+- **未確認の範囲のうち、この棚卸しで決着したもの**:
+  - GitHub のブランチ保護: `gh api repos/.../branches/main/protection` は「Branch not protected」（404）。**main への直接 push は止められていない**ので、CFG-01 の結論（merge や push がそのまま本番デプロイになる）は強まる。
+  - `tools/claude-ai-skill/build.sh:35-37` と `word-reannotation-research/SKILL.md` の description の違い: 一致していないが、意図的なもの。build.sh は「バンドル用のフロントマター＋運用の上書き」を書き出しており、バンドル版は一括の調査（「アノテーションを調べて」）も受けるように広げてある。指摘にはしない。
+  - reading_length.rb が RuboCop の対象か: `bundle exec rubocop --list-target-files` に `.claude/` 配下は 1 本も無い。**対象外**。
+  - 本番に MeCab が無いこと（CFG-17）: オーナーの運用記録で「本番・CI に MeCab は未導入」と確認できる。
+  - B-01 から預かった A-03（seed まわりの精読）: CFG-05・CFG-06・CFG-07 が seed_catalog（RENAMES・品詞名・語種名）、dev_samples.rake（:9・:60・:94）、db/seeds.rb（:31・:35）を読んで指摘している。**A-03 は見送る**。
+- **ほかの単位に任せるもの**: indexing_switch_test の中身、User-Agent の切り詰めのテストの有無、system テストの Google Fonts 遮断は B-06。annotation-guidelines とマスタの突き合わせは B-08。
+- **見送るもの**:
+  - 本番の実際の値（WEB_CONCURRENCY など）: リポジトリの外にあるので、この改修では扱わない。
+  - `script/og_default.py` の RING 座標と KanaRing.path の一致: 既定の og:image の見た目の問題で、目的の外にある。
+  - research/README.md と .gitignore の細かな対応: 効果が小さい。
+  - credentials の `admin:` キー: 読まない。
