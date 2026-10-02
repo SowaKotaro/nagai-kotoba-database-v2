@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 2: 棚卸しと補完監査 |
-| 次の一手 | A-01（派生値の再計算の網羅確認） |
+| 次の一手 | A-04・A-09（サブエージェントで実行中）の取り込み → A-02 から順に |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -64,16 +64,17 @@
 | B-05 | `audits/db-config.md`（CFG- 18 件） | high | 済 | `4610ead` | 陳腐化 0・重複 5 組・要確認 3。main にブランチ保護が無いことを確認した。A-03 を見送りにした |
 | B-06 | `audits/test.md`（T- 19 件） | high | 済 | `d5a1376` | 陳腐化 0・重複 3 組・要確認 3。他の単位から預かった 6 点を決着させた。新しい指摘 T-20 を足した。新しい A 行は無し |
 | B-07 | `audits/docs-guides.md`（DOC- 16 件） | high | 済 | `a668f8c` | 陳腐化 0・重複 5 組・要確認 2。コミットされた README・/expand を DOC-17〜20 として足した（§7.6 から対象に戻る）。A-08・A-09 を足した |
-| B-08 | `audits/docs-specs.md`（SPEC- 24 件） | high | 済 | このコミット | 陳腐化 0・重複 5 組・要確認 3。SPEC-13 をコードで確認した。A-05 を広げ、A-10・A-11 を足した。記録の文書の照合は見送り、P-01 で扱いを決める |
+| B-08 | `audits/docs-specs.md`（SPEC- 24 件） | high | 済 | `de84dcf` | 陳腐化 0・重複 5 組・要確認 3。SPEC-13 をコードで確認した。A-05 を広げ、A-10・A-11 を足した。記録の文書の照合は見送り、P-01 で扱いを決める |
 
 ### 3.2 補完監査（棚卸しで見つかった未確認の範囲と、目的が変わって新たに見る範囲）
 
 <!-- B の各単位と段階 1 の結果から、行を足す。1 行は 3〜5k 行以内に収める。
-     成果物は audits/<領域>-supplement.md。ID の接頭辞は既存の監査と揃える -->
+     成果物は audits/supplement/A-xx.md（1 単位 1 ファイル。サブエージェントが並行で書いても衝突しない）。
+     指摘の ID は単位ごとに A01-1, A01-2 … と振る（既存の M- / C- などの通し番号とは衝突させない） -->
 
 | ID | 対象 | 規模（行） | 推奨 effort | 状態 | コミット | 備考 |
 |---|---|---:|---|---|---|---|
-| A-01 | 派生値をビュー・ヘルパ・JS で再計算していないかの網羅確認: `app/helpers/stats_helper.rb`・`app/javascript/controllers/feature_range_controller.js` | 539 | high | 未着手 | | B-01 から。B-02・B-03 のどちらでも覆われていなかった。JS 側は target_start の計算がサーバの規則と合っているかだけを見る |
+| A-01 | 派生値をビュー・ヘルパ・JS で再計算していないかの網羅確認: `app/helpers/stats_helper.rb`・`app/javascript/controllers/feature_range_controller.js` | 539 | high | 済 | このコミット | B-01 から。B-02・B-03 のどちらでも覆われていなかった。JS 側は target_start の計算がサーバの規則と合っているかだけを見る 。指摘 7 件（A01-1〜7）。A01-1・A01-2 は外部振る舞いに関わる（target_start の検証が無い）。A01-5 の 818px はリーダーが裏取りした |
 | A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 未着手 | | B-01 から（冒頭しか見ていない） |
 | A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 533 | high | 見送り | `4610ead` | B-01 から。CFG-05〜CFG-07 で覆われていた（`audits/db-config.md` の棚卸しを参照） |
 | A-04 | 管理ビューの精読: `app/views/admin/` の candidates・tags・annotation_decks・bulk_proposal_approvals・annotation_proposals・word_candidates の全ファイルと、annotations の `_proposal*`・`_feature_fields`・`_new_master`・`_variant_fields` | 1,296 | high | 未着手 | | B-02 から（grep で拾っただけ） |
