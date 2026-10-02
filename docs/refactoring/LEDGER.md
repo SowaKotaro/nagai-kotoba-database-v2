@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 2: 棚卸しと補完監査 |
-| 次の一手 | B-08（`audits/docs-specs.md` の棚卸し） |
+| 次の一手 | A-01（派生値の再計算の網羅確認） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -63,8 +63,8 @@
 | B-04 | `audits/stylesheets.md`（S- 13 件） | high | 済 | `21483dd` | 陳腐化 0・重複 3 組・要確認 3。S-09 の前提を routes で確認した。A-07 を足した |
 | B-05 | `audits/db-config.md`（CFG- 18 件） | high | 済 | `4610ead` | 陳腐化 0・重複 5 組・要確認 3。main にブランチ保護が無いことを確認した。A-03 を見送りにした |
 | B-06 | `audits/test.md`（T- 19 件） | high | 済 | `d5a1376` | 陳腐化 0・重複 3 組・要確認 3。他の単位から預かった 6 点を決着させた。新しい指摘 T-20 を足した。新しい A 行は無し |
-| B-07 | `audits/docs-guides.md`（DOC- 16 件） | high | 済 | このコミット | 陳腐化 0・重複 5 組・要確認 2。コミットされた README・/expand を DOC-17〜20 として足した（§7.6 から対象に戻る）。A-08・A-09 を足した |
-| B-08 | `audits/docs-specs.md`（SPEC- 24 件） | high | 未着手 | | |
+| B-07 | `audits/docs-guides.md`（DOC- 16 件） | high | 済 | `a668f8c` | 陳腐化 0・重複 5 組・要確認 2。コミットされた README・/expand を DOC-17〜20 として足した（§7.6 から対象に戻る）。A-08・A-09 を足した |
+| B-08 | `audits/docs-specs.md`（SPEC- 24 件） | high | 済 | このコミット | 陳腐化 0・重複 5 組・要確認 3。SPEC-13 をコードで確認した。A-05 を広げ、A-10・A-11 を足した。記録の文書の照合は見送り、P-01 で扱いを決める |
 
 ### 3.2 補完監査（棚卸しで見つかった未確認の範囲と、目的が変わって新たに見る範囲）
 
@@ -77,11 +77,13 @@
 | A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメントが実装と合っているか | 648 | high | 未着手 | | B-01 から（冒頭しか見ていない） |
 | A-03 | `app/models/seed_catalog.rb` の 41-254 行・`lib/tasks/dev_samples.rake`・`db/seeds.rb` の精読 | 533 | high | 見送り | `4610ead` | B-01 から。CFG-05〜CFG-07 で覆われていた（`audits/db-config.md` の棚卸しを参照） |
 | A-04 | 管理ビューの精読: `app/views/admin/` の candidates・tags・annotation_decks・bulk_proposal_approvals・annotation_proposals・word_candidates の全ファイルと、annotations の `_proposal*`・`_feature_fields`・`_new_master`・`_variant_fields` | 1,296 | high | 未着手 | | B-02 から（grep で拾っただけ） |
-| A-05 | 統計・共有パーシャルの精読: stats の `_origins`・`_sound_breakdown`・`_sound_matrix`・`_vowel_graph`・`_feature_ranking`・`_entity_cell`、shared の `_kana_ring_art`・`_radial_art`・`_brand_mark`、共有カードの SVG | 450 | high | 未着手 | | B-02 から |
+| A-05 | 統計・共有パーシャルの精読: stats の `_origins`・`_sound_breakdown`・`_sound_matrix`・`_vowel_graph`・`_feature_ranking`・`_entity_cell`、shared の `_kana_ring_art`・`_radial_art`・`_brand_mark`、共有カードの SVG。あわせて stats.md §4〜§8 と実装の照合 | 約 650 | high | 未着手 | | B-02・B-08 から |
 | A-06 | マスタを新設する経路の正規化と検証: `ProposedMasterCreation`・`TagKind`・`Genre`・`concerns/tag_master.rb`（C-20 の裏取り） | 301 | high | 未着手 | | B-02 から |
+| A-07 | 逆方向の照合: ビュー・ヘルパ・i18n・JS が付けるクラス名のうち、CSS に定義が無いものを洗い出す（例: `.stats-header`・`.flash--notice`・`.proposal-json`）。スクリプトで機械的に出して、意図的なもの（JS のフック用など）と残骸に分ける | 全ビュー・JS | high | 未着手 | | B-04 から |
 | A-08 | 注釈スキルの `schema.json`・`example.json` と `AnnotationProposalImport::PAYLOAD_KEYS`・`ProposalApplication` の突き合わせ（M-05 の食い違いに 4 か所目が無いか） | 369 | high | 未着手 | | B-07 から |
 | A-09 | data-model §8「一覧・検索・sitemap・API・統計のすべてが公開スコープを通る」の全経路の確認。公開側のコントローラ・ビュー・ヘルパ・統計の各クエリが `Word.annotated` / `WordSense.published` を通るかを洗い出す | 約 3,000 | high | 未着手 | | B-07 から。未公開語の漏れに関わるので優先度が高い |
-| A-07 | 逆方向の照合: ビュー・ヘルパ・i18n・JS が付けるクラス名のうち、CSS に定義が無いものを洗い出す（例: `.stats-header`・`.flash--notice`・`.proposal-json`）。スクリプトで機械的に出して、意図的なもの（JS のフック用など）と残骸に分ける | 全ビュー・JS | high | 未着手 | | B-04 から |
+| A-10 | design.md の未照合の節（§5.1 フッターの細部・§5.6 入力部品・§6 タップ領域・§7・§9.2〜9.3・§10.1.2〜10.1.3）と CSS・レイアウトの照合 | 約 300（文書）＋該当 CSS | high | 未着手 | | B-07・B-08 から |
+| A-11 | annotation-guidelines.md と、注釈・再注釈・読み・拡張・収穫の各 SKILL.md、SeedCatalog のマスタの突き合わせ | 289（文書）＋スキル | high | 未着手 | | B-05・B-08 から |
 
 参考（2026-10-02 時点の行数）: app/models 5,965 / app/services 324 / app/controllers 2,016 / app/helpers 1,157 /
 app/views 5,243 / app/javascript 2,219 / app/assets/stylesheets 8,127 / config 2,445 / lib 243 /
