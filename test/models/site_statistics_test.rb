@@ -140,6 +140,16 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal 0, gap[%w[a a]][:count]
   end
 
+  test "母音の遷移: 層は読みが長くても 15(TRANSITION_MAX_POSITIONS)で打ち切る" do
+    word = Word.create!(surface: "母音の遷移の上限の見本", annotated_at: Time.current, annotation_status: :done)
+    word.word_senses.create!(reading: "アイウエオアイウエオアイウエオアイウエオ") # 20 拍
+
+    transitions = SiteStatistics.new.vowel_transitions
+    assert_equal 15, transitions[:layers].size
+    assert_equal 15, transitions[:layers].last[:position]
+    assert_equal 14, transitions[:edges].map { |edge| edge[:position] }.uniq.size
+  end
+
   test "母音の遷移: 読みが1拍しか無ければ層が作れないので空にする" do
     Word.annotated.destroy_all
     word = Word.create!(surface: "亜", annotated_at: Time.current, annotation_status: :done)

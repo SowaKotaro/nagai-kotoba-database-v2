@@ -334,6 +334,18 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_not WordSenseSearch.new(vowel_transition: "1-xy").conditions?
   end
 
+  # 上限は 2 つの定数が別々に持つ(並びの長さは VOWEL_TRANSITION_FORMAT の 15、拍位置は
+  # VOWEL_TRANSITION_MAX_POSITION の 30)。境界の内側は条件に残り、外側は条件ごと捨てる。
+  test "母音の遷移の境界: 並びは15拍まで・拍位置は30まで受ける" do
+    fifteen = "1-#{'a' * 15}"
+    assert_equal fifteen, WordSenseSearch.new(vowel_transition: fifteen).vowel_transition
+    assert_equal "", WordSenseSearch.new(vowel_transition: "1-#{'a' * 16}").vowel_transition
+
+    assert_equal "30-ae", WordSenseSearch.new(vowel_transition: "30-ae").vowel_transition
+    assert_equal "", WordSenseSearch.new(vowel_transition: "31-ae").vowel_transition
+    assert_not WordSenseSearch.new(vowel_transition: "31-ae").conditions?
+  end
+
   test "母音の遷移は引き継ぐ条件に入り、単独でもインデックスは許可しない" do
     search = WordSenseSearch.new(vowel_transition: "1-ae")
     assert_equal "1-ae", search.to_query_params[:vowel_transition]
