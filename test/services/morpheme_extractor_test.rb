@@ -22,11 +22,6 @@ class MorphemeExtractorTest < ActiveSupport::TestCase
     assert_includes result.second, "殺人"
   end
 
-  test "空の入力には空を返す" do
-    assert_equal [], @extractor.call([])
-    assert_equal [], @extractor.call(nil)
-  end
-
   test "助詞や記号は落とす" do
     result = @extractor.call([ "涼宮ハルヒの憂鬱" ]).first
     assert_not_includes result, "の"
@@ -51,5 +46,24 @@ class MorphemeExtractorTest < ActiveSupport::TestCase
   test "数詞は落とす" do
     result = @extractor.call([ "第三次スーパーロボット大戦" ]).first
     assert_not_includes result, "三"
+  end
+end
+
+# mecab の有無に依らず走らせる分(上のクラスは setup で丸ごと skip するため、別のクラスに置く)。
+class MorphemeExtractorFallbackTest < ActiveSupport::TestCase
+  test "空の入力には空を返す" do
+    assert_equal [], MorphemeExtractor.new.call([])
+    assert_equal [], MorphemeExtractor.new.call(nil)
+  end
+
+  # 判定の仕組み(メモの有無)に依らず通るよう、PATH を空にして本当に見つからなくする。
+  test "mecab が無いときは、入力と同じ数の空配列を返す" do
+    original_path = ENV["PATH"]
+    ENV["PATH"] = ""
+    extractor = MorphemeExtractor.new
+    assert_not extractor.available?
+    assert_equal [ [], [] ], extractor.call([ "天上天下唯我独尊", "殺人事件" ])
+  ensure
+    ENV["PATH"] = original_path
   end
 end

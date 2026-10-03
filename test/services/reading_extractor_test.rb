@@ -10,6 +10,15 @@ class ReadingExtractorTest < ActiveSupport::TestCase
     assert_equal [], ReadingExtractor.call([])
   end
 
+  # mecab が無い環境の退避。判定の仕組み(メモの有無)に依らず通るよう、PATH を空にして本当に見つからなくする。
+  test "mecab が無いときは、入力と同じ数の nil を返す" do
+    original_path = ENV["PATH"]
+    ENV["PATH"] = ""
+    assert_equal [ nil, nil ], ReadingExtractor.call([ "天上天下唯我独尊", "資本主義" ])
+  ensure
+    ENV["PATH"] = original_path
+  end
+
   test "表層形の並びに対応した読み(カタカナ)を返す" do
     skip "mecab 未インストールのため skip" unless mecab_available?
 

@@ -26,6 +26,22 @@ class Words::ShareCardsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "焼けなかった(fetch が nil)ときと、描けない語(語義が無い)のときは既定のカードへ回す" do
+    renderer = Object.new
+    renderer.define_singleton_method(:fetch) { |**| nil }
+    no_sense_word = Word.create!(surface: "語義の無い公開語のテスト", annotated_at: Time.current)
+
+    stub_method(ShareCardRenderer, :available?, -> { true }) do
+      stub_method(ShareCardRenderer, :new, -> { renderer }) do
+        get word_share_card_path(words(:abc_murder), format: :png)
+        assert_redirected_to "/og-default.png"
+
+        get word_share_card_path(no_sense_word, format: :png)
+        assert_redirected_to "/og-default.png"
+      end
+    end
+  end
+
   test "焼けない環境では既定のカードへ回し、未公開の語は 404 にする" do
     stub_method(ShareCardRenderer, :available?, -> { false }) do
       get word_share_card_path(words(:abc_murder), format: :png)
