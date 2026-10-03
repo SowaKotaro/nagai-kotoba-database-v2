@@ -363,7 +363,8 @@ main.container--flush > .flash {
   background: var(--surface);
 }
 
-/* 左のガター: 標識と小さな図を置く柱。ページを貫く縦の基準線を作る */
+/* 左のガター: 標識と小さな図を置く柱。縦罫は区画ごとに引き、紙全体を貫く線は持たない
+   (docs/design.md §5.2)。どの区画でも同じ位置に立つので、並ぶと 1 本の柱に見える */
 .sheet .band__inner {
   display: grid;
   /* 袖と本体のあいだに縦罫を通すので、gap は持たせず padding で振り分ける。

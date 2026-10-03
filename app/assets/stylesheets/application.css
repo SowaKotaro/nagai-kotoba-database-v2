@@ -1,6 +1,14 @@
 /*
  * デザインシステムの読み込み順を明示するマニフェスト(docs/design.md 参照)。
- * tokens(変数) → base(素のタグ) → layout(骨格) → components(部品) の順で効かせる。
+ * tokens(変数) → base(素のタグと .mono) → layout(骨格) → components(部品) の後に、管理画面用の
+ * annotate(注釈コンソール) → candidates(登録予定単語) → admin(.is-admin の下の上書き) を読む。
+ * レイアウトは 1 本(application.html.erb の stylesheet_link_tag "application")なので、
+ * 管理画面用の 3 ファイルも公開ページで毎回読まれる。
+ * 順序には意味がある: 同じ特異度の規則は後に書いたほうが勝つので、admin は最後に置いて上書きし、
+ * annotate はフォーム部品の級数を components より後で上げる。並べ替えると見た目が変わる。
+ * 置き場所の実態: layout.css にも部品(nav-menu・theme-toggle・flash・admin-nav)があり、
+ * components.css にも管理画面の部品がある。candidates.css は admin.css だけが定義する
+ * --admin-accent / --admin-warn を使う(管理画面の外では未定義)。
  * require_tree は使わない(アルファベット順で順序が壊れるため)。
  *
  *= require tokens

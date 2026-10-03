@@ -1,7 +1,9 @@
 /* =====================================================================
  アノテーション・コンソール(管理者専用)。docs/design.md 準拠。
- 本編と同じ器(白い面・細罫・角丸・アクセントは青一色)のまま、
+ 本編と同じ器(白い面・細罫・角丸)のまま、
  1画面で多くを捌けるよう級数と余白だけを詰めた高密度レイアウト。
+ このファイルの色は無彩色のトークンと --bg-tint(選択中の淡い面)、状態の --success / --danger だけ。
+ 管理画面の青(--admin-accent)は admin.css がリンクやボタンに付ける。
  チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
  ===================================================================== */
 
@@ -109,7 +111,8 @@
 .ann-sense { border-radius: var(--radius-lg); background: var(--surface); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
 /* 最低限の項目(読み・語種・ジャンル・品詞・エンティティ)が揃った語義。
  保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
- 枠を緑に替え、番号のバッジも緑のベタにする。 */
+ 番号のバッジを緑のベタにする。.ann-sense は border を持たないので、下の border-color は
+ 見た目に効いていない(枠は緑にならない)。 */
 .ann-sense.is-complete { border-color: var(--success); }
 .ann-sense.is-complete .ann-sense__stamp { background: var(--success); color: var(--bg); }
 .ann-sense__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-3); }
@@ -256,7 +259,7 @@
 .deck-nav__arrow:disabled { border-color: var(--border); color: var(--text-subtle); cursor: default; }
 .deck-nav__position { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .deck-nav__dots { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中はアクセントの淡い面 */
+/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中は --bg-tint の淡い面と濃い枠 */
 .deck-dot { font-size: 11px; line-height: 1; min-width: 26px; height: 26px; padding: 0; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text-subtle); cursor: pointer; }
 .deck-dot:hover { border-color: var(--text-subtle); color: var(--text); }
 .deck-dot.is-done { background: var(--success); border-color: var(--success); color: var(--bg); }
@@ -298,7 +301,8 @@
 }
 
 /* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。
- このファイルは components より後に読まれるため、ここの小さめ入力は個別に上げる */
+ .ann-add__input は input[type="text"] なので、実際には components.css の @media の
+ input[type="text"](特異度が高い)だけで 16px になる。ここは同じ値の重ねで、読み込み順には頼っていない */
 @media (max-width: 767px) {
  .ann-add__input { font-size: 16px; }
 }

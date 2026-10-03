@@ -234,6 +234,8 @@
   flex: none;
 }
 
+/* 使用元はビューではなく ja.yml(admin.word_candidates.export の count_html・count_limited_html)。
+   ビューだけを grep すると未使用に見える */
 .cand-export__num {
   margin: 0 2px;
   font-size: 20px;

@@ -150,7 +150,8 @@
   margin: 0;
 }
 
-/* いま何件目を見ているか(001–050)。数えられる目盛りとして等幅で置く */
+/* いま何件目を見ているか(001–100。1 ページは WordsController::PER_PAGE 件)。数えられる目盛りとして
+   等幅(.mono と併用)で置く。11px は base.css の .mono(0.92em)より後にあることで効く(読み込み順に依存) */
 .entry-range {
   font-size: 11px;
   color: var(--text-subtle);
@@ -652,6 +653,8 @@ a.tag:hover {
   margin-top: var(--space-6);
 }
 
+/* .section-heading は 2 か所で定義している(もう 1 つは後ろの「セクション見出し」)。
+   margin は後ろの定義が記述順で勝つので、ここの margin は効いていない。下罫と padding はここだけが持つ */
 .section-heading {
   font-size: 17px;
   color: var(--text-muted);
@@ -794,6 +797,8 @@ a.browse-length:hover .browse-length__count {
   margin-top: var(--space-4);
 }
 
+/* 使用元はビューではなく ja.yml(words.show.shiritori の lead_html・dead_end_html・none_html)。
+   ビューだけを grep すると未使用に見える */
 .shiritori__char {
   color: var(--text);
 }
@@ -1855,6 +1860,8 @@ a.tag:hover .genre-hub__count {
 
 /* --- 収録数の内訳。ホームでは看板のレールに、管理画面では横並びに置く --- */
 
+/* margin は、使っている 2 か所(ホームの .stats-grid--rows と、admin.css の .is-admin .stats-grid)が
+   どちらも上書きするので、どこにも効いていない */
 .stats-grid {
   margin: var(--space-7) 0 0;
   display: flex;
@@ -1892,7 +1899,9 @@ a.tag:hover .genre-hub__count {
 /* --- 標識(英字の極小ラベル) -------------------------------------------
    資料館のキャプションのように、区画の頭に等幅の小さな英字を置く。
    本文の代わりではなく「そこが何の区画か」を示す標識なので、必ず日本語の
-   見出しと対にして使う(docs/design.md §5.8)。 */
+   見出しと対にして使う(docs/design.md §5.8)。
+   図のキャプション(.ring-art__caption。五十音円環と放射図の両方)はこのクラスを兼ね、級数・行間・字送りを
+   後ろの規則で上書きする。その上書きは、この規則より後に書いてあることで効く(記述順に依存)。 */
 .label-en {
   display: block;
   margin: 0;
@@ -1980,7 +1989,8 @@ a.tag:hover .genre-hub__count {
 }
 
 /* 右はそのほかの数。ラベル左・値右の等幅の行で積み、縦罫で左と分ける。
-   罫は区画の高さいっぱいに通したいので、行のほうを縦中央に寄せる */
+   罫は区画の高さいっぱいに通したいので、行のほうを縦中央に寄せる。
+   767px 以下の gap は、ずっと後ろの @media の .stats-grid が同じ特異度の記述順で勝ち、8px 16px になる */
 .stats-grid--rows {
   flex-direction: column;
   align-items: stretch;
@@ -2067,7 +2077,8 @@ a.tag:hover .genre-hub__count {
 
 /* 図に添えるキャプションは標識より一段小さい 10px。
    級数を上げると「READING PATH / 50-ON RING」がレール幅(168px)で 2 行に折り返し、図より重くなる。
-   標識=区画が何かを示す / キャプション=図が何かを示す、で役割が違うので揃えなくてよい */
+   標識=区画が何かを示す / キャプション=図が何かを示す、で役割が違うので揃えなくてよい。
+   要素は .label-en も兼ねるので、ここの級数・行間・字送りは .label-en より後に書いてあることで効く */
 .ring-art__caption {
   font-size: 10px;
   line-height: 1.9;
@@ -2315,6 +2326,8 @@ a.tag:hover .genre-hub__count {
   }
 }
 
+/* 同じ特異度の .stats-grid--rows の gap(2px)を記述順で上書きする。実際に効くのはホームの --rows だけ
+   (管理画面は admin.css の .is-admin .stats-grid が特異度で勝つ) */
 @media (max-width: 767px) {
   .stats-grid {
     gap: var(--space-2) var(--space-4);
@@ -2725,12 +2738,14 @@ a.tag:hover .genre-hub__count {
   padding-left: var(--space-5);
 }
 
+/* 状態の 3 つの色は admin.css(.is-admin の下。特異度が高い)が必ず上書きする。この表は管理画面にしか
+   無いので、ここの color は効いていない(効くのは級数だけ) */
 .admin-words-table__annotated {
   font-size: 13px;
   color: var(--text-muted);
 }
 
-/* 未対応はアクセント色(注意を引く現在の作業対象) */
+/* 未対応は本文色(注意を引く現在の作業対象。管理画面では admin.css が --admin-warn にする) */
 .admin-words-table__unannotated {
   font-size: 13px;
   color: var(--text);
@@ -2742,7 +2757,8 @@ a.tag:hover .genre-hub__count {
   color: var(--text-muted);
 }
 
-/* --- セクション見出し --- */
+/* --- セクション見出し ---
+   .section-heading の 2 つ目の定義(1 つ目は索引ページの節)。margin はこちらが記述順で勝つ */
 .section-heading {
   margin: var(--space-7) 0 var(--space-4);
   font-size: 17px;
