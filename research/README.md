@@ -84,7 +84,10 @@
    「提案 JSON の取り込み」に貼ると下書きが上書きされ、コンソールで承認し直せる。
    スマートフォンの Claude アプリからも同じ流れで回せる。
 
-判断基準（立項の4原則・表記・読み・ジャンル選定）は [`docs/annotation-guidelines.md`](../docs/annotation-guidelines.md) が正。
+判断基準のうち、収録範囲・立項の4原則と立項スコア・表記・読み・知名度・人物語の分類・確信度は
+[`docs/annotation-guidelines.md`](../docs/annotation-guidelines.md) が正。語種・ジャンル・エンティティ・
+言語学的特徴の付け方と意味の文体は注釈スキル（`.claude/skills/word-annotation-research/SKILL.md`）が正で、
+言語学的特徴の定義は用語解説（`config/linguistic_features_glossary.yml`）が正。
 
 ## 共通の約束
 
