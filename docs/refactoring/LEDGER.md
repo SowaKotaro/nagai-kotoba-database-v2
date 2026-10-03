@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-03（収録リクエストの、まだ固定されていない振る舞いを固定する） |
+| 次の一手 | T0-04（公開ページの、まだ固定されていない振る舞いを固定する） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -140,8 +140,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | D1-18 | 第2群 | 公開スコープの例外を data-model §8 に表で書き、公開の取り消しが最大 1 日遅れること（A09-1。許容に決まった）も書く | high | 済 | `797af66` | data-model §8 の「すべてがこのスコープを通る」を「原則として」に直し、§8.1 に例外 3 つ（ワードクラウドの事前集計ファイル、/search とファセットの見出しのマスタ全件、ホームのジャンル数）を、語の漏れにならない理由と注意つきの表にした。§8.2 に公開の取り消しが反映されるまでの遅れを、すぐ消える（詳細・一覧・Atom・共有カード。ただし版付きの共有カードは 1 年 immutable で配った画像は残る）／最大 1 日残る（llms-full.txt・sitemap.xml・/rankings・/stats）／数だけ残る、に分けて書き、オーナーが許容したこと、本番は memory_store で再起動で消えること、キャッシュを足すときの前提を書いた（各 TTL と cache_store はコードで確かめた）。published_words_digest.rb の冒頭と削除の段落に、取り消しも遅れに含まれ許容済みであることを書いた。Ruby の変更はコメントだけ。合格判定は全部通過 |
 | D1-21 | 第2群 | design.md を実装に合わせる（補完監査の分: ΔRGB の式は最大差に決まった・タップ領域・ブレークポイント・標識の例外など）。節番号は変えない | high | 済 | `2f5a3c7` | §1 に ΔRGB の定義（R・G・B の差の最大値。オーナー判断）と既知の問題（テストは合計で測る、ダークの --bg-tint は最大差 16 で下限に届かない。計算で確認）を書き、§9.1・§10.1.3 の数値を定義に合わせた（11→7、22→16、59/53/44→59）。コード側の「ΔRGB 22」（tokens.css）と design_tokens_test の delta_rgb にも定義との違いを注記した（コメントだけ）。§1 の --text-subtle の比を白地 5.6／--bg 5.0／--bg-soft 4.7 に。§4・§5.6 の入力の focus に共通の :focus-visible も出ること。§5.1 の共有カードの割りやすい所を ShareCardTypesetter に合わせ、フッターのワードマークを消し、560px 以下の余白のずれと 1040px の 4 か所の直書きを書いた。§5.8 に標識の規則の例外 3 つ（ブランド名の右の英字・フッターの EST.・図のキャプション）と、日本語の見出しとの対の実際の組み方。CLAUDE.md の標識の行に「例外は design.md §5.8」を 1 行。§5.9 の .radial-art は目印だけ。§6 のタップ領域の実寸と、閉じたドロワー・ナビのランドマークの既知の問題。§7 を「広い幅が基底で max-width で上書き」に直し、検証幅に 1000px、表を畳むか横スクロールかの選び方、ブレークポイント 7 つの表（CSS の @media をすべて洗って作った）。§10.1.3 に表の行 hover が AA を割る既知の問題（4.19・4.08 を計算で確認）。§11（末尾に新設）にクラス名の付け方。既存の節番号は変えていない。§ 参照 173 件すべて実在。CSS とテストはコメントだけ。合格判定は全部通過。これで第1群・第2群がすべて済んだ |
 | T0-01 | 第3群 | 公開 JSON API のキー集合と入れ子を固定する | high | 済 | `a688812` | 第1〜2群の切れ目では merge の指示が無いまま再開されたので、merge せずこのブランチで第3群に進んだ（2026-10-03）。words_api_test.rb に、詳細のキー集合（語・語義・特徴）と値（char_type_pattern・mora_count など 5 つ・ジャンルの id/name/level・entity_type）、ライセンスのハッシュ全体、ジャンルの無い語義（curry）で genre と entity_type が null・variants が [{surface, reading}] になること、一覧のキー集合・total_pages・語の id/surface/url/readings を足した（2 件追加・既存 1 件を拡張）。合格判定は全部通過 |
-| T0-02 | 第3群 | 外部コマンドのフォールバックを固定する（MeCab 無しは PATH を空にして確かめる） | high | 済 | このコミット | share_cards_controller_test に「fetch が nil」と「語義の無い公開語（描けない語）」で /og-default.png へ回るテスト。reading_extractor_test に PATH を空にして [nil, nil] が返るテスト。morpheme_extractor_test は setup の丸ごと skip に掛からない MorphemeExtractorFallbackTest を新設し、PATH を空にして available? が false・[[], []] が返るテストを置き、mecab の要らない「空の入力」をそちらへ移した（重複させない）。ローカルには mecab があるので、PATH を空にしたテストは実際に退避の分岐を通っている。合格判定は全部通過 |
-| T0-03 | 第3群 | 収録リクエストの、まだ固定されていない振る舞いを固定する | high | 未着手 | | |
+| T0-02 | 第3群 | 外部コマンドのフォールバックを固定する（MeCab 無しは PATH を空にして確かめる） | high | 済 | `93ef293` | share_cards_controller_test に「fetch が nil」と「語義の無い公開語（描けない語）」で /og-default.png へ回るテスト。reading_extractor_test に PATH を空にして [nil, nil] が返るテスト。morpheme_extractor_test は setup の丸ごと skip に掛からない MorphemeExtractorFallbackTest を新設し、PATH を空にして available? が false・[[], []] が返るテストを置き、mecab の要らない「空の入力」をそちらへ移した（重複させない）。ローカルには mecab があるので、PATH を空にしたテストは実際に退避の分岐を通っている。合格判定は全部通過 |
+| T0-03 | 第3群 | 収録リクエストの、まだ固定されていない振る舞いを固定する | high | 済 | このコミット | word_requests_controller_test に 3 件足した。フォームの項目名（items_attributes の surface/reading、form_token、origin_path、ハニーポット）。期限切れのトークン（EXPIRES_IN を過ぎて発行）で 422 と expired の案内になり、レコードを作らないこと。受付中はホーム・検索 0 件の一覧（.empty-request）・About に /requests/new への導線が出て、受付停止中は 3 ページとも 0 件になること（出る側も確かめるので空振りしない）。上限値の定数化は計画書のとおり見送り。合格判定は全部通過 |
 | T0-04 | 第3群 | 公開ページの、まだ固定されていない振る舞いを固定する（今日の一語はキャッシュの語数で選ぶことを含む） | high | 未着手 | | |
 | T0-05 | 第3群 | 多語義語の代表語義と、語義の順序を固定する | high | 未着手 | | |
 | T0-06 | 第3群 | 照合順序の帰結（一意制約・char_type_pattern の検索）を固定する | high | 未着手 | | |

@@ -33,6 +33,16 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "meta[name=robots][content=?]", "noindex,follow"
   end
 
+  # 送信を受ける側(コントローラ・モデル)が読む名前なので、変わったら気づけるよう固定する。
+  test "フォームの項目名" do
+    get new_request_path
+    assert_select "input[name=?]", "word_request[items_attributes][0][surface]"
+    assert_select "input[name=?]", "word_request[items_attributes][0][reading]"
+    assert_select "input[type=hidden][name=form_token]"
+    assert_select "input[type=hidden][name=origin_path]"
+    assert_select "input[name=?]", WordRequestsController::HONEYPOT_FIELD.to_s
+  end
+
   test "送信すると未着手のリクエストとして保存し、送信の技術メタデータを記録する" do
     assert_difference [ "WordRequest.count", "WordRequestItem.count" ], 1 do
       post requests_path,
@@ -101,6 +111,15 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("word_requests.create.expired"), flash[:alert]
   end
 
+  test "期限切れのトークン(フォームを開いたまま放置)は捨てずに再送を促す" do
+    expired = travel_to((WordRequestFormToken::EXPIRES_IN + 1.hour).ago) { WordRequestFormToken.issue }
+    assert_no_difference "WordRequest.count" do
+      post requests_path, params: submission(items: one_item, token: expired)
+    end
+    assert_response :unprocessable_entity
+    assert_equal I18n.t("word_requests.create.expired"), flash[:alert]
+  end
+
   test "同一 IP から短時間に送りすぎると受け付けない" do
     WordRequest::RATE_LIMITS.min_by(&:last).last.times do
       WordRequest.create!(ip_address: "127.0.0.1", items_attributes: one_item)
@@ -155,6 +174,25 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
 
       assert_no_difference "WordRequest.count" do
         post requests_path, params: submission(items: one_item)
+      end
+    end
+  end
+
+  test "受付中はホーム・検索0件の一覧・About に導線が出て、止めているときはどこにも出さない" do
+    no_hit = words_path(q: "収録されていない言葉の見本")
+    request_link = "a[href^='#{new_request_path}']"
+
+    [ root_path, no_hit, about_path ].each do |path|
+      get path
+      assert_select request_link, { minimum: 1 }, path
+    end
+    get no_hit
+    assert_select ".empty-request #{request_link}"
+
+    with_requests_disabled do
+      [ root_path, no_hit, about_path ].each do |path|
+        get path
+        assert_select request_link, { count: 0 }, path
       end
     end
   end
