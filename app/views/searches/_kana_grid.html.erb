@@ -4,7 +4,7 @@
 <fieldset class="kana-field">
   <legend class="field-legend"><%= icon(legend_icon) if local_assigns[:legend_icon] %><%= legend %></legend>
   <div class="kana-grid">
-    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+    <% KanaRow::TABLE_COLUMNS.each do |column| %>
       <div class="kana-col">
         <% column.each do |kana| %>
           <% if kana %>

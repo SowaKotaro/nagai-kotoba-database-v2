@@ -14,7 +14,7 @@
 <section class="browse-section">
   <h2 class="section-heading"><%= icon "grid_nine" %><%= t("browse.index.by_first_char") %></h2>
   <div class="kana-grid">
-    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+    <% KanaRow::TABLE_COLUMNS.each do |column| %>
       <div class="kana-col">
         <% column.each do |kana| %>
           <% if kana.nil? %>

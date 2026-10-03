@@ -11,8 +11,8 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | C3-09（50 音表の定義を KanaRow へ移す） |
-| 次の一手の推奨 effort | high |
+| 次の一手 | C3-10（キャッシュの書き方を正典に寄せる）。max 推奨 |
+| 次の一手の推奨 effort | max |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
 | 台帳を作ったときの main | `e4d2b7a` |
@@ -178,8 +178,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | C3-06 | 第5群（前半） | 管理画面の判定を `admin_page?` の 1 つにする | high | 済 | `49e00b7` | layout の body の is-admin とヘッダーの「管理」の現在地を、パスの前方一致から AdminHelper#admin_page?（コントローラが Admin::BaseController か）に替えた（共通ナビは前から admin_page?）。先に、全ルート（eager_load したうえで）について「パスが /admin で始まる」と「コントローラが Admin::BaseController の子孫」が一致することを確かめた（管理ルート 59 本、不一致 0）。ダッシュボード・ログイン後のホームを足した 22 ページの HTML を前後で比べ、違いは時刻入りトークンとテストで作ったレコードの ID だけ。T0-07 のテストの説明を直した。合格判定は全部通過 |
 | C3-07a | 第5群（前半） | 管理画面で重複している UI を 1 つにする（初版の分: キューの絞り込み・状態ラベル・状態タブ） | high | 済 | `f8fd4a5` | ①キューの絞り込み UI を admin/annotations/_queue_filter（strict locals の path_for）にし、コンソールとデッキから呼ぶ。Admin::AnnotationQueue に SORT_EASY・SORT_REVIEW・REVIEW_ON と helper_method の proposed_param・queue_sort・review_filter? を足し、queue_scope・queue_order・nav_params もそれを使う（ビューから生の params[:proposed]/[:review]/[:sort] が消えた。知らない sort の値の扱いも前と同じ）。②コントローラ 3 つ（candidates の base・triages・lists）の状態ラベルを helpers.candidate_status_label にした。③単語管理一覧の状態タブを Admin::WordsController::STATUS_FILTERS から組むようにした（文言のキーは状態名から annotation_ を除いたもの）。コンソール・デッキを proposed・sort（easy/review/知らない値）・review の組み合わせで、単語管理一覧を状態つきで、計 29 ページの HTML を前後で比べ、違いは行頭の空白と空行 1 行（パーシャルの末尾の改行）、時刻入りトークン、テストで作ったレコードの ID だけ。合格判定は全部通過 |
 | C3-07b | 第5群（前半） | 管理画面で重複している UI を 1 つにする（補完監査の分: 提案パネル・コピー欄・書き出しの欄・用語解説・下端のバー） | high | 済 | `daf2bb0` | A04-3: 提案パネルのバッジ・注記・語義のループを admin/annotations/_proposal_meta・_proposal_notes・_proposal_senses にし、コンソールとデッキから呼ぶ（creatable の決め方は _proposal_senses の 1 か所に書いた）。A04-4: 提案の書き出し・特徴の書き出し・1語の再調査のコピー欄を admin/shared/_copy_panel にし、「コピー」「コピーしました」を ja.yml の admin.shared.copy_panel の 1 組にした（3 組を削除）。登録予定単語の書き出し（admin/candidates/_export。件数とリンクを並べて中身を畳む別の作りで、すでに 3 段で共有する 1 本のパーシャル）は計画の「4 か所を 1 つに」から外し、文言だけ共有した。A04-5: 書き出し 2 画面の範囲・件数の欄を admin/annotation_proposals/_export_limit にした。A04-9: 用語解説を admin/annotations/_glossary（extra_class）にした。A04-10: 「すべて選ぶ」「選択を外す」を admin/candidates/_selection_controls（js_only で data-js-only を付ける）にし、_bar と「すべての語」から呼ぶ（バー全体の共通化は差が大きいので共通部分だけ）。新しいパーシャルはすべて strict locals。複数語義・立項の懸念つきの提案、再調査、拡張の書き出しを足した 33 ページの HTML を前後で比べ、違いは行頭の空白・空行・時刻入りトークン・テストで作ったレコードの ID だけ。合格判定は全部通過 |
-| C3-08 | 第5群（前半） | ページネーションの計算を値オブジェクトにする | high | 済 | このコミット | app/models/pagination.rb（Pagination.page_number・total_pages・offset・paginate）を作り、words・admin/words・admin/word_requests の 3 コントローラの同じ計算を置き換えた。ビューが読むインスタンス変数（@page・@total_count・@total_pages）とマークアップは変えていない（統合は §7.7）。test/models/pagination_test.rb に境界（数字でない・0 以下のページ、0 件・ちょうど・1 件超えの総ページ数、offset と limit）を足した。公開一覧（page=2・abc・99・JSON）と管理の一覧 2 つを足した 39 ページを前後で比べ、違いはテストで作ったレコードの ID と時刻入りトークンだけ。T0-17 は前後とも通る。合格判定は全部通過 |
-| C3-09 | 第5群（前半） | 50 音表の定義を KanaRow へ移す | high | 未着手 | | |
+| C3-08 | 第5群（前半） | ページネーションの計算を値オブジェクトにする | high | 済 | `8a2da5a` | app/models/pagination.rb（Pagination.page_number・total_pages・offset・paginate）を作り、words・admin/words・admin/word_requests の 3 コントローラの同じ計算を置き換えた。ビューが読むインスタンス変数（@page・@total_count・@total_pages）とマークアップは変えていない（統合は §7.7）。test/models/pagination_test.rb に境界（数字でない・0 以下のページ、0 件・ちょうど・1 件超えの総ページ数、offset と limit）を足した。公開一覧（page=2・abc・99・JSON）と管理の一覧 2 つを足した 39 ページを前後で比べ、違いはテストで作ったレコードの ID と時刻入りトークンだけ。T0-17 は前後とも通る。合格判定は全部通過 |
+| C3-09 | 第5群（前半） | 50 音表の定義を KanaRow へ移す | high | 済 | このコミット | SearchesHelper::KANA_COLUMNS を KanaRow::TABLE_COLUMNS へ移し（ROWS との違い＝濁音・半濁音を別の列に立てることを注記）、詳細検索・統計・索引の 3 つのビューから参照する。3 ページの HTML は前後でバイト単位で同じ。合格判定は全部通過 |
 | C3-10 | 第5群（前半） | キャッシュの書き方を正典に寄せる（TTL の定数化、ホームと About のキャッシュをモデルへ） | max | 未着手 | | |
 | C3-11a | 第5群（前半） | テストのヘルパ（with_rails_cache・with_fragment_cache・with_config・with_env・CANONICAL_HOST・create_published_word）を test_helper に集める | high | 未着手 | | |
 | C3-11b | 第5群（前半） | 管理画面のテストのログインを揃え、局所変数 `words` の名前と 422 の記号を揃える | high | 未着手 | | |

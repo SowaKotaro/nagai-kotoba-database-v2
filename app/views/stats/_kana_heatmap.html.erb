@@ -4,7 +4,7 @@
 <div class="stats-kana">
   <h3 class="stats-subheading"><%= heading %></h3>
   <div class="kana-grid">
-    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+    <% KanaRow::TABLE_COLUMNS.each do |column| %>
       <div class="kana-col">
         <% column.each do |kana| %>
           <% if kana.nil? %>
