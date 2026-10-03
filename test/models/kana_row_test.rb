@@ -54,4 +54,14 @@ class KanaRowTest < ActiveSupport::TestCase
       chars.each { |char| assert_equal row, KanaRow.row(char) }
     end
   end
+
+  # かなの畳み込み(T0-18): 1 字ずつ NFKC とカタカナ化を経て、行と基本46字へ畳む。
+  test "半角カナ・合成濁点・ゔ・ゕ・ゖ の行と基本字" do
+    half_ga = KANA_FOLD_SAMPLE[0, 2]
+    combined_ga = KANA_FOLD_SAMPLE[4, 2]
+    vu, small_ka, small_ke = KANA_FOLD_SAMPLE[6], KANA_FOLD_SAMPLE[7], KANA_FOLD_SAMPLE[8]
+
+    assert_equal %w[カ カ ア カ カ], [ half_ga, combined_ga, vu, small_ka, small_ke ].map { |char| KanaRow.row(char) }
+    assert_equal %w[カ カ ウ カ ケ], [ half_ga, combined_ga, vu, small_ka, small_ke ].map { |char| KanaRow.base(char) }
+  end
 end

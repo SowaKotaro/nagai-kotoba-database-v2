@@ -81,4 +81,9 @@ class WordRequestDuplicateCheckTest < ActiveSupport::TestCase
     assert_predicate results.first, :exact?
     assert_predicate results.second, :none?
   end
+
+  # かなの畳み込み(T0-18): NFKC で半角カナ・合成濁点を畳み、ひらがな(ゔ・ゕ・ゖ を含む)をカタカナへ寄せる。
+  test "fold は半角カナ・合成濁点を畳み、ゔ・ゕ・ゖ もカタカナへ寄せる" do
+    assert_equal "ガギガヴヵヶ", WordRequestDuplicateCheck.fold(KANA_FOLD_SAMPLE)
+  end
 end

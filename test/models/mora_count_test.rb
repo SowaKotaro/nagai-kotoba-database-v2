@@ -42,4 +42,9 @@ class MoraCountTest < ActiveSupport::TestCase
     assert_equal 0, MoraCount.call("")
     assert_equal 0, MoraCount.call(nil)
   end
+
+  # かなの畳み込み(T0-18): ガ・ギ・ガ・ヴ・ゕ・ゖ の 6 拍として数える。
+  test "半角カナ・合成濁点・ゔ・ゕ・ゖ を含む読みのモーラ数" do
+    assert_equal 6, MoraCount.call(KANA_FOLD_SAMPLE)
+  end
 end

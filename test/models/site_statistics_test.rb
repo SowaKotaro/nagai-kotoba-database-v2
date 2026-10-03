@@ -193,4 +193,11 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_empty stats.head_consonants
     assert_empty stats.feature_ranking[:rows]
   end
+
+  # かなの畳み込み(T0-18): GROUP BY の結果キーを NFKC とカタカナ化で畳んでから合算する。
+  test "50音の集計キーは半角カナ・合成濁点・ひらがなを畳んで合算する" do
+    counts = { KANA_FOLD_SAMPLE[0, 2] => 1, KANA_FOLD_SAMPLE[4, 2] => 2, "ガ" => 4,
+               KANA_FOLD_SAMPLE[6] => 8, KANA_FOLD_SAMPLE[7] => 16 }
+    assert_equal({ "ガ" => 7, "ヴ" => 8, "ヵ" => 16 }, SiteStatistics.allocate.send(:normalized_kana_counts, counts))
+  end
 end

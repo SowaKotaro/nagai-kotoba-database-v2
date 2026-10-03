@@ -60,4 +60,9 @@ class RhythmPatternTest < ActiveSupport::TestCase
     assert_equal "", RhythmPattern.call("")
     assert_equal "", RhythmPattern.call(nil)
   end
+
+  # かなの畳み込み(T0-18): NFKC で畳んでからローマ字にする。ゕ・ゖ はローマ字にならずそのまま残る。
+  test "半角カナ・合成濁点・ゔ は畳んでローマ字にし、ゕ・ゖ は残る" do
+    assert_equal "gagigavu" + [ 0x3095, 0x3096 ].pack("U*"), RhythmPattern.call(KANA_FOLD_SAMPLE)
+  end
 end

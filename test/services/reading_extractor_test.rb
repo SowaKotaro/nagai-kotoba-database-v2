@@ -55,6 +55,11 @@ class ReadingExtractorTest < ActiveSupport::TestCase
     assert_nil normalize(extractor, "")
   end
 
+  # かなの畳み込み(T0-18): NFKC で畳み、ひらがなは「ぁ-んゔ」の範囲だけカタカナにする。ゕ・ゖ は落ちる。
+  test "読みの整形は半角カナ・合成濁点・ゔ を畳み、ゕ・ゖ を落とす" do
+    assert_equal "ガギガヴ", normalize(ReadingExtractor.new, KANA_FOLD_SAMPLE)
+  end
+
   private
 
   def normalize(extractor, line) = extractor.send(:normalize, line)

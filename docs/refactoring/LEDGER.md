@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-18（かなの畳み込みの各呼び出し元の出力を固定する） |
+| 次の一手 | T0-19（管理一覧のジャンル絞り込みの結果を固定する） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -155,8 +155,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-14 | 第3群 | 母音遷移の境界値（15 拍・位置 30 / 31）を固定する | high | 済 | `dd72545` | word_sense_search_test に 1 件: 並び 15 拍は条件に残り 16 拍は捨てる、拍位置 30 は残り 31 は捨てる（conditions? も false）。site_statistics_test に 1 件: 20 拍の読みがあっても層は 15 で打ち切り、最後の層の位置が 15、遷移は 14 区間。合格判定は全部通過 |
 | T0-15 | 第3群 | og:image の版（`WordShareCard#digest`）を固定する | high | 済 | `f92f8eb` | word_share_card_test に 1 件。abc_murder の版 ba4090a8b4c0c919 と curry の版 081b6da5155bc686 を文字列で固定した（テスト環境で 2 回取って同じ値）。改修のあいだの特性テストで、残すかは G4-05 で決める。合格判定は全部通過 |
 | T0-16 | 第3群 | 一括登録の調査 JSON で、形が不正な入力の扱いを固定する | high | 済 | `9678d98` | bulk_word_registration_test に 3 件（壊れた JSON とフェンス付きは既存のテストがある）: words の中の Hash でない要素（文字列・数値・nil）は黙って飛ばしてほかの要素を使いエラーにしないこと、調査 JSON が nil・空・空白だけならエラーにせず全行 mecab_only、words が配列でない・words が無い・トップレベルが配列なら research_error? が真で全行 mecab_only。合格判定は全部通過 |
-| T0-17 | 第3群 | 公開一覧のページ送り（seed の引き継ぎ・nofollow）を固定する | high | 済 | このコミット | words_controller_test に 1 件。公開語を 103 件（2 ページ）にして、既定の並びでは「次へ」が /words?page=2 で nofollow が無いこと、最後のページはリンクが「前へ」（page=1）の 1 本だけであること、シャッフル中（seed 指定）は sort・seed を引き継いだ page=2 のリンクに rel=nofollow が付くことを固定した。合格判定は全部通過 |
-| T0-18 | 第3群 | かなの畳み込みの各呼び出し元の出力を固定する（半角カナ・合成濁点・ゔ・ゕゖ） | high | 未着手 | | |
+| T0-17 | 第3群 | 公開一覧のページ送り（seed の引き継ぎ・nofollow）を固定する | high | 済 | `914c8ec` | words_controller_test に 1 件。公開語を 103 件（2 ページ）にして、既定の並びでは「次へ」が /words?page=2 で nofollow が無いこと、最後のページはリンクが「前へ」（page=1）の 1 本だけであること、シャッフル中（seed 指定）は sort・seed を引き継いだ page=2 のリンクに rel=nofollow が付くことを固定した。合格判定は全部通過 |
+| T0-18 | 第3群 | かなの畳み込みの各呼び出し元の出力を固定する（半角カナ・合成濁点・ゔ・ゕゖ） | high | 済 | このコミット | 入力（半角カナ ｶﾞｷﾞ・合成濁点つきの か・ゔ・ゕ・ゖ）を test_helper に KANA_FOLD_SAMPLE として 1 つ置き（エスケープを書かず pack で作る）、8 つの呼び出し元に 1 件ずつ、いまの出力を固定した。WordRequestDuplicateCheck.fold は「ガギガヴヵヶ」。KanaRow は行がカ・カ・ア・カ・カ、基本字がカ・カ・ウ・カ・ケ。SearchRegexp#for_reading と WordsHelper の突き合わせは NFKC をかけないので半角カナと合成濁点が残る。SiteStatistics の 50 音の集計キーは畳んで合算。ReadingExtractor の整形は「ガギガヴ」（ゕ・ゖ を落とす）。RhythmPattern は「gagigavu」＋ゕゖ がそのまま残る。MoraCount は 6。値は rails runner で取ってから書いた。合格判定は全部通過 |
 | T0-19 | 第3群 | 管理一覧のジャンル絞り込みの結果を固定する | high | 未着手 | | |
 | T0-20 | 第3群 | publish_guard と deck が削除済みの語義を数えないことを固定する（system テスト） | high | 未着手 | | |
 | T0-21 | 第3群 | `JAPANESE_ORIGIN_NAME` が SeedCatalog の語種名に含まれることを確かめる | high | 未着手 | | |
