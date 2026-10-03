@@ -35,6 +35,8 @@ class ShareCardRenderer
   end
 
   # 書体が無くても rsvg-convert は豆腐(□)のまま焼いてしまうので、先に確かめる。
+  # 字幅の見積もり(ShareCardTypesetter)は Noto Sans CJK JP が前提。ここでは何か日本語の書体があるかしか見ないので、
+  # ほかの書体で焼くと組みがずれうる。
   def self.japanese_font_installed?
     output, status = Open3.capture2("fc-list", ":lang=ja", "family")
     status.success? && output.strip.present?

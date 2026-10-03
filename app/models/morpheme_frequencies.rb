@@ -30,12 +30,12 @@ class MorphemeFrequencies
       reset!
     end
 
-    # 見本に並べる形態素。頻度の多い順。
+    # ワードクラウドに並べる形態素。頻度の多い順。
     def entries
       @entries ||= build_entries
     end
 
-    # 集計時点の情報(生成日・対象語数)。見本の肩に添える。
+    # 集計時点の情報(生成日・対象語数)。いまはどこにも表示していない。
     def metadata
       @metadata ||= data["metadata"] || {}
     end
@@ -66,6 +66,8 @@ class MorphemeFrequencies
 
     private
 
+    # 壊れた JSON は空として扱う(統計ページの §1 は丸ごと出なくなり、ログも出さない)。
+    # 読めないファイル(権限など)は例外のまま上げる。
     def data
       @data ||= path.exist? ? JSON.parse(path.read) : {}
     rescue JSON::ParserError

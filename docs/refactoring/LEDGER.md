@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | D1-12b（モデルのコメント: 補完監査の分） |
+| 次の一手 | D1-13（暗黙の前提をコードに書く） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -127,8 +127,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | D1-10a | 第2群 | stats.md の本文を実装に合わせる（リンク先・順序・章題・拍位置・明度・地・操作規則・データの出どころ・件数の単位） | high | 済 | `47a4703` | リンク先（/words。/search ではない）、ページの並び、各章の画面の見出し（ja.yml のキー）、§2 の注記、再集計の文言と奥付、§4 の集計（Ruby で週ごと・点は末尾だけ）、§6 の 5 値の実際と明度、§7 の位置（vowel_pattern の添字）・選んだ鎖・控えだけ外す規則・スペクトルの打ち切り・頭子音の出し方、§8 の件数の単位、チントの式が 3 通りあることを、実装に合わせて書いた。節番号は変えていない（参照 161 件はすべて実在）。合格判定は全部通過 |
 | D1-10b | 第2群 | コメントの § 参照を「stats.md §N」「統計ページ §N」に書き分ける（`grep -rn '§[0-9]'` の全件を確かめる） | high | 済 | `df5d81d` | app・lib・config・test の「§」の参照 100 件を全件確かめ、文書名の無い 37 件と、紙面の章を「stats.md §N」と書いていた 12 件を書き分けた（紙面の章＝統計ページ §N、文書の節＝stats.md §N、design.md の節＝design.md §N）。決まりは stats.md の冒頭に書いた。章名はコメントでも画面の見出しに揃えた。節の参照 158 件はすべて実在。合格判定: test:system は 1 回目に既知の console_test:189 が落ち、再実行で 26 本・失敗 0 |
 | D1-11 | 第2群 | genres.md と SeedCatalog の関係（正は SeedCatalog）と、小分類の追加経路の記述を直す | high | 済 | `656e7b5` | seed_catalog.rb の「出典: docs/genres.md」を正の向きに、存在しない RENAMES を種類ごとの *_RENAMES に直した。genres.md に手作業の写しであること（Issue 85 で生成に）と、小分類の実際の追加経路 3 つ（タグ統括管理では追加できない）を書いた。合格判定は全部通過 |
-| D1-12a | 第2群 | モデル・サービスのコメントを実装に合わせる（初版の分: unannotated・公開スコープの名前・種別ラベル・テスト用の注記など） | high | 済 | このコミット | 非 ActiveRecord のクラス 49 本とサービス 3 本に「種別:」の行を置き、計画書 §4.1 の語彙に揃えた（WordRanking・SearchRegexp の「値オブジェクト」の誤りを直した）。unannotated の説明・公開スコープの名前・ProposalApplication の保存・重複チェック 3 実装の違い・KanaRow の波及・SiteStatistics の冒頭とタグクラウド・語種名の例・将来の差し込み口・update_sql の参照元・DECISIONS への参照・register と annotated? の意味・読みの改行の 2 通り・テスト専用の 9 か所を直した。変更行がすべてコメントであることを確かめた。合格判定は全部通過 |
-| D1-12b | 第2群 | モデルのコメントを実装に合わせる（補完監査の分: MorphemeCloud・ShareCardTypesetter・ProposedMasterCreation・ProposalApplication・SiteStatistics の total） | high | 未着手 | | |
+| D1-12a | 第2群 | モデル・サービスのコメントを実装に合わせる（初版の分: unannotated・公開スコープの名前・種別ラベル・テスト用の注記など） | high | 済 | `1388c5a` | 非 ActiveRecord のクラス 49 本とサービス 3 本に「種別:」の行を置き、計画書 §4.1 の語彙に揃えた（WordRanking・SearchRegexp の「値オブジェクト」の誤りを直した）。unannotated の説明・公開スコープの名前・ProposalApplication の保存・重複チェック 3 実装の違い・KanaRow の波及・SiteStatistics の冒頭とタグクラウド・語種名の例・将来の差し込み口・update_sql の参照元・DECISIONS への参照・register と annotated? の意味・読みの改行の 2 通り・テスト専用の 9 か所を直した。変更行がすべてコメントであることを確かめた。合格判定は全部通過 |
+| D1-12b | 第2群 | モデルのコメントを実装に合わせる（補完監査の分: MorphemeCloud・ShareCardTypesetter・ProposedMasterCreation・ProposalApplication・SiteStatistics の total） | high | 済 | このコミット | MorphemeCloud（最後の pack の実際・落ちる語・実測値の出どころ・用語・Z と記号の幅・相互参照・top はテスト用）、MorphemeFrequencies（見本→ワードクラウド・壊れた JSON の方針）、ShareCardTypesetter と ShareCardRenderer（割りやすい所の実際・書体の前提）、WordShareCard の字面、SiteStatistics（拍位置・件数の単位・total はテスト用）、ProposedMasterCreation の語種、seeded? の完全一致、ProposalApplication の反映の意味の表を直した。経緯の数値「60 件中 23 件」は stats.md へ移した。変更行はすべてコメント。合格判定は全部通過 |
 | D1-13 | 第2群 | 暗黙の前提をコードに書く（コールバックを通らない更新・target_start・マスタ名の正規化と衝突・WordBatch など） | high | 未着手 | | |
 | D1-14a | 第2群 | コントローラ・ビュー・ヘルパのコメントを実装に合わせる（初版の分） | high | 未着手 | | |
 | D1-14b | 第2群 | コントローラ・ビュー・ヘルパのコメントを実装に合わせる（補完監査の分: 統計・円環・登録予定単語・新設候補の案内・ワードマーク）。`share_cards/word.svg.erb` には触れない | high | 未着手 | | |

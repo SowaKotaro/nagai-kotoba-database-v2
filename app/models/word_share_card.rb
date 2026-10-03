@@ -42,6 +42,7 @@ class WordShareCard
   # 字面どうしの間合い(px)は既定カードの 見出し → 説明 → 罫 → 標識 に合わせてある。
   SURFACE_LEADING = 1.4
   READING_LEADING = 1.7
+  # Noto Sans CJK JP の ascender 880 / descender -120。MorphemeCloud の ASCENT_FULLWIDTH / DESCENT_FULLWIDTH と同じ値。
   ASCENT = 0.88
   DESCENT = 0.12
   SURFACE_TO_READING = 36

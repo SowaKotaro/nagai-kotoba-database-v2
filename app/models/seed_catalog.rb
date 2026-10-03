@@ -323,6 +323,7 @@ class SeedCatalog
     end
 
     # レコードが seed 管理(本カタログ収載)かどうか。タグ統括管理の「seed」印・警告表示に使う。
+    # 名前は Ruby の完全一致で比べる(DB の一意制約は ai_ci なので、清濁などだけが違う名前は DB では同じとみなされる)。
     # genre_index は id => Genre の索引(一覧表示での親参照の N+1 回避用。省略時は record.parent を辿る)。
     def seeded?(kind_key, record, genre_index: nil)
       case kind_key

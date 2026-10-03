@@ -25,6 +25,7 @@ class SiteStatistics
   SPECTRUM_SUPPORT_RATIO = 0.1
   SPECTRUM_MAX_POSITIONS = 24
   # 母音の遷移グラフ(層=拍位置・ノード=母音)で見せる層の数。
+  # 「拍位置」は vowel_pattern の添字(何番目の母音か)で、撥音・促音を数えない(mora_count の拍とは別)。
   # 5母音 × 層数のノードと、隣り合う層の全結合(25本)のエッジを引く。
   # 15拍(=350本)まで伸ばし、収まらないぶんは横スクロールで見せる(オーナー指示 2026-09-10)。
   # 後ろの層ほど、そこまで読みが続く語義は減る(15拍まで届くのは全体の 7% ほど)。
@@ -266,6 +267,7 @@ class SiteStatistics
 
   # 語頭からの拍位置ごとの母音構成 [{ position:, total:, counts: { "a" => n, ... } }]。
   # その位置まで読みが続く語義が全体の1割を切ったら打ち切る。
+  # 戻り値の total(全体の語義数)は画面では使わず、テストだけが参照する。
   def build_vowel_spectrum
     patterns = WordSense.published.where.not(vowel_pattern: [ nil, "" ]).pluck(:vowel_pattern)
     return { total: 0, positions: [] } if patterns.empty?
@@ -353,6 +355,8 @@ class SiteStatistics
   # ==== 統計ページ §8 言語学的特徴 ==========================================
 
   # 特徴の件数ランキングと実例(該当部分をハイライトするための surface / target / target_start)。
+  # 件数は該当部分ごとの数(word_sense_features の行数。同じ語義に 2 か所あれば 2 件)で、リンク先の一覧の件数とは単位が違う。
+  # 戻り値の total は画面では使わず、テストだけが参照する。
   def build_feature_ranking
     counts = WordSenseFeature.joins(word_sense: :word).merge(Word.annotated)
                              .group(:linguistic_feature_id).count

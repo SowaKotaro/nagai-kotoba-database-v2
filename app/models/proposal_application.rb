@@ -4,6 +4,13 @@
 # 既存の語義(一括登録で読みだけ入った語義など)を先頭から使い回し、足りない分は同じ読みで
 # 新しい語義を建てる。マスタ名 → レコードの解決は AnnotationProposal::SenseProposal が担う。
 #
+# 反映の意味(項目ごと):
+#   意味・ジャンル・エンティティ・品詞 … 提案に値があるときだけ上書きする
+#   語種 ……………………………………… 解決できた名前があるときだけ置き換える
+#   別表記・言語学的特徴 ……………… まだ無いものを足すだけで、既存のものは消さない
+#   語義 ……………………………………… 既存の語義を先頭から使い回し、足りない分だけ建てる(余った語義は消さない)
+# そのため、提案から項目を外しても(特徴・別表記を消しても)保存済みの値は消えない。
+#
 # 語種は has_many :through。GET 反映(persist: false)は永続化済み語義に即書き込みしないよう
 # association の target をメモリ上で差し替えるだけにする。保存前提の一括承認(persist: true)は
 # word_origin_ids= の setter で join を確定させる(target を先に立てると setter が「変化なし」と
@@ -78,7 +85,7 @@ class ProposalApplication
   end
 
   # 提案の言語的特徴を、既存マスタに解決できるものだけ足す(重複追加しない・Issue 63)。
-  # target_start はモデルの before_validation が先頭出現に補完し、feature-range が
+  # 提案の target_start は使わない。target_start はモデルの before_validation が先頭出現に補完し、feature-range が
   # ロード時に該当部分のハイライトを復元する。target/target_reading は保存時に部分一致検証を
   # 受ける(外れていれば人が直す)。マスタに無い特徴名は反映せず、新設候補としてパネルに出る。
   def build_features(sense, sense_proposal)
