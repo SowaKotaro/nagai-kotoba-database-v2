@@ -5,7 +5,7 @@ require "test_helper"
 class MorphemeExtractorTest < ActiveSupport::TestCase
   setup do
     @extractor = MorphemeExtractor.new
-    skip "mecab が無いため skip" unless @extractor.available?
+    skip "mecab が無いため skip" unless MorphemeExtractor.available?
   end
 
   test "漢語の複合語を部品に分ける" do
@@ -56,13 +56,22 @@ class MorphemeExtractorFallbackTest < ActiveSupport::TestCase
     assert_equal [], MorphemeExtractor.new.call(nil)
   end
 
-  # 判定の仕組み(メモの有無)に依らず通るよう、PATH を空にして本当に見つからなくする。
+  # 判定はプロセスごとにメモするので、PATH を変えず available? を差し替える。
   test "mecab が無いときは、入力と同じ数の空配列を返す" do
+    stub_method(MorphemeExtractor, :available?, -> { false }) do
+      extractor = MorphemeExtractor.new
+      assert_not extractor.available?
+      assert_equal [ [], [] ], extractor.call([ "天上天下唯我独尊", "殺人事件" ])
+    end
+  end
+
+  # 判定のあとで mecab が消えた(起動に失敗した)ときも止めない。
+  test "判定が真でも起動できなければ、入力と同じ数の空配列を返す" do
     original_path = ENV["PATH"]
     ENV["PATH"] = ""
-    extractor = MorphemeExtractor.new
-    assert_not extractor.available?
-    assert_equal [ [], [] ], extractor.call([ "天上天下唯我独尊", "殺人事件" ])
+    stub_method(MorphemeExtractor, :available?, -> { true }) do
+      assert_equal [ [], [] ], MorphemeExtractor.new.call([ "天上天下唯我独尊", "殺人事件" ])
+    end
   ensure
     ENV["PATH"] = original_path
   end

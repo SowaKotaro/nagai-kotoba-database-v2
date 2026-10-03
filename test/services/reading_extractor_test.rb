@@ -2,25 +2,30 @@ require "test_helper"
 
 # MeCab の CLI を呼ぶサービス。mecab が無い環境(一部の CI 等)では skip する。
 class ReadingExtractorTest < ActiveSupport::TestCase
-  def mecab_available?
-    system("mecab", "--version", out: File::NULL, err: File::NULL)
-  end
-
   test "空配列には空配列を返す" do
     assert_equal [], ReadingExtractor.call([])
   end
 
-  # mecab が無い環境の退避。判定の仕組み(メモの有無)に依らず通るよう、PATH を空にして本当に見つからなくする。
+  # mecab が無い環境の退避。判定はプロセスごとにメモするので、PATH を変えず available? を差し替える。
   test "mecab が無いときは、入力と同じ数の nil を返す" do
+    stub_method(ReadingExtractor, :available?, -> { false }) do
+      assert_equal [ nil, nil ], ReadingExtractor.call([ "天上天下唯我独尊", "資本主義" ])
+    end
+  end
+
+  # 判定のあとで mecab が消えた(起動に失敗した)ときも止めない。
+  test "判定が真でも起動できなければ、入力と同じ数の nil を返す" do
     original_path = ENV["PATH"]
     ENV["PATH"] = ""
-    assert_equal [ nil, nil ], ReadingExtractor.call([ "天上天下唯我独尊", "資本主義" ])
+    stub_method(ReadingExtractor, :available?, -> { true }) do
+      assert_equal [ nil, nil ], ReadingExtractor.call([ "天上天下唯我独尊", "資本主義" ])
+    end
   ensure
     ENV["PATH"] = original_path
   end
 
   test "表層形の並びに対応した読み(カタカナ)を返す" do
-    skip "mecab 未インストールのため skip" unless mecab_available?
+    skip "mecab 未インストールのため skip" unless ReadingExtractor.available?
 
     surfaces = [ "天上天下唯我独尊", "資本主義" ]
     readings = ReadingExtractor.call(surfaces)
@@ -31,13 +36,13 @@ class ReadingExtractorTest < ActiveSupport::TestCase
   end
 
   test "中黒などの記号は読みから落とす" do
-    skip "mecab 未インストールのため skip" unless mecab_available?
+    skip "mecab 未インストールのため skip" unless ReadingExtractor.available?
 
     assert_equal "シャーロットリンリン", ReadingExtractor.call([ "シャーロット・リンリン" ]).first
   end
 
   test "全角英数字の語も半角に寄せて読みを取る" do
-    skip "mecab 未インストールのため skip" unless mecab_available?
+    skip "mecab 未インストールのため skip" unless ReadingExtractor.available?
 
     assert_equal ReadingExtractor.call([ "Dr.スランプ" ]), ReadingExtractor.call([ "Ｄｒ．スランプ" ])
   end
@@ -62,5 +67,5 @@ class ReadingExtractorTest < ActiveSupport::TestCase
 
   private
 
-  def normalize(extractor, line) = extractor.send(:normalize, line)
+  def normalize(extractor, line) = extractor.normalize(line)
 end
