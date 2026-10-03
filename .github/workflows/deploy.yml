@@ -1,3 +1,7 @@
+# main への push(PR の merge を含む)で、本番へ自動でデプロイする(bundle exec cap production deploy)。
+# CI(ci.yml)の完了は待たない。CI が落ちてもデプロイは止まらないので、merge の前に PR 上の CI を確かめる。
+# NAGAI_KOTOBA_DATABASE_V2_PASSWORD は渡しているが、本番では使われていない
+# (サーバ上の config/database.yml がパスワードを持つ。docs/issues.md 確定事項 28)。
 name: Deploy to Production
 
 on:

@@ -51,12 +51,14 @@ set :ssh_options, {
   forward_agent: false,
   auth_methods: %w[publickey]
 }
+# 本番では使われていない。本番の DB 接続情報は、linked_files にあるサーバ上の config/database.yml が
+# パスワードを直書きで持つ(docs/issues.md 確定事項 28)。
 set :default_env, {
   "NAGAI_KOTOBA_DATABASE_V2_PASSWORD" => ENV["NAGAI_KOTOBA_DATABASE_V2_PASSWORD"]
 }
 
 namespace :deploy do
-  desc "管理者(seed)を作成/更新する。credentials の admin: を読み込む。seed は冪等なので毎回実行して安全。"
+  desc "db:seed で管理者とマスタを冪等に投入する。マスタは SeedCatalog の名前リストで、*_RENAMES に書いた改名も本番に適用する。"
   task :seed do
     on roles(:app) do
       within release_path do

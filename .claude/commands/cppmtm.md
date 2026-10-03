@@ -29,6 +29,8 @@ argument-hint: "[任意: コミット/PR に含める補足指示]"
      本文に実行したチェックの結果を書く）。
 4. **CI を待って merge**: `gh pr checks <番号> --watch` で CI 通過を確認してから
    `gh pr merge <番号> --merge --delete-branch`。その後ローカル main を pull して最新化する。
+   **merge はそのまま本番デプロイになる**（main への push で `.github/workflows/deploy.yml` が
+   `cap production deploy` を実行し、main 上の CI の完了は待たない）。PR 上の CI が通るまでは merge しない。
 
 注意:
 - 今回の作業と**無関係な未コミット変更は巻き込まない**。ステージから除外し、その旨を報告する。

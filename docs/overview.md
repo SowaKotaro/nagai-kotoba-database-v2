@@ -38,8 +38,11 @@
 - Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
 - CSS は手書き（`tokens → base → layout → components` ＋ `admin.css` / `annotate.css`）
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
-- デプロイ: **Capistrano**（`cap production deploy`。`deploy:migrate` の後に `deploy:seed` が自動実行）
-- CI: GitHub Actions（PR 作成時・main への push 時。DB は `mysql:8.4`）
+- デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で
+  `.github/workflows/deploy.yml` が自動で実行する**。CI の完了は待たず、main にブランチ保護も無い。
+  `deploy:migrate` の直後に `deploy:seed` が毎回走り、管理者とマスタ（`SeedCatalog` の `*_RENAMES` による改名を含む）を投入する
+- CI: GitHub Actions（`.github/workflows/ci.yml`。PR の作成時と PR ブランチへの push のたび、main への push 時。DB は `mysql:8.4`）。
+  main への push ではデプロイと並走するので、CI が落ちてもデプロイは止まらない
 - タイムゾーンは `Tokyo`、既定ロケールは `:ja`（表示文言は `config/locales/ja.yml` に集約）
 - 外部サービスへの実行時依存は持たない（web フォント CDN・チャート CDN・外部 API いずれも無し。
   唯一の同梱ライブラリが `vendor/javascript/plotly.min.js` で、統計ページ内でのみ遅延読み込みする）
@@ -204,7 +207,7 @@ bin/rails server
 | `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
 | `MECAB_DICT` | 未設定 | MeCab の辞書パス。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
 | `DATABASE_HOST` / `DATABASE_PORT` | `127.0.0.1` / `3307` | development / test の接続先（CI は 3306） |
-| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | — | リポジトリの `database.yml` と `deploy.rb` が参照するが、**本番では使われていない**（下記） |
+| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | — | リポジトリの `database.yml` と `deploy.rb` が参照し、deploy.yml も GitHub の secret から渡すが、**本番では使われていない**（下記） |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | credentials | `db:seed` が作る管理者。環境変数が優先 |
 | `RAILS_MASTER_KEY` | `config/master.key` | credentials の復号鍵 |
 | `WEB_CONCURRENCY` | `1` | Puma のワーカー数。**増やすとキャッシュと `rate_limit` が worker 間で分裂する**（`:memory_store` のため） |
@@ -214,7 +217,7 @@ bin/rails server
 
 > **本番 DB の接続情報は環境変数ではない。** `config/database.yml` は Capistrano の `linked_files`
 > に入っているので、本番で読まれるのは**サーバ上の共有ファイル**で、そこにパスワードが直書きされている。
-> リポジトリ側の `production:` ブロックと `deploy.rb` の `default_env` は実質使われていない
+> リポジトリ側の `production:` ブロック、`deploy.rb` の `default_env`、deploy.yml が渡す secret は実質使われていない
 > （2026-09-16 に確認。[`issues.md`](issues.md) 確定事項 28）。
 
 ## 9. コミット前の必須チェック（CI と同一）

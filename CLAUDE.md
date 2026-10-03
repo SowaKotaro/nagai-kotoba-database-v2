@@ -17,10 +17,15 @@
 - バージョン: **Ruby 3.4.2 / Rails 8.1**
 - 構成: Rails + **MySQL（mysql2）** + Puma + Hotwire（Turbo / Stimulus）+ importmap-rails + Sprockets
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
-- デプロイ: **Capistrano**（`cap production deploy`）。デプロイ後に `deploy:seed` が自動実行される。
+- デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で
+  `.github/workflows/deploy.yml` が本番デプロイを自動で走らせる**。CI の完了は待たない（main にブランチ保護も無い）。
+  デプロイでは `deploy:migrate` の直後に `deploy:seed` が毎回走り、管理者とマスタを投入する
+  （`SeedCatalog` の `*_RENAMES` に書いた改名も、このとき本番に適用される）。
   本番 DB の接続情報は**サーバ上の `config/database.yml`**（`linked_files` の共有ファイル）が持つ。
-  リポジトリの `database.yml` と `deploy.rb` の `default_env` は本番では使われていない。
-- CI: GitHub Actions（`.github/workflows/ci.yml`）。**PR 作成時** と **main への push 時** に実行。
+  リポジトリの `database.yml` の production ブロック、`deploy.rb` の `default_env`、deploy.yml が渡す
+  `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` は、本番では使われていない。
+- CI: GitHub Actions（`.github/workflows/ci.yml`）。PR（作成時と、PR ブランチへの push のたび）と main への push で実行。
+  main への push ではデプロイと並走し、CI が落ちてもデプロイは止まらない。関門は PR 上の CI と `/cppmtm` の手順だけ。
 
 ## データモデル（詳細は [`docs/data-model.md`](docs/data-model.md)。カラムの正は `db/schema.rb`）
 - `word` : `word_sense` = **1 : 多**（同音異義語に対応）。
@@ -217,5 +222,6 @@ bin/rails test test:system               # テスト（単体 + システム）
   **公開済みの URL とクエリパラメータ名は世に出ているので変えない**（`?sort=created_desc` など）。
 - 不要な Gem を増やさない。追加する場合はメンテ状況とライセンスを確認し、`Gemfile.lock` の更新も忘れない。
 - `config/deploy.rb`・`config/puma.rb`・`.github/workflows/` などインフラ/デプロイ設定の変更は影響が大きいので、内容を説明してから行う。
+- **main への merge（push）は、そのまま本番デプロイになる**（deploy.yml。CI の成否を待たない）。merge の前に PR 上の CI が通ったことを確かめる。
 - 検索エンジンから見える挙動（robots・canonical・noindex・sitemap）を変えるときは、
   **URL 空間が無限に広がらないか**を必ず確認する（過去に 2 度クロール事故を起こしている。issues.md Issue 80・81）。
