@@ -325,6 +325,25 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
   end
 
+  # --- ページ送り ---
+  test "ページ送りは条件を引き継ぎ、シャッフル中だけシードを渡して nofollow にする" do
+    (WordsController::PER_PAGE + 1).times do |index|
+      Word.create!(surface: "ページ送りの見本その#{index}", annotated_at: Time.current, annotation_status: :done)
+    end
+
+    get words_path
+    assert_select ".pagination a[href=?]", words_path(page: 2)
+    assert_select ".pagination a[rel=nofollow]", 0
+
+    # 最後のページ(公開語 103 件 = 2 ページ)は「前へ」だけ
+    get words_path(page: 2)
+    assert_select ".pagination a", 1
+    assert_select ".pagination a[href=?]", words_path(page: 1)
+
+    get words_path(sort: "shuffle", seed: "abc123")
+    assert_select ".pagination a[rel=nofollow][href=?]", words_path(sort: "shuffle", seed: "abc123", page: 2)
+  end
+
   # --- 多語義語の代表語義と語義の順序 ---
   # いまは「id が最小の語義」が代表で、語義は id 順に並ぶ(preload の返す順に頼っている)。
   # 先頭の語義が最長でない語で、いまの振る舞いを固定する。
