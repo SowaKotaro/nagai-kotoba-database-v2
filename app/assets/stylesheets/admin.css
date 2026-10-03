@@ -39,9 +39,7 @@
   --radius-pill: 3px;
   /* --radius-sm(6px)は上書きしていないので、管理画面では --radius(3px)より大きい(揃えるかは見送り中) */
 
-  /* 影は使わない(公開側はメニューのパネルとドロワーに --shadow-pop を使う。管理画面ではそれも消す。
-     --shadow-soft はどこからも参照されていない) */
-  --shadow-soft: none;
+  /* 影は使わない(公開側はメニューのパネルとドロワーに --shadow-pop を使う。管理画面ではそれも消す) */
   --shadow-pop: none;
 
   line-height: 1.5;
@@ -66,7 +64,6 @@
    影(合成レイヤ)・大きな角丸・SVG の描画・要らない要素そのもの。 */
 .is-admin .admin-card,
 .is-admin .nav-menu__panel,
-.is-admin .proposal,
 .is-admin .sense-card {
   box-shadow: none;
 }
@@ -251,15 +248,13 @@
 /* ── 破壊的な操作を色で分ける ───────────────────────────────
    行末の「annot.」と「del.」は同じ見た目なので、押し間違えると戻せない側だけ色を変える */
 .is-admin .btn[data-turbo-confirm],
-.is-admin form[data-turbo-confirm] .btn,
-.is-admin .btn--danger {
+.is-admin form[data-turbo-confirm] .btn {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
 }
 
 .is-admin .btn[data-turbo-confirm]:hover,
-.is-admin form[data-turbo-confirm] .btn:hover,
-.is-admin .btn--danger:hover {
+.is-admin form[data-turbo-confirm] .btn:hover {
   background: color-mix(in srgb, var(--danger) 8%, var(--surface));
 }
 
@@ -278,7 +273,6 @@
    状態タブ・管理ナビの選択中は、下線だけでなく色でも示す。
    管理ナビの下線は帯の下罫にぴったり重なる(layout.css) */
 .is-admin .admin-status-tabs a[aria-current],
-.is-admin .admin-status-tabs .is-current,
 .is-admin .admin-nav__link[aria-current="page"] {
   color: var(--admin-accent);
   border-color: var(--admin-accent);

@@ -466,11 +466,6 @@ main.container--flush > .flash {
   }
 }
 
-/* 読み物(About・プライバシー)はさらに狭く組む */
-.reading-column {
-  max-width: var(--reading-width);
-}
-
 /* --- 管理画面の共通サブナビ(Issue 35) --- */
 /* 下罫は border ではなく背景として引く。横スクロールする内側の箱の中から、
    現在地の下線(admin.css)をこの罫にぴったり重ねて描くため(border だと箱の外に出て重ならない) */

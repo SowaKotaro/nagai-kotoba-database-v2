@@ -12,15 +12,12 @@
   flex: none;
 }
 
-.icon--lg { width: 1.35em; height: 1.35em; }
-
 /* ラベル・小見出しの先頭に添える装飾アイコン。色はラベルの文字色をそのまま継承する
    (等幅の極小ラベルに、同じ細さの線画をひとつだけ置く「欄外の印」の文法) */
 .field-legend .icon,
 .section-label .icon,
 .section-heading .icon,
 .sense-attrs dt .icon,
-.stats-grid__item dt .icon,
 .stats-section__title .icon,
 .stats-wall__heading .icon,
 .page-eyebrow .icon,
@@ -637,11 +634,6 @@ a.tag:hover {
   background: var(--bg-tint);
   color: var(--text);
   text-decoration: none;
-}
-
-/* 表示のみのタグ(語種など、絞り込み対象でないもの) */
-.tag--static {
-  color: var(--text-muted);
 }
 
 /* --- 索引ページ(Issue 22) --- */
@@ -1848,12 +1840,6 @@ a.tag:hover .genre-hub__count {
   color: var(--text);
 }
 
-/* 簡素↔詳細 検索の切替リンク */
-.search-switch {
-  margin: var(--space-3) 0 var(--space-5);
-  font-size: 13px;
-}
-
 /* --- 収録数の内訳。ホームでは看板のレールに、管理画面では横並びに置く --- */
 
 /* margin は、使っている 2 か所(ホームの .stats-grid--rows と、admin.css の .is-admin .stats-grid)が
@@ -2957,12 +2943,6 @@ textarea {
   margin-bottom: var(--space-2);
 }
 
-/* 検索のキーワード欄はひと回り大きく */
-.field--keyword input {
-  width: min(420px, 100%);
-  font-size: 15px;
-}
-
 /* フォームのまとまり: 細罫の角丸パネル */
 .fieldset-card {
   border: none;
@@ -3491,21 +3471,6 @@ textarea {
   display: flex;
   gap: var(--space-3);
   align-items: center;
-}
-
-/* --- 管理フォームの入れ子(語義・特徴の行) --- */
-.word-sense-fields {
-  border-top: 1px solid var(--border-strong);
-  padding-top: var(--space-4);
-  margin-top: var(--space-4);
-}
-
-.word-sense-feature-fields {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
 }
 
 /* --- 汎用 --- */
@@ -5314,8 +5279,6 @@ a.entity-treemap__cell:hover {
   fill: var(--text);
   font-family: var(--font-sans);
   font-weight: 400;
-  /* 隙間に詰めた小さい語まで拾えるよう、字面の当たりを広めに取る */
-  paint-order: stroke;
   transition: fill var(--transition);
 }
 

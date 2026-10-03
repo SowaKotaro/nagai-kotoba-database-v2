@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | R2-04（使われていない CSS セレクタ・効いていない宣言・未使用のトークンを消す） |
+| 次の一手 | R2-04b（効いていない CSS の宣言を消す） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -162,8 +162,9 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-21 | 第3群 | `JAPANESE_ORIGIN_NAME` が SeedCatalog の語種名に含まれることを確かめる | high | 済 | `62f3a71` | seed_catalog_test に 1 件。WordSense::JAPANESE_ORIGIN_NAME（日本語）が SeedCatalog::WORD_ORIGINS に含まれ、WORD_ORIGIN_RENAMES の改名元にもなっていないこと。これで第3群（T0-01〜T0-21）がすべて済んだ。合格判定は全部通過 |
 | R2-01 | 第4群 | 使われていない Ruby コードを消す（SiteStatistics の 2 つの total は消さない） | high | 済 | `b4dba42` | 消す直前に参照を検索し直してから消した: app/helpers/articles_helper.rb（空のモジュール）、BulkWordRegistration::MergedEntry#match? / #differ?、WordCandidate::DECISIONS（ビューが使うのは WordCandidateReview::CHOICES。D1-16b で candidates.css のコメントに書いた参照もこちらへ直した）、SessionTestHelper#sign_out、MorphemeCloud::Placed の weight と Layout#any?、MorphemeFrequencies.metadata（reset! のメモも）、stats_timeline_chart の price_bottom と出来高の棒の count。SiteStatistics の 2 つの total は計画どおり残した。消したものを指す文字列が app・test・docs に残っていないことを確かめた。合格判定は全部通過（og:image の版のテストも通過）、development で eager_load! も通る |
 | R2-02 | 第4群 | 使われていないビューと i18n を消す | high | 済 | `23b82b5` | 消す直前に参照を検索し直した（アイコン名を動的に渡す箇所・相対キー・補間で組むキーも見た）。shared/icons/_crown・_sparkle、ja.yml の admin.annotations.nav・today と admin.word_candidates.title（使われているのは edit.title）、en.yml の hello（en: {} にした）を消した。完了条件どおり raise_on_missing_translations を一時的に true にして単体・システムテストを流し、消したキーでの訳抜けが無いことを確かめた（設定は元に戻した）。そのとき出た訳抜け 2 つ（admin.words.bulk.review.similarity・word_requests.fields.no）は変更前の HEAD でも同じなので既存のもの（受付箱）。合格判定は全部通過 |
-| R2-03 | 第4群 | 使われていない JS を消す | high | 済 | このコミット | 消す直前に検索し直した。inline_add_controller.js の escapeHtml の export を外した（同じファイルの __NAME__ の置換だけが使う）。admin/annotations/_feature_fields.html.erb の .js-feature を外した（JS・CSS・テストのどこからも参照が無い。管理画面の HTML の class 属性だけが変わる）。合格判定は全部通過 |
-| R2-04 | 第4群 | 使われていない CSS セレクタ・効いていない宣言・未使用のトークンを消す | high | 未着手 | | |
+| R2-03 | 第4群 | 使われていない JS を消す | high | 済 | `ffa333b` | 消す直前に検索し直した。inline_add_controller.js の escapeHtml の export を外した（同じファイルの __NAME__ の置換だけが使う）。admin/annotations/_feature_fields.html.erb の .js-feature を外した（JS・CSS・テストのどこからも参照が無い。管理画面の HTML の class 属性だけが変わる）。合格判定は全部通過 |
+| R2-04a | 第4群 | 使われていない CSS セレクタと未使用のトークンを消す（8 セレクタ、要確認の 4 つ、--shadow-soft、paint-order） | high | 済 | このコミット | 分量と確かめ方の重さから R2-04 を a・b に分けた（b は効いていない宣言）。比べる仕組みを scratchpad に作った（style_snapshot_test.rb: 公開 12 ページと管理 10 ページを、ライト・ダーク × 1400・767・560px、1400px では操作要素の種類ごとに :hover と :focus-visible を CDP で強制し、全要素〈::before / ::after を含む〉の computed style の指紋を取る。transition と animation を止め、Plotly の中とカスタムプロパティは外す。HEAD で 2 回取って 46,408 か所が一致することを確かめてから使った）。消したもの: .btn--danger（admin.css の 2 つの一覧から。design.md §10 の言及も）、.field--keyword、.icon--lg、.reading-column、.search-switch、.tag--static、.word-sense-fields、.word-sense-feature-fields、.is-admin .proposal、.is-admin .admin-status-tabs .is-current、.stats-grid__item dt .icon、--shadow-soft（tokens.css の 3 か所と --dark-shadow-soft、admin.css、design.md の 2 か所）、.word-cloud__text の paint-order とコメント。**要確認の .page-eyebrow .icon は使われていた**（単語詳細の見出しのシャッフルのアイコン。監査 S-04 の見落としで、比べる仕組みが差分として捕まえた）ので残した。削除後の比較で、差分はワードクラウドの text 606 か所の paint-order（stroke が無いので描画は変わらない）だけ。孤立したコメントは D1-16b で消し済み。合格判定は全部通過、§ 参照 174 件すべて実在 |
+| R2-04b | 第4群 | 効いていない宣言を消す（admin.css の box-shadow:none の規則、.ann-sense.is-complete の border-color、打ち消す相手の無い border-bottom:0、打ち消される margin-left:auto、基本と同じ値の繰り返し、直後に上書きされる border:none、通常時と同じ色の hover、.stats-grid の効いていない margin、components.css の管理表の色） | high | 未着手 | | |
 | R2-05 | 第4群 | 設定とタスクの残骸を片付ける（robots.txt の `#` の行は対象外。`cap -T` を通す） | high | 未着手 | | |
 | R2-06 | 第4群 | テストの残骸を片付ける（期待値は変えない） | high | 未着手 | | |
 | R2-07 | 第4群 | CSS の無い残骸クラスをビューから消す | high | 未着手 | | |
