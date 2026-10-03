@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-09（tokens.css のダークの 2 ブロックの一致と、application.css の読み込み順を確かめる） |
+| 次の一手 | T0-10（提案の取り込みと反映で捨てられるキーを固定する） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -146,8 +146,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-05 | 第3群 | 多語義語の代表語義と、語義の順序を固定する | high | 済 | `33ef215` | 先頭（id が最小）の語義が 6 字・2 番目が 15 字の語を作り、いまの振る舞いを固定した。一覧の行は先頭の語義の文字数（6 字）を出し、読みは語義の順に「、」で並べる。詳細の語義カードは id の順。ホームでは「読みが長い言葉」の 1 位になる（並びは max_reading_length）が、看板と行に出る数は先頭の語義の 6（C-02 のずれ。C3-14 で変えない方針なので、いまの値で固定）。JSON の senses は id の順。words_controller_test・home_controller_test・words_api_test に 1 件ずつ。合格判定は全部通過 |
 | T0-06 | 第3群 | 照合順序の帰結（一意制約・char_type_pattern の検索）を固定する | high | 済 | `f7ee13c` | word_test に、surface の一意性がひらがな⇔カタカナ（しゃーろっと）と小書き⇔並字（シヤーロット）を同一視し、清濁（ジャーロット）は区別するテスト。word_sense_search_test に、大小を区別しない文字種の検索では「ああ…」の語が「アア…」のパターンに当たり、区別する検索（utf8mb4_bin）では当たらないテスト。合格判定は全部通過 |
 | T0-07 | 第3群 | `body.is-admin` の付き方を固定する | high | 済 | `144dd3d` | test/integration/admin_body_class_test.rb を新設。ログイン画面には付かず、管理画面（/admin・単語の管理・タグ管理）には付き、ログインしていても公開ページ（ホーム・一覧・詳細・About）には付かないことを 1 本で確かめる。合格判定は全部通過 |
-| T0-08 | 第3群 | 検索スライダーの表示文言と hidden の値を固定する（system テスト） | high | 済 | このコミット | test/system/search_length_slider_test.rb を新設（1 回の visit）。初期は「10文字以上」で hidden は 10 と空、15〜20 で「15文字以上20文字以下」、同じ値で「20文字」、下限が上限を追い越すと上限も連れて動く（「25文字」）、上限 30 で「25文字以上」と max が空。つまみは値を入れて input を発火させる（ネイティブの range 操作に頼らない）。単独で 3 回流して安定。合格判定は全部通過 |
-| T0-09 | 第3群 | tokens.css のダークの 2 ブロックの一致と、application.css の読み込み順を確かめる | high | 未着手 | | |
+| T0-08 | 第3群 | 検索スライダーの表示文言と hidden の値を固定する（system テスト） | high | 済 | `0e20ee0` | test/system/search_length_slider_test.rb を新設（1 回の visit）。初期は「10文字以上」で hidden は 10 と空、15〜20 で「15文字以上20文字以下」、同じ値で「20文字」、下限が上限を追い越すと上限も連れて動く（「25文字」）、上限 30 で「25文字以上」と max が空。つまみは値を入れて input を発火させる（ネイティブの range 操作に頼らない）。単独で 3 回流して安定。合格判定は全部通過 |
+| T0-09 | 第3群 | tokens.css のダークの 2 ブロックの一致と、application.css の読み込み順を確かめる | high | 済 | このコミット | design_tokens_test に 2 件。@media と [data-theme="dark"] の宣言が同じで、:root の --dark-* をすべて --X: var(--dark-X) で参照し、color-scheme が dark であること（片方から 1 行抜くと検出できることを同じ抽出で確かめた）。application.css の require が tokens → base → layout → components → annotate → candidates → admin の順で、require_self があり require_tree が無いこと。合格判定は全部通過 |
 | T0-10 | 第3群 | 提案の取り込みと反映で捨てられるキーを固定する | high | 未着手 | | |
 | T0-11 | 第3群 | `backfill:sense_metrics` が崩した代表値を元に戻すことを固定する | high | 未着手 | | |
 | T0-12 | 第3群 | 名前と中身がずれているテストの名前を直し、名前が約束していた検証を足す | high | 未着手 | | |
