@@ -487,7 +487,6 @@ ja:
         destroyed: "%{count} 件を削除しました。"
         limited: "一度に渡せるのは %{count} 件までのため、先頭から %{count} 件を渡しました。"
     word_candidates:
-      title: "登録予定単語"
       page_title: "%{page}｜登録予定単語"
       unit: "語"
       # ステータスは「次に何を待っているか」で呼ぶ(段の名前ではなく、名前だけで次の一手が分かるように)。
@@ -964,8 +963,6 @@ ja:
         selected_existing: "同じ名前が既にあったので、それを選びました。"
     annotations:
       title: "アノテーション"
-      nav: "アノテーション"
-      today: "本日"
       unit_word: "語"
       remaining: "未対応"
       eyebrow: "見出し語"

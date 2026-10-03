@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | R2-02（使われていないビューと i18n を消す） |
+| 次の一手 | R2-03（使われていない JS を消す） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -160,8 +160,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-19 | 第3群 | 管理一覧のジャンル絞り込みの結果を固定する | high | 済 | `b421d24` | admin/words_controller_test に 1 件。独立した木（大 1・中 2・小 3）と 4 語（うち 1 語は未公開）を作り、大分類なら 4 語すべて、中分類（労働法）なら配下の小分類 2 つの 3 語、別の中分類（民法）なら 1 語、小分類（判例）なら公開・未公開の 2 語、と結果の集合ごと固定した。既存のテスト（小分類・大分類・存在しない id）はそのまま。合格判定は全部通過 |
 | T0-20 | 第3群 | publish_guard と deck が削除済みの語義を数えないことを固定する（system テスト） | high | 済 | `6a6ac21` | 1 つ目が完了・2 つ目が未完了の 2 語義の語を作り、コンソールでは 2 つ目を「この語義を削除」で外して保存すると公開前の確認（confirm）が呼ばれないこと（同じ window のまま次の語へ進んだことも確かめる）、デッキでは削除で「n / m 完了」が 0 から 1 になることを固定した。操作は JS で送る。途中で、保存済みの語義を削除しても DB から消えない不具合を見つけた（受付箱）。そのため、いまは保存済みの語義も DOM から外れ、`display: none` の分岐はテストで通っていない。単独で 3 回流して安定。合格判定は全部通過 |
 | T0-21 | 第3群 | `JAPANESE_ORIGIN_NAME` が SeedCatalog の語種名に含まれることを確かめる | high | 済 | `62f3a71` | seed_catalog_test に 1 件。WordSense::JAPANESE_ORIGIN_NAME（日本語）が SeedCatalog::WORD_ORIGINS に含まれ、WORD_ORIGIN_RENAMES の改名元にもなっていないこと。これで第3群（T0-01〜T0-21）がすべて済んだ。合格判定は全部通過 |
-| R2-01 | 第4群 | 使われていない Ruby コードを消す（SiteStatistics の 2 つの total は消さない） | high | 済 | このコミット | 消す直前に参照を検索し直してから消した: app/helpers/articles_helper.rb（空のモジュール）、BulkWordRegistration::MergedEntry#match? / #differ?、WordCandidate::DECISIONS（ビューが使うのは WordCandidateReview::CHOICES。D1-16b で candidates.css のコメントに書いた参照もこちらへ直した）、SessionTestHelper#sign_out、MorphemeCloud::Placed の weight と Layout#any?、MorphemeFrequencies.metadata（reset! のメモも）、stats_timeline_chart の price_bottom と出来高の棒の count。SiteStatistics の 2 つの total は計画どおり残した。消したものを指す文字列が app・test・docs に残っていないことを確かめた。合格判定は全部通過（og:image の版のテストも通過）、development で eager_load! も通る |
-| R2-02 | 第4群 | 使われていないビューと i18n を消す | high | 未着手 | | |
+| R2-01 | 第4群 | 使われていない Ruby コードを消す（SiteStatistics の 2 つの total は消さない） | high | 済 | `b4dba42` | 消す直前に参照を検索し直してから消した: app/helpers/articles_helper.rb（空のモジュール）、BulkWordRegistration::MergedEntry#match? / #differ?、WordCandidate::DECISIONS（ビューが使うのは WordCandidateReview::CHOICES。D1-16b で candidates.css のコメントに書いた参照もこちらへ直した）、SessionTestHelper#sign_out、MorphemeCloud::Placed の weight と Layout#any?、MorphemeFrequencies.metadata（reset! のメモも）、stats_timeline_chart の price_bottom と出来高の棒の count。SiteStatistics の 2 つの total は計画どおり残した。消したものを指す文字列が app・test・docs に残っていないことを確かめた。合格判定は全部通過（og:image の版のテストも通過）、development で eager_load! も通る |
+| R2-02 | 第4群 | 使われていないビューと i18n を消す | high | 済 | このコミット | 消す直前に参照を検索し直した（アイコン名を動的に渡す箇所・相対キー・補間で組むキーも見た）。shared/icons/_crown・_sparkle、ja.yml の admin.annotations.nav・today と admin.word_candidates.title（使われているのは edit.title）、en.yml の hello（en: {} にした）を消した。完了条件どおり raise_on_missing_translations を一時的に true にして単体・システムテストを流し、消したキーでの訳抜けが無いことを確かめた（設定は元に戻した）。そのとき出た訳抜け 2 つ（admin.words.bulk.review.similarity・word_requests.fields.no）は変更前の HEAD でも同じなので既存のもの（受付箱）。合格判定は全部通過 |
 | R2-03 | 第4群 | 使われていない JS を消す | high | 未着手 | | |
 | R2-04 | 第4群 | 使われていない CSS セレクタ・効いていない宣言・未使用のトークンを消す | high | 未着手 | | |
 | R2-05 | 第4群 | 設定とタスクの残骸を片付ける（robots.txt の `#` の行は対象外。`cap -T` を通す） | high | 未着手 | | |
@@ -225,6 +225,7 @@ test 10,177 / docs 7,446 / .claude 1,419
 | 2026-10-03 | main の CI（2026-10-02、PR #165 の merge `e4d2b7a`）が `test/system/admin_annotation_console_test.rb:165`（ジャンルのその場追加で既にある名前を入れると…）で 1 回落ちている（`.ann-add__msg` の文言が出る前に判定した）。同じコミットの PR 上の CI は通っている。受付箱の :189 と同じ console_test の不安定さ。デプロイは CI を待たないので本番には影響していない | D1-17a | オーナーに報告する。C3-23（system テストのヘルパの集約）か別の PR で、待ち方を直す |
 | 2026-10-03 | システムテストの不安定さの原因を特定した。`system_sign_in` で fixture の管理者（パスワード "password"）がログインすると、Chrome のパスワード漏洩の警告が入力を奪い、以後ネイティブの入力（fill_in・send_keys・Actions・クリック）がページに届かなくなる（公開ページでも）。ドライバに `--disable-features=PasswordLeakDetection` と `profile.password_manager_leak_detection: false` ほかの設定を足すと届く（2026-10-03、Chrome 154.0.8037.92 で使い捨てのテストで確認）。console_test:165・:189、deck_test:84 の不安定さも、ログイン後のネイティブ入力に頼っている箇所なので、これが原因の可能性が高い（推測） | D1-17b | テストの設定の変更なので、C3-23 で直すのが筋（4 つのうちどの設定が効いているかは、そのとき切り分ける）。直したら、各テストの JS 経由の回避策と ApplicationSystemTestCase の注記を見直す。オーナーに報告する |
 | 2026-10-03 | **注釈コンソール・デッキの「この語義を削除」は、保存済みの語義を DB から消さない**（不具合）。`fields_for` が保存済みの語義に付ける隠しフィールド `id` は `.js-sense` の外に出る（結合テストで HTML を見て確認）。そのため `sense_cloner_controller.js` の `remove` は保存済みの語義を新しい行とみなして DOM ごと外し、`_destroy` が送られない。画面からは消え、公開前の確認やデッキの件数にも入らないが、保存しても語義は残る（system テストで確認。2 語義の語で 2 つ目を削除して保存すると、語義は 2 つのまま）。`display: none` で隠す分岐は、いまは保存済みの語義でも通っていない | T0-20 | 振る舞いの変更なので第7群の候補（オーナー判断）。直すなら、`id` を `.js-sense` の中に出す（`fields_for` の `include_id: false` と手で置く hidden）か、JS の探し方を変える。T0-20 のテストは「数えない」ことだけを固定し、DB の件数は固定していない |
+| 2026-10-03 | 訳抜けが 2 つある（既存）。`ja.admin.words.bulk.review.similarity`（app/views/admin/words/_match.html.erb:4。一括登録の重複候補の類似度）と `ja.word_requests.fields.no`（app/views/word_requests/_rows.html.erb:12。収録リクエストの表の番号の列の見出し。visually-hidden）。本番では「translation missing」の span が出る。raise_on_missing_translations を true にしたテストで見つけた（変更前の HEAD でも同じ） | R2-02 | 表示文言の追加なので第7群の候補（公開側の文言は §7.1）。直すなら ja.yml にキーを足す |
 
 ## 7. 作業ログ
 
