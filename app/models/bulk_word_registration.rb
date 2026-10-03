@@ -59,9 +59,6 @@ class BulkWordRegistration
     :surface, :mecab_reading, :research_reading, :research_alternatives, :research_confidence, :chosen, :status,
     keyword_init: true
   ) do
-    def match? = status == :match
-    def differ? = status == :differ
-
     # 読み欄に流し込める候補(重複読みは除く)。source は mecab / research / alt。
     def candidates
       list = []

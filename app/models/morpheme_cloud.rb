@@ -112,15 +112,13 @@ class MorphemeCloud
   # 配置済みの1語。x はその語の左端、y はベースライン(SVG の text の基準点)。
   # top(最頻の語か)はテストだけが使う(中心に据える語の特定。最頻の語を色で印す表示はやめた)。
   # 字面の矩形は (x, top_y) を左上とする width × height(ベースラインは矩形の途中を通る)。
-  Placed = Data.define(:text, :count, :weight, :font_size, :x, :y, :top_y, :width, :height,
+  Placed = Data.define(:text, :count, :font_size, :x, :y, :top_y, :width, :height,
                        :palette, :top) do
     def top? = top
   end
 
   # 配置の結果。描画側は height を viewBox に使う。
-  Layout = Data.define(:items, :height) do
-    def any? = items.any?
-  end
+  Layout = Data.define(:items, :height)
 
   def self.place(entries) = new(entries).place
 
@@ -428,7 +426,7 @@ class MorphemeCloud
     top_y = (row * CELL) + half_gap
     ascent, descent = vertical_metrics(entry.text)
     Placed.new(
-      text: entry.text, count: entry.count, weight: entry.weight, font_size: box[:font_size],
+      text: entry.text, count: entry.count, font_size: box[:font_size],
       x: ((column * CELL) + half_gap).round(1),
       top_y: top_y.round(1),
       # SVG の text はベースライン基準。字面の上端から、上に伸びる分だけ下げる。

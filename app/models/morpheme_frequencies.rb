@@ -36,11 +36,6 @@ class MorphemeFrequencies
       @entries ||= build_entries
     end
 
-    # 集計時点の情報(生成日・対象語数)。いまはどこにも表示していない。
-    def metadata
-      @metadata ||= data["metadata"] || {}
-    end
-
     def available? = entries.any?
 
     # 集計結果を書き出す(rake タスクから呼ぶ)。
@@ -61,7 +56,6 @@ class MorphemeFrequencies
     # テストや再読み込み用。
     def reset!
       @entries = nil
-      @metadata = nil
       @data = nil
     end
 

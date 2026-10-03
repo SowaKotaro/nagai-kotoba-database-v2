@@ -697,7 +697,7 @@
 }
 
 /* 採用(大半の行)は淡い面にとどめ、例外の処理だけを色のベタにする。
-   ビューは処理名(WordCandidate::DECISIONS)を補間して --expand / --keep / --hold / --reject を付けるが、
+   ビューは処理名(WordCandidateReview::CHOICES)を補間して --expand / --keep / --hold / --reject を付けるが、
    --keep(採用)は既定の見た目に任せるので規則を持たない(.cand-bar__count・.cand-bar__action も同じ) */
 .cand-choice__option input:checked + .cand-choice__label {
   background: var(--bg-tint);

@@ -36,9 +36,6 @@ class WordCandidate < ApplicationRecord
     "triage" => %w[triage], "expand" => %w[expanding], "notation" => %w[notating notated], "ready" => %w[ready]
   }.freeze
 
-  # 仕分け・表記の確認で、語ごとに選べる処理。行き先は #destination_for が決める。
-  DECISIONS = %w[expand keep hold reject].freeze
-
   # 「すべての語」の一覧でまとめて移せる先(本流から外した語を戻す・外すのに使う)。
   MOVES = %w[triage held rejected].freeze
 

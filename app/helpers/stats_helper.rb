@@ -82,7 +82,7 @@ module StatsHelper
 
     {
       width: TIMELINE_WIDTH, height: TIMELINE_HEIGHT,
-      price_bottom: TIMELINE_PRICE_BOTTOM, volume_bottom: TIMELINE_VOLUME_BOTTOM,
+      volume_bottom: TIMELINE_VOLUME_BOTTOM,
       line: line, area: area, first: points.first, last: points.last,
       volume_bars: timeline_volume_bars(weeks, xs)
     }
@@ -402,7 +402,7 @@ module StatsHelper
 
       height = (week[:count] * (TIMELINE_VOLUME_BOTTOM - TIMELINE_VOLUME_TOP) / max_count.to_f).round(1)
       { x: (xs[index] - bar_width / 2).round(1), y: (TIMELINE_VOLUME_BOTTOM - height).round(1),
-        width: bar_width, height: height, count: week[:count], last: index == weeks.size - 1 }
+        width: bar_width, height: height, last: index == weeks.size - 1 }
     end
   end
 
