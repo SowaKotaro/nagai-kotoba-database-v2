@@ -1,7 +1,7 @@
 require "test_helper"
 
 # 管理画面のトーン(admin.css)は <body class="is-admin"> の下でだけ効く。
-# いまは「パスが /admin で始まるか」で付けている(layouts/application.html.erb)。
+# 付けるかどうかは AdminHelper#admin_page?(管理画面のコントローラか)で決める(layouts/application.html.erb)。
 class AdminBodyClassTest < ActionDispatch::IntegrationTest
   test "管理画面では body に is-admin が付き、公開ページとログイン画面には付かない" do
     get new_session_path
