@@ -166,12 +166,12 @@ module StatsHelper
   GRAPH_LABEL_WIDTH = 52
   GRAPH_TOP = 16
   GRAPH_BOTTOM = 26        # 下端の拍位置の逃げ
-  GRAPH_HEIGHT = GRAPH_TOP + (GRAPH_ROW_PITCH * 4) + GRAPH_BOTTOM
+  GRAPH_HEIGHT = GRAPH_TOP + (GRAPH_ROW_PITCH * (SiteStatistics::VOWELS.size - 1)) + GRAPH_BOTTOM
   # ノードは件数によらず同じ大きさ(オーナー指示 2026-09-10)。多寡はエッジだけで見せる。
   GRAPH_RADIUS = 6.5
   # 「多い遷移だけ」に絞るときの下限。偏りが無ければどの組も 1/25 = 4% になるので、
   # その 1.5 倍(6%)を「その位置で目立って多い」とみなす。
-  GRAPH_UNIFORM_SHARE = 1.0 / (5 * 5)
+  GRAPH_UNIFORM_SHARE = 1.0 / (SiteStatistics::VOWELS.size**2)
   GRAPH_SIGNIFICANT_RATIO = 1.5
   # エッジの太さと濃さ。350 本を重ねるので、細く薄く始めて上限も抑える。
   GRAPH_MIN_EDGE = 0.3

@@ -5,7 +5,7 @@
 class WordSenseSearch
   # 母音の遷移条件("<拍位置>-<母音の並び>"。例 "3-ou" / "3-ouia")。
   # 並びは2拍以上(遷移なので1拍では意味を成さない)、上限は統計ページ §7 のグラフの層数。
-  VOWEL_TRANSITION_FORMAT = /\A(\d{1,2})-([aiueo]{2,15})\z/
+  VOWEL_TRANSITION_FORMAT = /\A(\d{1,2})-([aiueo]{2,#{SiteStatistics::TRANSITION_MAX_POSITIONS}})\z/
   # 拍位置の上限。ここを開けておくと、意味の無い位置ぶんだけ URL が湧く
   # (どれも 0 件で、しかも無限に作れる)。実在する読みの長さに合わせて閉じておく。
   VOWEL_TRANSITION_MAX_POSITION = 30

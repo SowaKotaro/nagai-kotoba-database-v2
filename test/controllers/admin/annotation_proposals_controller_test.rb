@@ -27,6 +27,8 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     get export_admin_annotation_proposals_path(limit: 99_999)
     assert_response :success
     assert_select "input#export_limit[value=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
+    # 入力欄の上限もサーバの上限と同じ値(ずれると、ブラウザが上限までの値を拒む)
+    assert_select "input#export_limit[max=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
   end
 
   test "語ID範囲を指定すると、下書き提案がある語も再調査用に書き出す" do

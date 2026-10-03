@@ -85,7 +85,7 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
   test "リポジトリに入っている集計ファイルが読める" do
     assert MorphemeFrequencies.available?, "db/morpheme_frequencies.json が読めていない"
     assert MorphemeFrequencies.entries.all? { |entry| entry.count >= MorphemeFrequencies::MIN_COUNT }
-    assert MorphemeFrequencies.entries.all? { |entry| entry.text.length >= 2 }
+    assert MorphemeFrequencies.entries.all? { |entry| entry.text.length >= MorphemeFrequencies::MIN_LENGTH }
     assert_equal 1, MorphemeFrequencies.entries.count(&:top?), "最頻(top?)は1件だけ"
   end
 end

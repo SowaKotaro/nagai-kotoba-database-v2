@@ -57,7 +57,7 @@ class WordCandidate < ApplicationRecord
 
   validates :surface, presence: true, length: { maximum: MAX_SURFACE_LENGTH }, uniqueness: true
   validates :note, length: { maximum: MAX_NOTE_LENGTH }
-  validates :entry_score, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
+  validates :entry_score, numericality: { only_integer: true, in: AnnotationProposal::ENTRY_SCORE_RANGE }, allow_nil: true
   validates :confidence, inclusion: { in: CONFIDENCES }, allow_nil: true
 
   before_validation :normalize_surface

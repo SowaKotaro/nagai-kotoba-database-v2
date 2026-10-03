@@ -16,7 +16,7 @@
         placeholder: t("admin.annotation_proposals.export.to_placeholder"), class: "proposal-limit__input" %>
 
   <label for="export_limit" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.limit_label") %></label>
-  <%= number_field_tag :limit, @limit, id: "export_limit", min: 1, max: 200, class: "proposal-limit__input" %>
+  <%= number_field_tag :limit, @limit, id: "export_limit", min: 1, max: Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT, class: "proposal-limit__input" %>
 
   <label class="check-chip">
     <%= check_box_tag :japanese_only, "1", @japanese_only, id: nil, class: "visually-hidden" %>

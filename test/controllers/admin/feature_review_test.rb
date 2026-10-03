@@ -31,6 +31,8 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
     get export_features_admin_annotation_proposals_path(limit: 9999)
     assert_response :success
     assert_select "input#export_limit[value=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
+    # 入力欄の上限もサーバの上限と同じ値(ずれると、ブラウザが上限までの値を拒む)
+    assert_select "input#export_limit[max=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
   end
 
   # --- 「特徴なしで確定」 ---

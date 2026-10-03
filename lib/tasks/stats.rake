@@ -45,7 +45,7 @@ namespace :stats do
       extractor.call(batch).each do |morphemes|
         # 同じ語の中に同じ部品が2回出ても「その語に現れた」の1回として数える
         # (「時々」のような畳語で頻度が二重に乗るのを避ける)。
-        morphemes.uniq.each { |morpheme| counts[morpheme] += 1 if morpheme.length >= 2 }
+        morphemes.uniq.each { |morpheme| counts[morpheme] += 1 if morpheme.length >= MorphemeFrequencies::MIN_LENGTH }
       end
       print "."
     end

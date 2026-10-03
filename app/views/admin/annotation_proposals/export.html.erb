@@ -16,7 +16,7 @@
         placeholder: t("admin.annotation_proposals.export.to_placeholder"), class: "proposal-limit__input" %>
 
   <label for="export_limit" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.limit_label") %></label>
-  <%= number_field_tag :limit, @limit, id: "export_limit", min: 1, max: 200, class: "proposal-limit__input" %>
+  <%= number_field_tag :limit, @limit, id: "export_limit", min: 1, max: Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT, class: "proposal-limit__input" %>
   <%= submit_tag t("admin.annotation_proposals.export.reload"), class: "btn btn--sm" %>
   <span class="proposal-limit__count"><%= t("admin.annotation_proposals.export.count", count: @word_count) %></span>
 <% end %>

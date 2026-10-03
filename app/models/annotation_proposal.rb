@@ -12,6 +12,9 @@ class AnnotationProposal < ApplicationRecord
   # pending: 未承認 / applied: コンソールで保存済み / dismissed: 見送り
   enum :status, { pending: 0, applied: 1, dismissed: 2 }, default: :pending
 
+  # 立項スコアの範囲(docs/annotation-guidelines.md §2 の 5 段階)。表記の確認(WordCandidate)の entry_score も同じ範囲。
+  # Ruby だけが当てる範囲で、SQL の needs_review は範囲外の値も「要判断」に入れる(下のスコープを参照)。
+  ENTRY_SCORE_RANGE = 1..5
   # 立項スコアがこれ以下の語は「オーナー判断が必要」(docs/annotation-guidelines.md §2)。
   # コンソールの赤いバッジ・キューの「要判断」・一括承認のゲートが、この 1 つの境界を共有する。
   ENTRY_CONCERN_MAX_SCORE = 3
@@ -113,11 +116,11 @@ class AnnotationProposal < ApplicationRecord
   def confidence = payload["confidence"].presence
   def notes = payload["notes"].presence
 
-  # 立項スコア(1〜5)。docs/annotation-guidelines.md の収録4原則への適合度。範囲外・未評価は nil。
+  # 立項スコア(ENTRY_SCORE_RANGE)。docs/annotation-guidelines.md の収録4原則への適合度。範囲外・未評価は nil。
   # (SQL の needs_review は範囲外の値を「要判断」に入れる。上のスコープを参照)
   def entry_score
     value = payload["entry_score"].to_i
-    value if value.between?(1, 5)
+    value if ENTRY_SCORE_RANGE.cover?(value)
   end
 
   # 立項の懸念理由(どの原則を・なぜ欠くか)。スコア3以下の語に付く。

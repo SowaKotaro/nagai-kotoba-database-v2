@@ -87,7 +87,7 @@ class WordCandidateNotationImport
 
   def entry_score(entry)
     score = Integer(entry["entry_score"], exception: false)
-    score if score&.between?(1, 5)
+    score if score && AnnotationProposal::ENTRY_SCORE_RANGE.cover?(score)
   end
 
   def confidence(entry)
