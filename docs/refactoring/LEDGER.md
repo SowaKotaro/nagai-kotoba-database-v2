@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-11（backfill:sense_metrics が崩した代表値を元に戻すことを固定する） |
+| 次の一手 | T0-12（名前と中身がずれているテストの名前を直し、名前が約束していた検証を足す） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -148,8 +148,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-07 | 第3群 | `body.is-admin` の付き方を固定する | high | 済 | `144dd3d` | test/integration/admin_body_class_test.rb を新設。ログイン画面には付かず、管理画面（/admin・単語の管理・タグ管理）には付き、ログインしていても公開ページ（ホーム・一覧・詳細・About）には付かないことを 1 本で確かめる。合格判定は全部通過 |
 | T0-08 | 第3群 | 検索スライダーの表示文言と hidden の値を固定する（system テスト） | high | 済 | `0e20ee0` | test/system/search_length_slider_test.rb を新設（1 回の visit）。初期は「10文字以上」で hidden は 10 と空、15〜20 で「15文字以上20文字以下」、同じ値で「20文字」、下限が上限を追い越すと上限も連れて動く（「25文字」）、上限 30 で「25文字以上」と max が空。つまみは値を入れて input を発火させる（ネイティブの range 操作に頼らない）。単独で 3 回流して安定。合格判定は全部通過 |
 | T0-09 | 第3群 | tokens.css のダークの 2 ブロックの一致と、application.css の読み込み順を確かめる | high | 済 | `828e140` | design_tokens_test に 2 件。@media と [data-theme="dark"] の宣言が同じで、:root の --dark-* をすべて --X: var(--dark-X) で参照し、color-scheme が dark であること（片方から 1 行抜くと検出できることを同じ抽出で確かめた）。application.css の require が tokens → base → layout → components → annotate → candidates → admin の順で、require_self があり require_tree が無いこと。合格判定は全部通過 |
-| T0-10 | 第3群 | 提案の取り込みと反映で捨てられるキーを固定する | high | 済 | このコミット | annotation_proposal_import_test に 2 件: トップレベルの reading・linguistic_features・sense_id は捨てられ（payload は meaning だけ）、旧形式の語義の読みは nil・特徴は空になること。senses の要素は genre_new・target_start・未知のキーごと丸ごと保持し、トップレベルの genre_new も保持すること。test/models/proposal_application_test.rb を新設して 2 件: 提案の target_start（5）は反映で使われず、組んだ特徴は nil で、保存すると先頭の出現（0）になること。SenseProposal に genre_new を読む口が無いこと。合格判定は全部通過 |
-| T0-11 | 第3群 | `backfill:sense_metrics` が崩した代表値を元に戻すことを固定する | high | 未着手 | | |
+| T0-10 | 第3群 | 提案の取り込みと反映で捨てられるキーを固定する | high | 済 | `ab50129` | annotation_proposal_import_test に 2 件: トップレベルの reading・linguistic_features・sense_id は捨てられ（payload は meaning だけ）、旧形式の語義の読みは nil・特徴は空になること。senses の要素は genre_new・target_start・未知のキーごと丸ごと保持し、トップレベルの genre_new も保持すること。test/models/proposal_application_test.rb を新設して 2 件: 提案の target_start（5）は反映で使われず、組んだ特徴は nil で、保存すると先頭の出現（0）になること。SenseProposal に genre_new を読む口が無いこと。合格判定は全部通過 |
+| T0-11 | 第3群 | `backfill:sense_metrics` が崩した代表値を元に戻すことを固定する | high | 済 | このコミット | backfill_task_test に 1 件。WordSenseMetrics.refresh! で正しい値を取ってから、update_all で全語の代表値（14 列）を崩し（崩れたことも確かめる）、タスクの後に 14 列が元どおりになること、curry の値（語義 1・別表記 1・最長 3・max_reading カレー）を固定した。合格判定は全部通過 |
 | T0-12 | 第3群 | 名前と中身がずれているテストの名前を直し、名前が約束していた検証を足す | high | 未着手 | | |
 | T0-13 | 第3群 | 読みを変えて保存すると `reading_density` が追従することを固定する | high | 未着手 | | |
 | T0-14 | 第3群 | 母音遷移の境界値（15 拍・位置 30 / 31）を固定する | high | 未着手 | | |

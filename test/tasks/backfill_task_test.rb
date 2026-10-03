@@ -24,6 +24,28 @@ class BackfillTaskTest < ActiveSupport::TestCase
     assert_equal [ "uuiaauiouuuu", 12, "つ" ], [ blank.vowel_pattern, blank.mora_count, blank.last_char ]
   end
 
+  METRIC_COLUMNS = %w[sense_count variant_count feature_count min_reading_length max_reading_length max_mora_count
+                      max_small_kana_count max_chouon_count max_dakuten_count min_ring_crossing_count
+                      max_ring_crossing_count min_reading max_reading min_reversed_reading].freeze
+
+  test "sense_metrics は、直接更新で崩した words の代表値を元に戻す" do
+    WordSenseMetrics.refresh!
+    expected = Word.order(:id).pluck(*METRIC_COLUMNS)
+
+    # コールバックを通さない直接更新で、全語の代表値を崩す
+    Word.update_all(sense_count: 99, variant_count: 99, feature_count: 99, min_reading_length: 1, max_reading_length: 1,
+                    max_mora_count: 0, min_ring_crossing_count: 99, max_ring_crossing_count: 99,
+                    min_reading: "崩", max_reading: "崩", min_reversed_reading: "崩")
+    assert_not_equal expected, Word.order(:id).pluck(*METRIC_COLUMNS)
+
+    Rake::Task["backfill:sense_metrics"].reenable
+    capture_io { Rake::Task["backfill:sense_metrics"].invoke }
+
+    assert_equal expected, Word.order(:id).pluck(*METRIC_COLUMNS)
+    curry = words(:curry).reload
+    assert_equal [ 1, 1, 3, "カレー" ], [ curry.sense_count, curry.variant_count, curry.max_reading_length, curry.max_reading ]
+  end
+
   test "verify は last_char・char_type_pattern の不整合を報告する" do
     sense = word_senses(:curry)
     sense.update_columns(last_char: "陳")
