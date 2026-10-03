@@ -111,6 +111,38 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p.empty-note"
   end
 
+  # ジャンルを配下へ広げる処理は、管理一覧が WordSenseSearch とは別に持っている(Genre#self_and_descendant_ids)。
+  # 独立した 大 → 中 2 つ → 小 3 つ の木で、いまの結果を集合ごと固定する。未公開の語も出る。
+  test "ジャンル絞り込みは大・中・小のどれを選んでも配下だけに広げる(兄弟の分類は混ぜない)" do
+    sign_in_as(Admin.take)
+    large = Genre.create!(level: :large, name: "法律")
+    medium_labor = Genre.create!(level: :medium, name: "労働法", parent: large)
+    medium_civil = Genre.create!(level: :medium, name: "民法", parent: large)
+    small_cases = Genre.create!(level: :small, name: "判例", parent: medium_labor)
+    small_rules = Genre.create!(level: :small, name: "規則", parent: medium_labor)
+    small_family = Genre.create!(level: :small, name: "家族法", parent: medium_civil)
+
+    words = {
+      cases: [ "残業手当不払い請求事件", small_cases, true ], rules: [ "就業規則の不利益変更", small_rules, true ],
+      family: [ "親権者変更の申立て事件", small_family, true ], draft: [ "未公開の判例の見本", small_cases, false ]
+    }.transform_values do |surface, genre, published|
+      word = Word.new(surface: surface)
+      word.word_senses.build(reading: "ミホンノヨミ", genre: genre)
+      word.mark_annotated if published
+      word.save!
+      word.surface
+    end
+    listed = lambda do |genre|
+      get admin_words_path(genre_id: genre.id)
+      css_select("td a").map(&:text).map(&:strip) & words.values
+    end
+
+    assert_equal words.values_at(:cases, :rules, :family, :draft).sort, listed.(large).sort
+    assert_equal words.values_at(:cases, :rules, :draft).sort, listed.(medium_labor).sort
+    assert_equal words.values_at(:family).sort, listed.(medium_civil).sort
+    assert_equal words.values_at(:cases, :draft).sort, listed.(small_cases).sort
+  end
+
   test "タグ絞り込みは検索・注釈状態と組み合わせられる(AND)" do
     sign_in_as(Admin.take)
     # 品詞「名詞」× 表層形「カレー」→ curry のみ
