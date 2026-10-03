@@ -602,7 +602,6 @@ a.chip:hover {
 .genre-path--sm a.genre-path__current {
   color: var(--text-muted);
   font-weight: 400;
-  border-bottom: 0;
 }
 
 .genre-path--sm a:hover,
@@ -1842,10 +1841,8 @@ a.tag:hover .genre-hub__count {
 
 /* --- 収録数の内訳。ホームでは看板のレールに、管理画面では横並びに置く --- */
 
-/* margin は、使っている 2 か所(ホームの .stats-grid--rows と、admin.css の .is-admin .stats-grid)が
-   どちらも上書きするので、どこにも効いていない */
+/* margin は使う側(ホームの .stats-grid--rows と、admin.css の .is-admin .stats-grid)が持つ */
 .stats-grid {
-  margin: var(--space-7) 0 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -2220,10 +2217,6 @@ a.tag:hover .genre-hub__count {
   line-height: 1.7;
   color: var(--text);
   overflow-wrap: anywhere;
-}
-
-.home-column__item:hover .home-column__word {
-  color: var(--text);
 }
 
 .home-column__reading {
@@ -2724,23 +2717,11 @@ a.tag:hover .genre-hub__count {
   padding-left: var(--space-5);
 }
 
-/* 状態の 3 つの色は admin.css(.is-admin の下。特異度が高い)が必ず上書きする。この表は管理画面にしか
-   無いので、ここの color は効いていない(効くのは級数だけ) */
-.admin-words-table__annotated {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-/* 未対応は本文色(注意を引く現在の作業対象。管理画面では admin.css が --admin-warn にする) */
-.admin-words-table__unannotated {
-  font-size: 13px;
-  color: var(--text);
-}
-
-/* 保留は弱い文字色(対応待ちで脇に置いた語) */
+/* 状態の文字。色(未対応・保留・完了)は admin.css が持つ。この表は管理画面にしか無い */
+.admin-words-table__annotated,
+.admin-words-table__unannotated,
 .admin-words-table__on-hold {
   font-size: 13px;
-  color: var(--text-muted);
 }
 
 /* --- セクション見出し ---

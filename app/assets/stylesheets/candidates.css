@@ -354,7 +354,6 @@
 
 .cand-toolbar__keys {
   display: flex;
-  margin-left: auto;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
@@ -1083,10 +1082,6 @@
 
 /* --- 狭い幅: 行は語の下に処理の選択を全幅で置き、押しやすい高さにする(選択の列は2段ぶんの高さ) --- */
 @media (max-width: 767px) {
-  .cand-steps__list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .cand-steps__link {
     padding: 6px var(--space-2) var(--space-2);
   }
