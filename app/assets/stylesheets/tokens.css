@@ -103,7 +103,8 @@
   --dark-bg: #191d22;
   --dark-bg-soft: #12161a;
   /* 選択中の面は --dark-surface より明るい側に置く(暗い側だと面の上で沈む)。
-     --dark-surface との差 ΔRGB 22・--dark-text-subtle を載せて 4.55:1(2026-09-23 実測。Issue 93) */
+     --dark-surface との差 ΔRGB 16(docs/design.md §1 の最大差。合計では 22)・--dark-text-subtle を
+     載せて 4.55:1(2026-09-23 実測。Issue 93)。最大差の 16 は下限 19 に届いていない(§1 の既知の問題) */
   --dark-bg-tint: #242e40;
   --dark-surface: #232930;
   --dark-text: #e3e7ea;
