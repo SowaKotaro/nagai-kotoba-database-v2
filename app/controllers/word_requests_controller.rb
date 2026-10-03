@@ -10,7 +10,8 @@
 # キャッシュするページ(いまは単語詳細と Atom。WordsController)には置かない。単語一覧の HTML は
 # キャッシュを宣言していないが、検索0件などからも同じく「リンク」で誘導する。
 class WordRequestsController < ApplicationController
-  allow_unauthenticated_access
+  # 公開面に開けるのはこの 3 つだけ(受付の画面・送信・送信前の重複チェック)。
+  allow_unauthenticated_access only: %i[new create duplicates]
   before_action :ensure_accepting_requests
 
   # ハニーポット。CSS で隠した欄で、人間は触れない = 埋まっていれば自動投稿。
