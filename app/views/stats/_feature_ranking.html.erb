@@ -9,7 +9,7 @@
   <% ranking[:rows].each do |row| %>
     <li class="feature-rank__row">
       <div class="feature-rank__head">
-        <%= link_to row[:name], words_path(linguistic_feature_id: row[:id]), class: "tag feature-rank__chip" %>
+        <%= link_to row[:name], words_path(linguistic_feature_id: row[:id]), class: "tag" %>
         <span class="feature-rank__count"><%= t("stats.index.features.count", count: number_with_delimiter(row[:count])) %></span>
         <% if (example = row[:example]) %>
           <%# 該当部分(target_start から target の文字数分)をハイライトした実例 %>

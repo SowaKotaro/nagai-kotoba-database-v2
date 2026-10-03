@@ -89,7 +89,7 @@
       <% end %>
     </div>
     <div class="home-featured__body">
-      <div class="home-featured__headword">
+      <div>
         <%= link_to @featured_word.surface, word_path(@featured_word), class: "home-featured__word" %>
         <p class="home-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
         <% if featured_sense&.meaning.present? %>

@@ -38,7 +38,7 @@
   <% end %>
 
   <%# 行のどこを押しても選べる(Shift+クリック・選択の列をなぞって範囲)。選んだ語は下端のバーで移す(row-select) %>
-  <%= tag.div class: "cand-select", data: candidate_list_select_data do %>
+  <%= tag.div data: candidate_list_select_data do %>
     <div class="table-scroll">
       <table class="data-table cand-table">
         <thead>

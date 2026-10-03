@@ -74,7 +74,7 @@
       <%= form.text_area :surface, rows: 1, class: "ann-surface__input", id: "deck_#{word.id}_surface" %>
     </div>
 
-    <div class="ann-senses" data-controller="sense-cloner">
+    <div data-controller="sense-cloner">
       <div data-sense-cloner-target="container">
         <%= form.fields_for :word_senses do |sense_form| %>
           <%= render "admin/annotations/sense_fields", form: sense_form, word: word, compact: true %>

@@ -30,7 +30,7 @@
               <span class="bulk-review__reading-text"><%= entry.reading.presence || "—" %></span>
               <%= hidden_field_tag "bulk_word_registration[entries][][reading]", entry.reading %>
             </td>
-            <td class="bulk-review__warnings">
+            <td>
               <%# 収録基準(読みの文字数)を満たさない行はエラー。既定で除外にチェックを入れておく。 %>
               <% if entry.too_short? %>
                 <p class="bulk-review__error-label">

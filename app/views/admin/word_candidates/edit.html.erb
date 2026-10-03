@@ -12,11 +12,11 @@
         <% end %>
       </ul>
     <% end %>
-    <div class="cand-edit__field">
+    <div>
       <%= form.label :surface, class: "cand-edit__label" %>
       <%= form.text_field :surface, maxlength: WordCandidate::MAX_SURFACE_LENGTH, autofocus: true, class: "cand-edit__surface" %>
     </div>
-    <div class="cand-edit__field">
+    <div>
       <%= form.label :note, class: "cand-edit__label" %>
       <%= form.text_area :note, rows: 2, maxlength: WordCandidate::MAX_NOTE_LENGTH, class: "cand-edit__note" %>
     </div>

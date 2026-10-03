@@ -127,7 +127,8 @@
       キーワードはフォームへ引き継ぐ(条件だけの 0 件は語が特定できないので空のフォームへ)。
       フォーム自体は埋め込まず、HTTP キャッシュさせない専用ページへリンクする。CSRF トークン入りの
       フォームは共有キャッシュに載りうるページに置かない方針(WordRequestsController の冒頭)。
-      なお、この一覧の HTML はいま HTTP キャッシュを宣言していない(public なのは単語詳細と Atom)。 %>
+      なお、この一覧の HTML はいま HTTP キャッシュを宣言していない(public なのは単語詳細と Atom)。
+      .empty-request はスタイルを持たない。結合テスト(word_requests_controller_test)の目印。 %>
   <% if requests_open? %>
     <p class="empty-request">
       <%= link_to t("words.index.request_link"), new_request_path(surface: @search.q.presence),

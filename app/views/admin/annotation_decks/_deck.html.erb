@@ -59,7 +59,7 @@
       <% @words.each_with_index do |word, index| %>
         <button type="button" class="deck-dot" data-deck-target="dot" data-index="<%= index %>"
                 data-action="deck#jump" title="<%= word.surface %>">
-          <span class="deck-dot__no"><%= index + 1 %></span>
+          <span><%= index + 1 %></span>
         </button>
       <% end %>
     </div>

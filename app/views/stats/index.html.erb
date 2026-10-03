@@ -4,7 +4,7 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("stats.index.title"), nil ] ] %>
 
-<header class="page-header stats-header">
+<header class="page-header">
   <p class="label-en"><%= t("labels.en.stats") %></p>
   <p class="label-en"><%= t("labels.en.updated", date: @stats.computed_at.strftime("%Y-%m-%d")) %></p>
   <h1 class="page-title"><%= t("stats.index.title") %></h1>

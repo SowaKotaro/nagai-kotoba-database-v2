@@ -17,7 +17,7 @@
   <input class="visually-hidden vowel-graph-panel__toggle" type="checkbox" id="vowel-graph-filter">
   <div class="vowel-graph-panel__head">
     <label class="vowel-graph-panel__switch" for="vowel-graph-filter">
-      <span class="vowel-graph-panel__switch-text"><%= t("stats.index.sound.graph_filter") %></span>
+      <span><%= t("stats.index.sound.graph_filter") %></span>
       <span class="vowel-graph-panel__switch-track" aria-hidden="true"></span>
     </label>
   </div>
@@ -75,7 +75,7 @@
   <%# ノードを2つ以上つないだときだけ出る導線。JS が無ければ現れない。
       検索(母音の遷移)は拍位置で固定した細かい面なので必ず nofollow %>
   <p class="vowel-graph-panel__readout" data-vowel-graph-target="readout" hidden>
-    <span class="vowel-graph-panel__pick" data-vowel-graph-target="pick"></span>
+    <span data-vowel-graph-target="pick"></span>
     <%= link_to t("stats.index.sound.graph_link"), "#", class: "vowel-graph-panel__link icon-label",
           rel: "nofollow", data: { vowel_graph_target: "link" } %>
   </p>
