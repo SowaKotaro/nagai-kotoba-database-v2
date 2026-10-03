@@ -43,6 +43,8 @@ class FeatureResearchExport
 
   private
 
+  # 提案 payload の形(AnnotationProposal::SENSE_KEYS)とは別の入力形式。語義を sense_id で指し、
+  # 特徴の調査に要る項目だけを書く。
   def sense_entries
     @senses.map do |sense|
       {

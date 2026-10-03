@@ -12,6 +12,22 @@ class AnnotationProposal < ApplicationRecord
   # pending: 未承認 / applied: コンソールで保存済み / dismissed: 見送り
   enum :status, { pending: 0, applied: 1, dismissed: 2 }, default: :pending
 
+  # ---- payload のキー(単一の正) ----
+  # 書き手は word-annotation-research / reannotation スキル(.claude/skills/word-annotation-research/schema.json)。
+  # キーを足すときは、ここと schema.json と、読み手の SenseProposal / 語全体のメタのメソッドを直す。
+  # 語義に属するキー(senses の要素)。genre_new は読まずに保持だけする。
+  SENSE_KEYS = %w[reading meaning genre_path genre_new entity_type part_of_speech
+                  word_origins linguistic_features variants].freeze
+  # 語全体のメタ(語義に依らない)。並びは再調査の書き出し(ReannotationExport)の出力順。
+  META_KEYS = %w[entry_score entry_notes confidence notes].freeze
+  # 旧形式(senses を使わずトップレベルに単一語義を並べる)で読む語義のキー。
+  # トップレベルの reading と linguistic_features は保持しない(スキルは senses に書く取り決め。
+  # schema.json の description)。
+  LEGACY_SENSE_KEYS = (SENSE_KEYS - %w[reading linguistic_features]).freeze
+  # 取り込み(AnnotationProposalImport)で保持するトップレベルのキー。これ以外は捨てる。
+  # 選別はトップレベルだけで、senses の要素は中身を丸ごと保持する。
+  PAYLOAD_KEYS = (%w[surface senses] + LEGACY_SENSE_KEYS + META_KEYS).freeze
+
   # 立項スコアの範囲(docs/annotation-guidelines.md §2 の 5 段階)。表記の確認(WordCandidate)の entry_score も同じ範囲。
   # Ruby だけが当てる範囲で、SQL の needs_review は範囲外の値も「要判断」に入れる(下のスコープを参照)。
   ENTRY_SCORE_RANGE = 1..5
@@ -35,6 +51,7 @@ class AnnotationProposal < ApplicationRecord
   validates :payload, presence: true
 
   # 語義ごとの提案(意味・ジャンル・エンティティ・品詞・語種・別表記・読み)を持つ値オブジェクト。
+  # 読むのは SENSE_KEYS のうち genre_new 以外(特徴の target_start も読まない)。
   # マスタ名 → レコードの解決もここで行う(見つからなければ nil = 新設候補)。
   class SenseProposal
     def initialize(data)
@@ -143,7 +160,6 @@ class AnnotationProposal < ApplicationRecord
 
   # トップレベル形式(単一語義)を語義ハッシュに切り出す。
   def legacy_sense_hash
-    payload.slice("meaning", "reading", "genre_path", "genre_new", "entity_type",
-                  "part_of_speech", "word_origins", "variants")
+    payload.slice(*LEGACY_SENSE_KEYS)
   end
 end

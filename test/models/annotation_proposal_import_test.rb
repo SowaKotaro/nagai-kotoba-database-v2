@@ -48,8 +48,8 @@ class AnnotationProposalImportTest < ActiveSupport::TestCase
     assert_nil words(:pending_bermuda).reload.annotation_proposal.payload["evil"]
   end
 
-  # 選別するのはトップレベルのキーだけ(PAYLOAD_KEYS)。旧形式の reading は legacy_sense_hash が読みに行くが、
-  # 取り込みで先に捨てられているので届かない。
+  # 選別するのはトップレベルのキーだけ(AnnotationProposal::PAYLOAD_KEYS)。旧形式の reading と
+  # linguistic_features は保持しない。
   test "トップレベルの reading・linguistic_features・sense_id は捨て、旧形式の語義の読みと特徴は空になる" do
     import_json([ {
       word_id: words(:pending_bermuda).id, meaning: "大西洋の海域。", reading: "バミューダトライアングル",

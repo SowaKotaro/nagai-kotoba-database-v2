@@ -6,11 +6,6 @@ class AnnotationProposalImport
   # 取り込み結果。saved=保存(新規+上書き), unknown_word_ids=DB に無い word_id(取り込まない)。
   Result = Struct.new(:saved, :unknown_word_ids, keyword_init: true)
 
-  # payload に保持するキー(これ以外は捨てる。想定外のデータを溜め込まない)。
-  # senses は複数語義(Issue 41)。meaning 等のトップレベル形式は単一語義の後方互換で残す。
-  PAYLOAD_KEYS = %w[surface senses meaning genre_path genre_new entity_type part_of_speech
-                    word_origins variants confidence notes entry_score entry_notes].freeze
-
   def initialize(json_text)
     @json_text = json_text.to_s
   end
@@ -50,7 +45,9 @@ class AnnotationProposalImport
       word_id = entry["word_id"].to_i
       next if word_id.zero?
 
-      entries[word_id] = entry.slice(*PAYLOAD_KEYS)
+      # トップレベルだけ選別し(AnnotationProposal::PAYLOAD_KEYS)、senses の中身は丸ごと保持する。
+      # senses は複数語義(Issue 41)。meaning 等のトップレベル形式は単一語義の後方互換で読む。
+      entries[word_id] = entry.slice(*AnnotationProposal::PAYLOAD_KEYS)
     end
     entries
   rescue JSON::ParserError

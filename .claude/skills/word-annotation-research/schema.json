@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "取り込み側が保持するキーの正は app/models/annotation_proposal.rb の SENSE_KEYS / META_KEYS / PAYLOAD_KEYS。キーを足すときは両方を直す。",
   "title": "word-annotation-research output",
   "description": "nagai-kotoba-database-v2 の「提案 JSON の取り込み」に貼るアノテーション提案。word_id は書き出し JSON の値をそのまま返す。マスタ名(genre_path/entity_type/part_of_speech/word_origins/linguistic_features[].name)は書き出し JSON の masters と一字一句同じ表記にする。ジャンルとエンティティは軸が違う: ジャンルはその語が「どこに属するか」(所属)、エンティティはその語が「一体何であるか」(正体)。取り違えない。両方とも品詞に関わらず全語に付ける。語義の中身は単一語義でも必ず senses 配列(要素1つ)に入れる。meaning 等をトップレベルに置く旧形式は後方互換で読めるが、取り込み側がトップレベルの linguistic_features を保持しないため使わない。必須の取り決めは required と allOf に書く(語義の4項目、立項スコア、スコア3以上の senses、スコア3以下の entry_notes、confidence が low の notes)。",
   "type": "object",

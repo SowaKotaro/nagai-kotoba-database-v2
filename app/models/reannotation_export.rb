@@ -12,11 +12,6 @@
 class ReannotationExport
   VERSION = "1".freeze
   FORMAT = "reannotation".freeze
-  # 提案 payload のうち語義に属するキー(トップレベル形式の提案を senses へ畳むのに使う)。
-  SENSE_KEYS = %w[reading meaning genre_path genre_new entity_type part_of_speech
-                  word_origins linguistic_features variants].freeze
-  # 語全体のメタ(語義に依らない)。
-  META_KEYS = %w[entry_score entry_notes confidence notes].freeze
 
   def initialize(word, proposal = nil)
     @word = word
@@ -59,8 +54,8 @@ class ReannotationExport
   # senses 配列へ畳んで渡し、スキルが受け取る形を1つに保つ。
   def proposal_current
     payload = @proposal.payload
-    senses = payload["senses"].is_a?(Array) ? payload["senses"] : [ payload.slice(*SENSE_KEYS) ]
-    { "source" => "proposal", "senses" => senses }.merge(payload.slice(*META_KEYS))
+    senses = payload["senses"].is_a?(Array) ? payload["senses"] : [ payload.slice(*AnnotationProposal::SENSE_KEYS) ]
+    { "source" => "proposal", "senses" => senses }.merge(payload.slice(*AnnotationProposal::META_KEYS))
   end
 
   # 提案側だけが持つ語全体のメタ(立項スコア・確信度・メモ)。保存済みの語でも、
@@ -68,7 +63,7 @@ class ReannotationExport
   def proposal_meta
     return {} unless @proposal
 
-    @proposal.payload.slice(*META_KEYS)
+    @proposal.payload.slice(*AnnotationProposal::META_KEYS)
   end
 
   # 語義に何か1つでも注釈が付いていれば「保存済みの内容がある」とみなす(Word.annotated(公開済み)とは別の意味)。
@@ -80,7 +75,7 @@ class ReannotationExport
     end
   end
 
-  # 保存済みの語義を、提案 JSON と同じキー(genre_path / entity_type / ...)で書き出す。
+  # 保存済みの語義を、提案 JSON と同じキー(AnnotationProposal::SENSE_KEYS の写し。genre_new は書かない)で書き出す。
   # 空の項目は落として、渡す JSON を読みやすくする。
   def sense_entries
     @word.word_senses.map do |sense|
