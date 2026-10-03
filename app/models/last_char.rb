@@ -7,6 +7,7 @@
 # マルチバイト文字を含めると ActiveRecord の SchemaDumper(MySQL2 アダプタ)が
 # schema.rb をダンプする際に文字化けする既知の制限があるため、last_char だけ
 # 例外的に Ruby 側(WordSense の before_validation)で計算する。
+# 種別: 値オブジェクト（DB に触れない）。
 class LastChar
   CHOUON = "ー" # 長音符
 

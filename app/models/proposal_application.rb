@@ -1,4 +1,5 @@
-# 提案(AnnotationProposal)の値を word の word_senses へ初期値として組み立てる(保存はしない)。
+# 提案(AnnotationProposal)の値を word の word_senses へ初期値として組み立てる(既定では保存しない。
+# ただし persist: true の一括承認では、語種だけは永続化済みの語義の中間表へ即座に書き込む。下記)。
 # コンソールの「提案を反映」(GET・Issue 38/41/63)と一括承認(Issue 65)で規則を共有する。
 # 既存の語義(一括登録で読みだけ入った語義など)を先頭から使い回し、足りない分は同じ読みで
 # 新しい語義を建てる。マスタ名 → レコードの解決は AnnotationProposal::SenseProposal が担う。
@@ -7,6 +8,7 @@
 # association の target をメモリ上で差し替えるだけにする。保存前提の一括承認(persist: true)は
 # word_origin_ids= の setter で join を確定させる(target を先に立てると setter が「変化なし」と
 # 判断して join を書かないため、保存時は target を使わず setter に一本化する)。
+# 種別: 書き込み処理。
 class ProposalApplication
   def initialize(word, proposal, persist: false)
     @word = word
@@ -14,7 +16,7 @@ class ProposalApplication
     @persist = persist
   end
 
-  # 提案の各語義を word_senses へ割り当てる(build のみ・保存しない)。組み立てた word を返す。
+  # 提案の各語義を word_senses へ割り当てる(build のみ。persist: true のときの語種を除いて保存しない)。組み立てた word を返す。
   def build
     base_reading = @word.word_senses.first&.reading
     existing = @word.word_senses.reject(&:marked_for_destruction?)

@@ -1,5 +1,6 @@
 # 2つの文字列の編集距離(Levenshtein 距離)と、正規化した類似度を計算する値オブジェクト。
 # 読みの重複・類似チェック(一括登録・公開の収録リクエスト)で使う。純 Ruby 実装で gem を増やさない。
+# 種別: 値オブジェクト（DB に触れない）。
 module Levenshtein
   # 「似ている」とみなす正規化類似度のしきい値。管理側の一括登録(step3)と
   # 公開側の収録リクエスト(Issue 75)で同じ基準を使うため、ここを単一の正とする。
@@ -7,6 +8,7 @@ module Levenshtein
 
   module_function
 
+  # テスト用: 最適化版(similarity_at_least_chars)と突き合わせる参照実装。アプリからは呼ばない。
   # 挿入・削除・置換の最小回数(編集距離)を返す。
   # 文字単位で比較する(日本語の読み=かなを想定)。
   def distance(a, b)
@@ -36,6 +38,7 @@ module Levenshtein
     previous.last
   end
 
+  # テスト用: 参照実装(アプリからは呼ばない)。
   # 正規化した類似度(0.0〜1.0)。1.0 が完全一致。
   # 距離を「長い方の文字数」で割って正規化するため、長さの違う読みも公平に比較できる。
   def similarity(a, b)
@@ -50,6 +53,7 @@ module Levenshtein
   # しきい値に届く可能性が無い組を、距離計算の前に安価に弾く。
   # 編集距離は最低でも文字数の差だけかかるため、|差| が許容距離を超えていれば、
   # 距離を計算するまでもなく類似度はしきい値未満で確定する。
+  # テスト用: アプリからは呼ばない(収録リクエストの重複チェックは similarity_at_least_chars で打ち切る)。
   def far_apart?(a, b, threshold = SIMILARITY_THRESHOLD)
     a_length = a.to_s.length
     b_length = b.to_s.length
@@ -96,6 +100,7 @@ module Levenshtein
     similarity >= threshold ? similarity : nil
   end
 
+  # テスト用: 参照実装(アプリからは呼ばない)。
   # 編集距離が max 以下ならその距離を、max を超えると確定した時点で nil を返す。
   def distance_within(a, b, max)
     distance_within_chars(a.to_s.chars, b.to_s.chars, max)

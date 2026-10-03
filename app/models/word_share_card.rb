@@ -4,6 +4,7 @@
 # 左の袖に読みの五十音円環、右の本体に 表層形 → 読み(文字数) → 罫 → 標識 を積む(docs/design.md §5.1)。
 # ここで決めるのは寸法と文字の組みまでで、SVG は share_cards/word.svg.erb が描き、
 # PNG に焼くのは ShareCardRenderer。
+# 種別: 値オブジェクト（DB に触れない）。
 class WordShareCard
   WIDTH = 1200
   HEIGHT = 630

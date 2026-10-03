@@ -8,6 +8,7 @@
 #   有望な軸が無く words が空の元の語も同じく戻す(拡張せずに進めるかを仕分けで決める)。
 # - すでに入っている語(不要にした語を含む)・収録済みの語は入れない。
 # - 拡張待ちにいない元の語は見送る。同じ JSON を2回貼っても増えない。
+# 種別: 調査 JSON の入出力。
 class WordCandidateExpansionImport
   Result = Struct.new(:counts, :messages, keyword_init: true)
 

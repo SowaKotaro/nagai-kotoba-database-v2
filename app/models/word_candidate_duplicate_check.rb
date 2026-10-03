@@ -4,11 +4,14 @@
 # そこで表層形を「粗く」畳んで照合するふるいに徹する: かなの種類・全角半角・大小文字を同一視し、
 # 空白・中黒・記号を無視する(「ゴールドマンサックス」と「ゴールドマン・サックス」を同じ語とみなす)。
 # 読みでの厳密な照合は、従来どおり一括登録 step3 が担う。
+# (重複・類似の判定は 3 実装あり、違いは意図: 一括登録は確定後の読みを Levenshtein で、収録リクエストは
+# 公開語だけを畳み込んでから Levenshtein で比べる。ここは読みが無い段なので表層形のキーで比べる)
 #
 # 照合の相手は 収録済みの語(表層形・別表記) と ほかの登録予定単語(登録済みを除き、状態を問わない。
 # 不要にした語に当たれば「一度見て外した語」だと分かる)。
 # 並べた語どうしは先に来た語を正とし、後ろの語だけを重複とみなす(同じ語が2つ並んだとき、
 # 両方に「除外」を選んでおいて両方とも落とすことがないように)。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class WordCandidateDuplicateCheck
   # 一致した相手。kind は :word(収録済みの語) / :variant(収録済みの語の別表記) / :candidate(ほかの登録予定単語)。
   Match = Struct.new(:kind, :surface, :word_id, :candidate, keyword_init: true)
@@ -42,7 +45,7 @@ class WordCandidateDuplicateCheck
     matches.uniq { |match| match.candidate ? [ :candidate, match.candidate.id ] : [ :word, match.word_id ] }
   end
 
-  # 照合を続けながら語を足したとき、以降の照合にその表層形を反映する。
+  # 照合を続けながら語を足したとき、以降の照合にその表層形を反映する(照合用のメモリに足すだけで、DB には保存しない)。
   def register(candidate)
     corpus[self.class.key(candidate.surface)] << Match.new(kind: :candidate, surface: candidate.surface, candidate: candidate)
   end

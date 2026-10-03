@@ -1,5 +1,6 @@
 # タグ統括管理で扱う「種別」の目録(PORO)。URL の :kind パラメータからモデルを引くための
 # ホワイトリストを兼ねる。ユーザー入力を constantize せず、この対応表にある種別だけを許可する。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class TagKind
   # 表示順。文字列キーは URL(/admin/tags/:kind)・i18n(admin.tags.kinds.*) の双方に使う。
   MODELS = {

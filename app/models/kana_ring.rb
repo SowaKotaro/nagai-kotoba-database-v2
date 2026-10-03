@@ -7,6 +7,7 @@
 # 読みの畳み方は KanaRow に合わせる(しりとり慣習: 濁音・半濁音は清音へ、小書きは大書きへ、
 # ヴ→ウ、ヰ/ヱ→イ/エ)。長音符「ー」など基本46字に載らない文字は経路から除く。
 # 座標は 200x200 の viewBox 前提。
+# 種別: 値オブジェクト（DB に触れない）。
 class KanaRing
   VIEWBOX = 200
   CENTER = 100.0
@@ -45,7 +46,7 @@ class KanaRing
     path(reading).each_cons(2).sum { |from, to| Math.hypot(to.cx - from.cx, to.cy - from.cy) }.round(2)
   end
 
-  # 経路が通った基本字の集合(点灯させる字の判定に使う)。
+  # 経路が通った基本字の集合(点灯させる字の判定に使う)。テストだけが使う(アプリからは呼ばない)。
   def self.visited_chars(reading)
     path(reading).map(&:char).to_set
   end

@@ -8,6 +8,7 @@
 # 置き場: tmp/cache/share_cards。本番は Capistrano の linked_dirs(tmp/cache)なのでデプロイをまたいで残る。
 #   ファイル名は「名前-版.png」で、版(SVG の digest)が変われば別のファイルになる。古い版は焼いたときに消す。
 #   Rails.cache(本番は :memory_store)に画像を載せると、全件出力などのキャッシュを追い出してしまうので使わない。
+# 種別: 外部コマンドのラッパー（app/services には外部プロセスを起動するクラスだけを置く）。
 class ShareCardRenderer
   require "open3"
 

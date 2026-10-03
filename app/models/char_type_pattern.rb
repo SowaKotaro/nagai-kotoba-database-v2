@@ -9,6 +9,7 @@
 # 例: "ABC殺人事件" → "AAA漢漢漢漢" / "Web3.0" → "Aaa1@1"
 # 大文字小文字は区別する(A/a)が、全角/半角は区別しない(数字・英字とも1文字種に畳む)。
 # 変換仕様の詳細は docs/char_type_pattern.md を参照。
+# 種別: 値オブジェクト（DB に触れない）。
 class CharTypePattern
   KANJI    = "漢"
   HIRAGANA = "あ"

@@ -1,6 +1,7 @@
 # word-annotation-research スキルの出力 JSON を annotation_proposals へ取り込む(Issue 38)。
 # 語ごとに1件で、既に提案がある語は上書きして pending に戻す(再貼り付けで冪等)。
 # 未知のマスタ名は解決せず payload にそのまま保持する(新設候補としてコンソールに出す)。
+# 種別: 調査 JSON の入出力。
 class AnnotationProposalImport
   # 取り込み結果。saved=保存(新規+上書き), unknown_word_ids=DB に無い word_id(取り込まない)。
   Result = Struct.new(:saved, :unknown_word_ids, keyword_init: true)

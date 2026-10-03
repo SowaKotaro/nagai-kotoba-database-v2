@@ -13,6 +13,7 @@
 #
 # SQL 片はすべて定数の文字列リテラルで書き切る(WordSort と同じ方針)。外から来た値が
 # 混ざらないことを静的解析でも追えるようにするため、絞り込みだけ sanitize_sql_array を通す。
+# 種別: 書き込み処理。
 class WordSenseMetrics
   # 小書きのかな(拗音・促音)。「文字数 - 拍数」では促音「ッ」と長音符が独立した1拍として
   # 数えられて現れないため、小書きの字を直接1字ずつ数える。
@@ -105,7 +106,7 @@ class WordSenseMetrics
       ApplicationRecord.connection.execute(update_sql(ids))
     end
 
-    # 実行される UPDATE 文(テストと backfill から参照する)。
+    # 実行される UPDATE 文(refresh! から呼ぶ)。
     def update_sql(ids)
       # 1語の焼き直しでも派生表を全件 GROUP BY しないよう、内側にも同じ絞り込みを掛ける。
       sense_filter = ids ? sanitize("WHERE word_senses.word_id IN (?)", ids) : ""

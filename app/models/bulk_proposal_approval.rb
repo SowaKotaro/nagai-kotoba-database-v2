@@ -5,6 +5,7 @@
 #
 # ゲート判定は各提案の payload と各マスタの find_by で行うため、対象数に比例してクエリが増える
 # (管理者が随時叩く操作なので許容。件数が桁違いに増えたら事前絞り込みを検討)。
+# 種別: 書き込み処理。
 class BulkProposalApproval
   Result = Struct.new(:approved, keyword_init: true)
 

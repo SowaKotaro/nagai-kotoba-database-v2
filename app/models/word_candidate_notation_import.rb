@@ -12,6 +12,7 @@
 #   (分割後の語はまだ誰も判断していないため、仕分けからやり直す)。
 # - 表記待ちにいない語は見送る。同じ JSON を2回貼っても二重に動かない。
 # - 入れられない語(長すぎる表記・分割後の語など)は、その語だけを表記待ちに残して行のエラーにする。
+# 種別: 調査 JSON の入出力。
 class WordCandidateNotationImport
   Result = Struct.new(:counts, :messages, keyword_init: true)
 

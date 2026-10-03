@@ -1,5 +1,6 @@
 # 調査スキル(Claude Code)の出力 JSON を、管理画面の貼り付け欄から読むための共通処理。
 # チャットやエディタからのコピーで付いてくる ```json フェンスを剥がしてからパースする。
+# 種別: 調査 JSON の入出力。
 module ResearchJson
   module_function
 

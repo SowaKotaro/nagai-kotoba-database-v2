@@ -86,7 +86,7 @@ class WordCandidate < ApplicationRecord
     I18n.t("admin.word_candidates.not_unique")
   end
 
-  # 選んだ処理(DECISIONS)の行き先。除外は照合で一致があれば重複、無ければ不要。
+  # 選んだ処理(WordCandidateReview::CHOICES の値)の行き先。除外は照合で一致があれば重複、無ければ不要。
   # 採用は、表記を確かめ済みの語(保留から戻した語など)なら登録待ち、まだなら表記待ちへ進める。
   def destination_for(decision, duplicate: false)
     case decision

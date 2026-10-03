@@ -5,6 +5,7 @@
 # 円環が「1語の読み」を線にするのに対し、こちらは「並んだ数値」を線にする。
 #
 # 座標は 200x200 の viewBox 前提。
+# 種別: 値オブジェクト（DB に触れない）。
 class RadialChart
   VIEWBOX = KanaRing::VIEWBOX
   CENTER = KanaRing::CENTER

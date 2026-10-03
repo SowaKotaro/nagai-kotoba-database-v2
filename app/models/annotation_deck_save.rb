@@ -6,6 +6,7 @@
 # 「通った語は保存し、落ちた語はエラー付きのまま返してデッキに残す」を採る。
 # 1語の中(word + word_senses + 特徴・別表記)は accepts_nested_attributes_for の保存が
 # 1トランザクションにまとまるので、語義だけ保存されて語が落ちる、という中途半端は起きない。
+# 種別: 書き込み処理。
 class AnnotationDeckSave
   # saved / failed はどちらも Word の配列(failed は errors を抱えたまま返す)。
   Result = Struct.new(:saved, :failed, keyword_init: true)

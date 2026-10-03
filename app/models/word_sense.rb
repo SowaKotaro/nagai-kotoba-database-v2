@@ -142,7 +142,8 @@ class WordSense < ApplicationRecord
   private
 
   def strip_reading_newlines
-    # 読みは空白を持たないため、混入した改行は除去して前後の空白も落とす。
+    # 読みは空白を持たないため、混入した改行は除去して前後の空白も落とす
+    # (収録リクエストの読みは改行を空白に置き換える。WordRequestItem と扱いが違う)。
     self.reading = reading.gsub(/[\r\n]+/, "").strip if reading
   end
 

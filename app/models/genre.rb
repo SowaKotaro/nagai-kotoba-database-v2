@@ -24,7 +24,7 @@ class Genre < ApplicationRecord
     chain
   end
 
-  # 大分類(root)を返す。
+  # 大分類(root)を返す。テストだけが使う(アプリからは呼ばない)。
   def root_genre
     self_and_ancestors.first
   end

@@ -2,6 +2,7 @@
 # 対象語(word_id・表層形・読み)とマスタ一覧(ジャンル木・エンティティ・品詞・語種・
 # 言語学的特徴)をまとめた JSON を作る。この JSON を word-annotation-research スキルへ
 # 渡すと、語ごとの提案 JSON(取り込み画面に貼る形式)が返ってくる。
+# 種別: 調査 JSON の入出力。
 class AnnotationResearchExport
   VERSION = "2".freeze
 

@@ -2,6 +2,7 @@
 # マスタ(linguistic_features)は name のみの単純マスタのまま、説明文はコード管理の YAML に置く
 # (マイグレーション不要・変更をレビューできる)。アノテーション・コンソールの「用語解説」
 # パネルと docs/annotation-guidelines.md §7 が参照する。
+# 種別: 値オブジェクト（DB に触れない）。
 class LinguisticFeatureGlossary
   Entry = Struct.new(:name, :description, :examples, keyword_init: true)
 

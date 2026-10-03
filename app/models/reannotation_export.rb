@@ -8,6 +8,7 @@
 #     これを「調べ直した結果と突き合わせる相手」として使い、再調査しない項目は
 #     そのまま素通しして返す(取り込みは payload を丸ごと上書きするため、返す JSON は
 #     常に語の全項目が揃っている必要がある)。
+# 種別: 調査 JSON の入出力。
 class ReannotationExport
   VERSION = "1".freeze
   FORMAT = "reannotation".freeze
@@ -70,7 +71,7 @@ class ReannotationExport
     @proposal.payload.slice(*META_KEYS)
   end
 
-  # 語義に何か1つでも注釈が付いていれば「保存済みの内容がある」とみなす。
+  # 語義に何か1つでも注釈が付いていれば「保存済みの内容がある」とみなす(Word.annotated(公開済み)とは別の意味)。
   def annotated?
     @word.word_senses.any? do |sense|
       sense.meaning.present? || sense.genre_id || sense.entity_type_id ||

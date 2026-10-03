@@ -6,7 +6,10 @@
 #
 # 公開側から不特定多数に叩かれるため、既存語の一覧は Rails.cache に載せて DB の総なめが
 # 毎回起きないようにする(Issue 52 で指摘済みの負荷が公開面へ露出するのを避ける)。
-# 距離計算そのものは Levenshtein.far_apart? の枝刈りで、長さの近い語だけに絞られる。
+# 距離計算は Levenshtein.similarity_at_least_chars で行い、しきい値に届かないと確定した時点で打ち切る。
+# 重複・類似の判定は 3 実装あり、違いは意図: ここは公開語だけを、NFKC とかなの畳み込みのあと Levenshtein で比べる
+# (一括登録は確定後の読みを畳み込まずに全語と比べ、登録予定単語は表層形を粗く畳んだキーの完全一致で比べる)。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class WordRequestDuplicateCheck
   CACHE_TTL = 1.hour
   # 1回の押下で照合する語数の上限(フォームの行数上限と同じ)。
@@ -16,6 +19,7 @@ class WordRequestDuplicateCheck
 
   # 判定結果1語分。kind は :exact(完全一致) / :similar(似ている) / :none(該当なし)。
   Result = Struct.new(:surface, :reading, :kind, :matches, keyword_init: true) do
+    # exact? / similar? はテストだけが使う(ビューは kind を文字列にして使う)。
     def exact? = kind == :exact
     def similar? = kind == :similar
     def none? = kind == :none

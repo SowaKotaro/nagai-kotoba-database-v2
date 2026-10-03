@@ -6,6 +6,7 @@
 #
 # 集計は元データから常に作り直せる導出データなので、テーブルは作らない
 # (統計ページ本体が「統計テーブルを先行して作らない」方針なのと揃える)。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class MorphemeFrequencies
   DEFAULT_PATH = Rails.root.join("db/morpheme_frequencies.json")
 

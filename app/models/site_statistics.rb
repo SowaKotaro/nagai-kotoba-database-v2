@@ -1,11 +1,12 @@
 # 公開統計ページ(/stats)の集計一式(docs/stats.md)。
 # 派生カラム(reading_length / mora_count / first_char / last_char / char_type_pattern /
-# vowel_pattern / rhythm_pattern)への GROUP BY を中心に、想定1万レコード規模を
+# vowel_pattern)の集計を中心に(頭子音は first_char を RhythmPattern に通して出す)、想定1万レコード規模を
 # オンライン集計する(Issue 34 Phase 1)。結果は Rails.cache に1日置く(毎日再集計)。
 #
 # すべての集計は公開対象(注釈済みの語・その語義)だけを数える。
 # ジャンル・語種・エンティティ・特徴はアノテーション依存のため、
 # ビュー側で「集計対象は◯語義」を明示する(covered 系の値を使う)。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
   CACHE_KEY = "site_statistics/v3"
@@ -253,7 +254,7 @@ class SiteStatistics
     with_share.map { |category| category.except(:remainder) }
   end
 
-  # エンティティ型のタグクラウド用 [{ id:, name:, count: }](多い順)。
+  # エンティティ型のツリーマップ用 [{ id:, name:, count: }](多い順)。
   def build_entity_types
     counts = WordSense.published.where.not(entity_type_id: nil).group(:entity_type_id).count
     names = EntityType.where(id: counts.keys).pluck(:id, :name).to_h

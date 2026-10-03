@@ -9,6 +9,7 @@
 # linguistic_features しか持たない提案を反映しても、意味・ジャンル・品詞などは書き換わらない。
 # ただし正しく反映されるのは単一語義の語だけ。sense_id は提案の形式に無く、反映は提案の語義を
 # 既存の語義に並び順で割り当てる。また取り込みは同じ語の既存の提案を payload ごと上書きする。
+# 種別: 調査 JSON の入出力。
 class FeatureResearchExport
   VERSION = "1".freeze
 
