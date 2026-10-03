@@ -30,10 +30,14 @@ class WordSense < ApplicationRecord
 
   # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
   # 一括登録の確認画面と公開の収録リクエスト・フォームで同じ基準を示すため、ここを単一の正とする。
+  # モデルの検証には入れていない(validates は presence だけ)。当てているのは一括登録の確認画面・収録リクエストの表示・
+  # 重複確認の画面だけで、コンソールや一括承認からは 10 文字未満の読みの語義も保存できる。
   MIN_READING_LENGTH = 10
 
   # 語種マスタ(SeedCatalog::WORD_ORIGINS)の和語・漢語をまとめた名前。
   # 特徴の調査対象を絞るスコープで参照する(Issue 76)。
+  # SeedCatalog::WORD_ORIGINS の名前に依存する。/admin/tags で「日本語」を改名すると、with_japanese_origin が
+  # 黙って 0 件を返す(改名するなら、この定数と SeedCatalog の *_RENAMES をそろえる)。
   JAPANESE_ORIGIN_NAME = "日本語".freeze
 
   validates :reading, presence: true

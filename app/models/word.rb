@@ -10,7 +10,9 @@ class Word < ApplicationRecord
 
   # アノテーション状態。未対応(既定)→ 保留(あとで見直す。キューから外れる)→ 完了(公開)。
   # 完了は annotated_at ありと一致する(mark_annotated が両方を立てる)。公開判定は従来どおり
-  # annotated_at で行うため、公開スコープはこの enum に依存しない。公開条件の名前は、語は Word.annotated、
+  # annotated_at で行うため、公開スコープはこの enum に依存しない。
+  # 公開状態を annotated_at と annotation_status の 2 列で持つ。両者が一致するのは mark_* を経由したときだけで、
+  # update_all などで片方だけ変えると食い違う。公開条件の名前は、語は Word.annotated、
   # 語義は WordSense.published と違う(Word に published スコープは無い)。
   # enum が Word.annotation_pending / annotation_on_hold / annotation_done スコープを生やす。
   enum :annotation_status, { pending: 0, on_hold: 1, done: 2 }, prefix: :annotation

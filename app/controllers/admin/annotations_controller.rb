@@ -68,6 +68,7 @@ class Admin::AnnotationsController < Admin::BaseController
   # 特徴が既に付いている語義は対象にしない(付いている時点で調査済みのため)。
   def review_features
     targets = @word.word_senses.reject { |sense| sense.word_sense_features.any? }
+    # update_all は touch と after_commit を通らない(features_reviewed_at は公開面に出ない管理用の印で、代表値にも関わらない)。
     WordSense.where(id: targets.map(&:id)).update_all(features_reviewed_at: Time.current)
     redirect_to admin_annotation_path(@word, nav_params),
                 notice: t("admin.annotations.features_reviewed")

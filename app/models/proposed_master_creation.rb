@@ -30,6 +30,9 @@ class ProposedMasterCreation
 
   private
 
+  # 名前は提案の値をそのまま使う(前後の空白を落とさない)。find_or_create_by! の find_by は照合順序 ai_ci で引くので、
+  # 表記の違う既存のマスタ(清濁・かなの種類だけが違うもの)があれば、作らずにそれを返す。
+  # 競合は find_or_create_by!(Rails 8.1 では find_by の後に create_or_find_by! を呼ぶ)が吸収する。
   def create_named(model, name)
     raise Error, "blank name" if name.blank?
 

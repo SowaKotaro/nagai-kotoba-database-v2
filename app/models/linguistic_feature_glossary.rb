@@ -9,6 +9,7 @@ class LinguisticFeatureGlossary
   GLOSSARY_PATH = "config/linguistic_features_glossary.yml".freeze
 
   class << self
+    # プロセス内のメモで、再起動まで保持する(YAML を直したら Puma を再起動して読み直す)。
     def all
       @all ||= load_entries
     end

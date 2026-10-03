@@ -31,6 +31,7 @@ class MorphemeFrequencies
     end
 
     # ワードクラウドに並べる形態素。頻度の多い順。
+    # プロセス内のメモで、再起動まで保持する(集計ファイルを差し替えたら Puma を再起動して読み直す)。
     def entries
       @entries ||= build_entries
     end

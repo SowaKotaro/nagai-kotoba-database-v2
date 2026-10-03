@@ -8,6 +8,7 @@ class Admin::Candidates::BaseController < Admin::BaseController
 
   # 調査スキルの出力 JSON を取り込み、次に見る画面へ移る。読めない JSON はフォームを出し直す。
   # waiting はスキルの結果を待つステータス。数十語ずつ渡したとき、まだ待っている語数を知らせに添える。
+  # 読めない JSON のときは load_stage を呼んで show を描き直すので、サブクラスに load_stage と show テンプレートが要る。
   def run_import(importer_class, redirect_to_path, waiting:)
     result = importer_class.new(params[:json]).call
     unless result

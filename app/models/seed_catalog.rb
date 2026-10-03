@@ -300,6 +300,7 @@ class SeedCatalog
         end
       end
 
+      # 競合は find_or_create_by!(Rails 8.1 では find_by の後に create_or_find_by! を呼ぶ)が吸収する。
       names.each { |name| model.find_or_create_by!(name: name) }
     end
 

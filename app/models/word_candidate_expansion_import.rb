@@ -22,6 +22,9 @@ class WordCandidateExpansionImport
     return nil unless seeds
 
     @result = Result.new(counts: Hash.new(0), messages: [])
+    # 外側のトランザクションの中で、行ごとの RecordNotUnique・RecordInvalid を捕まえて続行する(下の rescue)。
+    # savepoint は張らない。MySQL は失敗した文だけを巻き戻すので続けられる(DB に依存する。
+    # WordCandidateNotationImport は requires_new で行ごとに savepoint を張る)。
     WordCandidate.transaction do
       seeds.each { |entry| import_seed(entry) }
     end
