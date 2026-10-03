@@ -27,6 +27,14 @@ class WordShareCardTest < ActiveSupport::TestCase
     assert_not_equal digest, WordShareCard.new(word).digest
   end
 
+  # 版は og:image の URL に入るので、SVG のバイト列が 1 つでも変わると、共有済みの URL ごと変わる。
+  # リファクタリング(大規模改修)のあいだ、カードの入力(代表語義・円環の点・標識・テンプレート)に触れても
+  # 版が変わらないことを確かめるための値。意匠を意図して変えたときは、ここを新しい値に更新する。
+  test "フィクスチャの語の版は、いまの値のまま" do
+    assert_equal "ba4090a8b4c0c919", WordShareCard.new(words(:abc_murder)).digest
+    assert_equal "081b6da5155bc686", WordShareCard.new(words(:curry)).digest
+  end
+
   test "語義(読み)の無い語は描けない" do
     assert_not WordShareCard.new(Word.new(surface: "語義の無い言葉")).drawable?
     assert WordShareCard.new(words(:abc_murder)).drawable?
