@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-16（一括登録の調査 JSON で、形が不正な入力の扱いを固定する） |
+| 次の一手 | T0-17（公開一覧のページ送り〈seed の引き継ぎ・nofollow〉を固定する） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -153,8 +153,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-12 | 第3群 | 名前と中身がずれているテストの名前を直し、名前が約束していた検証を足す | high | 済 | `ddc2ba5` | 名前を中身に合わせた（assert は変えていない）: admin/words の「単語を削除すると語義も消える」、word_sense_feature の「別の語義には同じ特徴を付けられる」、reannotation_export の「注釈の内容が保存された語でも…」（ReannotationExport#annotated? と Word.annotated が別の意味であることを注記）。名前が約束していた検証を新しいテストとして足した: 単語を削除すると特徴（murder の 2 件）も消えること、同じ語の別の語義になら同じ特徴・同じ該当部分（殺人）・同じ出現位置でも付けられ、同じ語義なら重複になること。T-12 のほかの項目（tag_kind の空の assert、word_requests の重複検証）は計画書の T0-12 に入っていないので触っていない（「朱」は D1-17b で済）。合格判定は全部通過 |
 | T0-13 | 第3群 | 読みを変えて保存すると `reading_density` が追従することを固定する | high | 済 | `04f2448` | word_sense_metrics_test に 1 件。表記 3 字の語の語義の読みを 6 字から 9 字に変えて保存すると、after_commit で max_reading_length が 9 に焼き直され、STORED の reading_density が 2.0 から 3.0 になること。合格判定は全部通過 |
 | T0-14 | 第3群 | 母音遷移の境界値（15 拍・位置 30 / 31）を固定する | high | 済 | `dd72545` | word_sense_search_test に 1 件: 並び 15 拍は条件に残り 16 拍は捨てる、拍位置 30 は残り 31 は捨てる（conditions? も false）。site_statistics_test に 1 件: 20 拍の読みがあっても層は 15 で打ち切り、最後の層の位置が 15、遷移は 14 区間。合格判定は全部通過 |
-| T0-15 | 第3群 | og:image の版（`WordShareCard#digest`）を固定する | high | 済 | このコミット | word_share_card_test に 1 件。abc_murder の版 ba4090a8b4c0c919 と curry の版 081b6da5155bc686 を文字列で固定した（テスト環境で 2 回取って同じ値）。改修のあいだの特性テストで、残すかは G4-05 で決める。合格判定は全部通過 |
-| T0-16 | 第3群 | 一括登録の調査 JSON で、形が不正な入力の扱いを固定する | high | 未着手 | | |
+| T0-15 | 第3群 | og:image の版（`WordShareCard#digest`）を固定する | high | 済 | `f92f8eb` | word_share_card_test に 1 件。abc_murder の版 ba4090a8b4c0c919 と curry の版 081b6da5155bc686 を文字列で固定した（テスト環境で 2 回取って同じ値）。改修のあいだの特性テストで、残すかは G4-05 で決める。合格判定は全部通過 |
+| T0-16 | 第3群 | 一括登録の調査 JSON で、形が不正な入力の扱いを固定する | high | 済 | このコミット | bulk_word_registration_test に 3 件（壊れた JSON とフェンス付きは既存のテストがある）: words の中の Hash でない要素（文字列・数値・nil）は黙って飛ばしてほかの要素を使いエラーにしないこと、調査 JSON が nil・空・空白だけならエラーにせず全行 mecab_only、words が配列でない・words が無い・トップレベルが配列なら research_error? が真で全行 mecab_only。合格判定は全部通過 |
 | T0-17 | 第3群 | 公開一覧のページ送り（seed の引き継ぎ・nofollow）を固定する | high | 未着手 | | |
 | T0-18 | 第3群 | かなの畳み込みの各呼び出し元の出力を固定する（半角カナ・合成濁点・ゔ・ゕゖ） | high | 未着手 | | |
 | T0-19 | 第3群 | 管理一覧のジャンル絞り込みの結果を固定する | high | 未着手 | | |

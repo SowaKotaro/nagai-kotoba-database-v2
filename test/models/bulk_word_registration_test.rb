@@ -120,6 +120,32 @@ class BulkWordRegistrationTest < ActiveSupport::TestCase
     assert_equal "ネコ", row.chosen
   end
 
+  # 形が不正な入力のいまの扱い(ResearchJson.array_at へ寄せる前の特性)。
+  test "words の中の Hash でない要素は黙って飛ばし、ほかの要素は使う(エラーにしない)" do
+    json = { version: "1", words: [ "文字列", 123, nil, { input: "資本主義", surface: "資本主義", reading: "シホンシュギ" } ] }.to_json
+    reg = BulkWordRegistration.new(entries: [ { surface: "資本主義", reading: "シホンシュギ" } ], research_json: json)
+
+    assert_not reg.research_error?
+    assert_equal :match, reg.merge_research.first.status
+  end
+
+  test "調査 JSON が空なら、エラーにせず全行 mecab_only" do
+    [ nil, "", "  " ].each do |blank|
+      reg = BulkWordRegistration.new(entries: [ { surface: "猫", reading: "ネコ" } ], research_json: blank)
+      assert_not reg.research_error?, blank.inspect
+      assert_equal :mecab_only, reg.merge_research.first.status
+    end
+  end
+
+  test "words が配列でない・トップレベルが配列なら research_error? が真" do
+    [ { version: "1", words: "資本主義" }.to_json, { version: "1" }.to_json,
+      [ { input: "資本主義", reading: "シホンシュギ" } ].to_json ].each do |json|
+      reg = BulkWordRegistration.new(entries: [ { surface: "資本主義", reading: "シホンシュギ" } ], research_json: json)
+      assert reg.research_error?, json
+      assert_equal :mecab_only, reg.merge_research.first.status
+    end
+  end
+
   test "```json フェンス付きで貼り付けても読める" do
     fenced = "```json\n#{research_json(input: '資本主義', surface: '資本主義', reading: 'シホンシュギ', confidence: 'high')}\n```"
     reg = BulkWordRegistration.new(
