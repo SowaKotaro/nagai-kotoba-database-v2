@@ -57,7 +57,7 @@ Docker で用意して接続する。
 
 ```bash
 docker compose up -d   # MySQL 8.4（ホスト側ポート 3307）
-bin/rails db:prepare   # DB 作成 → マイグレーション → seed
+bin/rails db:prepare   # DB が無ければ作って schema.rb を読み込み、seed を流す（あればマイグレーションだけ）
 bin/rails server
 ```
 
@@ -67,15 +67,19 @@ bin/rails server
 ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed
 ```
 
-## コミット前のチェック（CI と同じ）
+## コミット前のチェック（中身は CI と同じ検査）
 
 ```bash
 bundle exec rubocop
 bundle exec brakeman --no-pager
 bundle exec bundler-audit check --update
 bin/importmap audit
-bin/rails test test:system
+bin/rails test
+bin/rails test:system
 ```
+
+テストは 2 本に分けて打つ（連結形の `bin/rails test test:system` はローカルでは `LoadError` になる）。
+注意点と WSL での実行方法は [`CLAUDE.md`](CLAUDE.md) の「コミット前に必ず実行すること」にある。
 
 ## ドキュメント
 

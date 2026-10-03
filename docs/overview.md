@@ -161,10 +161,12 @@ Docker で用意**して接続する。
 
 ```bash
 docker compose up -d   # MySQL 8.4 を起動（ホスト側 3307。既存 3306 との衝突を避けるため）
-bin/rails db:prepare   # DB 作成 → マイグレーション → seed
+bin/rails db:prepare   # DB が無ければ作って schema.rb を読み込み、seed を流す（あればマイグレーションだけ）
 bin/rails server
 ```
 
+- 新しい環境は `db:prepare`（schema.rb の読み込み）で作る。マイグレーションを最初から流し直す `db:migrate` は、
+  CI でも流しておらず、通ることは保証しない（古いマイグレーションはアプリのコードを呼んでいる）。
 - development / test は既定で `127.0.0.1:3307`（`DATABASE_HOST` / `DATABASE_PORT` で上書き可）。
   production は socket ＋ 環境変数。
 - 管理者をローカルで任意の値にする: `ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed`
@@ -220,18 +222,11 @@ bin/rails server
 > リポジトリ側の `production:` ブロック、`deploy.rb` の `default_env`、deploy.yml が渡す secret は実質使われていない
 > （2026-09-16 に確認。[`issues.md`](issues.md) 確定事項 28）。
 
-## 9. コミット前の必須チェック（CI と同一）
+## 9. コミット前の必須チェック（中身は CI と同じ検査）
 
-```bash
-bundle exec rubocop
-bundle exec brakeman --no-pager
-bundle exec bundler-audit check --update
-bin/importmap audit
-bin/rails test test:system
-```
-
-これが通らないコードは「未完成」とみなす。システムテストは WSL では Chrome の版まわりで
-不安定になりやすいので、実行方法は `CLAUDE.md` とセッションのメモを参照する。
+コマンドの正は `CLAUDE.md` の「コミット前に必ず実行すること」にある（6 本。テストは `bin/rails test` と
+`bin/rails test:system` の 2 本に分けて打つ。連結形の `bin/rails test test:system` はローカルでは `LoadError` になる）。
+これが通らないコードは「未完成」とみなす。WSL でのシステムテストの実行方法（`CHROME_BIN` など）も `CLAUDE.md` にある。
 
 ## 10. 進め方の規約
 

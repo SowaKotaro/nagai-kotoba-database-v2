@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | D1-02（合格判定コマンドを動く形に直す） |
+| 次の一手 | D1-03（照合順序の記述を実測に合わせる） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -112,8 +112,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | ID | 群 | 内容（1 行） | 推奨 effort | 状態 | コミット | 備考 |
 |---|---|---|---|---|---|---|
 | E-00 | 開始前 | 合格判定（計画書 §0.3）を一度通して、ベースラインを取り直す。結果を作業ログに書く | high | 済 | `285830a` | 2026-10-03、HEAD `e08c2f7`（コードは a04f375 と同じ）。rubocop 310 files・違反 0 / brakeman 警告 0 / bundler-audit 0 / importmap audit 0 / `bin/rails test` 785 runs・15301 assertions・失敗 0・skip 1（rsvg-convert） / `bin/rails test:system`（Chrome 154.0.8037.92）26 runs・217 assertions・失敗 0 |
-| D1-01 | 第1群 | デプロイと CI の実態（main への merge = 本番デプロイ、seed の改名、本番の DB 接続）を CLAUDE.md・overview・cppmtm・デプロイ設定のコメントに書く。`cap -T` を通す | high | 済 | このコミット | `cap -T` と YAML の読み込みを確認。合格判定は全部通過（test:system は 1 回目に 1 件失敗したが、どのテストかを記録し損ねた。続けて 2 回再実行して 2 回とも 26 本・失敗 0。変更はコメントと文書だけ） |
-| D1-02 | 第1群 | 合格判定コマンドを、動く形に直す（CLAUDE.md・overview・cppmtm・README） | high | 未着手 | | |
+| D1-01 | 第1群 | デプロイと CI の実態（main への merge = 本番デプロイ、seed の改名、本番の DB 接続）を CLAUDE.md・overview・cppmtm・デプロイ設定のコメントに書く。`cap -T` を通す | high | 済 | `99576be` | `cap -T` と YAML の読み込みを確認。合格判定は全部通過（test:system は 1 回目に 1 件失敗したが、どのテストかを記録し損ねた。続けて 2 回再実行して 2 回とも 26 本・失敗 0。変更はコメントと文書だけ） |
+| D1-02 | 第1群 | 合格判定コマンドを、動く形に直す（CLAUDE.md・overview・cppmtm・README） | high | 済 | このコミット | 合格判定コマンドの正を CLAUDE.md に置き、overview §9・README・cppmtm はそこを指す形にした。`db:prepare` が新しい DB で schema.rb を読み込むことは Rails 8.1.3.1 の実装で確認（CFG-09 の推測を確認済みに）。`CI=1 bin/rails test` が通ることも確認。合格判定は全部通過 |
 | D1-03 | 第1群 | 照合順序の記述を、計画書 §1 の実測に合わせる（as_ci の一覧は data-model §6 だけに置く） | high | 未着手 | | |
 | D1-05 | 第1群 | CLAUDE.md の規約文（認証・ジョブ・system テスト）と、README のジョブの行を実態に合わせる | high | 未着手 | | |
 | D1-06 | 第2群 | 調査スキルと research/README の「この後の流れ」を現行のフローに合わせる（/expand を含む） | high | 未着手 | | |
@@ -216,7 +216,7 @@ test 10,177 / docs 7,446 / .claude 1,419
 
 | 日付 | 内容 | 見つけた単位 | 判断 |
 |---|---|---|---|
-| — | | | |
+| 2026-10-03 | docs/overview.md §7 の「production は socket ＋ 環境変数」は、本番ではリポジトリの production 設定を使わないという事実（D1-01）と食い違う | D1-02 | G4-03（docs の最終確認）で直す |
 
 ## 7. 作業ログ
 

@@ -55,15 +55,25 @@
 ---
 
 ## コミット前に必ず実行すること（強制チェック）
-コードを変更したら、コミット前に以下を実行し、**指摘をすべて解消する**こと。CI と同じ内容なので、ローカルで通れば CI も通る。
+コードを変更したら、コミット前に以下を実行し、**指摘をすべて解消する**こと。中身は CI（`.github/workflows/ci.yml`）と同じ検査。
 
 ```bash
 bundle exec rubocop                      # スタイル / 静的解析（rubocop-rails-omakase）
 bundle exec brakeman --no-pager          # セキュリティ静的スキャン
 bundle exec bundler-audit check --update # gem 依存の既知脆弱性
 bin/importmap audit                      # JS 依存の既知脆弱性
-bin/rails test test:system               # テスト（単体 + システム）
+bin/rails test                           # テスト（単体・結合）
+bin/rails test:system                    # テスト（システム。Chrome が要る）
 ```
+
+- テストは 2 本に分けて打つ。連結形の `bin/rails test test:system` は、ローカルでは `LoadError` になる
+  （`test:system` をファイルのパスとして読むため）。CI の `bin/rails db:test:prepare test test:system` は、
+  先頭が rake タスクなので全体が rake タスクとして解釈されて通る。
+- ローカルで通っても、CI で落ちることがある。test 環境の eager load は環境変数 `CI` があるときだけ効く
+  （`config/environments/test.rb`）。CI と同じ条件で試すには、`CI=1` を付けて実行する。
+- WSL では、システムテストに Chrome のパスを渡す:
+  `CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャー版の Chrome> bin/rails test:system`。
+  Chrome の依存ライブラリが足りない環境では、`LD_LIBRARY_PATH` も要る。
 
 - これらが通らないコードは「未完成」とみなす。エラーは握りつぶさず修正する。
 - RuboCop は安全な範囲で `bundle exec rubocop -a` による自動修正を活用してよい。
