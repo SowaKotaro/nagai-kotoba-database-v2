@@ -177,6 +177,20 @@ class WordSenseSearchTest < ActiveSupport::TestCase
                  ids(char_type_pattern: "aaa漢漢漢漢", char_type_ignore_case: "1")
   end
 
+  # words.char_type_pattern は utf8mb4_0900_ai_ci なので、大小を区別しない検索では
+  # 「あ」(ひらがな)と「ア」(カタカナ)の記号も同じとみなされる。区別する検索は utf8mb4_bin で比べる。
+  test "大小を区別しない文字種の検索では、あ と ア も同一視される" do
+    word = Word.new(surface: "ひらがなだけのことば")
+    word.word_senses.build(reading: "ヒラガナダケノコトバ")
+    word.mark_annotated
+    word.save!
+    assert_equal "ああああああああああ", word.char_type_pattern
+
+    katakana_pattern = "アアアアアアアアアア"
+    assert_includes ids(char_type_pattern: katakana_pattern, char_type_ignore_case: "1"), word.word_senses.first.id
+    assert_not_includes ids(char_type_pattern: katakana_pattern), word.word_senses.first.id
+  end
+
   test "大小を区別しないとき文字種パターンの小文字は大文字に畳まれる" do
     search = WordSenseSearch.new(char_type_pattern: "Aa1あ", char_type_ignore_case: "1")
     assert_equal "AA1あ", search.char_type_pattern

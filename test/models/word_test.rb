@@ -13,6 +13,16 @@ class WordTest < ActiveSupport::TestCase
     assert dup.errors.added?(:surface, :taken, value: words(:abc_murder).surface)
   end
 
+  # 一意性は DB の照合順序(words.surface は utf8mb4_0900_as_ci)で判定される。
+  # かなの種類・小書きの違いは同じ語とみなし、清濁の違いは別の語とみなす(docs/data-model.md §6)。
+  test "surface の一意性は、かなの種類・小書きを同一視し、清濁は区別する" do
+    Word.create!(surface: "シャーロット")
+
+    assert_not Word.new(surface: "しゃーろっと").valid?, "ひらがな⇔カタカナは同じ語"
+    assert_not Word.new(surface: "シヤーロット").valid?, "小書き⇔並字は同じ語"
+    assert Word.new(surface: "ジャーロット").valid?, "清濁が違えば別の語"
+  end
+
   test "保存時に surface から char_type_pattern が自動生成される" do
     word = Word.create!(surface: "令和6年")
     assert_equal "漢漢1漢", word.char_type_pattern
