@@ -320,7 +320,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 削除(編集はコンソールへ統合済み。Issue 36) ---
-  test "単語を削除できる(語義・特徴も連鎖削除)" do
+  test "単語を削除すると語義も消える" do
     sign_in_as(Admin.take)
     word = word_senses(:murder).word
 
@@ -329,5 +329,14 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to admin_words_path
     assert_not WordSense.exists?(word_senses(:murder).id)
+  end
+
+  test "単語を削除すると、語義に付いた言語学的特徴も消える" do
+    sign_in_as(Admin.take)
+    feature_ids = word_senses(:murder).word_sense_features.ids
+    assert_equal 2, feature_ids.size
+
+    delete admin_word_path(words(:abc_murder))
+    assert_empty WordSenseFeature.where(id: feature_ids)
   end
 end

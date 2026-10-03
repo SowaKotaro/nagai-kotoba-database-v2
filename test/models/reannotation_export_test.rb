@@ -55,7 +55,9 @@ class ReannotationExportTest < ActiveSupport::TestCase
     assert_equal [ { "reading" => "バミューダトライアングル" } ], data["current"]["senses"]
   end
 
-  test "注釈済みの語でも、残っている提案のメタ(立項スコア・確信度)は手がかりとして渡す" do
+  # ここでいう「注釈の内容が保存された」は ReannotationExport の annotated?(意味などが 1 つでも付いている)で、
+  # Word.annotated(annotated_at がある = 公開)とは別の意味。この語は未公開。
+  test "注釈の内容が保存された語でも、残っている提案のメタ(立項スコア・確信度)は手がかりとして渡す" do
     word = words(:pending_haruhi)
     word.word_senses.first.update!(meaning: "谷川流のライトノベル。")
     data = ReannotationExport.new(word.reload, annotation_proposals(:haruhi_proposal)).as_json

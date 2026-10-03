@@ -58,10 +58,22 @@ class WordSenseFeatureTest < ActiveSupport::TestCase
     assert WordSenseFeature.new(valid_attributes(target: "事件", target_reading: "じけん")).valid?
   end
 
-  test "別の語義になら同じ特徴・同じ該当部分でも有効" do
+  test "別の語義には同じ特徴を付けられる" do
     wsf = WordSenseFeature.new(word_sense: word_senses(:curry), linguistic_feature: linguistic_features(:rendaku),
                               target: "カレー", target_reading: "カレー")
     assert wsf.valid?
+  end
+
+  # 一意の範囲(語義 × 特徴 × 該当部分 × 出現位置)に語義が入っていることを、同じ該当部分で確かめる。
+  test "同じ語の別の語義になら、同じ特徴・同じ該当部分・同じ出現位置でも付けられる" do
+    other_sense = words(:abc_murder).word_senses.create!(reading: "さつじんじけん")
+    wsf = WordSenseFeature.new(word_sense: other_sense, linguistic_feature: linguistic_features(:rendaku),
+                              target: "殺人", target_reading: "さつじん", target_start: 3)
+    assert wsf.valid?
+
+    duplicate = WordSenseFeature.new(word_sense: word_senses(:murder), linguistic_feature: linguistic_features(:rendaku),
+                                     target: "殺人", target_reading: "さつじん", target_start: 3)
+    assert_not duplicate.valid?, "同じ語義なら重複になる(fixture の murder_rendaku と同じ四つ組)"
   end
 
   # --- 同一文字列が繰り返す語(target_start による出現箇所の区別) ---
