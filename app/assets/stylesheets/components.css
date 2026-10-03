@@ -313,7 +313,7 @@
   margin-top: var(--space-7);
 }
 
-/* 章の見出し。§3 の「細罫はセクション見出しの下」に従って 1px の細罫で章の頭を示す。
+/* 章の見出し。design.md §3 の「細罫はセクション見出しの下」に従って 1px の細罫で章の頭を示す。
    h2 が等間隔に並ぶだけだと、どこで話題が変わるのか読めない(濃い章の罫は
    ページ見出しの下など 4 箇所だけなので、ここは --border で止める) */
 .prose h2 {
@@ -512,7 +512,7 @@ a.chip:hover {
 /* --- 語義の関連データ: ラベル列 + 値列。行を細罫で仕切る(面が広いので余白だけでは読めない) --- */
 .sense-attrs {
   margin: var(--space-5) 0 0;
-  /* 行の区切りは border ではなく 1px の隙間で作る(§5.3 と同じ組み) */
+  /* 行の区切りは border ではなく 1px の隙間で作る(design.md §5.3 と同じ組み) */
   display: grid;
   gap: 1px;
   background: var(--border);
@@ -1897,8 +1897,8 @@ a.tag:hover .genre-hub__count {
   display: block;
   margin: 0;
   font-family: var(--font-mono);
-  /* 級数は 12px。§2 の「補足・ラベルは 11px 未満にしない」を満たす最小で、
-     かつ**白抜きが成立する最小**でもある(10px では線が溶けるか字面が潰れる。実測は §5.8)。
+  /* 級数は 12px。design.md §2 の「補足・ラベルは 11px 未満にしない」を満たす最小で、
+     かつ**白抜きが成立する最小**でもある(10px では線が溶けるか字面が潰れる。実測は design.md §5.8)。
      16px / 20px の縦積み / 30px(figure-number の書体)まで上げて試したが、
      いずれもオーナー判断で戻した(2026-09-05)。字送りは 0.04em */
   font-size: 12px;
@@ -4003,7 +4003,7 @@ a.sound-matrix__cell:hover {
   color: var(--text);
 }
 
-/* --- §3 波形塗りバー --- */
+/* --- 統計ページ §3 波形塗りバー --- */
 .wave-chart {
   display: block;
   width: min(100%, calc(var(--chart-width, 720px) * 1.3));
@@ -4053,7 +4053,7 @@ a.sound-matrix__cell:hover {
   fill: var(--chart);
 }
 
-/* --- §4 収録の推移(株価チャート式) --- */
+/* --- 統計ページ §4 収録の推移(株価チャート式) --- */
 .stats-current {
   margin: 0;
   white-space: nowrap;
@@ -4330,7 +4330,7 @@ a.entity-treemap__cell:hover {
 }
 
 /* 面が小さいマスは余白と級数を詰める。詰めないと名前が枠から溢れて読めなくなる。
-   いちばん小さい段は名前だけ(件数は title に残す)。11px は §2 の下限。 */
+   いちばん小さい段は名前だけ(件数は title に残す)。11px は design.md §2 の下限。 */
 .entity-treemap__cell--small {
   padding: 4px 5px;
   gap: 1px;
@@ -4377,7 +4377,7 @@ a.entity-treemap__cell:hover {
   }
 }
 
-/* --- §7 母音スペクトルと頭子音 ---
+/* --- 統計ページ §7 母音スペクトルと頭子音 ---
    帯は文字色の明度4段 + オ段のみアクセントのチントの5値。右端の段名で識別する */
 .vowel-spectrum {
   display: block;
@@ -4417,7 +4417,7 @@ a.entity-treemap__cell:hover {
   fill: var(--text-subtle);
 }
 
-/* --- §7 母音の遷移グラフ ---
+/* --- 統計ページ §7 母音の遷移グラフ ---
    層 = 拍位置、ノード = 母音、エッジ = 隣り合う層の全結合。
    太さと濃さで多寡を出し、最多の1本だけ --chart(「最」にだけ色を使う作法) */
 /* 「多い遷移だけ」の切替。checkbox + 兄弟セレクタで JS を持たない。
@@ -4638,7 +4638,7 @@ a.entity-treemap__cell:hover {
   text-align: right;
 }
 
-/* --- §8 特徴の見本つきランキング --- */
+/* --- 統計ページ §8 特徴の見本つきランキング --- */
 .feature-rank {
   list-style: none;
   margin: 0;
@@ -4792,7 +4792,7 @@ a.entity-treemap__cell:hover {
   list-style: none;
   margin: 0;
   padding: 0;
-  /* 行の区切りは border ではなく 1px の隙間で作る(§5.3 と同じ組み)。
+  /* 行の区切りは border ではなく 1px の隙間で作る(design.md §5.3 と同じ組み)。
      親を罫の色で塗り、行を面の色で塗る */
   display: grid;
   gap: 1px;
@@ -5259,10 +5259,10 @@ a.entity-treemap__cell:hover {
   color: var(--text-muted);
 }
 
-/* ===== 統計 §1 ワードクラウド(Issue 78) =====
+/* ===== 統計ページ §1 ワードクラウド(Issue 78) =====
    よく現れる形態素を「活字の大きさ＝頻度」で組む。最頻の1語を中心に据え、
    残りはばらばらに置いて隙間を詰める(オーナー指示 2026-08-11 / 2026-09-10)。
-   100 件を余白が見えないくらい詰めて組む(docs/stats.md §1)。
+   100 件を余白が見えないくらい詰めて組む(統計ページ §1)。
    配置は MorphemeCloud が仮想平面で決め、viewBox 付き SVG で拡縮する。 */
 .word-cloud {
   border: 1px solid var(--border);

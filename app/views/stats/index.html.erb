@@ -15,7 +15,7 @@
 <% if @stats.word_count.zero? %>
   <p class="empty-note"><%= icon "binoculars" %><%= t("stats.index.empty") %></p>
 <% else %>
-  <%# §1 看板「ワードクラウド」。頻度は事前集計のため、集計ファイルが無ければ丸ごと出さない %>
+  <%# 統計ページ §1「ワードクラウド」。頻度は事前集計のため、集計ファイルが無ければ丸ごと出さない %>
   <% if MorphemeFrequencies.available? %>
     <section class="stats-section stats-section--word-cloud">
       <h2 class="stats-section__title"><%= icon "text_aa" %><%= t("stats.index.word_cloud.title") %></h2>

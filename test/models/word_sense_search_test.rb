@@ -289,7 +289,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_includes ids(vowel_reading: "ケー"), word_senses(:curry).id
   end
 
-  # --- 母音の遷移(統計 §7 のグラフから来る、拍位置で固定した2拍の組) ---
+  # --- 母音の遷移(統計ページ §7 のグラフから来る、拍位置で固定した2拍の組) ---
   test "母音の遷移は指定した拍位置の2拍で絞れる" do
     # curry の母音は aee。1拍目 a → 2拍目 e。
     assert_equal [ word_senses(:curry).id ], ids(vowel_transition: "1-ae")
