@@ -232,8 +232,6 @@ class BulkWordRegistration
 
     @research_error = false
     @research_index = parse_research_words.each_with_object({}) do |word, index|
-      next unless word.is_a?(Hash)
-
       data = {
         reading: normalize_reading(word["reading"]),
         alternatives: Array(word["alternatives"]).filter_map { |alt| normalize_reading(alt.is_a?(Hash) ? alt["reading"] : alt) },
@@ -246,16 +244,13 @@ class BulkWordRegistration
     end
   end
 
-  # 調査 JSON の words 配列を取り出す。空や不正な JSON は空配列(＋エラーフラグ)。
+  # 調査 JSON の words 配列(Hash の要素だけ)を取り出す。空欄は空配列、不正な JSON は空配列＋エラーフラグ。
   def parse_research_words
     return [] if research_json.blank?
 
-    parsed = JSON.parse(ResearchJson.strip_code_fence(research_json))
-    words = parsed.is_a?(Hash) ? parsed["words"] : nil
-    words.is_a?(Array) ? words : (@research_error = true) && []
-  rescue JSON::ParserError
-    @research_error = true
-    []
+    words = ResearchJson.array_at(research_json, "words")
+    @research_error = true if words.nil?
+    words || []
   end
 
   # entries の1件と、対応する調査データから MergedEntry を組み立てる。

@@ -33,6 +33,8 @@ class AnnotationProposalImport
   private
 
   # { word_id => payload } に整える。word_id が無い・重複する行は後勝ちで単純化する。
+  # 他の調査 JSON の取り込みと違い ResearchJson.array_at を使わない(```json フェンス付きは受け付けない)。
+  # 寄せると受理する入力が広がるので、振る舞いを変える改修として別に扱う(計画書 §7.1)。
   def parse
     data = JSON.parse(@json_text)
     proposals = data.is_a?(Hash) ? data["proposals"] : nil

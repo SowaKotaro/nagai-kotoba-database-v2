@@ -120,7 +120,7 @@ class BulkWordRegistrationTest < ActiveSupport::TestCase
     assert_equal "ネコ", row.chosen
   end
 
-  # 形が不正な入力のいまの扱い(ResearchJson.array_at へ寄せる前の特性)。
+  # 形が不正な入力の扱い(ResearchJson.array_at に寄せる前から同じ)。
   test "words の中の Hash でない要素は黙って飛ばし、ほかの要素は使う(エラーにしない)" do
     json = { version: "1", words: [ "文字列", 123, nil, { input: "資本主義", surface: "資本主義", reading: "シホンシュギ" } ] }.to_json
     reg = BulkWordRegistration.new(entries: [ { surface: "資本主義", reading: "シホンシュギ" } ], research_json: json)
