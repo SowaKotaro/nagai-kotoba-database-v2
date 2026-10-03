@@ -6,14 +6,17 @@ import { Controller } from "@hotwired/stimulus"
 //   - 右は 大分類の積み上げ棒 → 押すとその大分類の中分類の積み上げ棒 → さらに押すと
 //     その中分類の小分類をタグ(件数付き)の一覧で表示する
 //   - 末端(小分類)は扇もタグも、そのジャンルで絞り込んだ語の一覧へ遷移する
-// Plotly(vendor/javascript/plotly.min.js)はこのページ専用のため、接続時に1度だけ読み込む。
+// Plotly(vendor/javascript/plotly.min.js)はこのページ専用のため、接続時に1度だけ読み込む
+// (importmap には意図してピンしない。理由は config/importmap.rb の注記)。
 export default class extends Controller {
   static targets = ["data", "sunburst", "largeBar",
                     "mediumContainer", "mediumTitle", "mediumBar",
                     "smallContainer", "smallTitle", "smallList"]
   static values = { script: String, searchUrl: String, countLabel: String, smallsSuffix: String }
 
-  // チャート色(--chart #6F8EA8)の濃淡だけのパレット。多色カテゴリカルは作らない
+  // チャート色(--chart #6F8EA8)の濃淡だけのパレット。多色カテゴリカルは作らない。
+  // ライトの --chart から作った値の直書きなので、塗りはダークに追従しない(区切り線と文字の色は
+  // 下の token で CSS から読む)。塗りの色の正はここ
   static palette = [
     "#6F8EA8", "#829DB4", "#95ACC0", "#A8BBCC", "#BBCAD8",
     "#C9D5E0", "#D7E0E8", "#E3E9EF", "#EDF1F5", "#F5F8FA"
@@ -35,8 +38,9 @@ export default class extends Controller {
     if (window.Plotly) this.plots.forEach((element) => window.Plotly.purge(element))
   }
 
-  // グラフの色は JS に持たせず CSS のトークンから読む(ダークで地と文字色が入れ替わるため)。
-  // 扇・棒を仕切る線は「地の色」で抜く。
+  // 区切り線と文字の色は JS に持たせず CSS のトークンから読む(ダークで入れ替わるため。
+  // 塗りだけは上の palette の直書き)。扇・棒を仕切る線は --bg で抜く(本文の地は --surface なので、
+  // 地と同じ色ではなく一段淡い面の色になる)。
   get separatorColor() {
     return this.token("--bg")
   }

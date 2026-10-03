@@ -4,6 +4,9 @@ import { Controller } from "@hotwired/stimulus"
 // ひらがな・漢字・中黒・空白などが混じった行はエラーにして次のステップへ進ませない。
 // 「調査結果を反映」(formaction 付き)の送信は、読みを直す前の中間操作なので検証しない。
 // 空欄は「自動取得できなかった行」を表すため、ここではエラーにしない(登録時に弾かれる)。
+// 「カタカナだけ」を強制しているのはこの JS だけで、サーバ(BulkWordRegistration・WordSense)は
+// 読みの字種を検証しない。同じ文字クラスが ReadingExtractor::NON_KATAKANA と
+// MorphemeExtractor::KATAKANA_ONLY にもあるので、変えるなら揃える。
 const KATAKANA_ONLY = /^[ァ-ヶー]+$/
 
 export default class extends Controller {

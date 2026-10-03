@@ -4,6 +4,9 @@ import { Controller } from "@hotwired/stimulus"
 // 引き継ぎつつ、読み・意味・ジャンル・エンティティ・別表記・特徴の読み側は空にした
 // 新しい語義を下に追加する(同音異義語の入力を素早くするため)。
 // ネスト属性の添字は新しい一意値へ置換し、id/_destroy を外して新規レコード扱いにする。
+// 添字の置換は、Rails の nested attributes(fields_for :word_senses)が name に付ける
+// "[word_senses_attributes][<添字>]" の形に頼った文字列の分割・結合で行う。関連名や fields_for の
+// 組み方を変えると壊れる(コンソールとデッキの両方で使う)。
 export default class extends Controller {
   static targets = ["container"]
 

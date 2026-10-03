@@ -92,6 +92,8 @@
           <button type="button" class="ann-genre__change" data-action="genre-picker#reset"><%= t("admin.annotations.genre_change") %></button>
         </div>
       <% end %>
+      <%# js-genre-large / -medium / -small は JS からは使わない。コンソールのシステムテスト
+          (admin_annotation_console_test)が段を掴むためのフックなので、名前を変えない %>
       <div class="ann-genre__level js-genre-large" data-genre-picker-target="largeLevel" <%= "hidden" if sense.genre %>>
         <span class="ann-genre__tag"><%= t("admin.annotations.genre_large") %></span>
         <div class="ann-chips" data-genre-picker-target="largeChips">

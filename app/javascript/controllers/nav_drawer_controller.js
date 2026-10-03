@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
-// 狭幅ヘッダーのハンバーガーメニュー。ナビ+検索パネルの開閉を担当する。
+// 狭幅ヘッダーのハンバーガーメニュー。ナビ(「探す」のサブメニューとテーマの切り替えを含む)を
+// 収めたサイドパネルの開閉を担当する。
 export default class extends Controller {
   static targets = ["panel", "scrim", "button"]
   static values = { openLabel: String, closeLabel: String }

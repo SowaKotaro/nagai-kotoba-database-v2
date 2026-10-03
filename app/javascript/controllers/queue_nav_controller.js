@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // キュー操作のキーボードショートカット(任意・補助)。
 //   Enter=保存して次へ / →=スキップ / ←=戻る。
 // テキスト入力中は無効化して、通常の入力を邪魔しない(タップ操作が主・キーは補助)。
+// もう 1 つの役目として、接続のたびにページ先頭へスクロールする(scrollToTop)。
 export default class extends Controller {
   static targets = ["form", "skip", "back"]
 

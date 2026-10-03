@@ -39,7 +39,7 @@ export default class extends Controller {
     this.minFieldTarget.value = lo
     this.maxFieldTarget.value = hi >= this.MAX ? "" : hi
 
-    // トラックの塗り(選択範囲)をアクセント色で示す。
+    // トラックの塗り(選択範囲)の位置を --from / --to で渡す。色は CSS が持つ(選択範囲は --text)。
     if (this.hasTrackTarget) {
       const span = this.MAX - this.MIN
       const a = ((lo - this.MIN) / span) * 100

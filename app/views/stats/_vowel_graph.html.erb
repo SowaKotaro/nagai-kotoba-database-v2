@@ -5,7 +5,8 @@
     多層ニューラルネットワークの概念図の組み方(オーナー指示 2026-09-10)。
 
     「多い遷移だけ」の切替は checkbox + 兄弟セレクタで JS を持たない。
-    ノードを2つ押して検索へ進む導線だけ Stimulus(vowel-graph)で足している。 %>
+    ノードを押して母音の並び(鎖)を選び、検索へ進む導線だけ Stimulus(vowel-graph)で足している
+    (選び方の正は docs/stats.md の統計ページ §7 の章)。 %>
 <h3 class="stats-subheading"><%= t("stats.index.sound.graph_heading") %></h3>
 <p class="stats-section__lead"><%= t("stats.index.sound.graph_lead", positions: graph[:layers].size) %></p>
 <div class="vowel-graph-panel" data-controller="vowel-graph"

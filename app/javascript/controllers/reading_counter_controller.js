@@ -12,6 +12,9 @@ export default class extends Controller {
 
   update() {
     // サロゲートペア(絵文字など)を1文字として数えるため、コードポイントで分解する。
+    // 基準値はサーバの WordSense::MIN_READING_LENGTH をビューから受け取る(reading_counter_data)。
+    // trim は全角空白も落とすが、サーバの strip(WordRequestItem#normalize)は落とさないので、
+    // 両端に全角空白があると、保存される読みとは字数がずれる(表示だけの差で、送信は妨げない)。
     const length = [...this.inputTarget.value.trim()].length
     const satisfied = length >= this.minValue
 
