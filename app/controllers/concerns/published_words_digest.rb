@@ -13,6 +13,11 @@
 # 日単位に畳むと、1日じゅうアノテーションしても作り直しは最大1回で済む。
 # どちらの出力も Cache-Control で1日の猶予を宣言している(expires_in 1.day, public)ので、
 # 最大1日の遅れは元々の契約どおりで、公開側の鮮度を新たに損ねてはいない。
+#
+# 公開の取り消し(保留で annotated_at を空にする・削除)も、この遅れに含まれる。語が減っても
+# 版(公開語の最終更新日)は変わらないので、取り消した語は有効期限(最大およそ1日)のあいだ
+# sitemap.xml / llms-full.txt に表層形・読み・意味ごと残る。性能のための割り切りで、オーナーが
+# 許容している(2026-10-03)。ほかの出力の遅れも含めた一覧は docs/data-model.md §8.2。
 module PublishedWordsDigest
   extend ActiveSupport::Concern
 
@@ -28,8 +33,8 @@ module PublishedWordsDigest
   # 公開語数が必ず1増える。件数を版に含めると、日単位に畳んでも保存のたびに版が変わってしまい、
   # 畳んだ意味が無くなる(実測: 1万語規模で保存のたびに sitemap 1.5秒 + 全文 5.7秒の再生成)。
   #
-  # 削除だけが起きた場合は最終更新日が動かないが、キャッシュ自体に1日の有効期限が
-  # あるので、遅くとも翌日には作り直される。
+  # 削除や保留(公開の取り消し)だけが起きた場合は最終更新日が動かないが、キャッシュ自体に
+  # 1日の有効期限があるので、遅くとも翌日には作り直される(上の注記のとおり許容している)。
   def published_words_version
     @published_words_version ||= Word.annotated.maximum(:updated_at)&.in_time_zone&.beginning_of_day
   end
