@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-13（読みを変えて保存すると reading_density が追従することを固定する） |
+| 次の一手 | T0-14（母音遷移の境界値を固定する） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -150,8 +150,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-09 | 第3群 | tokens.css のダークの 2 ブロックの一致と、application.css の読み込み順を確かめる | high | 済 | `828e140` | design_tokens_test に 2 件。@media と [data-theme="dark"] の宣言が同じで、:root の --dark-* をすべて --X: var(--dark-X) で参照し、color-scheme が dark であること（片方から 1 行抜くと検出できることを同じ抽出で確かめた）。application.css の require が tokens → base → layout → components → annotate → candidates → admin の順で、require_self があり require_tree が無いこと。合格判定は全部通過 |
 | T0-10 | 第3群 | 提案の取り込みと反映で捨てられるキーを固定する | high | 済 | `ab50129` | annotation_proposal_import_test に 2 件: トップレベルの reading・linguistic_features・sense_id は捨てられ（payload は meaning だけ）、旧形式の語義の読みは nil・特徴は空になること。senses の要素は genre_new・target_start・未知のキーごと丸ごと保持し、トップレベルの genre_new も保持すること。test/models/proposal_application_test.rb を新設して 2 件: 提案の target_start（5）は反映で使われず、組んだ特徴は nil で、保存すると先頭の出現（0）になること。SenseProposal に genre_new を読む口が無いこと。合格判定は全部通過 |
 | T0-11 | 第3群 | `backfill:sense_metrics` が崩した代表値を元に戻すことを固定する | high | 済 | `312f40b` | backfill_task_test に 1 件。WordSenseMetrics.refresh! で正しい値を取ってから、update_all で全語の代表値（14 列）を崩し（崩れたことも確かめる）、タスクの後に 14 列が元どおりになること、curry の値（語義 1・別表記 1・最長 3・max_reading カレー）を固定した。合格判定は全部通過 |
-| T0-12 | 第3群 | 名前と中身がずれているテストの名前を直し、名前が約束していた検証を足す | high | 済 | このコミット | 名前を中身に合わせた（assert は変えていない）: admin/words の「単語を削除すると語義も消える」、word_sense_feature の「別の語義には同じ特徴を付けられる」、reannotation_export の「注釈の内容が保存された語でも…」（ReannotationExport#annotated? と Word.annotated が別の意味であることを注記）。名前が約束していた検証を新しいテストとして足した: 単語を削除すると特徴（murder の 2 件）も消えること、同じ語の別の語義になら同じ特徴・同じ該当部分（殺人）・同じ出現位置でも付けられ、同じ語義なら重複になること。T-12 のほかの項目（tag_kind の空の assert、word_requests の重複検証）は計画書の T0-12 に入っていないので触っていない（「朱」は D1-17b で済）。合格判定は全部通過 |
-| T0-13 | 第3群 | 読みを変えて保存すると `reading_density` が追従することを固定する | high | 未着手 | | |
+| T0-12 | 第3群 | 名前と中身がずれているテストの名前を直し、名前が約束していた検証を足す | high | 済 | `ddc2ba5` | 名前を中身に合わせた（assert は変えていない）: admin/words の「単語を削除すると語義も消える」、word_sense_feature の「別の語義には同じ特徴を付けられる」、reannotation_export の「注釈の内容が保存された語でも…」（ReannotationExport#annotated? と Word.annotated が別の意味であることを注記）。名前が約束していた検証を新しいテストとして足した: 単語を削除すると特徴（murder の 2 件）も消えること、同じ語の別の語義になら同じ特徴・同じ該当部分（殺人）・同じ出現位置でも付けられ、同じ語義なら重複になること。T-12 のほかの項目（tag_kind の空の assert、word_requests の重複検証）は計画書の T0-12 に入っていないので触っていない（「朱」は D1-17b で済）。合格判定は全部通過 |
+| T0-13 | 第3群 | 読みを変えて保存すると `reading_density` が追従することを固定する | high | 済 | このコミット | word_sense_metrics_test に 1 件。表記 3 字の語の語義の読みを 6 字から 9 字に変えて保存すると、after_commit で max_reading_length が 9 に焼き直され、STORED の reading_density が 2.0 から 3.0 になること。合格判定は全部通過 |
 | T0-14 | 第3群 | 母音遷移の境界値（15 拍・位置 30 / 31）を固定する | high | 未着手 | | |
 | T0-15 | 第3群 | og:image の版（`WordShareCard#digest`）を固定する | high | 未着手 | | |
 | T0-16 | 第3群 | 一括登録の調査 JSON で、形が不正な入力の扱いを固定する | high | 未着手 | | |
