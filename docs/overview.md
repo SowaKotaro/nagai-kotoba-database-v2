@@ -36,7 +36,7 @@
 - **Ruby 3.4.2 / Rails 8.1**（`config.load_defaults 8.1`）
 - **MySQL 8.x（mysql2）** — 照合順序は `utf8mb4_0900_ai_ci` 基準（読みまわりだけ `as_ci`。[`data-model.md`](data-model.md) §6）
 - Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
-- CSS は手書き（`tokens → base → layout → components` ＋ `admin.css` / `annotate.css`）
+- CSS は手書き（`tokens → base → layout → components` ＋ `annotate.css` / `candidates.css` / `admin.css`）
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
 - デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で
   `.github/workflows/deploy.yml` が自動で実行する**。CI の完了は待たず、main にブランチ保護も無い。
@@ -144,7 +144,7 @@ app/services/        reading_extractor（MeCab CLI）/ morpheme_extractor / shar
 app/controllers/     公開（words / searches / browse / genres / rankings / stats / pages / llms /
                      sitemaps / robots / word_requests / home）＋ admin/ 名前空間
 app/javascript/      Stimulus のみ（importmap）。1 コントローラ 1 目的
-app/assets/          手書き CSS（tokens → base → layout → components ＋ admin / annotate）
+app/assets/          手書き CSS（tokens → base → layout → components ＋ annotate / candidates / admin）
 db/schema.rb         スキーマの正（マイグレーション経由で更新）
 db/seeds.rb          管理者とマスタを冪等に投入（名前リストは SeedCatalog が単一の正）
 db/morpheme_frequencies.json  統計 §1 ワードクラウドの事前集計結果（コミットするデータファイル）
@@ -232,7 +232,7 @@ bin/rails server
 ## 10. 進め方の規約
 
 - **1 Issue = 1 ブランチ = 1 PR** を原則とする（[`issues.md`](issues.md)）。
-  小粒な改善は Issue を立てずに PR だけで進めてよい（その場合も完了記録は `issues.md` に残す）。
+  小粒な改善は Issue を立てずに PR だけで進めてよい（その場合も完了記録は `changelog.md` の「番号を持たない改善」節に 1 行残す）。
 - ブランチ名は `feature/<内容>`。**Issue / PR 番号は入れない**（Issue と PR で採番カウンタが
   共通なので、付けた番号が必ずずれる）。
 - 返答・コミットメッセージ・コードコメントは**日本語**。

@@ -240,4 +240,4 @@ bin/rails test:system                    # テスト（システム。Chrome が
 - `config/deploy.rb`・`config/puma.rb`・`.github/workflows/` などインフラ/デプロイ設定の変更は影響が大きいので、内容を説明してから行う。
 - **main への merge（push）は、そのまま本番デプロイになる**（deploy.yml。CI の成否を待たない）。merge の前に PR 上の CI が通ったことを確かめる。
 - 検索エンジンから見える挙動（robots・canonical・noindex・sitemap）を変えるときは、
-  **URL 空間が無限に広がらないか**を必ず確認する（過去に 2 度クロール事故を起こしている。issues.md Issue 80・81）。
+  **URL 空間が無限に広がらないか**を必ず確認する（過去に 2 度クロール事故を起こしている。`docs/changelog.md` の Issue 80・81）。
