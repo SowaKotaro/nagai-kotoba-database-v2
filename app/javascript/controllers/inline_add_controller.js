@@ -125,7 +125,7 @@ export async function post(url, body, labels) {
   return { error: errors || labels.failed.replace("%{status}", response.status) }
 }
 
-export function escapeHtml(text) {
+function escapeHtml(text) {
   const el = document.createElement("span")
   el.textContent = text
   return el.innerHTML

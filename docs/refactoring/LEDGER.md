@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | R2-03（使われていない JS を消す） |
+| 次の一手 | R2-04（使われていない CSS セレクタ・効いていない宣言・未使用のトークンを消す） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -161,8 +161,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-20 | 第3群 | publish_guard と deck が削除済みの語義を数えないことを固定する（system テスト） | high | 済 | `6a6ac21` | 1 つ目が完了・2 つ目が未完了の 2 語義の語を作り、コンソールでは 2 つ目を「この語義を削除」で外して保存すると公開前の確認（confirm）が呼ばれないこと（同じ window のまま次の語へ進んだことも確かめる）、デッキでは削除で「n / m 完了」が 0 から 1 になることを固定した。操作は JS で送る。途中で、保存済みの語義を削除しても DB から消えない不具合を見つけた（受付箱）。そのため、いまは保存済みの語義も DOM から外れ、`display: none` の分岐はテストで通っていない。単独で 3 回流して安定。合格判定は全部通過 |
 | T0-21 | 第3群 | `JAPANESE_ORIGIN_NAME` が SeedCatalog の語種名に含まれることを確かめる | high | 済 | `62f3a71` | seed_catalog_test に 1 件。WordSense::JAPANESE_ORIGIN_NAME（日本語）が SeedCatalog::WORD_ORIGINS に含まれ、WORD_ORIGIN_RENAMES の改名元にもなっていないこと。これで第3群（T0-01〜T0-21）がすべて済んだ。合格判定は全部通過 |
 | R2-01 | 第4群 | 使われていない Ruby コードを消す（SiteStatistics の 2 つの total は消さない） | high | 済 | `b4dba42` | 消す直前に参照を検索し直してから消した: app/helpers/articles_helper.rb（空のモジュール）、BulkWordRegistration::MergedEntry#match? / #differ?、WordCandidate::DECISIONS（ビューが使うのは WordCandidateReview::CHOICES。D1-16b で candidates.css のコメントに書いた参照もこちらへ直した）、SessionTestHelper#sign_out、MorphemeCloud::Placed の weight と Layout#any?、MorphemeFrequencies.metadata（reset! のメモも）、stats_timeline_chart の price_bottom と出来高の棒の count。SiteStatistics の 2 つの total は計画どおり残した。消したものを指す文字列が app・test・docs に残っていないことを確かめた。合格判定は全部通過（og:image の版のテストも通過）、development で eager_load! も通る |
-| R2-02 | 第4群 | 使われていないビューと i18n を消す | high | 済 | このコミット | 消す直前に参照を検索し直した（アイコン名を動的に渡す箇所・相対キー・補間で組むキーも見た）。shared/icons/_crown・_sparkle、ja.yml の admin.annotations.nav・today と admin.word_candidates.title（使われているのは edit.title）、en.yml の hello（en: {} にした）を消した。完了条件どおり raise_on_missing_translations を一時的に true にして単体・システムテストを流し、消したキーでの訳抜けが無いことを確かめた（設定は元に戻した）。そのとき出た訳抜け 2 つ（admin.words.bulk.review.similarity・word_requests.fields.no）は変更前の HEAD でも同じなので既存のもの（受付箱）。合格判定は全部通過 |
-| R2-03 | 第4群 | 使われていない JS を消す | high | 未着手 | | |
+| R2-02 | 第4群 | 使われていないビューと i18n を消す | high | 済 | `23b82b5` | 消す直前に参照を検索し直した（アイコン名を動的に渡す箇所・相対キー・補間で組むキーも見た）。shared/icons/_crown・_sparkle、ja.yml の admin.annotations.nav・today と admin.word_candidates.title（使われているのは edit.title）、en.yml の hello（en: {} にした）を消した。完了条件どおり raise_on_missing_translations を一時的に true にして単体・システムテストを流し、消したキーでの訳抜けが無いことを確かめた（設定は元に戻した）。そのとき出た訳抜け 2 つ（admin.words.bulk.review.similarity・word_requests.fields.no）は変更前の HEAD でも同じなので既存のもの（受付箱）。合格判定は全部通過 |
+| R2-03 | 第4群 | 使われていない JS を消す | high | 済 | このコミット | 消す直前に検索し直した。inline_add_controller.js の escapeHtml の export を外した（同じファイルの __NAME__ の置換だけが使う）。admin/annotations/_feature_fields.html.erb の .js-feature を外した（JS・CSS・テストのどこからも参照が無い。管理画面の HTML の class 属性だけが変わる）。合格判定は全部通過 |
 | R2-04 | 第4群 | 使われていない CSS セレクタ・効いていない宣言・未使用のトークンを消す | high | 未着手 | | |
 | R2-05 | 第4群 | 設定とタスクの残骸を片付ける（robots.txt の `#` の行は対象外。`cap -T` を通す） | high | 未着手 | | |
 | R2-06 | 第4群 | テストの残骸を片付ける（期待値は変えない） | high | 未着手 | | |
