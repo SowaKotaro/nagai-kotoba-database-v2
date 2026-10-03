@@ -20,10 +20,17 @@ module Admin::AnnotationQueue
     ] }
   ].freeze
 
+  # 提案キューの並べ替え(?sort=)。easy は確実な提案を先に、review は要判断を先に(Issue 67)。
+  # 値は公開済みの URL に載っているので変えない。
+  SORT_EASY = "easy"
+  SORT_REVIEW = "review"
+  # 要判断フィルタを掛けたときの ?review= の値。
+  REVIEW_ON = "1"
+
   included do
     # ビューのリンク/フォームで、提案フィルタ(proposed)・並べ替え(sort)・要判断フィルタ(review)を
-    # 保ったままキューを辿るためのパラメータ一式(Issue 38/67)。
-    helper_method :nav_params
+    # 保ったままキューを辿るためのパラメータ一式(Issue 38/67)と、絞り込み UI の現在地。
+    helper_method :nav_params, :proposed_param, :queue_sort, :review_filter?
   end
 
   private
@@ -35,7 +42,7 @@ module Admin::AnnotationQueue
     scope = Word.annotation_pending
     if proposed_param
       scope = scope.with_pending_proposal
-      scope = scope.merge(AnnotationProposal.needs_review) if params[:review] == "1"
+      scope = scope.merge(AnnotationProposal.needs_review) if review_filter?
     end
     scope
   end
@@ -52,11 +59,11 @@ module Admin::AnnotationQueue
   def queue_order
     return Word.arel_table[:id] unless proposed_param
 
-    case params[:sort]
-    when "easy"
+    case queue_sort
+    when SORT_EASY
       Arel.sql("FIELD(annotation_proposals.payload->>'$.confidence','high','medium','low'), " \
                "CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) DESC, words.id")
-    when "review"
+    when SORT_REVIEW
       Arel.sql("CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) ASC, " \
                "FIELD(annotation_proposals.payload->>'$.confidence','low','medium','high'), words.id")
     else
@@ -69,6 +76,16 @@ module Admin::AnnotationQueue
     params[:proposed].presence
   end
 
+  # 並べ替えの指定(?sort=)。知らない値もそのまま返す(並びは id 順になり、どのリンクも現在地にならない)。
+  def queue_sort
+    params[:sort].presence
+  end
+
+  # 要判断フィルタ(?review=1)が掛かっているか。
+  def review_filter?
+    params[:review] == REVIEW_ON
+  end
+
   # 入口(?proposed 無し)を提案キューへ寄せるか(Issue 69)。Claude の下調べ(提案)が残っているのに
   # 提案なしの語(surface+reading だけの手調査になる)へ着地させない。?proposed の明示指定は尊重。
   def enter_proposed_queue?
@@ -77,7 +94,7 @@ module Admin::AnnotationQueue
 
   # リンク/フォームで提案フィルタ・並べ替え・要判断フィルタを保つためのパラメータ。
   def nav_params
-    { proposed: proposed_param, sort: params[:sort].presence, review: params[:review].presence }.compact
+    { proposed: proposed_param, sort: queue_sort, review: params[:review].presence }.compact
   end
 
   # チップ選択で使うマスタ一式。

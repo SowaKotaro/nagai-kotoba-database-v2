@@ -30,22 +30,8 @@
   <p class="deck-lead"><%= t("admin.annotation_decks.lead", count: @words.size) %></p>
 
   <%# 提案キューのときだけ絞り込み・並べ替え(1語コンソールと同じ規則。デッキを組み直す) %>
-  <% if params[:proposed].present? %>
-    <nav class="ann-queue-filter">
-      <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.filter") %></span>
-      <%= link_to t("admin.annotations.queue.all"), admin_annotation_deck_path(nav_params.except(:review)),
-            class: class_names("ann-queue-filter__link", "is-on" => params[:review].blank?) %>
-      <%= link_to t("admin.annotations.queue.review"), admin_annotation_deck_path(nav_params.merge(review: "1")),
-            class: class_names("ann-queue-filter__link", "is-on" => params[:review] == "1") %>
-      <span class="ann-queue-filter__sep" aria-hidden="true">|</span>
-      <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.sort") %></span>
-      <%= link_to t("admin.annotations.queue.sort_default"), admin_annotation_deck_path(nav_params.except(:sort)),
-            class: class_names("ann-queue-filter__link", "is-on" => params[:sort].blank?) %>
-      <%= link_to t("admin.annotations.queue.sort_easy"), admin_annotation_deck_path(nav_params.merge(sort: "easy")),
-            class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "easy") %>
-      <%= link_to t("admin.annotations.queue.sort_review"), admin_annotation_deck_path(nav_params.merge(sort: "review")),
-            class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "review") %>
-    </nav>
+  <% if proposed_param %>
+    <%= render "admin/annotations/queue_filter", path_for: ->(query) { admin_annotation_deck_path(query) } %>
   <% end %>
 
   <%# カードの現在地。ドットはタップでそのカードへ飛ぶ(スワイプの補助) %>

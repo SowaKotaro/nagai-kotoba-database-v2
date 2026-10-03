@@ -57,6 +57,7 @@ module WordCandidatesHelper
     end
   end
 
+  # 状態の表示名。コントローラのフラッシュも helpers 経由でこれを使う(キーを組み立てる場所を 1 つにする)。
   def candidate_status_label(status)
     t("admin.word_candidates.statuses.#{status}")
   end

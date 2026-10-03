@@ -54,10 +54,9 @@
   <% end %>
 
   <nav class="admin-status-tabs" aria-label="<%= t("admin.words.index.status_label") %>">
-    <% { nil => t("admin.words.index.status_all"),
-         "annotation_pending" => t("admin.words.index.status_pending"),
-         "annotation_on_hold" => t("admin.words.index.status_on_hold"),
-         "annotation_done" => t("admin.words.index.status_done") }.each do |status, label| %>
+    <%# タブは絞り込みの定義(Admin::WordsController::STATUS_FILTERS)から組む。文言のキーは状態名から annotation_ を除いたもの %>
+    <% [ nil, *Admin::WordsController::STATUS_FILTERS ].each do |status| %>
+      <% label = status ? t("admin.words.index.status_#{status.delete_prefix("annotation_")}") : t("admin.words.index.status_all") %>
       <%= link_to label, admin_words_path({ q: @query.presence, status: status }.merge(@tag_filters).compact),
             class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
     <% end %>

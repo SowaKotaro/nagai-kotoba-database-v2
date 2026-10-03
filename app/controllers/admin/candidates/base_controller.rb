@@ -36,7 +36,7 @@ class Admin::Candidates::BaseController < Admin::BaseController
     return unless count.positive?
 
     t("admin.word_candidates.import_results.remaining",
-      status: t("admin.word_candidates.statuses.#{status}"), count: count)
+      status: helpers.candidate_status_label(status), count: count)
   end
 
   # 画面で語ごとに選んだ処理(decisions[ID] = 処理)を当て、移した先ごとの語数を返す。
@@ -48,7 +48,7 @@ class Admin::Candidates::BaseController < Admin::BaseController
   # 確定の結果(「表記待ち 9 語 / 不要 1 語」)。流れの順に並べる。何も動かなければ nil。
   def decisions_summary(counts)
     counts.sort_by { |status, _| WordCandidate.statuses.fetch(status) }.map do |status, count|
-      t("admin.word_candidates.decisions.moved", status: t("admin.word_candidates.statuses.#{status}"), count: count)
+      t("admin.word_candidates.decisions.moved", status: helpers.candidate_status_label(status), count: count)
     end.join(" / ").presence
   end
 end

@@ -1,0 +1,19 @@
+<%# locals: (path_for:) -%>
+<%# 提案キューの絞り込み・並べ替え(Issue 67)。1語コンソールとデッキが共有する。
+    path_for は絞り込みを替えたキューの URL を返す(コンソールは index へ、デッキはデッキへ戻る)。
+    規則(並べ替えの値・要判断の判定)は Admin::AnnotationQueue が持つ -%>
+<nav class="ann-queue-filter">
+  <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.filter") %></span>
+  <%= link_to t("admin.annotations.queue.all"), path_for.call(nav_params.except(:review)),
+        class: class_names("ann-queue-filter__link", "is-on" => nav_params[:review].nil?) %>
+  <%= link_to t("admin.annotations.queue.review"), path_for.call(nav_params.merge(review: Admin::AnnotationQueue::REVIEW_ON)),
+        class: class_names("ann-queue-filter__link", "is-on" => review_filter?) %>
+  <span class="ann-queue-filter__sep" aria-hidden="true">|</span>
+  <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.sort") %></span>
+  <%= link_to t("admin.annotations.queue.sort_default"), path_for.call(nav_params.except(:sort)),
+        class: class_names("ann-queue-filter__link", "is-on" => queue_sort.nil?) %>
+  <%= link_to t("admin.annotations.queue.sort_easy"), path_for.call(nav_params.merge(sort: Admin::AnnotationQueue::SORT_EASY)),
+        class: class_names("ann-queue-filter__link", "is-on" => queue_sort == Admin::AnnotationQueue::SORT_EASY) %>
+  <%= link_to t("admin.annotations.queue.sort_review"), path_for.call(nav_params.merge(sort: Admin::AnnotationQueue::SORT_REVIEW)),
+        class: class_names("ann-queue-filter__link", "is-on" => queue_sort == Admin::AnnotationQueue::SORT_REVIEW) %>
+</nav>
