@@ -96,7 +96,8 @@ class WordSense < ApplicationRecord
   # 文字種(words.char_type_pattern)で絞り込む。
   # partial:        真なら部分一致(LIKE %...%)、偽なら完全一致(=)。
   # case_sensitive: 真なら大文字小文字を区別する。カラムは utf8mb4_0900_ai_ci で
-  #                 既定では A=a とみなすため、区別する時だけ utf8mb4_bin で厳密比較する。
+  #                 既定では A=a に加えて、ひらがなの記号「あ」とカタカナの記号「ア」も同じとみなす
+  #                 (docs/data-model.md §6)。区別する時だけ utf8mb4_bin で厳密比較する。
   # ワイルドカードはエスケープする。
   scope :char_type_pattern_matching, lambda { |pattern, partial:, case_sensitive:|
     column = case_sensitive ? "words.char_type_pattern COLLATE utf8mb4_bin" : "words.char_type_pattern"

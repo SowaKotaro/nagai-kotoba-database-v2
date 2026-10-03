@@ -31,7 +31,7 @@ class WordSenseMetrics
   READING_KEY_LIMIT = 255
 
   # 語義そのものから採る代表値。読みは COLLATE utf8mb4_bin へ落として数える
-  # (格納時の as_ci のままだと小書き⇔並字・清濁が畳まれて数を取り違える)。
+  # (照合順序の同一視に数え方を左右させないための備え。実測と理由は docs/data-model.md §5)。
   SENSE_METRICS_SQL = <<~SQL.freeze
     SELECT word_senses.word_id AS word_id,
            COUNT(*)                                     AS sense_count,

@@ -47,10 +47,9 @@
 - **照合順序**: 日本語検索が中心のため全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。
   長い文字列カラムは prefix index（例 `surface(191)`）を使う。ただし **読み・表層形まわりは
   例外的に `utf8mb4_0900_as_ci`**（ai は濁点・半濁点を同一視して「ハ=バ=パ」になるため。as_ci なら
-  清濁を区別しつつ、ひらがな⇔カタカナ・A⇔a の同一視は保てる）。
-  対象は `words.surface` / `words.max_reading` / `min_reading` / `min_reversed_reading` /
-  `word_senses.reading` / `first_char` / `last_char` / `word_sense_variants.surface` / `reading` /
-  `word_request_items.surface` / `reading`。**読み・表層形を持つカラムを新設するときは `as_ci` を明示する。**
+  清濁を区別しつつ、ひらがな⇔カタカナ・A⇔a の同一視は保てる。小書き⇔並字（ヤ=ャ）は as_ci でも同一視される）。
+  as_ci にしてあるカラムの一覧と、それぞれの照合順序が何を同一視するか（実測）は
+  [`docs/data-model.md`](docs/data-model.md) §6 が正。**読み・表層形を持つカラムを新設するときは `as_ci` を明示する。**
 
 ---
 
