@@ -919,7 +919,7 @@ ja:
       new:
         title: "提案 JSON の取り込み"
         lead: "word-annotation-research スキルの出力 JSON を貼り付けて保存します。提案は下書き（DB）に入るだけで、公開データには反映されません。反映はアノテーション・コンソールで1語ずつ確認して保存（承認）します。同じ語に再度貼り付けると上書きされます。"
-        placeholder: '{ "version": "1", "proposals": [ { "word_id": 1, "meaning": "…", "genre_path": ["…"], … } ] }'
+        placeholder: '{ "version": "1", "proposals": [ { "word_id": 1, "entry_score": 5, "senses": [ { "meaning": "…", "genre_path": ["…", "…", "…"], … } ] } ] }'
         submit: "下書きとして保存"
         next_step: "取り込んだら:"
         to_console: "提案ありの語からアノテーションを始める"
