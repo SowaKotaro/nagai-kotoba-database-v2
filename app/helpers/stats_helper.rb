@@ -353,7 +353,8 @@ module StatsHelper
     data[:genre_ids] << node[:id]
   end
 
-  # 上辺を正弦波(振幅 2.6px・2周期)にした棒のパス。「読みの息の長さ」の見立て(統計ページ §3)。
+  # 上辺を正弦波(振幅 WAVE_AMPLITUDE。低い棒では高さの半分まで。周期数 WAVE_CYCLES)にした
+  # 棒のパス(統計ページ §3)。
   def wave_bar_path(x, top, width, bottom)
     steps = 24
     amplitude = [ WAVE_AMPLITUDE, (bottom - top) / 2.0 ].min

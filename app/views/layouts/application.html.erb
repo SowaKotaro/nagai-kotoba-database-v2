@@ -51,15 +51,21 @@
     <%# web フォントは読まない(書体は OS 標準のゴシック 1 本。docs/design.md §2)。
         外部フォント CDN への接続をなくすことが、そのまま表示速度になる。 %>
 
-    <%# モバイルのブラウザ UI の色。既定値はライトの --bg で、実際の値は
-        直後のスクリプトと theme コントローラが CSS のトークンから読んで上書きする %>
+    <%# モバイルのブラウザ UI の色。#ffffff は JS が動かないときに残る既定値(ライトの --surface と同じ白)。
+        JS が動けば、直後のスクリプトと theme_controller.js の sync が CSS の --bg を読んで上書きする
+        (--bg はヘッダーの --bg-soft とも本文の --surface とも違う色)。読むトークンを変えるなら 2 か所を揃える %>
     <meta name="theme-color" content="#ffffff">
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
     <%# ダークモードの復元(docs/design.md §9)。手動で選んだテーマを body の描画前に
         当てないと、一瞬ライトが見えてから暗転する。Stimulus の起動を待てないので
-        ここだけインラインで実行する。CSS 読み込みの後に置いてトークンを参照する %>
+        ここだけインラインで実行する。CSS 読み込みの後に置いてトークンを参照する。
+        theme_controller.js と対で、localStorage のキー "theme"(あちらの STORAGE_KEY)と
+        theme-color に読むトークン(--bg)を同じにしておく。
+        nonce: true はいま何もしていない: CSP が未設定(config/initializers/content_security_policy.rb は
+        全行コメント)。nonce 前提の CSP を入れると、nonce の無い GA4 のインライン script(layouts/_analytics)と、
+        Plotly を script 要素で差し込む genre_sunburst_controller.js の読み込みも止まるので、一緒に直す %>
     <%= javascript_tag nonce: true do %>
       (function () {
         try {

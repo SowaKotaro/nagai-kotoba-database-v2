@@ -32,6 +32,10 @@ class SearchesController < ApplicationController
   def search_params
     # genre_id / word_origin_id はフォームからは配列、ファセットリンクからは単一値で
     # 届くため両方許可する。vowel_reading は母音パターン検索用の生カナ入力。
+    # 単語一覧(WordsController#search_filter_params)とは許可する集合が違う: こちらは
+    # first_char / last_char / part_of_speech_id / entity_type_id / linguistic_feature_id の
+    # 単一値と、reading_length / mora_count / vowel_transition を持たない。一覧の「条件を変える」
+    # (search_path に一覧のクエリをそのまま渡す)で来ると、これらの条件はここで黙って落ちる。
     params.permit(
       :q, :regexp, :reading_length_min, :reading_length_max,
       :dakuten_min, :small_kana_min, :chouon_min,

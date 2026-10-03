@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | D1-14a（コントローラ・ビュー・ヘルパのコメント: 初版の分） |
+| 次の一手 | D1-14b（コントローラ・ビュー・ヘルパのコメント: 補完監査の分） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -129,8 +129,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | D1-11 | 第2群 | genres.md と SeedCatalog の関係（正は SeedCatalog）と、小分類の追加経路の記述を直す | high | 済 | `656e7b5` | seed_catalog.rb の「出典: docs/genres.md」を正の向きに、存在しない RENAMES を種類ごとの *_RENAMES に直した。genres.md に手作業の写しであること（Issue 85 で生成に）と、小分類の実際の追加経路 3 つ（タグ統括管理では追加できない）を書いた。合格判定は全部通過 |
 | D1-12a | 第2群 | モデル・サービスのコメントを実装に合わせる（初版の分: unannotated・公開スコープの名前・種別ラベル・テスト用の注記など） | high | 済 | `1388c5a` | 非 ActiveRecord のクラス 49 本とサービス 3 本に「種別:」の行を置き、計画書 §4.1 の語彙に揃えた（WordRanking・SearchRegexp の「値オブジェクト」の誤りを直した）。unannotated の説明・公開スコープの名前・ProposalApplication の保存・重複チェック 3 実装の違い・KanaRow の波及・SiteStatistics の冒頭とタグクラウド・語種名の例・将来の差し込み口・update_sql の参照元・DECISIONS への参照・register と annotated? の意味・読みの改行の 2 通り・テスト専用の 9 か所を直した。変更行がすべてコメントであることを確かめた。合格判定は全部通過 |
 | D1-12b | 第2群 | モデルのコメントを実装に合わせる（補完監査の分: MorphemeCloud・ShareCardTypesetter・ProposedMasterCreation・ProposalApplication・SiteStatistics の total） | high | 済 | `1b6d68b` | MorphemeCloud（最後の pack の実際・落ちる語・実測値の出どころ・用語・Z と記号の幅・相互参照・top はテスト用）、MorphemeFrequencies（見本→ワードクラウド・壊れた JSON の方針）、ShareCardTypesetter と ShareCardRenderer（割りやすい所の実際・書体の前提）、WordShareCard の字面、SiteStatistics（拍位置・件数の単位・total はテスト用）、ProposedMasterCreation の語種、seeded? の完全一致、ProposalApplication の反映の意味の表を直した。経緯の数値「60 件中 23 件」は stats.md へ移した。変更行はすべてコメント。合格判定は全部通過 |
-| D1-13 | 第2群 | 暗黙の前提をコードに書く（コールバックを通らない更新・target_start・マスタ名の正規化と衝突・WordBatch など） | high | 済 | このコミット | update_all の 4 経路、RefreshesWordMetrics の発火条件、ExpansionImport の savepoint 無しの続行、収録基準はモデルで検証しないこと、JAPANESE_ORIGIN_NAME の依存、公開状態の 2 列、プロセス内のメモ、target_start の前提、マスタ名の正規化と衝突の扱い（その場追加・タグ統括管理・新設候補・seed）、find_or_create_by! の Rails 8.1 依存、entry_score の範囲外の食い違い、不完全な提案の黙った除外、WordBatch、run_import の前提をコメントに書いた。WordCandidateIntake のコメントは初版の計画書で不採用にしたので触っていない。変更行はすべてコメント。合格判定は全部通過 |
-| D1-14a | 第2群 | コントローラ・ビュー・ヘルパのコメントを実装に合わせる（初版の分） | high | 未着手 | | |
+| D1-13 | 第2群 | 暗黙の前提をコードに書く（コールバックを通らない更新・target_start・マスタ名の正規化と衝突・WordBatch など） | high | 済 | `ba58a72` | update_all の 4 経路、RefreshesWordMetrics の発火条件、ExpansionImport の savepoint 無しの続行、収録基準はモデルで検証しないこと、JAPANESE_ORIGIN_NAME の依存、公開状態の 2 列、プロセス内のメモ、target_start の前提、マスタ名の正規化と衝突の扱い（その場追加・タグ統括管理・新設候補・seed）、find_or_create_by! の Rails 8.1 依存、entry_score の範囲外の食い違い、不完全な提案の黙った除外、WordBatch、run_import の前提をコメントに書いた。WordCandidateIntake のコメントは初版の計画書で不採用にしたので触っていない。変更行はすべてコメント。合格判定は全部通過 |
+| D1-14a | 第2群 | コントローラ・ビュー・ヘルパのコメントを実装に合わせる（初版の分） | high | 済 | このコミット | 計画書 D1-14 の初版の分（C-23・SPEC-15・SPEC-07・C-01・C-03・J-11・S-08・C-22 の nonce）を直した。「words#feed」「新着より上」、home/index の重複、words/index のファセット一覧（INDEXABLE_FACET_KEYS を指す形に）、genres/index の数の定義（3 通りあることを書いた）、「一覧は public でキャッシュ」（word_requests_controller・words/index）、太字（3 か所）・アクセント（統計の 4 か所と icons_helper）・印章、stats_helper の「2周期」と「見立て」（_length_chart も）、_sound_matrix の 11×11、_entry_row の組み方、words/show の §5.4、searches_controller の許可パラメータの違い（words_controller から相互参照）、CSP 未設定の前提（layout と _analytics）、テーマ復元 2 か所の相互参照（layout と theme_controller.js）、theme-color の既定値。admin/_nav の「アクセント色」は --admin-accent が実在するので直していない。変更行はすべてコメント（ERB は Erubi で HEAD と出力が同じことを 16 ファイルで確かめた）。§ 参照 158 件すべて実在。合格判定は全部通過 |
 | D1-14b | 第2群 | コントローラ・ビュー・ヘルパのコメントを実装に合わせる（補完監査の分: 統計・円環・登録予定単語・新設候補の案内・ワードマーク）。`share_cards/word.svg.erb` には触れない | high | 未着手 | | |
 | D1-15 | 第2群 | JavaScript のコメントを実装に合わせる | high | 未着手 | | |
 | D1-16 | 第2群 | CSS のコメントを実装に合わせる（tokens・application・components・admin・統計の地・既定の見た目の修飾子など） | high | 未着手 | | |
@@ -227,4 +227,4 @@ test 10,177 / docs 7,446 / .claude 1,419
 |---|---|---|---|---|
 | 2026-10-02 | `e4d2b7a` | 段階 0: 方針・台帳・再開コマンドを作った | `d8ce684` | 段階 1 はオーナーの回答待ち |
 | 2026-10-02 | `d8ce684` | 段階 1（目的の確定）、段階 2（棚卸し B-01〜B-08、補完監査 A-01〜A-11。A-03 は見送り）。途中で 1 回利用上限に当たり、A-07 をやり直した。**`ffb0664` では A-10 がまだ実行中なのに段階 2 を「済」にしてしまった**（台帳の A-10 は未着手のままだった）ので、このコミットで A-10 を取り込んで正した | `1110261` | 段階 2 の完了。P-01 は max 推奨 |
-| 2026-10-03 | `1110261` | 段階 3 の P-01（a〜d。計画書を補完監査の結果で改訂）・P-02（反証レビュー 16 件）・P-03（a: レビューの反映で 78 項目に、b: 台帳 §5 に 92 行で写した） | （このコミット） | P-04 はオーナーの回答待ち |
+| 2026-10-03 | `1110261` | 段階 3 の P-01（a〜d。計画書を補完監査の結果で改訂）・P-02（反証レビュー 16 件）・P-03（a: レビューの反映で 78 項目に、b: 台帳 §5 に 92 行で写した） | `e5951b5` | P-04 はオーナーの回答待ち |

@@ -85,7 +85,7 @@
       <article class="sense-card">
         <span class="sense-card__number"><%= t("words.show.sense_number", number: number) %></span>
 
-        <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.2) %>
+        <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.4) %>
         <h2 class="sense-heading">
           <ruby><%= @word.surface %><rt><%= sense.reading %></rt></ruby>
         </h2>

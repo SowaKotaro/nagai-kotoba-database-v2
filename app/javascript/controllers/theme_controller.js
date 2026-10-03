@@ -4,6 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // 既定は OS 設定に追従し、トグルを押したときだけ html[data-theme] で上書きして
 // localStorage に覚える。初回描画のちらつきを防ぐ復元は layouts/application.html.erb
 // の head 内インラインスクリプトが担当していて、ここは操作と表示の同期だけを行う。
+// あちらも同じキー("theme")を読むので、変えるなら 2 か所を揃える。
 const STORAGE_KEY = "theme"
 
 export default class extends Controller {
@@ -36,7 +37,8 @@ export default class extends Controller {
 
   sync() {
     this.buttonTarget.setAttribute("aria-checked", String(this.dark))
-    // モバイルのブラウザ UI(アドレスバー)の色。値は CSS のトークンを正とする
+    // モバイルのブラウザ UI(アドレスバー)の色。値は CSS のトークンを正とする。
+    // 初回描画の値は layouts/application.html.erb のインラインスクリプトが同じ --bg から入れる
     const themeColor = document.querySelector('meta[name="theme-color"]')
     if (themeColor) {
       themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()

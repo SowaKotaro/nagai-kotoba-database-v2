@@ -24,12 +24,12 @@ class HomeController < ApplicationController
     @genre_count = stats[:genres]
     @monthly_new_count = stats[:monthly_new]
     # 新着はサイトに出てきた順(annotated_at = 注釈完了 = 公開)で並べる。新着 Atom フィード
-    # (words#feed)と同じ基準。
+    # (words#index の atom 形式。WordsController#feed_words)と同じ基準。
     @recent_words = Word.annotated
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
                         .order(annotated_at: :desc, id: :desc)
                         .limit(RECENT_WORDS_LIMIT)
-    # 最長ランキング(読みが長い順)。サイト最大のフックなので新着より上に置く。
+    # 最長ランキング(読みが長い順)。ビューでは「読みが長い言葉」として新着の下に置く。
     @longest_words = Word.annotated
                          .includes(word_senses: [ :part_of_speech, :entity_type ])
                          .order(WordSort.new("length_desc").order_clause)

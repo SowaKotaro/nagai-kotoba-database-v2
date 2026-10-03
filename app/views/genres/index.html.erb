@@ -19,7 +19,9 @@
   </div>
 
   <%# レール: このページの性格を表す数(公開語をもつ分類の数)と、大分類ごとの語義数を
-      円の上に並べた線画。数はホームの「ジャンル数」と同じ定義に揃える %>
+      円の上に並べた線画。数は PublishedSenseCounts.by_genre のキーの数で、ジャンル未設定(nil)の
+      公開語義があればその nil も 1 と数える。ホームの「ジャンル数」(マスタの小分類の全件)・
+      統計の「使用ジャンル」(nil を除いた使用中の小分類)とは定義が違う %>
   <div class="page-header__rail">
     <div>
       <span class="figure-number figure-number--sm"><%= number_with_delimiter(@published_counts.size) %></span>

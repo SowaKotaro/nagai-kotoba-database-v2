@@ -5,9 +5,10 @@
 #   - 送信のレートリミットは保存済みレコードの COUNT(WordRequest.rate_limited?)
 #   - 重複チェックはレコードを作らないため、そこだけ Rails 標準の rate_limit
 #
-# フォームは専用ページにだけ置く。単語一覧などは public: true の HTTP キャッシュ配下にあり、
-# CSRF トークンを含むフォームを共有キャッシュに載せると別の利用者へトークンが渡るため、
-# 検索0件などからは「リンク」で誘導する(このページ自体はキャッシュさせない)。
+# フォームは専用ページにだけ置く(このページ自体は HTTP キャッシュさせない)。CSRF トークンを
+# 含むフォームを共有キャッシュに載せると別の利用者へトークンが渡るため、public: true で
+# キャッシュするページ(いまは単語詳細と Atom。WordsController)には置かない。単語一覧の HTML は
+# キャッシュを宣言していないが、検索0件などからも同じく「リンク」で誘導する。
 class WordRequestsController < ApplicationController
   allow_unauthenticated_access
   before_action :ensure_accepting_requests

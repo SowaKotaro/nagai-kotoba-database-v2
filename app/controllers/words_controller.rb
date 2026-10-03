@@ -130,6 +130,7 @@ class WordsController < ApplicationController
   end
 
   # 検索フォーム経由は配列、ファセットリンクは単一値で届くキーがあるため両方許可する。
+  # 詳細検索(SearchesController#search_params)はこれより許可する集合が狭い(あちらの注記を参照)。
   def search_filter_params
     params.permit(
       :q, :regexp, :reading_length_min, :reading_length_max, :reading_length, :mora_count,
