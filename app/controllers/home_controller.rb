@@ -3,7 +3,7 @@ class HomeController < ApplicationController
   allow_unauthenticated_access only: :index
 
   RECENT_WORDS_LIMIT = 5
-  RANKING_LIMIT = 10
+  RANKING_LIMIT = 5
 
   def index
     # 公開統計は毎リクエスト COUNT を3本発行していた。短TTLでキャッシュする(Issue 26)。
@@ -37,7 +37,7 @@ class HomeController < ApplicationController
     # 看板に出す「最長の読み」。サイト最大のフックになる数で、下の「読みが長い言葉」の
     # 1 位と同じ値になる。@longest_words は読み込み済みなので追加のクエリは発行しない。
     # load してから first を取る。未読込のリレーションに first を呼ぶと LIMIT 1 の
-    # 問い合わせが別に飛び、ビューで改めて 10 件を引き直すことになる。
+    # 問い合わせが別に飛び、ビューで改めて RANKING_LIMIT 件を引き直すことになる。
     @longest_reading_length = @longest_words.load.first&.word_senses&.first&.reading_length
     @featured_word = featured_word
   end

@@ -105,8 +105,8 @@ class SiteStatistics
       first_char_kinds: base_kana_kinds(@first_char_counts.keys),
       last_char_kinds: base_kana_kinds(@last_char_counts.keys),
       kana_total: KanaRow::BASE_46.size,
-      katakana_only_pct: percent(Word.annotated.where("char_type_pattern REGEXP ?", "^ア+$").count, @word_count),
-      with_kanji_pct: percent(Word.annotated.where("char_type_pattern LIKE ?", "%漢%").count, @word_count),
+      katakana_only_pct: percent(Word.annotated.where("char_type_pattern REGEXP ?", "^#{CharTypePattern::KATAKANA}+$").count, @word_count),
+      with_kanji_pct: percent(Word.annotated.where("char_type_pattern LIKE ?", "%#{CharTypePattern::KANJI}%").count, @word_count),
       with_chouon_pct: percent(WordSense.published.where("reading LIKE ?", "%ー%").count, @sense_count)
     }
   end

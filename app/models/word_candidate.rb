@@ -20,6 +20,7 @@
 class WordCandidate < ApplicationRecord
   MAX_SURFACE_LENGTH = 255
   MAX_NOTE_LENGTH = 1000
+  # 確信度の語彙。AnnotationProposal::HIGH_CONFIDENCE・LOW_CONFIDENCE と同じ(どちらも Claude の調査スキルの出力)。
   CONFIDENCES = %w[high medium low].freeze
   # notation の立項スコアがこれ以下の語は「立項に疑義がある語」として、確認のときに保留を選んでおく
   # (word-notation-research が上部リストから外す基準と同じ)。

@@ -158,8 +158,7 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "重複チェックの押しすぎは断る" do
-    limit = 10
-    limit.times { post duplicates_requests_path, params: check_params(surface: "調べたい言葉") }
+    WordRequestsController::DUPLICATE_CHECK_LIMIT.times { post duplicates_requests_path, params: check_params(surface: "調べたい言葉") }
     assert_response :success
 
     post duplicates_requests_path, params: check_params(surface: "調べたい言葉")

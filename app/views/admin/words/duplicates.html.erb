@@ -4,7 +4,7 @@
 
 <%= render "steps", current: 3 %>
 
-<p class="field-hint"><%= t("admin.words.bulk.duplicates.lead") %></p>
+<p class="field-hint"><%= t("admin.words.bulk.duplicates.lead", min: WordSense::MIN_READING_LENGTH) %></p>
 
 <%= form_with url: admin_words_path, method: :post, scope: :bulk_word_registration, data: { turbo: false } do %>
   <div class="bulk-review">
@@ -35,7 +35,7 @@
               <% if entry.too_short? %>
                 <p class="bulk-review__error-label">
                   <%= t("admin.words.bulk.duplicates.error_too_short",
-                        min: BulkWordRegistration::MIN_READING_LENGTH, length: entry.reading.length) %>
+                        min: WordSense::MIN_READING_LENGTH, length: entry.reading.length) %>
                 </p>
               <% end %>
               <% if entry.warnings? %>

@@ -12,13 +12,21 @@ class AnnotationProposal < ApplicationRecord
   # pending: 未承認 / applied: コンソールで保存済み / dismissed: 見送り
   enum :status, { pending: 0, applied: 1, dismissed: 2 }, default: :pending
 
-  # コンソールのキューで「要判断」に絞る(Issue 67)。立項スコアが低い(≤3)か確信度が low の提案。
+  # 立項スコアがこれ以下の語は「オーナー判断が必要」(docs/annotation-guidelines.md §2)。
+  # コンソールの赤いバッジ・キューの「要判断」・一括承認のゲートが、この 1 つの境界を共有する。
+  ENTRY_CONCERN_MAX_SCORE = 3
+  # 確信度(docs/annotation-guidelines.md §8)のうち、判定に使う両端の値。
+  # 語彙は WordCandidate::CONFIDENCES と同じ(どちらも Claude の調査スキルの出力)。
+  HIGH_CONFIDENCE = "high"
+  LOW_CONFIDENCE = "low"
+
+  # コンソールのキューで「要判断」に絞る(Issue 67)。立項スコアが低い(ENTRY_CONCERN_MAX_SCORE 以下)か確信度が low の提案。
   # payload(JSON)から取り出す。joins された words クエリからも呼べるよう列を明示修飾する。
   # 範囲外の立項スコア(0・負の値・数値でない文字列)は、CAST で 0 以下になるので「要判断」に入る。
   # Ruby の entry_score は同じ値を nil(未評価)として扱うので、範囲外の値では両者の判定が食い違う。
   scope :needs_review, -> {
-    where("CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) <= 3 " \
-          "OR annotation_proposals.payload->>'$.confidence' = 'low'")
+    where("CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) <= ? " \
+          "OR annotation_proposals.payload->>'$.confidence' = ?", ENTRY_CONCERN_MAX_SCORE, LOW_CONFIDENCE)
   }
 
   validates :payload, presence: true
@@ -115,9 +123,9 @@ class AnnotationProposal < ApplicationRecord
   # 立項の懸念理由(どの原則を・なぜ欠くか)。スコア3以下の語に付く。
   def entry_notes = payload["entry_notes"].presence
 
-  # 3以下は「オーナー判断が必要」ゾーン。コンソールの提案パネルで赤いバッジを出す。
+  # ENTRY_CONCERN_MAX_SCORE 以下は「オーナー判断が必要」ゾーン。コンソールの提案パネルで赤いバッジを出す。
   def entry_concern?
-    entry_score.present? && entry_score <= 3
+    entry_score.present? && entry_score <= ENTRY_CONCERN_MAX_SCORE
   end
 
   # --- 後方互換: 単一語義時代の呼び出し口は先頭語義に委譲する ---

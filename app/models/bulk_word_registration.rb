@@ -24,12 +24,9 @@ class BulkWordRegistration
   # 登録フェーズの入力(確認・編集後のエントリ配列)。
   attr_reader :entries
 
-  # 読みの正規化類似度がこの値以上なら「似ている」とみなして警告する。
-  # 公開側の収録リクエスト(Issue 75)と基準を揃えるため Levenshtein 側を正とする。
-  SIMILARITY_THRESHOLD = Levenshtein::SIMILARITY_THRESHOLD
-
-  # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
-  MIN_READING_LENGTH = WordSense::MIN_READING_LENGTH
+  # 基準値は持ち主の定数を直接使う(別名を置かない)。
+  # 読みの「似ている」は Levenshtein::SIMILARITY_THRESHOLD(公開側の収録リクエストと共有)、
+  # 収録基準の下限は WordSense::MIN_READING_LENGTH(docs/annotation-guidelines.md)。
 
   # 行頭の bullet: 「1.」「2)」「-」「*」「・」など。
   BULLET = /\A\s*(?:\d+[.)．、:：]|[-*・‣▪●○])\s*/
@@ -42,9 +39,9 @@ class BulkWordRegistration
       batch_matches.any? || db_matches.any?
     end
 
-    # 収録基準(読み MIN_READING_LENGTH 文字以上)を満たさない語。確認画面ではエラー扱いで既定除外にする。
+    # 収録基準(読み WordSense::MIN_READING_LENGTH 文字以上)を満たさない語。確認画面ではエラー扱いで既定除外にする。
     def too_short?
-      reading.present? && reading.length < MIN_READING_LENGTH
+      reading.present? && reading.length < WordSense::MIN_READING_LENGTH
     end
   end
   # 似ている相手の情報(表示用)。
@@ -184,7 +181,7 @@ class BulkWordRegistration
     analyzed.combination(2).each do |a, b|
       next if a.reading.blank? || b.reading.blank?
 
-      sim = Levenshtein.similarity_at_least(a.reading, b.reading, SIMILARITY_THRESHOLD)
+      sim = Levenshtein.similarity_at_least(a.reading, b.reading, Levenshtein::SIMILARITY_THRESHOLD)
       next unless sim
 
       a.batch_matches << Match.new(surface: b.surface, reading: b.reading, similarity: sim)
@@ -205,7 +202,7 @@ class BulkWordRegistration
   def db_matches_for(reading)
     reading_chars = reading.chars
     existing_readings.filter_map do |existing_reading, existing_surface, existing_chars|
-      sim = Levenshtein.similarity_at_least_chars(reading_chars, existing_chars, SIMILARITY_THRESHOLD)
+      sim = Levenshtein.similarity_at_least_chars(reading_chars, existing_chars, Levenshtein::SIMILARITY_THRESHOLD)
       Match.new(surface: existing_surface, reading: existing_reading, similarity: sim) if sim
     end.sort_by { |m| -m.similarity }
   end

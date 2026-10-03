@@ -34,12 +34,6 @@ class WordSense < ApplicationRecord
   # 重複確認の画面だけで、コンソールや一括承認からは 10 文字未満の読みの語義も保存できる。
   MIN_READING_LENGTH = 10
 
-  # 語種マスタ(SeedCatalog::WORD_ORIGINS)の和語・漢語をまとめた名前。
-  # 特徴の調査対象を絞るスコープで参照する(Issue 76)。
-  # SeedCatalog::WORD_ORIGINS の名前に依存する。/admin/tags で「日本語」を改名すると、with_japanese_origin が
-  # 黙って 0 件を返す(改名するなら、この定数と SeedCatalog の *_RENAMES をそろえる)。
-  JAPANESE_ORIGIN_NAME = "日本語".freeze
-
   validates :reading, presence: true
   validate :genre_must_be_small
 
@@ -133,7 +127,7 @@ class WordSense < ApplicationRecord
   # 含む語義だけを見る。本番実データでは、日本語を含まない語の特徴付与率は 1% しかなく
   # 調査しても空振りが濃厚だった(日本語を含む語は 21%)。
   scope :with_japanese_origin, lambda {
-    where(id: WordSenseOrigin.where(word_origin: WordOrigin.where(name: JAPANESE_ORIGIN_NAME))
+    where(id: WordSenseOrigin.where(word_origin: WordOrigin.where(name: SeedCatalog::JAPANESE_ORIGIN_NAME))
                              .select(:word_sense_id))
   }
 

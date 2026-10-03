@@ -25,7 +25,10 @@ class WordRequestsController < ApplicationController
 
   # 重複チェックは既存語との総当たりを公開面に開くことになるので、押下自体を抑える。
   # (送信と違い保存レコードが残らず、created_at の COUNT では数えられないため)
-  rate_limit to: 10, within: 1.minute, only: :duplicates,
+  # 送信の上限は WordRequest::RATE_LIMITS が持つ。
+  DUPLICATE_CHECK_LIMIT = 10
+  DUPLICATE_CHECK_PERIOD = 1.minute
+  rate_limit to: DUPLICATE_CHECK_LIMIT, within: DUPLICATE_CHECK_PERIOD, only: :duplicates,
              store: RATE_LIMIT_STORE, with: -> { render_check_throttled }
 
   def new

@@ -13,8 +13,8 @@ class BulkProposalApproval
   # 1つでも欠けたら対象外(=人手キューでコンソール承認する)。
   def self.eligible?(proposal)
     return false unless proposal.pending?
-    return false unless proposal.confidence == "high"
-    return false unless proposal.entry_score && proposal.entry_score >= 4
+    return false unless proposal.confidence == AnnotationProposal::HIGH_CONFIDENCE
+    return false unless proposal.entry_score && proposal.entry_score > AnnotationProposal::ENTRY_CONCERN_MAX_SCORE
     return false unless proposal.senses.size == 1
 
     sense = proposal.senses.first

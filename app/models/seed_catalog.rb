@@ -201,8 +201,13 @@ class SeedCatalog
   # ==== 語種 ========================================================================
   # 「外来語」で束ねず言語ごとに切り分ける方針。混種語は語義に複数の語種を紐づけて
   # 表現するため、ここには単一の語源としての値のみを並べる(開いた集合)。
+  # 和語・漢語をまとめた語種の名前。WordSense.with_japanese_origin(特徴の調査対象を絞る。Issue 76)が
+  # この名前で引くので、/admin/tags で改名すると黙って 0 件になる(改名するならこの定数と
+  # WORD_ORIGIN_RENAMES をそろえる。test/models/seed_catalog_test.rb が改名の対象でないことを確かめる)。
+  JAPANESE_ORIGIN_NAME = "日本語".freeze
+
   WORD_ORIGINS = [
-    "日本語",
+    JAPANESE_ORIGIN_NAME,
     "中国語",
     "韓国語",
     "英語",

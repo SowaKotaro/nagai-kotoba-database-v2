@@ -34,9 +34,8 @@
 </header>
 <%# 大分類の公開語義数。数字だけだと 143 と 196 の差が読めないので、細い横棒を添えて
     「比べられる図」にする(docs/design.md §5.9)。最大値で割ると 73〜97% に潰れて差が見えないため、
-    最小値〜最大値を 20〜100% に写して幅の差を作る(レールの放射図も同じ写像) %>
+    最小値〜最大値を 20〜100% に写して幅の差を作る(レールの放射図も同じ写像。RadialChart.percent) %>
 <% count_min, count_max = large_counts.values.minmax %>
-<% bar_width = ->(count) { count_max.to_i == count_min.to_i ? 100 : (20 + (count - count_min) * 80.0 / (count_max - count_min)).round } %>
 <% if larges.empty? %>
   <p class="empty-note"><%= icon "binoculars" %><%= t("genres.index.empty") %></p>
 <% else %>
@@ -50,7 +49,7 @@
           <%= icon "caret_down", "genre-fold__caret" %>
           <span class="genre-hub__large-name"><%= large.name %></span>
           <span class="genre-hub__bar" aria-hidden="true"
-                style="--w: <%= bar_width.call(large_counts[large.id]) %>%"></span>
+                style="--w: <%= RadialChart.percent(large_counts[large.id], count_min, count_max) %>%"></span>
           <span class="genre-hub__count mono"><%= large_counts[large.id] %></span>
         </summary>
         <div class="genre-fold__body">
