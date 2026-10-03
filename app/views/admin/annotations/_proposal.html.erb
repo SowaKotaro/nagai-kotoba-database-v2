@@ -10,42 +10,15 @@
         <%= t("admin.annotations.proposal.status.#{proposal.status}") %>
       </span>
     <% end %>
-    <% if proposal.confidence %>
-      <span class="ann-proposal__confidence ann-proposal__confidence--<%= proposal.confidence %>">
-        <%= t("admin.annotations.proposal.confidence.#{proposal.confidence}",
-              default: proposal.confidence) %>
-      </span>
-    <% end %>
-    <%# 立項スコア(docs/annotation-guidelines.md §2)。3以下は赤でオーナー判断を促す %>
-    <% if proposal.entry_score %>
-      <span class="ann-proposal__entry <%= "ann-proposal__entry--concern" if proposal.entry_concern? %>">
-        <%= t("admin.annotations.proposal.entry_score", score: proposal.entry_score) %>
-      </span>
-    <% end %>
+    <%= render "admin/annotations/proposal_meta", proposal: proposal %>
     <span class="spacer"></span>
     <%= link_to t("admin.annotations.proposal.apply"),
           admin_annotation_path(word, nav_params.merge(apply_proposal: 1)),
           class: "btn btn--sm", data: { turbo_frame: "annotation-console" } %>
   </div>
 
-  <%# 複数語義(同音異義語・Issue 41)は語義ごとに区切って見せる。単一なら見出しは付けない。
-      新設候補のワンタップ作成(Issue 66)は再反映で全語義を組み直す都合上、単一語義のときだけ有効にする %>
-  <% if proposal.multiple_senses? %>
-    <p class="ann-proposal__senses-note"><%= t("admin.annotations.proposal.multiple_senses", count: proposal.senses.size) %></p>
-    <% proposal.senses.each_with_index do |sense, i| %>
-      <div class="ann-proposal__sense">
-        <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
-        <%= render "proposal_sense", sense: sense, word: word, creatable: false %>
-      </div>
-    <% end %>
-  <% else %>
-    <%= render "proposal_sense", sense: proposal.senses.first, word: word, creatable: true %>
-  <% end %>
+  <%# 複数語義(同音異義語・Issue 41)は語義ごとに区切って見せる。単一なら見出しは付けない %>
+  <%= render "admin/annotations/proposal_senses", proposal: proposal, word: word %>
 
-  <% if proposal.entry_notes %>
-    <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>
-  <% end %>
-  <% if proposal.notes %>
-    <p class="ann-proposal__notes"><%= t("admin.annotations.proposal.notes") %>　<%= proposal.notes %></p>
-  <% end %>
+  <%= render "admin/annotations/proposal_notes", proposal: proposal %>
 </div>

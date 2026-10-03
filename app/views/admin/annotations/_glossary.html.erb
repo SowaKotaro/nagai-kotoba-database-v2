@@ -1,0 +1,18 @@
+<%# locals: (extra_class: nil) -%>
+<%# 言語学的特徴の用語解説(Issue 39)。「音韻添加ってなに?」に作業中そのまま答える控えめなパネル。
+    定義は config/linguistic_features_glossary.yml が単一ソース(docs/annotation-guidelines.md §7)。
+    1語コンソールは特徴の欄に、デッキは画面上部に 1 つだけ置く -%>
+<details class="<%= class_names("ann-glossary", extra_class) %>">
+  <summary class="ann-glossary__summary"><%= t("admin.annotations.glossary.summary") %></summary>
+  <dl class="ann-glossary__list">
+    <% LinguisticFeatureGlossary.all.each do |entry| %>
+      <div class="ann-glossary__item">
+        <dt><%= entry.name %></dt>
+        <dd>
+          <%= entry.description %>
+          <span class="ann-glossary__examples"><%= entry.examples.join("　／　") %></span>
+        </dd>
+      </div>
+    <% end %>
+  </dl>
+</details>

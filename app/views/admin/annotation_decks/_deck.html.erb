@@ -54,20 +54,7 @@
   </nav>
 
   <%# 用語解説はカードごとに繰り返すと重いので、デッキに1つだけ置く(Issue 39) %>
-  <details class="ann-glossary deck-glossary">
-    <summary class="ann-glossary__summary"><%= t("admin.annotations.glossary.summary") %></summary>
-    <dl class="ann-glossary__list">
-      <% LinguisticFeatureGlossary.all.each do |entry| %>
-        <div class="ann-glossary__item">
-          <dt><%= entry.name %></dt>
-          <dd>
-            <%= entry.description %>
-            <span class="ann-glossary__examples"><%= entry.examples.join("　／　") %></span>
-          </dd>
-        </div>
-      <% end %>
-    </dl>
-  </details>
+  <%= render "admin/annotations/glossary", extra_class: "deck-glossary" %>
 
   <%# 横スクロール + scroll-snap。スマホは横スワイプ、PC は矢印ボタン/キーで送る %>
   <div class="deck-track" data-deck-target="track">

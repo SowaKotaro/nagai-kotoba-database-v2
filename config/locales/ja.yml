@@ -435,6 +435,11 @@ ja:
       similar_title: "似ている言葉があります"
       none_title: "登録が確認されませんでした"
   admin:
+    shared:
+      # admin/shared/_copy_panel と admin/candidates/_export が共有する
+      copy_panel:
+        copy: "コピー"
+        copied: "コピーしました"
     # 共通ナビの文言。作業のラベルはダッシュボードのカードの見出しも兼ねる(並びは AdminHelper#admin_sections)
     nav:
       aria: "管理メニュー"
@@ -572,8 +577,6 @@ ja:
       export:
         count_html: "%{status} <span class=\"cand-export__num\">%{count}</span>語"
         count_limited_html: "%{status} %{total} 語のうち、先頭の <span class=\"cand-export__num\">%{count}</span>語"
-        copy: "コピー"
-        copied: "コピーしました"
         how_html: "コピーして %{input} に保存し、Claude Code で %{command} を実行する。"
         peek: "渡す内容を見る"
       import:
@@ -906,8 +909,6 @@ ja:
         reload: "再読込"
         count: "%{count} 語"
         hint: "この JSON をコピーして Claude Code に貼り付けてください。"
-        copy: "コピー"
-        copied: "コピーしました"
         next_step: "調査結果が返ってきたら:"
         empty: "書き出す語がありません（未注釈の語がないか、すべてに提案があります）。"
       export_features:
@@ -1003,8 +1004,6 @@ ja:
         eyebrow: "1語の再調査"
         lead: "この語だけの再調査用データです。コピーして Claude Code の /reannotation に貼ると、どの項目（意味・ジャンル・特徴など）を調べ直すか選べます。返ってきた提案JSONは「提案 JSON の取り込み」に貼ると、この語の下書きを上書きします。"
         hint: "現在の注釈内容とマスタ一覧を含みます"
-        copy: "コピー"
-        copied: "コピーしました"
         back: "この語に戻る"
         to_import: "提案 JSON の取り込みへ"
       sticky: "前の語の値を引き継ぐ"

@@ -36,33 +36,11 @@
     <details class="deck-proposal" open>
       <summary class="deck-proposal__summary">
         <span class="deck-proposal__title"><%= t("admin.annotations.proposal.title") %></span>
-        <% if proposal.confidence %>
-          <span class="ann-proposal__confidence ann-proposal__confidence--<%= proposal.confidence %>">
-            <%= t("admin.annotations.proposal.confidence.#{proposal.confidence}", default: proposal.confidence) %>
-          </span>
-        <% end %>
-        <% if proposal.entry_score %>
-          <span class="ann-proposal__entry <%= "ann-proposal__entry--concern" if proposal.entry_concern? %>">
-            <%= t("admin.annotations.proposal.entry_score", score: proposal.entry_score) %>
-          </span>
-        <% end %>
+        <%= render "admin/annotations/proposal_meta", proposal: proposal %>
       </summary>
       <div class="ann-proposal">
-        <% proposal.senses.each_with_index do |sense, i| %>
-          <div class="ann-proposal__sense">
-            <% if proposal.multiple_senses? %>
-              <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
-            <% end %>
-            <%= render "admin/annotations/proposal_sense", sense: sense, word: word,
-                  creatable: true, deck: true, sense_index: i %>
-          </div>
-        <% end %>
-        <% if proposal.entry_notes %>
-          <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>
-        <% end %>
-        <% if proposal.notes %>
-          <p class="ann-proposal__notes"><%= t("admin.annotations.proposal.notes") %>　<%= proposal.notes %></p>
-        <% end %>
+        <%= render "admin/annotations/proposal_senses", proposal: proposal, word: word, deck: true %>
+        <%= render "admin/annotations/proposal_notes", proposal: proposal %>
       </div>
     </details>
   <% end %>

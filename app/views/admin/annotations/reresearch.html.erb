@@ -8,17 +8,8 @@
 
     <p class="proposal-lead"><%= t("admin.annotations.reresearch.lead") %></p>
 
-    <div class="proposal-json" data-controller="clipboard"
-         data-clipboard-text-value="<%= @reresearch_json %>"
-         data-clipboard-copied-label-value="<%= t("admin.annotations.reresearch.copied") %>">
-      <div class="proposal-json__bar">
-        <span class="proposal-json__hint"><%= t("admin.annotations.reresearch.hint") %></span>
-        <button type="button" class="btn btn--sm" data-action="clipboard#copy">
-          <span data-clipboard-target="label"><%= t("admin.annotations.reresearch.copy") %></span>
-        </button>
-      </div>
-      <%= text_area_tag :reresearch_json, @reresearch_json, readonly: true, rows: 12, class: "proposal-json__area" %>
-    </div>
+    <%= render "admin/shared/copy_panel", text: @reresearch_json, hint: t("admin.annotations.reresearch.hint"),
+          name: :reresearch_json, rows: 12 %>
 
     <div class="ann-actionbar">
       <%= link_to t("admin.annotations.reresearch.back"), admin_annotation_path(@word, nav_params), class: "btn" %>

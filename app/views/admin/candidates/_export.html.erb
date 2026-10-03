@@ -2,13 +2,14 @@
     中身は必要なときだけ開いて見る(数百行を毎回画面に広げない)。
     状態の名前は「すべての語」のその状態へのリンク(誤って回した語を見つけて仕分けに戻せるように)。
     語数を絞って書き出したときは、待っている語の総数を添える(拡張で数十語ずつ渡すとき)。
-    export は WordCandidateExport、empty はその段に語が無いときの案内。 %>
+    export は WordCandidateExport、empty はその段に語が無いときの案内。
+    件数とリンクを並べ、中身を畳む作りなので admin/shared/_copy_panel は使わず、文言だけそれと共有する。 %>
 <% target = export.target %>
 <% if export.candidates.any? %>
   <% status_link = link_to(candidate_status_label(target[:status]), admin_candidates_list_path(status: target[:status])) %>
   <div class="cand-export" data-controller="clipboard"
        data-clipboard-text-value="<%= export.text %>"
-       data-clipboard-copied-label-value="<%= t("admin.word_candidates.export.copied") %>">
+       data-clipboard-copied-label-value="<%= t("admin.shared.copy_panel.copied") %>">
     <div class="cand-export__bar">
       <p class="cand-export__count">
         <% if export.limited? %>
@@ -20,7 +21,7 @@
         <% end %>
       </p>
       <button type="button" class="btn btn--sm cand-export__copy" data-action="clipboard#copy">
-        <span data-clipboard-target="label"><%= t("admin.word_candidates.export.copy") %></span>
+        <span data-clipboard-target="label"><%= t("admin.shared.copy_panel.copy") %></span>
       </button>
     </div>
     <p class="cand-export__how">

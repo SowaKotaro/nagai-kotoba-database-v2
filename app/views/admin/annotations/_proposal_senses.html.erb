@@ -1,0 +1,26 @@
+<%# locals: (proposal:, word:, deck: false) -%>
+<%# 提案の語義ごとの内訳。複数語義(同音異義語・Issue 41)は「語義 N」で区切る。
+    新設候補のワンタップ作成(creatable。Issue 66)の出し方は画面で違い、その決め方はここだけに書く:
+    - 1語コンソール: 再反映で全語義を組み直す都合上、単一語義のときだけ有効にする
+    - デッキ: フォームごと create_master へ送って送信内容を描き直すので、語義の数によらず有効にする -%>
+<% if deck %>
+  <% proposal.senses.each_with_index do |sense, i| %>
+    <div class="ann-proposal__sense">
+      <% if proposal.multiple_senses? %>
+        <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
+      <% end %>
+      <%= render "admin/annotations/proposal_sense", sense: sense, word: word,
+            creatable: true, deck: true, sense_index: i %>
+    </div>
+  <% end %>
+<% elsif proposal.multiple_senses? %>
+  <p class="ann-proposal__senses-note"><%= t("admin.annotations.proposal.multiple_senses", count: proposal.senses.size) %></p>
+  <% proposal.senses.each_with_index do |sense, i| %>
+    <div class="ann-proposal__sense">
+      <span class="ann-proposal__sense-no"><%= t("admin.words.senses_legend") %> <%= i + 1 %></span>
+      <%= render "admin/annotations/proposal_sense", sense: sense, word: word, creatable: false %>
+    </div>
+  <% end %>
+<% else %>
+  <%= render "admin/annotations/proposal_sense", sense: proposal.senses.first, word: word, creatable: true %>
+<% end %>

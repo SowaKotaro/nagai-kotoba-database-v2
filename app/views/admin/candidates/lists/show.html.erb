@@ -93,8 +93,7 @@
             <%= button_tag t(".moves.#{move}"), type: "submit", name: "move", value: move, form: "cand-move", class: "btn btn--sm" %>
           <% end %>
         </span>
-        <button type="button" class="cand-link-button" data-js-only data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
-        <button type="button" class="cand-link-button" data-js-only data-action="row-select#clear"><%= t("admin.word_candidates.select.clear") %></button>
+        <%= render "admin/candidates/selection_controls", js_only: true %>
       </div>
     </div>
   <% end %>
