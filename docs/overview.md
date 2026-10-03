@@ -177,15 +177,16 @@ bin/rails server
 
 ### 任意の外部コマンド（無くても機能は止まらない）
 
-| コマンド | 使う場所 | 無いとどうなるか |
-|---|---|---|
-| `mecab`（＋ mecab-ipadic-neologd） | 一括登録 step2 の読み自動取得（`ReadingExtractor`） | 読みが空欄になり、確認画面で手入力する |
-| `mecab`（既定辞書 ipadic） | 統計 §1 の形態素頻度の事前集計（`bin/rails stats:morphemes`） | 集計を更新できない（本番は JSON を読むだけなので影響なし） |
-| `rsvg-convert` ＋ 日本語の書体 | 単語ごとの共有カード（`ShareCardRenderer`） | og:image が既定カード `og-default.png` のままになる |
+| コマンド | 使う場所 | 無いとどうなるか | 本番・CI |
+|---|---|---|---|
+| `mecab`（＋ mecab-ipadic-neologd） | 一括登録 step2 の読み自動取得（`ReadingExtractor`） | 読みが空欄になり、確認画面で手入力する | どちらにも無い（本番の step2 は読みが空欄で出る） |
+| `mecab`（既定辞書 ipadic） | 統計 §1 の形態素頻度の事前集計（`bin/rails stats:morphemes`） | 集計を更新できない（本番は JSON を読むだけなので影響なし） | どちらにも無い（集計はローカルで行い、`db/morpheme_frequencies.json` をコミットする） |
+| `rsvg-convert` ＋ 日本語の書体 | 単語ごとの共有カード（`ShareCardRenderer`） | og:image が既定カード `og-default.png` のままになる | 本番は導入済み（下記）。CI には無い |
 
 - 読みの取得は **neologd**、形態素の分解は**既定辞書**を使う。neologd は「涼宮ハルヒの憂鬱」を
   丸ごと 1 語で持つので、部品を数える用途では逆効果になる（目的が逆なので辞書の選択も逆）。
-- 辞書の場所は `MECAB_DICT` で上書きできる。無ければ既定辞書へフォールバックする。
+- 読みの取得（`ReadingExtractor`）の辞書の場所は `MECAB_DICT` で上書きできる。無ければ既定辞書へ
+  フォールバックする。形態素の分解（`MorphemeExtractor`）は `MECAB_DICT` を見ず、いつも既定辞書を使う。
 - これらに依存するテストは、コマンドが無い環境では skip する（CI もこの扱い）。
 - **本番サーバには rsvg-convert と Noto CJK を導入済み**（2026-09-15）。入れ直したら Puma を
   再起動する（有無の判定はプロセスごとに 1 回だけ行うため）。

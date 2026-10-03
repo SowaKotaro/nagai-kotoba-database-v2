@@ -1,7 +1,12 @@
 Rails.application.routes.draw do
+  # 並び: 管理者のログイン → 公開面 → 管理面(namespace :admin) → 公開面の残り(/up と root)。
+  # 公開面の URL とクエリパラメータ名は世に出ているので変えない(?sort=created_desc など。CLAUDE.md)。
+
+  # ── 管理者のログイン ──────────────────────────────────────────
   # SessionsController にあるのは new / create / destroy だけ。存在しない update へのルートを生やさない。
   resource :session, only: %i[new create destroy]
 
+  # ── 公開面 ────────────────────────────────────────────────────
   # 公開閲覧(誰でも閲覧可)。一覧・詳細と、詳細の共有カードのみ。書き込みは admin 名前空間に閉じる。
   # random は「ランダムに1語」導線。:id より前に来るよう collection で定義する。
   resources :words, only: %i[index show] do
@@ -48,12 +53,14 @@ Rails.application.routes.draw do
   # robots.txt(動的)。Sitemap 行のホストを canonical_host と連動させる。
   get "robots.txt", to: "robots#show", defaults: { format: "text" }, as: :robots
 
+  # ── 管理面(/admin) ──────────────────────────────────────────
   # 管理者専用の登録・編集・削除。認証必須(Admin::BaseController)。
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
     root "dashboard#index"
     # 詳細(show)は公開閲覧側(Issue 8)で扱う。編集はアノテーション・コンソールに統合済み(Issue 36)。
     # 一括登録は3ステップ: new(入力) → readings(step2 読み) → duplicates(step3 重複) → create(登録)。
+    # step2 では任意で apply_research(貼った調査 JSON を MeCab の暫定読みと突き合わせる)も使う。
     resources :words, only: %i[index new create destroy] do
       collection do
         post :readings
@@ -138,8 +145,8 @@ Rails.application.routes.draw do
     resources :parts_of_speech, only: :create
     resources :entity_types, only: :create
   end
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
+  # ── 公開面の残り ──────────────────────────────────────────────
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check

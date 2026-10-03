@@ -1,8 +1,8 @@
-# 既存レコードへ、後から追加した派生カラムの値を埋め直すためのタスク。
-# 冪等(何度実行しても同じ結果)。マイグレーションで追加した mora_count / vowel_pattern は
-# NULL 許容のため、既存行は本タスクで backfill する。
-# update_all や直接 SQL で reading / surface を更新すると派生カラムが古くなるため、
-# その修復にも本タスクを使う(事前の検出は backfill:verify)。
+# Ruby 側で作る派生値を、既存レコードについて作り直すためのタスク。冪等(何度実行しても同じ結果)。
+# いまの主な用途は修復: update_all や直接 SQL で reading / surface を書き換えると、コールバックを
+# 通らないので派生値が古くなる。backfill:verify で差分を検出し、reading_metrics(語義の読み由来の値)と
+# sense_metrics(words の代表値)で直す。派生カラムを新しく足したときの埋め直しにも使う
+# (もとは mora_count / vowel_pattern を足したときの backfill のために作った)。
 namespace :backfill do
   desc "既存の語義に reading 由来の派生値(rhythm_pattern/vowel_pattern/mora_count/last_char)を再生成する"
   task reading_metrics: :environment do

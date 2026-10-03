@@ -1,8 +1,9 @@
 # 統計ページ §1「ワードクラウド」の形態素頻度を事前集計する(Issue 78)。
 #
-# 本番・CI には MeCab が無いため、集計は MeCab のあるローカルで行い、
-# 結果(db/morpheme_frequencies.json)をコミットして本番は読むだけにする。
-# 冪等: 何度実行しても同じ入力からは同じ結果になる(backfill:reading_metrics と同じ作法)。
+# 本番・CI には MeCab が無いため(docs/overview.md の外部コマンドの表)、集計は MeCab のある
+# ローカルで行い、結果(db/morpheme_frequencies.json)をコミットして本番は読むだけにする。
+# 同じ入力からは同じ集計(counts)になる。ただしファイルの generated_at は実行のたびに変わるので、
+# ファイルそのものは同一にならない。
 #
 # 使い方:
 #   bin/rails stats:morphemes                      # 公開済みの語(DB)から集計する
@@ -11,6 +12,8 @@
 # SURFACES_FILE は、手元の DB が本番と同期していないときの逃げ道。
 # 本番の公開データは https://nagai-kotoba-database.jp/llms-full.txt から取れるので、
 # そこから見出し語を抜いたファイルを渡せば本番相当の集計ができる。
+# 渡すのは公開語(注釈済み)だけのファイルにする。この経路は公開スコープ(Word.annotated)を
+# 通らないので、未公開の語を混ぜるとその部品が公開のワードクラウドに出る(docs/data-model.md §8)。
 namespace :stats do
   desc "統計ページのワードクラウド用に、収録語の形態素頻度を集計して db/morpheme_frequencies.json を更新する"
   task morphemes: :environment do

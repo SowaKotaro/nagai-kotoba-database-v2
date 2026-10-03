@@ -48,9 +48,10 @@ module NagaiKotobaDatabaseV2
     # 末尾スラッシュ無し。ENV で上書き可(検証環境・ステージング用)。
     config.x.canonical_host = ENV.fetch("CANONICAL_HOST", "https://nagai-kotoba-database.jp")
 
-    # インデックス解禁スイッチ(Issue 43)。未設定 = 全ページ noindex(公開準備中)。
-    # 注釈済み 300〜500 語に達したら本番に INDEXING_ENABLED を設定して解禁する
-    # (手順は docs/launch-checklist.md)。テスト環境は解禁後の挙動を既定にする(test.rb)。
+    # インデックス解禁スイッチ(Issue 43)。未設定 = 全ページ noindex。本番は 2026-07-19 に解禁済み
+    # (手順は docs/launch-checklist.md)。値は見ず、空でない値が設定されているかだけで決まる
+    # ("false" を設定しても解禁になる。下の REQUESTS_ENABLED は真偽値として読むので、解釈が違う)。
+    # テスト環境は解禁後の挙動を既定にする(test.rb)。
     config.x.indexing_enabled = ENV["INDEXING_ENABLED"].present?
 
     # 収録リクエストの受付スイッチ(Issue 75)。荒らされたら本番の環境変数を "false" にして
