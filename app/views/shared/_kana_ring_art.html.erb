@@ -1,6 +1,11 @@
 <%# 「読みを五十音の円環で一筆書きにした線画」。単語詳細の円環交差数(words/_kana_ring)と
     同じ座標を使うが、こちらは数値を読ませない装飾なので、ラベルも枠も持たせない。
     実データから生まれる図なので、写真のプレースホルダを置かずに済む(docs/design.md §5.7)。
+    同じ円環(補助の円 + 折れ線)は、ヘッダーの shared/_brand_mark と、共有カードの
+    share_cards/word.svg.erb(寸法は WordShareCard)も別々に組んでいる。座標はどれも KanaRing から
+    取るが、始点の点の半径(ここは r="2.6" の直書き、カードは WordShareCard::RING_START_RADIUS)と
+    線の太さ(Web は components.css、カードは SVG に直書き)はそれぞれが持ち、1 点だけの読みでは
+    カードだけが折れ線を省く。見た目を変えるときは 3 か所を見る。
     locals: reading(必須) / caption(任意) / value(任意: キャプション2行目の値) / modifier(任意: 追加クラス)
            / arc_label(任意: 円の外側を弧を描いて回る英字。ホーム最上部の印だけで使う) %>
 <% path = KanaRing.path(reading) %>
@@ -39,8 +44,9 @@
       <circle class="ring-art__start" cx="<%= start.cx %>" cy="<%= start.cy %>" r="2.6"></circle>
     </svg>
     <% if local_assigns[:caption].present? %>
-      <%# 標識は2行にし、2行目に必ず「値」を置く(docs/design.md §5.8)。
-          図が何本の弦で交差しているかを数で併記しておくと、線の込み具合が読める %>
+      <%# 図のキャプション。クラスは標識(.label-en)を兼ねるが、標識の「2 行目に必ず値」の規則の
+          対象外(docs/design.md §5.8)。value は任意で、いまはホームの今日の一語だけが交差数を渡す
+          (図が何本の弦で交差しているかを数で併記すると、線の込み具合が読める) %>
       <figcaption class="ring-art__caption label-en">
         <%= caption %>
         <% if local_assigns[:value].present? %>

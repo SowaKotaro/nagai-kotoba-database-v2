@@ -36,6 +36,9 @@
 <% if @stats.head_consonants.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
   <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
+  <%# 棒の長さは先頭行の件数を 100% とし、最多の色も CSS の .stats-bars__row:first-child が付ける。
+      どちらも SiteStatistics#head_consonants が件数の多い順に返すことが前提(並びを変えると
+      棒が 100% を超え、色も別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>
   <% max_count = @stats.head_consonants.first[:count].to_f %>
   <ol class="stats-bars">
     <% @stats.head_consonants.each do |group| %>

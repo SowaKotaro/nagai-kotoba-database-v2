@@ -1048,7 +1048,7 @@ ja:
       features_reviewed: "言語的特徴を「該当なし」で確定しました。特徴の再調査の対象から外れます。"
       review_features: "特徴なしで確定"
       review_features_hint: "調べたうえで該当する現象が無かったとき。再調査の対象から外れます。"
-      create_master_failed: "新設候補の作成に失敗しました。タグ統括管理から手動で追加してください。"
+      create_master_failed: "新設候補の作成に失敗しました。入力欄の「＋ 追加」から手動で追加してください。"
       publish_incomplete_confirm: "まだ埋まっていない項目があります。未完了のまま公開しますか？"
       error_header: "入力内容にエラーがあります"
       all_done: "未対応の語はありません"

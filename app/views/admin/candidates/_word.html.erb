@@ -1,6 +1,12 @@
 <%# 行の「語」の部分: 表層形と、判断の手がかり(元の表記・立項スコア・照合で一致した相手・メモ)。
     turbo-frame の中身で、「直す」を押すとこの部分だけが編集フォームに替わる(admin/word_candidates/edit)。
-    root は系統の元の語の行か(一覧では系統のまとまりから、1語の画面では集めた語の有無から決める)。
+    root は「元の語」の札を付けるか。判定は画面ごとに違い、同じ札が別の意味になっている:
+      - 確認の一覧(admin/candidates/_review): 系統の根か(root_id || id。WordCandidateReview::Group#root_row?)
+      - 1 語の画面(admin/word_candidates/show): 直接の子がいるか(expansions = seed_id で引く)
+    「すべての語」(admin/candidates/lists/show)は札を付けず、seed_id があれば子として字下げする
+    (並び順の in_tree_order は root_id で決まる)。食い違うのは、子をさらに広げて孫ができたとき
+    (1 語の画面でだけ、その子に札が付く)と、元の語を消して seed_id だけが空になったとき
+    (「すべての語」では字下げされず、確認の一覧では子として括られる)。
     in_list は確認の一覧の中か。一覧では行の中のリンクを Tab で止めない(Tab で行から行へ移れるように。
     「直す」は F2 で開ける) %>
 <% link_tabindex = local_assigns[:in_list] ? -1 : nil %>

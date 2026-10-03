@@ -51,6 +51,8 @@
         </thead>
         <tbody>
           <% @candidates.each do |candidate| %>
+            <%# 子の字下げは seed_id の有無で決める。確認の一覧・1 語の画面の「元の語」とは判定が違う
+                (admin/candidates/_word の冒頭) %>
             <tr class="cand-table__row <%= "cand-table__child" if candidate.seed_id %>" data-row-select-target="row">
               <td class="cand-table__check">
                 <%# 登録済みの語は一括登録で収録された語なので動かせない %>

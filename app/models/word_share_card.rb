@@ -51,6 +51,8 @@ class WordShareCard
   LABEL_LEADING = 40
 
   # 円環は既定カードの印と同じ大きさ(viewBox 200 を 268px に)で、袖の中央に置く。
+  # Web の shared/_kana_ring_art・shared/_brand_mark と同じ図を、share_cards/word.svg.erb が別に組む
+  # (座標は KanaRing から取る。3 か所の違いは shared/_kana_ring_art の冒頭にまとめてある)。
   RING_SCALE = 1.34
   RING_CENTER_X = (FRAME_LEFT + PILLAR) / 2.0
   RING_CENTER_Y = FRAME_MIDDLE

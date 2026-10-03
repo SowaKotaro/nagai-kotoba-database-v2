@@ -80,6 +80,8 @@
   </p>
 </div>
 <% last = graph[:layers].last %>
+<%# 最多の遷移。stats_vowel_graph が edge[:top] に真偽で立てた 1 本を探し直す。SiteStatistics の
+    データでは層が 2 つ以上あれば件数が正の遷移が必ずあるので、nil にはならない %>
 <% top = graph[:edges].find { |edge| edge[:top] } %>
 <p class="stats-hint"><%= t("stats.index.sound.graph_hint",
       top_position: top[:position],

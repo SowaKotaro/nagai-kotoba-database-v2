@@ -1,6 +1,6 @@
 # 統計ページ(docs/stats.md)のチャート幾何計算。SVG はサーバ側(ERB)で描き、
-# チャートライブラリは導入しない。ここでは座標・パスの計算だけを行い、
-# 色・線種はビュー側の CSS クラス(components.css)に任せる。
+# チャートライブラリは導入しない。ここでは座標・パスと、量から写す値(母音の遷移の
+# 線の太さと濃さ。graph_edges)を計算する。色はビュー側の CSS クラス(components.css)に任せる。
 module StatsHelper
   # 数字の壁の値の表示用整形(nil は「—」、小数の .0 は落とす、桁区切りあり)。
   def stats_number(value)
@@ -23,6 +23,10 @@ module StatsHelper
 
   # 分布 [{ value:, count: }] から波形塗りバーの描画データを組み立てる。
   # 直書きラベルは最頻値と両端のみ(全点に数字を振らない。docs/stats.md §1)。
+  # 最頻(mode)はここで、渡されたビンの件数から決める(同数なら先のビン = 小さい値)。
+  # 数字の壁の「最頻値」は SiteStatistics#mode_from_counts が別に決めていて、あちらは
+  # 「30 以上」をまとめる前(SiteStatistics#fill_distribution の前)の件数で見る。そのため、
+  # まとめた棒の件数が単一の値の最大件数を超えると、ここでは「30+」が最頻になり、両者が食い違う。
   def stats_wave_bars(distribution)
     max_count = distribution.map { |bin| bin[:count] }.max.to_i
     mode_value = distribution.max_by { |bin| bin[:count] }&.fetch(:value)
@@ -106,6 +110,8 @@ module StatsHelper
   # ==== エンティティ型のツリーマップ ================================================
 
   # レイアウト計算に使う仮想キャンバス(横:縦 = 3:2。CSS の aspect-ratio と一致させる)。
+  # ただし 767px 以下では CSS だけが 3:5 にして縦へ引き伸ばす(面積の比は保たれるが、
+  # squarify が正方形に近づけるのは 3:2 のキャンバスに対してなので、マスは縦長になる)。
   # 2:1 から縦を伸ばしたのは、出す型を 8 → 38 に増やした 2026-09-10 に、
   # 1マスあたりの面積を確保するため(同じ幅なら 3:2 の方が 1.3 倍広い)。
   TREEMAP_WIDTH = 300.0
@@ -147,7 +153,8 @@ module StatsHelper
   # 層(拍位置)を横に並べ、各層に母音5つのノードを縦に置いて、隣り合う層を全結合で結ぶ。
   # 座標はスペクトルと同じく仮想キャンバスで持ち、viewBox 付き SVG で拡縮する。
   #
-  # キャンバスの幅は層の数から決める(15層で 818px)。画面に収まらないぶんは
+  # キャンバスの幅は層の数から決める(GRAPH_LEFT + GRAPH_COLUMN_PITCH ×(層の数 − 1)+ GRAPH_RIGHT。
+  # 15層で 1,148px)。画面に収まらないぶんは
   # 親(.stats-scroll)を横へスクロールさせ、図そのものは縮めない。
   # 間隔は「本文カラム(約 816px)に 10 拍ぶんが収まる」ところから決めている
   # (段名の 52 + 14 + 80×9 + 14 = 800。オーナー指示 2026-09-10)。11拍目からはスクロールの先。
@@ -273,6 +280,8 @@ module StatsHelper
         stroke: (GRAPH_MIN_EDGE + ((GRAPH_MAX_EDGE - GRAPH_MIN_EDGE) * ratio)).round(2),
         opacity: (GRAPH_MIN_OPACITY + ((GRAPH_MAX_OPACITY - GRAPH_MIN_OPACITY) * ratio)).round(3),
         significant: edge[:share] >= (GRAPH_UNIFORM_SHARE * GRAPH_SIGNIFICANT_RATIO),
+        # この top は「最多の 1 本」の真偽で、ビュー(_vowel_graph)が find で探し直す。
+        # 波形バー(stats_wave_bars)とツリーマップ(stats_entity_treemap)の top は座標なので取り違えない
         top: edge.equal?(top_edge)
       )
     end
