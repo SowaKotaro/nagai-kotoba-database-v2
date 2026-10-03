@@ -15,6 +15,14 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil Session.find_by(id: stale_session.id)
   end
 
+  test "未ログインで弾かれた管理画面の URL へ、ログイン後に戻す" do
+    get admin_words_path(status: "on_hold")
+    assert_redirected_to new_session_path
+
+    post session_path, params: { username: @admin.username, password: "password" }
+    assert_redirected_to admin_words_url(status: "on_hold")
+  end
+
   test "パスワードが違えばログイン画面へ戻す" do
     post session_path, params: { username: @admin.username, password: "wrong" }
 

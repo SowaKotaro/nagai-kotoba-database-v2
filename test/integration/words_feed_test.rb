@@ -19,6 +19,23 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
     assert(feed.css("entry > content").any? { |c| c.text.include?("日本語の長い言葉") })
   end
 
+  test "words.atom は FEED_LIMIT 件までで、一覧の絞り込みを無視し、エントリの URL は本番ホスト" do
+    (WordsController::FEED_LIMIT - 1).times do |index|
+      create_annotated_word_with_genre(surface: "フィードの件数上限の見本その#{index}",
+                                       reading: "フィードノケンスウジョウゲンノミホンソノ#{index}", genre: genres(:small_novel))
+    end
+    assert_operator Word.annotated.count, :>, WordsController::FEED_LIMIT
+
+    get words_path(format: :atom)
+    feed = Nokogiri::XML(response.body).remove_namespaces!
+    titles = feed.css("entry > title").map(&:text)
+    assert_equal WordsController::FEED_LIMIT, titles.size
+    assert(feed.css("entry > link").all? { |link| link["href"].start_with?("https://nagai-kotoba-database.jp/words/") })
+
+    get words_path(format: :atom, first_char: word_senses(:curry).first_char)
+    assert_equal titles, Nokogiri::XML(response.body).remove_namespaces!.css("entry > title").map(&:text)
+  end
+
   test "レイアウトに Atom の autodiscovery link がある" do
     get root_path
     assert_select "link[rel=alternate][type='application/atom+xml'][href=?]", "/words.atom"

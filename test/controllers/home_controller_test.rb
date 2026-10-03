@@ -44,4 +44,50 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil figure, "看板に「最長の読み」の行がある"
     assert_equal longest.gsub(/[^0-9]/, ""), figure.css("dd").text.gsub(/[^0-9]/, "")
   end
+
+  # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。
+  test "ホームの検索欄は単語一覧へ q を GET で送る" do
+    get root_path
+    assert_select "form.hero-search[action=?][method=get] input[name=q]", words_path
+  end
+
+  test "今日の一語は日付で決まり、翌日は別の語になる" do
+    ordered = Word.annotated.order(:id).to_a
+    assert_equal 2, ordered.size, "フィクスチャの公開語は2語の前提"
+    date = Date.new(2026, 10, 1)
+    date += 1 until date.jd.even?
+
+    travel_to(date.in_time_zone.change(hour: 12)) { get root_path }
+    assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[0])
+
+    travel_to((date + 1).in_time_zone.change(hour: 12)) { get root_path }
+    assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[1])
+  end
+
+  # 語数はホームの統計と一緒にキャッシュしている。公開・保留の直後でキャッシュの語数と実際の語数が
+  # ずれていても、今日の一語はキャッシュの語数で選ぶ(数え直すと COUNT が毎リクエストに戻る)。
+  test "今日の一語は、キャッシュした語数で選ぶ(実際の語数とずれていても)" do
+    ordered = Word.annotated.order(:id).to_a
+    # 2 語なら先頭、3 語なら 2 番目を選ぶ日(jd % 2 == 0 かつ jd % 3 == 1)
+    date = Date.new(2026, 10, 1)
+    date += 1 until date.jd % 6 == 4
+
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    travel_to(date.in_time_zone.change(hour: 12)) do
+      get root_path
+      assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[0])
+
+      word = Word.new(surface: "今日の一語の語数ずれの見本")
+      word.word_senses.build(reading: "キョウノイチゴノゴスウズレノミホン")
+      word.mark_annotated
+      word.save!
+      assert_equal 3, Word.annotated.count
+
+      get root_path
+      assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[0])
+    end
+  ensure
+    Rails.cache = original_cache
+  end
 end

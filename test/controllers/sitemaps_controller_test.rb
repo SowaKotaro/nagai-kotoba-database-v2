@@ -18,4 +18,13 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     # 未注釈の語は含めない
     assert_not_includes response.body, "/words/#{words(:pending_haruhi).id}<"
   end
+
+  test "sitemap.xml の <loc> は、静的ページ 8 件と公開語の詳細だけ(この順)" do
+    get "/sitemap.xml"
+    locs = Nokogiri::XML(response.body).remove_namespaces!.css("url > loc").map(&:text)
+
+    static = %w[/ /words /genres /browse /rankings /stats /about /privacy].map { |path| "#{HOST}#{path}" }
+    published = Word.annotated.order(:id).map { |word| "#{HOST}/words/#{word.id}" }
+    assert_equal static + published, locs
+  end
 end
