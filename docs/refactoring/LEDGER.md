@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | T0-05（多語義語の代表語義と、語義の順序を固定する） |
+| 次の一手 | T0-06（照合順序の帰結を固定する） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -142,8 +142,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | T0-01 | 第3群 | 公開 JSON API のキー集合と入れ子を固定する | high | 済 | `a688812` | 第1〜2群の切れ目では merge の指示が無いまま再開されたので、merge せずこのブランチで第3群に進んだ（2026-10-03）。words_api_test.rb に、詳細のキー集合（語・語義・特徴）と値（char_type_pattern・mora_count など 5 つ・ジャンルの id/name/level・entity_type）、ライセンスのハッシュ全体、ジャンルの無い語義（curry）で genre と entity_type が null・variants が [{surface, reading}] になること、一覧のキー集合・total_pages・語の id/surface/url/readings を足した（2 件追加・既存 1 件を拡張）。合格判定は全部通過 |
 | T0-02 | 第3群 | 外部コマンドのフォールバックを固定する（MeCab 無しは PATH を空にして確かめる） | high | 済 | `93ef293` | share_cards_controller_test に「fetch が nil」と「語義の無い公開語（描けない語）」で /og-default.png へ回るテスト。reading_extractor_test に PATH を空にして [nil, nil] が返るテスト。morpheme_extractor_test は setup の丸ごと skip に掛からない MorphemeExtractorFallbackTest を新設し、PATH を空にして available? が false・[[], []] が返るテストを置き、mecab の要らない「空の入力」をそちらへ移した（重複させない）。ローカルには mecab があるので、PATH を空にしたテストは実際に退避の分岐を通っている。合格判定は全部通過 |
 | T0-03 | 第3群 | 収録リクエストの、まだ固定されていない振る舞いを固定する | high | 済 | `571d4da` | word_requests_controller_test に 3 件足した。フォームの項目名（items_attributes の surface/reading、form_token、origin_path、ハニーポット）。期限切れのトークン（EXPIRES_IN を過ぎて発行）で 422 と expired の案内になり、レコードを作らないこと。受付中はホーム・検索 0 件の一覧（.empty-request）・About に /requests/new への導線が出て、受付停止中は 3 ページとも 0 件になること（出る側も確かめるので空振りしない）。上限値の定数化は計画書のとおり見送り。合格判定は全部通過 |
-| T0-04 | 第3群 | 公開ページの、まだ固定されていない振る舞いを固定する（今日の一語はキャッシュの語数で選ぶことを含む） | high | 済 | このコミット | home_controller_test に 3 件: ホームの検索欄が /words へ q を GET で送ること、今日の一語が日付で決まり翌日は別の語になること、キャッシュ（Rails.cache をテストの中だけメモリストアに差し替え）の語数 2 と実際の語数 3 がずれた日でもキャッシュの語数で選ぶこと（jd % 6 == 4 の日を使う。キャッシュを差し替えない版は落ちることを scratchpad で確かめた）。sitemaps_controller_test に <loc> の集合と順序（静的 8 件＋公開語）を丸ごと比べるテスト（/rankings を含む）。words_feed_test に FEED_LIMIT 件まで・絞り込みを無視・エントリの URL が本番ホスト。sessions_controller_test に、弾かれた管理画面の URL（クエリ込み）へログイン後に戻るテスト。合格判定は全部通過 |
-| T0-05 | 第3群 | 多語義語の代表語義と、語義の順序を固定する | high | 未着手 | | |
+| T0-04 | 第3群 | 公開ページの、まだ固定されていない振る舞いを固定する（今日の一語はキャッシュの語数で選ぶことを含む） | high | 済 | `d7bb6e3` | home_controller_test に 3 件: ホームの検索欄が /words へ q を GET で送ること、今日の一語が日付で決まり翌日は別の語になること、キャッシュ（Rails.cache をテストの中だけメモリストアに差し替え）の語数 2 と実際の語数 3 がずれた日でもキャッシュの語数で選ぶこと（jd % 6 == 4 の日を使う。キャッシュを差し替えない版は落ちることを scratchpad で確かめた）。sitemaps_controller_test に <loc> の集合と順序（静的 8 件＋公開語）を丸ごと比べるテスト（/rankings を含む）。words_feed_test に FEED_LIMIT 件まで・絞り込みを無視・エントリの URL が本番ホスト。sessions_controller_test に、弾かれた管理画面の URL（クエリ込み）へログイン後に戻るテスト。合格判定は全部通過 |
+| T0-05 | 第3群 | 多語義語の代表語義と、語義の順序を固定する | high | 済 | このコミット | 先頭（id が最小）の語義が 6 字・2 番目が 15 字の語を作り、いまの振る舞いを固定した。一覧の行は先頭の語義の文字数（6 字）を出し、読みは語義の順に「、」で並べる。詳細の語義カードは id の順。ホームでは「読みが長い言葉」の 1 位になる（並びは max_reading_length）が、看板と行に出る数は先頭の語義の 6（C-02 のずれ。C3-14 で変えない方針なので、いまの値で固定）。JSON の senses は id の順。words_controller_test・home_controller_test・words_api_test に 1 件ずつ。合格判定は全部通過 |
 | T0-06 | 第3群 | 照合順序の帰結（一意制約・char_type_pattern の検索）を固定する | high | 未着手 | | |
 | T0-07 | 第3群 | `body.is-admin` の付き方を固定する | high | 未着手 | | |
 | T0-08 | 第3群 | 検索スライダーの表示文言と hidden の値を固定する（system テスト） | high | 未着手 | | |

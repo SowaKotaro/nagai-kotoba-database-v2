@@ -63,6 +63,17 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_equal [ { "surface" => "カリー", "reading" => "カリー" } ], sense["variants"]
   end
 
+  test "多語義語の senses は id の順(先頭が最長でなくても)" do
+    word = Word.new(surface: "代表語義の見本")
+    word.word_senses.build(reading: "ミジカイヨミ")
+    word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ")
+    word.mark_annotated
+    word.save!
+
+    get word_path(word, format: :json)
+    assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ], JSON.parse(response.body)["senses"].map { |s| s["reading"] }
+  end
+
   test "未注釈の語の .json は 404" do
     get word_path(words(:pending_haruhi), format: :json)
     assert_response :not_found

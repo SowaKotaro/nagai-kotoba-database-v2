@@ -45,6 +45,24 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_equal longest.gsub(/[^0-9]/, ""), figure.css("dd").text.gsub(/[^0-9]/, "")
   end
 
+  # いまは「読みが長い言葉」の並びは words.max_reading_length で決まるが、看板と行に出す数は
+  # 先頭(id が最小)の語義の文字数。先頭の語義が最長でない語では、並びの指標と出る数がずれる(いまの振る舞い)。
+  test "多語義語が最長のとき、看板と「読みが長い言葉」の数は先頭の語義の文字数" do
+    word = Word.new(surface: "代表語義の見本")
+    word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい
+    word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ") # 15 字
+    word.mark_annotated
+    word.save!
+
+    get root_path
+    first_item = css_select(".home-column").last.css(".home-column__item").first
+    assert_equal word_path(word), first_item["href"]
+    assert_equal I18n.t("words.index.char_count", count: 6), first_item.css(".home-column__meta").text
+    figure = css_select(".stats-grid--rows .stats-grid__item")
+             .find { |item| item.css("dt").text == I18n.t("home.index.stats.longest") }
+    assert_equal "6", figure.css("dd").text.gsub(/[^0-9]/, "")
+  end
+
   # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。
   test "ホームの検索欄は単語一覧へ q を GET で送る" do
     get root_path

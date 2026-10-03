@@ -325,6 +325,25 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
   end
 
+  # --- 多語義語の代表語義と語義の順序 ---
+  # いまは「id が最小の語義」が代表で、語義は id 順に並ぶ(preload の返す順に頼っている)。
+  # 先頭の語義が最長でない語で、いまの振る舞いを固定する。
+  test "多語義語の一覧の行は先頭の語義の文字数を出し、読みは語義の順に並べる。詳細の語義も同じ順" do
+    word = Word.new(surface: "代表語義の見本")
+    word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい
+    word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ") # 15 字
+    word.mark_annotated
+    word.save!
+
+    get words_path(q: word.surface)
+    assert_select "article.entry-row", 1
+    assert_select ".entry-row__len", text: I18n.t("words.index.char_count", count: 6)
+    assert_select ".entry-row__reading", text: "ミジカイヨミ、トテモナガイヨミノゴギデスヨネ"
+
+    get word_path(word)
+    assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ], css_select(".sense-card .sense-heading rt").map(&:text)
+  end
+
   # --- HTTP キャッシュ(Issue 26) ---
   test "詳細は ETag を返し、変わっていなければ 304 になる" do
     get word_path(words(:abc_murder))
