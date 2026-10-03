@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |---|---|
 | 段階 | 4: 実行 |
-| 次の一手 | D1-09a（design.md・CLAUDE.md を CSS の実態に合わせる: 色・面・罫・管理画面） |
+| 次の一手 | D1-09b（design.md を CSS の実態に合わせる: 行間・見出し・区切り・動き・検索条件の数・古い記述） |
 | 次の一手の推奨 effort | high |
 | 作業ブランチ | `feature/refactoring` |
 | 既存監査の基準コミット | `a04f375`（`audits/` の行番号はこの時点のもの） |
@@ -121,8 +121,8 @@ test 10,177 / docs 7,446 / .claude 1,419
 | D1-19b | 第2群 | 再注釈・読み・表記・拡張・収穫のスキルと README の食い違いを直し、ガイドラインの写しを参照に置き換える（A11-2・5・11・12）。スキル束の再生成はオーナーに頼む | high | 済 | `17cd454` | 再注釈スキルの正の所在（立項スコアは §2・確信度は §8）と入力例の読み、target_reading の切り出し方（「、」連結・字種そのまま。A11-2）、/harvest のモーラ→文字数と委ね先・発表直後の名称（A11-5。ガイドラインを正）・例の差し替え、/reading の確信度を §8 に、§2・§4・§6 の写しを参照に、マスタの列挙に日付と現況の出どころ、ギリシャ語→アラビア語、用語を「言語学的特徴」に統一（7 ファイル）。合格判定は全部通過 |
 | D1-20 | 第2群 | 提案 JSON の取り決め（genre_new・target_start・required・再注釈の注意）を、スキルの文書と schema.json に事実どおりに書く | high | 済 | `b9cbe1c` | genre_new は参考情報、target_start は反映で使われないと書いた。schema.json に required と allOf（語義の 4 項目・立項スコア・スコア 3 以上の senses・3 以下の entry_notes・low の notes）を足し、example.json が通ること（エラー 0）と、崩した例が弾かれることを jsonschema で確かめた。スコア 1〜2 の語は senses を省いてよいと書いた（例 125 と取り込みの実装に合わせた）。再注釈の「外す結論は JSON では伝わらない」、特徴だけの書き出しは単一語義の語だけ正しく反映されることを書いた。**D1-06・D1-19・D1-20 でスキルを直したので、claude.ai 用のスキル束の再生成とアップロードをオーナーに頼む**。合格判定は全部通過 |
 | D1-07 | 第2群 | 文書間の参照切れと、置き場所の食い違いを直す（changelog に #162〜#164 を足すなど） | high | 済 | `b34eb08` | Issue 80・81・56 の参照先を changelog に、issues.md の行番号の参照をシンボル名に、plotly の配信の記述（pin ではなく manifest の link_tree）を直し、improvements.md が辿れないことを注記した。overview の完了記録の置き場所と CSS の一覧（candidates.css）、.gitignore のスキル名、changelog の #162〜#164 を直した。issues.md:336 の「(確定事項・Issue 74)」は指す先が見つからず未対応（Issue 74 はクロール導線の整理で、折り畳みの判断ではない）。overview のコードの地図の欠け（CFG-11）は G4-03。合格判定は全部通過 |
-| D1-08 | 第2群 | 否決・失効した判断を今も指示している記述を直す（growth-strategy・issues・performance-report・stats.md） | high | 済 | このコミット | growth-strategy の遡及付与（確定事項 37）・Bing（確定事項 33）・解禁予定日の宿題・文言の出どころ（pages.about.* と og_default.py の LEAD）・fragment cache の呼び名を直した。issues.md の確定事項 16・18 に失効の注記、performance-report の冒頭に §8 のその後、stats.md の「最頻のみ --chart」を直した。changelog の Issue 48 の見出しは記録なので書き換えず注記を添えた。合格判定は全部通過 |
-| D1-09a | 第2群 | design.md・CLAUDE.md を CSS の実態に合わせる（ゼロ埋めの例外、`--bg` と面の段、章の罫、管理画面の上書きとダーク未対応） | high | 未着手 | | |
+| D1-08 | 第2群 | 否決・失効した判断を今も指示している記述を直す（growth-strategy・issues・performance-report・stats.md） | high | 済 | `79dda9d` | growth-strategy の遡及付与（確定事項 37）・Bing（確定事項 33）・解禁予定日の宿題・文言の出どころ（pages.about.* と og_default.py の LEAD）・fragment cache の呼び名を直した。issues.md の確定事項 16・18 に失効の注記、performance-report の冒頭に §8 のその後、stats.md の「最頻のみ --chart」を直した。changelog の Issue 48 の見出しは記録なので書き換えず注記を添えた。合格判定は全部通過 |
+| D1-09a | 第2群 | design.md・CLAUDE.md を CSS の実態に合わせる（ゼロ埋めの例外、`--bg` と面の段、章の罫、管理画面の上書きとダーク未対応） | high | 済 | このコミット | ゼロ埋めの例外（.entry-range の 001–100）、--bg の実際の用途（地は --surface。ドロワー・操作バー・ホームの検索ボタン・反転文字・color-mix の下地）、章の罫を .sheet を含めた 5 箇所に、管理画面の上書き（トークン＋一部のコンポーネント＋専用の 2 色）とダーク未対応を、design.md と CLAUDE.md に書いた。CSS 側のコメントの同じ食い違いは D1-16。`design.md §`・`stats.md §` の参照 160 件がすべて実在することを確かめた。合格判定は全部通過 |
 | D1-09b | 第2群 | design.md を CSS の実態に合わせる（行間・見出し・区切り線と囲い・§5.3 の矛盾・動きの例外・検索条件の数・古い記述）。節番号は変えない | high | 未着手 | | |
 | D1-10a | 第2群 | stats.md の本文を実装に合わせる（リンク先・順序・章題・拍位置・明度・地・操作規則・データの出どころ・件数の単位） | high | 未着手 | | |
 | D1-10b | 第2群 | コメントの § 参照を「stats.md §N」「統計ページ §N」に書き分ける（`grep -rn '§[0-9]'` の全件を確かめる） | high | 未着手 | | |
