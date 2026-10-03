@@ -89,8 +89,11 @@ bin/rails test:system                    # テスト（システム。Chrome が
   - 動的に組む必要がある SQL 片（並び替え・集計）は**定数の文字列リテラルで書き切る**
     （`WordSort` / `WordSenseMetrics` の方針。外部入力が混ざらないことを静的解析でも追えるようにする）。
 - **認可を徹底する**。閲覧（read）は全世界に公開だが、**登録・編集・削除は管理者のみ**。
-  - 書き込み系アクションには認証必須の `before_action` を必ず付ける（管理者未ログインは弾く）。
-  - 公開閲覧アクションは `allow_unauthenticated_access` で明示的に開放し、書き込み経路を漏らさない。
+  - 認証は**全アクションで既定で必須**になっている（`ApplicationController` が `Authentication` を include し、
+    `before_action :require_authentication` が全体に掛かる）。管理側は `Admin::BaseController` を継承するだけでよく、
+    コントローラごとに認証の `before_action` を足す必要は無い。
+  - 公開閲覧アクションは `allow_unauthenticated_access only: %i[...]` で明示的に開放し、書き込み経路を漏らさない
+    （手本 `words_controller.rb`）。
 - ビュー出力は基本エスケープに任せる。`html_safe` / `raw` / `<%==` は安易に使わない。
 - 機密情報をコードに直書きしない。`Rails.application.credentials`（`config/credentials.yml.enc`）か環境変数を使う。`config/master.key` はコミットしない。
 - ログに個人情報・パスワード・トークンを出さない（`config.filter_parameters` を設定）。
@@ -197,10 +200,12 @@ bin/rails test:system                    # テスト（システム。Chrome が
   マッチして逆に重くなる。実測済み）。
 
 ## 重い処理・外部連携
-- メール送信・外部 API 呼び出し・重い集計は **ActiveJob で非同期化**する。
-- 現状バックグラウンドジョブのバックエンドは未導入（既定の `:async` アダプタで、プロセス内実行）。
-  恒常的なジョブ基盤が必要になったら、Rails 8 標準の **Solid Queue** 導入を第一候補として検討・相談する。
-- ジョブは**冪等**に設計し、リトライされても問題ないようにする。
+- **現状、ジョブは 1 本も無い**（`app/jobs` は雛形の `ApplicationJob` だけで、`perform_later` / `deliver_later` の呼び出しも無い）。
+  重い処理（共有カードの描画・代表値の UPDATE・MeCab による読みの取得）は同期で実行している。
+  共有カードの描画は意図して同期にし、タイムアウト・Mutex・ファイルキャッシュで守っている（`ShareCardRenderer`。Issue 89）。
+- メール送信・外部 API 呼び出し・重い集計を新しく足すときは、ActiveJob で非同期にすることを検討・相談する。
+  ジョブ基盤が要るなら、Rails 8 標準の **Solid Queue** の導入を第一候補にする（既定の `:async` アダプタはプロセス内で実行する）。
+- ジョブを作るときは**冪等**に設計し、リトライされても問題ないようにする。
 - 外部 API 呼び出しには **タイムアウトと例外処理**を必ず入れる。
 - 外部コマンド（`mecab` / `rsvg-convert`）への依存は**必ず「無くても機能が止まらない」形**にする
   （読みは空欄で手入力、og:image は既定カードへフォールバック）。依存するテストは skip で通す。
@@ -217,7 +222,9 @@ bin/rails test:system                    # テスト（システム。Chrome が
 - 変更には対応するテストを用意する。**正常系だけでなく異常系・境界値**も書く（例: `char_type_pattern` 変換の記号・数字・全角半角）。
 - 種類を目的に応じて使い分ける: モデル（`test/models`）/ コントローラ・結合（`test/controllers`・`test/integration`）/ システム（`test/system`、Capybara + Selenium）。
 - **1つの振る舞いは1つの層で検証する**。変換規則は値オブジェクト・モデルのテスト、画面の出し分けやリンクは結合テスト（`assert_select`）で書き、別の層で同じことを重ねない。
-- **システムテストは JS が無いと成立しない挙動だけに書く**（遅く、Chrome の版で不安定になりやすいため）。同じ画面で確かめる操作は1回の `visit` にまとめる。同じ前提で分けただけの結合テストも1本にまとめ、重いページ（`/stats` など）の GET を重ねない。
+- 管理画面のアクションの未ログイン拒否は、`test/integration/admin_authentication_test.rb` がルート表から全数を検証する。
+  各コントローラのテストには書かず、`setup` でログインする（Issue 96）。
+- **システムテストは、実ブラウザ（JS の実行・レイアウトの計算）が無いと確かめられない挙動だけに書く**（遅く、Chrome の版で不安定になりやすいため）。同じ画面で確かめる操作は1回の `visit` にまとめる。同じ前提で分けただけの結合テストも1本にまとめ、重いページ（`/stats` など）の GET を重ねない。
 - 開発中の確認で役目を終えたテスト（もう無いマークアップの「不在」確認、ルートヘルパ・関連の宣言そのものの確認）は残さない（2026-09-14 に 1002 本を整理した）。
 - キャッシュを有効にして検証するときは、書き込み先を差し替える。フラグメントキャッシュ（ビューの `cache`）は `Rails.cache` ではなく起動時に取り込んだ `ActionController::Base.cache_store` に書く（`Rails.cache` だけを差し替えたテストは一度もキャッシュを通っていなかった）。
 - フィクスチャは `test/fixtures` を使う。

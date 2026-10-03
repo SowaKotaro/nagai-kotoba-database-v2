@@ -54,8 +54,9 @@
 - **サインアップ画面は無い**。管理者は `db/seeds.rb` が credentials か環境変数
   （`ADMIN_USERNAME` / `ADMIN_PASSWORD`）から冪等に作成／更新する。
 - セッションは 2 週間のスライディング失効（`Session::LIFETIME`）。
-- `Admin::BaseController` 配下は既定で認証必須。公開閲覧は名前空間の外に置き、
-  `allow_unauthenticated_access` で明示的に開放する。
+- 認証は**全アクションで既定で必須**（`ApplicationController` が `Authentication` を include している）。
+  `Admin::BaseController` 配下はそれを継承するだけで管理者専用になる。公開閲覧は名前空間の外に置き、
+  `allow_unauthenticated_access only: %i[...]` で明示的に開放する。
 
 ## 4. データモデル（要点）
 
