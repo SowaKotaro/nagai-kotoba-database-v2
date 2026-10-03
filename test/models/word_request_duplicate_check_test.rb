@@ -68,8 +68,7 @@ class WordRequestDuplicateCheckTest < ActiveSupport::TestCase
 
   test "同じ語に複数の語義があっても候補は語単位で1件にまとまる" do
     word = words(:abc_murder)
-    word.word_senses.create!(reading: "べつのよみ", rhythm_pattern: "betsunoyomi",
-                             vowel_pattern: "euooi", mora_count: 6, last_char: "み")
+    word.word_senses.create!(reading: "べつのよみ")
 
     result = first_result(surface: word.surface)
     assert_equal 1, result.matches.count { |match| match.word_id == word.id }
