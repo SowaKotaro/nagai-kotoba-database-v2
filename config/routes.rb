@@ -147,10 +147,8 @@ Rails.application.routes.draw do
   end
 
   # ── 公開面の残り ──────────────────────────────────────────────
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Rails 標準のヘルスチェック。起動に成功していれば 200、例外なら 500 を返す。
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Defines the root path route ("/")
   root "home#index"
 end

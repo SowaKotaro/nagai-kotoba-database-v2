@@ -15,6 +15,17 @@
 # 渡すのは公開語(注釈済み)だけのファイルにする。この経路は公開スコープ(Word.annotated)を
 # 通らないので、未公開の語を混ぜるとその部品が公開のワードクラウドに出る(docs/data-model.md §8)。
 namespace :stats do
+  # トップレベルの def にすると Object 全体にメソッドが生えるので、ラムダで持つ。
+  load_surfaces = lambda do
+    path = ENV["SURFACES_FILE"].presence
+    if path
+      abort "ファイルが見つかりません: #{path}" unless File.exist?(path)
+      File.readlines(path, chomp: true).map(&:strip).reject(&:empty?)
+    else
+      Word.annotated.order(:id).pluck(:surface)
+    end
+  end
+
   desc "統計ページのワードクラウド用に、収録語の形態素頻度を集計して db/morpheme_frequencies.json を更新する"
   task morphemes: :environment do
     extractor = MorphemeExtractor.new
@@ -22,7 +33,7 @@ namespace :stats do
       abort "mecab が見つかりません。この集計は MeCab のある環境(ローカル)で実行してください。"
     end
 
-    surfaces = load_surfaces
+    surfaces = load_surfaces.call
     if surfaces.empty?
       abort "集計対象の語がありません。"
     end
@@ -47,16 +58,6 @@ namespace :stats do
     puts "  上位10件:"
     MorphemeFrequencies.entries.first(10).each do |entry|
       puts "    #{entry.count.to_s.rjust(4)}  #{entry.text}"
-    end
-  end
-
-  def load_surfaces
-    path = ENV["SURFACES_FILE"].presence
-    if path
-      abort "ファイルが見つかりません: #{path}" unless File.exist?(path)
-      File.readlines(path, chomp: true).map(&:strip).reject(&:empty?)
-    else
-      Word.annotated.order(:id).pluck(:surface)
     end
   end
 end
