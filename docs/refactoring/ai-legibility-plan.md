@@ -255,6 +255,9 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **集計とキャッシュ**
   - 版付きの `CACHE_KEY`・`CACHE_TTL`・`RACE_CONDITION_TTL` を持つクラスメソッドにする（手本 `site_statistics.rb`・`published_sense_counts.rb`）。
   - 無効化は TTL だけで行う（`Rails.cache.delete` は使っていない）。
+    そのため、公開の取り消し（保留・削除）も TTL のあいだは反映されない。これを許すかはオーナー判断（§7.5・A09-1）。
+  - **図や表の「印」（最頻のビン・最多の行・各行の比率）は、集計クラスが決めて返す**。ヘルパとビューは、それを座標や class に写すだけにする（A01-4・A01-7・A05-10）。
+    既存の二重計算は区分 D1 で注記する。揃えるのは、端の場合の表示が変わるので §7.1。
 - **基準値・しきい値**は、その概念の持ち主に1つだけ置く。別名の定数は作らない。
   - `WordSense::MIN_READING_LENGTH`
   - `Levenshtein::SIMILARITY_THRESHOLD`
@@ -263,6 +266,9 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **調査 JSON の入出力**
   - 取り込みの手本は `word_candidate_notation_import.rb`。`ResearchJson.array_at` で読む。入口は `call`。形が読めなければ nil を返す。外側のトランザクションに加えて行ごとに `requires_new` を張る。結果は `Struct(keyword_init: true)` で返す。
   - 書き出しの手本は `annotation_research_export.rb`。`as_json` / `to_json` に VERSION を付ける。
+  - **提案 JSON のキーの正は `AnnotationProposal` の定数**（`SENSE_KEYS` / `META_KEYS` / `PAYLOAD_KEYS`。区分 C3 の後。C3-02）。
+    取り込み・反映・再調査の書き出し・schema.json・SKILL.md は、それを参照するか写す。
+    取り込みや反映で捨てるキー、保持しても読まないキーは、定数のそばに理由を書く（A08-1〜A08-3）。
 - **外部コマンド**（手本 `share_card_renderer.rb`）
   - 有無の判定はクラスで1回だけ行う。
   - コマンドは配列で渡す。
@@ -271,6 +277,9 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - 失敗したら nil を返し、呼び出し側が既定値へフォールバックする。
 - **状態**は、間隔を空けた整数の enum で表す（手本 `word_candidate.rb`）。
 - **公開条件**は、語は `Word.annotated`、語義は `WordSense.published` だけを使う。語と語義で名前が違うことを word.rb に明記する。
+  - 公開側で語を読み出すクエリは、このどちらかから始めるか、これで選んだ id だけを受け取る（A-09 で全経路が守っていることを確認済み）。
+  - id を預かって読み出すクラス（`WordBatch` など）は、「公開語の id だけを預かる」ことを冒頭に書く（A09-3）。
+  - スコープを通らない公開出力（マスタの一覧・事前集計ファイル）と、それでも安全な理由は、data-model.md §8 の表に置く（D1-18・A09-2）。
 - **かなの畳み込み**は `KanaFold`（区分 C3 の後）、**代表語義**は `Word#primary_sense`（区分 C3 の後）を使う。
 
 ### 4.2 コントローラ・ヘルパ・ビュー
@@ -299,6 +308,16 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - 区切り記号も i18n に置く。
 - **フラッシュ**は、レイアウトの `#flash` だけに出す。
 - **同じ規則を名乗る2つの画面**では、その規則を concern か定数で1か所に置く（手本 `Admin::AnnotationQueue`、`WordSense::KEYWORD_MATCH_CONDITION`）。
+  - 画面の構成を決める定義（段・状態・タブ）も同じ。モデルの定数 1 つから、ヘルパ・コントローラ・書き出しが組み立てる。
+    登録予定単語の段は 5 か所に散らばっているので、C3-24 で 1 か所にまとめる（A04-7）。
+- **パーシャル**
+  - 新しく作るパーシャルは、冒頭の strict locals（`<%# locals: (name:, extra_class: nil) -%>`）で受け取るものを宣言する。
+  - パーシャルの中でインスタンス変数と `params` を読まない。必要な値は呼び出し側がローカルで渡す。
+  - 既存のパーシャルは、区分 C3 で触るものだけ揃える。全面的な統一は §7.7（A04-14）。
+- **2 画面以上で使う管理画面の部品**（提案パネルの見出しと注記、JSON のコピー欄、用語解説、選択バー）は、パーシャル 1 つにする。
+  文言も i18n に 1 組だけ置く（A04-3・A04-4・A04-9・A04-10。C3-07）。
+- **件数の合算や集計をビューで書かない**。コントローラか値オブジェクトが数えて渡す（A04-12・A01-7・C-17）。
+- **列挙値**（確信度・状態など）は、生の値ではなく i18n のラベルで表示する（A04-8。既存の画面を直すのは §7.1）。
 
 ### 4.3 JavaScript
 
@@ -315,6 +334,11 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - createElement を使うのは、クライアントだけで描く図に限る。
 - **fetch** は `inline_add_controller.js` の `post()` の形にする（CSRF・セッション切れ・JSON 以外の応答を扱う）。失敗したら必ず画面に出す。
 - **共有する関数**は `app/javascript/controllers/support/` に置く。stimulus-loading は `_controller` で終わるファイルしか登録しないことを確認済み。
+- **JS から要素を探す手がかり**
+  - 新しく足すときは、Stimulus の target か data 属性を使う。
+  - `js-` 接頭辞のクラスは既存の注釈コンソールだけに残し、増やさない。`js-` が付いていても、JS が使うとは限らない（A07-5）。
+  - 見た目用のクラスを JS・テストも参照している箇所は、CSS 側に「JS（〜_controller.js）・テストも参照」と注記する。
+- **操作規則を文書（stats.md など）に書いた JS** は、冒頭コメントで文書の節を参照し、規則そのものを写さない（A05-7）。
 - **localStorage** の読み書きは try/catch で包む（手本 `theme_controller.js`）。
 - **段階的な強化**は、サーバが全部を描き、JS が畳む（または表示する）形にする（手本 `rankings/index.html.erb` の hideOnConnect、`candidates.css` の `data-js-only`）。
 - **Plotly** は、意図して importmap にピンしない。Sprockets で配信し、UMD のグローバルとして使う。そのため `bin/importmap audit` の対象外になる。
@@ -341,12 +365,31 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - 色は必ずトークンを使う。
   - 余白は、区画のリズムにはトークンを使い、部品の中の微調整の px は直書きしてよい。
   - 級数・行間は直書きしてよい（級数の正は design.md §2）。
+  - ただし、**複数の部品が揃えて持つ値はトークンにする**。ヘッダー・フッター・管理ナビのフレーム幅 1040px は、4 か所に直書きされている。
+    これを `--frame-width` にする（C3-21。A10-8）。
+  - CSS と Ruby（ヘルパの定数）が同じ値を持つときは、ビューから CSS 変数で渡すか、両側に相手の名前を注記する（A05-4 の線の最大幅 3.2）。
+    手本は、円環のアニメーションの `KanaRing.stroke_length` を CSS 変数で渡している形。
+- **クラス名の付け方**（A07-3・A07-4）
+  - ブロックの根は、CSS が無くても DOM の目印として付けてよい。
+  - 要素・修飾子は、CSS かフック（JS・テスト）の用途があるときだけ付ける。
+  - 補間で組み立てる修飾子のうち、既定の見た目に任せる値（CSS を持たない値。`--keep` など）は、そのブロックの CSS に一行で列挙する。
+- **幅の切り替え**は、広い幅を基底にして、狭い幅を `max-width` で上書きする（実装の実態。`min-width` は使っていない）。
+  使っているブレークポイントの一覧は design.md §7 に置く（A10-5・A10-6）。
+- **淡さの下限（ΔRGB）の式**は design.md §1 で 1 つに定義する。テスト（`design_tokens_test.rb` の `delta_rgb`）とコメントは、その定義を参照する。
+  - いまは、テストが各チャンネルの差の合計、文書とコメントが最大差で測っていて、合否が入れ替わる（A10-1）。
+  - どちらを正にするかはオーナー判断（§7.5）。
 
 ### 4.5 DB・設定・タスク
 
 - **読み・表層形のカラム**には `collation: "utf8mb4_0900_as_ci"` を明示し、理由を一言コメントする（手本 `db/migrate/20260924100000_create_word_candidates.rb`）。
   as_ci が何を同一視するかは data-model.md §6 に書く（§1 の実測）。
 - **マスタ名**は `SeedCatalog` を唯一の正とする。コードで名前を使うときはカタログの定数を参照し、テストで固定する（手本 `test/models/linguistic_feature_glossary_test.rb`）。
+  - SeedCatalog が持つのは大分類・中分類・品詞・語種・言語学的特徴の名前。小分類とエンティティ種別は DB にしか無い（調査用の書き出しの `masters` が現況を表す）（A11-11）。
+  - **名前の正規化（前後の空白の除去）と、既存の名前と衝突したときの扱いは、モデルに 1 か所だけ置く**（`normalizes :name` と、`TagMaster` / `Genre` の共通メソッド）。
+    新設の経路（その場追加・タグ統括管理・提案の新設候補・seed）ごとに書かない。
+    いまは 4 系統でばらばらで、揃えると管理画面の振る舞いが変わるので、揃えるのは §7.1（C-20・A06-1・A06-2）。
+  - 名前が一致するかは、DB の照合順序（ai_ci。§1 の表）に任せる。Ruby で比べるときは、完全一致であることと、その理由をコメントに書く（A06-4）。
+  - 用語は、画面とカタログに合わせて「**言語学的特徴**」に揃える。文書とスキルに残る「言語的特徴」を直す（A11-12。画面の 3 か所を直すのは §7.1）。
 - **アプリのスイッチ（環境変数）**は `config/application.rb` で1回だけ読み、`config.x` に置く（手本は同ファイルの REQUESTS_ENABLED）。
 - **rake タスク**
   - 規則はモデルに任せる。
@@ -383,6 +426,8 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - 押し直しても結果が同じ操作は `click_expecting` を使う。
   - 押し直すと困る操作は `click_via_js` を使う。
   - turbo_confirm は `click_accepting_confirm` を使う。
+  - キー入力は、JS で keydown イベントを送る。オーナーの運用記録によると、ネイティブのキー入力はヘッドレス Chrome に届かない。
+    C3-23 で実行して確かめ、その結果で正典の文面を決める（**要確認**）。
 - **canonical ホスト**は、test_helper の定数1つにまとめる（区分 C3 の後）。
 
 ### 4.7 文書とコメント
@@ -398,11 +443,21 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   | デプロイと CI | overview.md（運用の章。G4-03 で新設） |
   | 環境変数 | overview.md §8 |
   | デザインの値と禁止事項 | design.md |
+  | ΔRGB の式・ブレークポイントの一覧 | design.md §1・§7（D1-21 で書く） |
+  | 統計の図の規則（色の段・操作規則・データの出どころ） | stats.md（JS とヘルパのコメントは節を参照するだけ） |
+  | 公開スコープを通らない公開出力の一覧 | data-model.md §8（D1-18 で書く） |
   | 調査の流れ（スキル → 管理画面） | research/README.md |
-  | 調査 JSON の形式 | 各 SKILL.md と schema.json |
-  | マスタ名（ジャンルなど） | `SeedCatalog`（genres.md はその写し） |
-  | 収録基準 | 方針は annotation-guidelines.md §0、値は `WordSense::MIN_READING_LENGTH` |
+  | 提案 JSON のキー | `AnnotationProposal` の定数（C3-02 の後）。schema.json と各 SKILL.md はその写しで、冒頭に正の場所を書く |
+  | 書き出す調査 JSON の形 | 各 Export クラス（`*Export`）の `as_json` |
+  | マスタ名（大分類・中分類・品詞・語種・言語学的特徴） | `SeedCatalog`（genres.md はその写し） |
+  | マスタ名（小分類・エンティティ種別） | DB。調査用の書き出しの `masters` が現況 |
+  | 言語学的特徴の定義 | 用語解説の YAML（glossary）。注釈スキルの対応表はその写し |
+  | 収録基準 | 方針は annotation-guidelines.md §0、値は `WordSense::MIN_READING_LENGTH`。読みの数え方も §0 に書く（D1-19） |
+  | 表記の決め方 | annotation-guidelines.md §3 |
+  | 読みの表記 | annotation-guidelines.md §4（reading スキルはこれに従う） |
   | 立項スコア | annotation-guidelines.md §2 |
+  | 確信度（confidence）の定義 | annotation-guidelines.md（D1-19 で新設） |
+  | 語種・ジャンル・エンティティ・言語学的特徴の付け方、意味の文体 | 注釈スキル（word-annotation-research の SKILL.md）（A11-1） |
   | ルート | `config/routes.rb`（画面の役割は overview.md §5） |
 
 - **コメントの扱い**
@@ -412,6 +467,23 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **参照の書き方**
   - 行番号ではなく、シンボル名と「文書名＋節」で参照する（行番号は必ずずれる）。
   - 件数（「13 条件」など）は文書に書かず、出どころを指す。
+- **コメントに書く数値**（寸法・実測値・割合）
+  - 式か出どころ（定数名・文書の節）で書く。
+  - 実測値を残すなら、「いつ・何で測ったか」を添える。
+  - 「15 層で 818px」（実装の式では 1,148px）や「77%」（いまは 79.6%）のように、数値だけを書いたコメントは、すでに実装とずれている（A01-5・A02-2）。
+
+### 4.8 調査スキルとアプリの境界
+
+調査スキル（`.claude/skills/`・`.claude/commands/`）は、RuboCop とテストの対象外。アプリ側を直しても、スキルが壊れたことに気づけない。
+
+- スキルからアプリのクラスを使うときは、**公開メソッドだけを呼ぶ**。`send` で private を呼ばない。
+  - いまは `reading_length.rb` が `ReadingExtractor#normalize`（private）を `send` で呼んでいる（DOC-19）。C3-04 で公開メソッドにする。
+  - スキルが呼ぶアプリのメソッドには、「スキル（パス）からも呼ばれる」とコメントを付ける。
+- **スキルは規則を写さず、正典の節を参照する**（§4.7 の表）。
+  - ガイドラインの本文を SKILL.md に写すと、どちらかだけが直る（A11-12）。
+  - 写しが要るとき（対応表など）は、正の場所と「正を直したらここも直す」を書く。
+- スキルに DB の現況（小分類・エンティティの名前など）を例として書くときは、日付と「現況は入力の `masters` が正」を添える（A11-11）。
+- スキルの文書を直したら、claude.ai 用のスキル束を再生成してアップロードし直す（`tools/claude-ai-skill/build.sh`。オーナーの作業）。
 
 ## 5. 改修項目
 
