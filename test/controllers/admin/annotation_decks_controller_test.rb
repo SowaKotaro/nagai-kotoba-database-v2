@@ -10,8 +10,6 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     @bermuda_sense = word_senses(:pending2)
   end
 
-  # --- 認可: 未認証は弾く ---
-
   # --- 表示 ---
   test "入口は1語コンソールと同じく提案付きのキューへ寄せる" do
     sign_in_as(Admin.take)

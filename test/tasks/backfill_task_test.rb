@@ -38,7 +38,8 @@ class BackfillTaskTest < ActiveSupport::TestCase
   end
 
   test "verify は不整合が無ければその旨だけを報告し、何も変更しない" do
-    # フィクスチャの派生値は読み・表層形と整合させてある(ずれていればここで検出される)
+    # フィクスチャの派生値は読み・表層形と整合させてある。verify が見る値がずれていればここで検出されるが、
+    # verify は ring_crossing_count を見ないので、円環交差数のずれはここでは検出されない
     before_senses = WordSense.order(:id).pluck(:rhythm_pattern, :vowel_pattern, :mora_count, :last_char)
 
     out, _err = capture_io { Rake::Task["backfill:verify"].invoke }

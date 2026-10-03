@@ -2,8 +2,6 @@ require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
 class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
-  # --- 認可: 未認証は弾く ---
-
   # --- 書き出し ---
   test "未注釈で提案が無い語とマスタ一覧を JSON で書き出す" do
     sign_in_as(Admin.take)

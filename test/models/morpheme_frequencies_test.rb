@@ -86,6 +86,6 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
     assert MorphemeFrequencies.available?, "db/morpheme_frequencies.json が読めていない"
     assert MorphemeFrequencies.entries.all? { |entry| entry.count >= MorphemeFrequencies::MIN_COUNT }
     assert MorphemeFrequencies.entries.all? { |entry| entry.text.length >= 2 }
-    assert_equal 1, MorphemeFrequencies.entries.count(&:top?), "朱にする最頻は1件だけ"
+    assert_equal 1, MorphemeFrequencies.entries.count(&:top?), "最頻(top?)は1件だけ"
   end
 end

@@ -10,8 +10,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     @sense = word_senses(:pending)
   end
 
-  # --- 認可: 未認証は弾く ---
-
   # --- index: 入口は提案付きの語を優先(Issue 69) ---
   test "入口は未承認の提案がある語へ寄せ、提案キューを辿り切ると提案キューの完了画面へ戻る" do
     sign_in_as(Admin.take)

@@ -3,8 +3,6 @@ require "test_helper"
 # タグ統括管理。ジャンル等のマスタを横断して一覧・リネーム・削除・統合する。
 # 使用件数・削除可否・統合の中身は TagMasterTest / GenreTest / TagKindTest で見る。
 class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
-  # --- 認可: 未認証は弾く ---
-
   # --- 表示 ---
   test "ハブと編集画面(現在の名前つき)を表示でき、未知の種別は 404" do
     sign_in_as(Admin.take)

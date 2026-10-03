@@ -13,8 +13,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     stub_method(ReadingExtractor, :call, callable) { yield }
   end
 
-  # --- 認可: 未認証は弾く ---
-
   # --- 一覧 ---
   test "一覧に読み・注釈状態・件数とコンソールへのリンクが出る" do
     sign_in_as(Admin.take)
