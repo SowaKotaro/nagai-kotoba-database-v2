@@ -205,4 +205,34 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
       assert_selector ".js-genre-medium .ann-add__btn"
     end
   end
+
+  # 公開前の確認(publish-guard)は、表示中の語義だけを数える。削除して隠した未完了の語義は数えない。
+  test "削除した未完了の語義は、公開前の確認の数え方に入らない" do
+    word_senses(:pending).update!(genre: genres(:small_novel), part_of_speech: parts_of_speech(:noun),
+                                  entity_type: entity_types(:book_title), word_origins: [ word_origins(:wago) ])
+    @word.word_senses.create!(reading: "ノコッタミカンリョウノゴギ")
+
+    visit admin_annotation_path(@word)
+    wait_for_stimulus "publish-guard"
+    wait_for_stimulus "sense-cloner"
+    assert_selector ".js-sense", count: 2
+    assert_selector ".ann-sense.is-complete", count: 1
+
+    # 未完了の 2 つ目を「この語義を削除」で画面から外す。ログイン後はネイティブのクリックが届かないことが
+    # あるので JS で押す(ApplicationSystemTestCase の注記)
+    execute_script("arguments[0].click()", all(".js-sense")[1].find(".ann-sense__del"))
+    assert_selector ".js-sense", count: 1
+
+    # confirm が呼ばれたら記録する。同じ window のまま次の語へ進んだことを __probe で確かめる
+    execute_script(<<~JS, find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']"))
+      window.__probe = "alive";
+      window.__confirmed = null;
+      window.confirm = (message) => { window.__confirmed = message; return true; };
+      arguments[0].click();
+    JS
+    assert_selector "h1.ann-word", text: words(:pending_bermuda).surface, wait: 10
+    assert_equal "alive", evaluate_script("window.__probe")
+    assert_nil evaluate_script("window.__confirmed"), "削除した語義が未完了として数えられた"
+    assert wait_until { @word.reload.annotated_at.present? }
+  end
 end
