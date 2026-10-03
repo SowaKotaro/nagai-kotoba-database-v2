@@ -103,7 +103,7 @@
 }
 
 /* 見出し語ストリップに溶け込む控えめなランダム導線。弱い文字色にシャッフル印を1つ添え、
-   hover で全体をアクセント色へ転じて操作可能と気づかせる */
+   hover で全体を本文色(--text)へ転じて操作可能と気づかせる */
 .eyebrow-random {
   color: var(--text-subtle);
   text-decoration: none;
@@ -188,7 +188,8 @@
   padding: 4px 8px;
 }
 
-/* ページの頭と中身を分ける「章の罫」。サイト内で唯一、罫に文字色を使う場所。
+/* ページの頭と中身を分ける「章の罫」。罫に文字色(--text-muted)を使うのは、docs/design.md §3 に
+   列挙した 5 か所だけで、ここはその 1 つ。
    手本が淡い縦罫と濃い横罫の二層を持つのに倣う(濃さは --text-muted まで。黒にはしない) */
 .page-header:not(.page-header--rail) {
   border-bottom: 1px solid var(--text-muted);
@@ -282,7 +283,7 @@
   color: var(--text-muted);
 }
 
-/* 動的に組み立てる解説文。細罫の下に控えめに置き、突拍子ない印象を避ける。
+/* 動的に組み立てる解説文。--bg-soft の淡い角丸の面に控えめに置き、突拍子ない印象を避ける。
    横幅は親(見出し語ブロック)いっぱいまで取り、ひっそりと添える */
 .word-flavor {
   margin: var(--space-5) 0 0;
@@ -304,7 +305,7 @@
   line-height: 1.95;
 }
 
-/* 恒久ページ(About 等)の本文。幅は他の要素と同じだけ取る(Issue 20) */
+/* 恒久ページ(About 等)の本文。幅は読み物の幅(--reading-width、640px)までに抑える(Issue 20) */
 .prose {
   font-size: 15px;
   max-width: var(--reading-width);
@@ -316,7 +317,7 @@
 
 /* 章の見出し。design.md §3 の「細罫はセクション見出しの下」に従って 1px の細罫で章の頭を示す。
    h2 が等間隔に並ぶだけだと、どこで話題が変わるのか読めない(濃い章の罫は
-   ページ見出しの下など 4 箇所だけなので、ここは --border で止める) */
+   ページ見出しの下など design.md §3 に列挙した箇所だけなので、ここは --border で止める) */
 .prose h2 {
   margin: 0 0 var(--space-4);
   padding-bottom: var(--space-3);
@@ -364,7 +365,7 @@
   font-size: 13px;
 }
 
-/* --- 語義パネル: 枠を持たない、淡い面の大きな角丸 --- */
+/* --- 語義パネル: 1px の細罫(--border)で囲む大きな角丸。面は塗らない(docs/design.md §5.4) --- */
 .sense-list {
   display: grid;
   gap: var(--space-5);
@@ -447,11 +448,6 @@
   color: var(--text);
 }
 
-/* 円環を開く副次的な導線 */
-/* 五十音を並べた外周円の薄いガイド */
-/* 読み順に結ぶアクセント色の折れ線 */
-/* 始点の刻印 */
-/* 五十音の各字。既定は弱い文字色、読みに登場する字はアクセント色で点灯 */
 /* 小さなセクションラベル */
 .section-label {
   margin: var(--space-6) 0 var(--space-2);
@@ -475,7 +471,7 @@
   gap: var(--space-2);
 }
 
-/* 注釈対象はアクセントのごく淡い面でハイライトする(下線・囲みは使わない) */
+/* 注釈対象は --bg-tint のごく淡い面でハイライトする(下線・囲みは使わない) */
 .annotation-target {
   font-size: 15px;
   line-height: 1.6;
@@ -581,7 +577,7 @@ a.chip:hover {
   color: var(--text);
 }
 
-/* 末端(小分類)は色の濃さと太さだけで一段立てる(下線は引かない) */
+/* 末端(小分類)は色の濃さだけで一段立てる(太字にせず、下線も引かない) */
 .genre-path a.genre-path__current {
   color: var(--text);
   font-weight: 400;
@@ -593,8 +589,8 @@ a.chip:hover {
 }
 
 /* 一覧の行に添える小さいパンくず。一覧の主役はあくまで見出し語なので、詳細と同じ
-   文法のまま級数・色を落として静かに添える。末端の太字は取り、
-   hover したときだけアクセント色を出す(押せることは失わない)。 */
+   文法のまま級数・色を落として静かに添える。末端も色差だけで立て、
+   hover したときだけ本文色(--text)と下線を出す(押せることは失わない)。 */
 .genre-path--sm {
   gap: 5px;
   font-size: 12px;
@@ -681,7 +677,7 @@ a.tag:hover {
   color: var(--text-subtle);
 }
 
-/* 件数ヒート: --fill(0〜1)に応じてアクセント色の濃淡でセルを塗る。多いマスほど濃い。
+/* 件数ヒート: --fill(0〜1)に応じて --chart の濃淡でセルを塗る。多いマスほど濃い。
    最大でも 45% までに抑え、ライト/ダークどちらでも文字が読める濃さに留める */
 .kana-cell--heat .kana-cell__face {
   background: color-mix(in srgb, var(--chart) calc(var(--fill, 0) * 45%), transparent);
@@ -1163,7 +1159,7 @@ a.tag:hover .genre-hub__count {
 }
 
 /* --- ホームの看板の中身 -------------------------------------------------
-   見出し → 一行の説明 → 検索 → 補助導線。左揃えで、右のレールと対にする。 */
+   見出し → 一行の説明 → 検索 → 補助導線。1 列の中央揃え(.masthead)で積む。 */
 .hero__title {
   font-size: 26px;
   line-height: 1.6;
@@ -1374,7 +1370,7 @@ a.tag:hover .genre-hub__count {
 
 /* 押したキーの文字種が並ぶ表示欄。VSCode の検索窓のように、先頭に「>」プロンプト、
    左に組み立て中のパターン、右端に切替アイコン(text-aa / "ab")を置く。手入力不可の読み取り専用。
-   枠線は他の入力欄と同じ(--border-strong、focus でアクセント色)。 */
+   枠線は他の入力欄と同じ(--border-strong、focus で --text-muted)。 */
 .char-type-display {
   display: flex;
   align-items: center;
@@ -1459,7 +1455,7 @@ a.tag:hover .genre-hub__count {
   color: var(--text-muted);
 }
 
-/* 選択中(aria-pressed=true = 厳密側が有効)は枠線でなくアクセントの淡い塗りで示す */
+/* 選択中(aria-pressed=true = 厳密側が有効)は枠線でなく --bg-tint の淡い塗りで示す */
 .char-type-flag__btn[aria-pressed="true"] {
   background: var(--bg-tint);
   color: var(--text);
@@ -1611,7 +1607,7 @@ a.tag:hover .genre-hub__count {
 .length-slider__thumb::-webkit-slider-runnable-track { background: transparent; height: 36px; }
 .length-slider__thumb::-moz-range-track { background: transparent; }
 
-/* ツマミ: アクセント色の丸ノブ(地の色のフチでトラック/もう一方のツマミから分離) */
+/* ツマミ: 本文色(--text)の丸ノブ(--bg のフチでトラック/もう一方のツマミから分離) */
 .length-slider__thumb::-webkit-slider-thumb {
   pointer-events: auto;
   -webkit-appearance: none;
@@ -1696,7 +1692,7 @@ a.tag:hover .genre-hub__count {
   outline-offset: 1px;
 }
 
-/* 一覧選択チップ(品詞・エンティティ・特徴)。選択でアクセントの塗りに変わる */
+/* 一覧選択チップ(品詞・エンティティ・特徴)。選択で本文色(--text)の塗りに変わる(文字は反転) */
 .check-chips,
 .genre-filter__level {
   display: flex;
@@ -1906,8 +1902,8 @@ a.tag:hover .genre-hub__count {
   display: block;
   margin: 0;
   font-family: var(--font-mono);
-  /* 級数は 12px。design.md §2 の「補足・ラベルは 11px 未満にしない」を満たす最小で、
-     かつ**白抜きが成立する最小**でもある(10px では線が溶けるか字面が潰れる。実測は design.md §5.8)。
+  /* 級数は 12px。design.md §2 の「補足・ラベルは 11px 未満にしない」を満たす最小。標識は塗りで置く
+     (白抜きにする案は試したうえで、オーナー判断で不採用。経緯と実測は design.md §5.8)。
      16px / 20px の縦積み / 30px(figure-number の書体)まで上げて試したが、
      いずれもオーナー判断で戻した(2026-09-05)。字送りは 0.04em */
   font-size: 12px;
@@ -1917,7 +1913,8 @@ a.tag:hover .genre-hub__count {
   color: var(--text-subtle);
 }
 
-/* 標識 + 日本語見出しの縦組み。見出しの上に標識を重ねる */
+/* 日本語の章見出し(ホーム)。標識(.label-en)は袖(.band__gutter)に置くので、いまは中に
+   .section-title__ja だけが入る(縦組みの flex は、見出しの上に標識を重ねていた頃の組み) */
 .section-title {
   display: flex;
   flex-direction: column;
@@ -1969,8 +1966,9 @@ a.tag:hover .genre-hub__count {
   color: var(--text-subtle);
 }
 
-/* --- 額装(ホームの看板) -----------------------------------------------
-   細い枠でひと区画を囲い、縦罫で「本文」と「数字」に分ける。 */
+/* --- 看板(ホーム) -----------------------------------------------------
+   面も枠も持たず、1 列の中央揃えで積む(docs/design.md §5.2)。最後の「収録の規模」だけを、
+   縦罫を挟んで左右に割る。 */
 /* 看板の列の最後に置く「収録の規模」。左に収録語数、縦罫を挟んで右にそのほかの数。
    検索からは --space-8 離して切り、ここだけ左右に割ることで列の終わりを示す */
 .masthead__figures {
@@ -2086,7 +2084,8 @@ a.tag:hover .genre-hub__count {
   text-align: center;
 }
 
-/* 標識の2行目に置く値(交差回数など)。1行目の役割の下へ落とす(docs/design.md §5.8) */
+/* キャプションの 2 行目に置く値(交差回数など)。1 行目の下へ落とす。図のキャプションは
+   標識の「2 行目に必ず値」の規則の対象外なので、値は任意(docs/design.md §5.8) */
 .ring-art__value {
   display: block;
 }
@@ -2173,7 +2172,8 @@ a.tag:hover .genre-hub__count {
 
 /* --- ホーム: 2つのリスト(最近追加 / 読みが長い) -------------------------
    横に並べず、縦に積んで余白で離す。囲いは付けない。 */
-/* 地は今日の一語と同じ白にして、2カラムと帯をひと続きの面として見せる */
+/* 新着と「読みが長い言葉」の区画(ホーム)。今日の一語と同じく、紙(.sheet)の中の白い帯として縦に積む
+   (余白は帯が持つので、ここは margin を持たない) */
 .home-column {
   margin: 0;
 }
@@ -2255,7 +2255,7 @@ a.tag:hover .genre-hub__count {
   white-space: nowrap;
 }
 
-/* --- 今日の一語: 淡い面の大きな角丸カード。右にイラストを添える --------- */
+/* --- 今日の一語: 面も角丸も持たない、帯の中の区画。右に読みの円環の線画を添える --------- */
 .home-featured {
   margin: 0;
 }
@@ -2800,7 +2800,7 @@ a.tag:hover .genre-hub__count {
   text-decoration: none;
 }
 
-/* --- テーブル(検索結果・管理一覧): ヘッダは細罫で締め、行は細罫で仕切る --- */
+/* --- テーブル(管理画面の一覧。公開側では使っていない): ヘッダは細罫で締め、行は細罫で仕切る --- */
 /* 狭幅では列を潰さず、この入れ物の中だけ横スクロールで逃がす(main は overflow-x: clip)。
    中のテーブルに min-width を与えてはじめて効く(無いと width:100% のまま列が潰れる) */
 .table-scroll {
@@ -3156,7 +3156,7 @@ textarea {
   margin-left: var(--space-2);
 }
 
-/* 番号は 1px 枠の丸。現在はアクセントのベタ、完了は淡い面。 */
+/* 番号は 1px 枠の丸。現在は本文色(--text)のベタ(文字は反転)、完了は淡い面(--bg-soft)。 */
 .steps__no {
   display: inline-flex;
   align-items: center;
@@ -3275,6 +3275,7 @@ textarea {
   line-height: 1.6;
 }
 
+/* 見た目用のクラスだが、reading_format_controller.js も探す(改名するなら JS も直す) */
 .bulk-review__reading-error {
   margin-top: var(--space-2);
 }
@@ -3344,7 +3345,7 @@ textarea {
   margin-top: var(--space-2);
 }
 
-/* 候補チップ: クリックで読み欄へ流し込む。選択中はアクセントの淡い面。 */
+/* 候補チップ: クリックで読み欄へ流し込む。選択中は --bg-tint の淡い面と濃い枠。 */
 .reading-choice {
   display: inline-flex;
   align-items: baseline;
@@ -3645,7 +3646,9 @@ textarea {
 /* ジャンルの階層インデント(中分類・小分類を段付けして木構造を示す)。
    段差を大きめに取り、ツリーコネクタ「└」でぶら下がりを明示する。
    等幅ラベルの階層列(大/中/小)と併せて読み取れるようにする。
-   ※パディングは .data-table td より詳細度を上げないと効かない(セルの既定パディングに負ける)。 */
+   ※パディングは .data-table td より詳細度を上げないと効かない(セルの既定パディングに負ける)。
+   ビューは genres.level を補間して --large / --medium / --small を付けるが、--large(大分類)は
+   字下げしない既定の見た目なので規則を持たない。 */
 .data-table td.tag-table__name--medium {
   padding-left: 2.8em;
 }
@@ -3700,7 +3703,7 @@ textarea {
 /* --- モバイルのフォーム部品は 16px を下限にする ---
    iOS Safari はフォーム部品の文字が 16px 未満だとフォーカス時にページ全体を自動ズームし、
    戻らないまま横スクロールが発生する。狭幅に限り文字を一段上げて防ぐ。
-   クラスで小さく上書きしている部品(ヘッダー検索・並び順・一括登録系)も同じ理由で列挙する。 */
+   クラスで小さく上書きしている部品(ホームの検索欄・並び順・一括登録系)も同じ理由で列挙する。 */
 @media (max-width: 767px) {
   input[type="text"],
   input[type="password"],
@@ -3720,8 +3723,8 @@ textarea {
 }
 
 /* --- 統計ページ(Issue 34 / docs/stats.md) ---------------------------------
-   チャートはインライン SVG で描く。量の濃淡はアクセント色のチント(color-mix)、
-   識別は色でなくラベルと位置で持つ。アクセントの濃い色は「最」にだけ使う。 */
+   チャートはインライン SVG で描く。量の濃淡は --chart のチント(color-mix)、
+   識別は色でなくラベルと位置で持つ。--chart のベタは「最」にだけ使う。 */
 
 .stats-computed {
   margin: var(--space-4) 0 0;
@@ -3881,7 +3884,7 @@ textarea {
   overflow-x: auto;
 }
 
-/* セグメントボタン(文字数/モーラ・期間切替)。選択中はアクセントの淡い面 */
+/* セグメントボタン(文字数/モーラ・期間切替)。選択中は本文色(--text)のベタ(文字は反転) */
 .segmented {
   display: inline-flex;
   margin-bottom: var(--space-4);
@@ -4195,9 +4198,12 @@ a.sound-matrix__cell:hover {
   text-align: left;
 }
 
-/* --- 語種の構成(ワッフル)とエンティティ型のヒートマップ ---
-   ワッフルの塗りは順位で固定: 1位=アクセント / 2位=文字色 / 3位=アクセントのチント /
-   4位=地のまま / 5番目(その他)=文字色のチント。明度差で識別する(色相に依存しない) */
+/* --- 統計ページ §6 語種の構成(ワッフル)とエンティティ型のツリーマップ ---
+   ワッフルの塗りは順位で固定: 1位=--chart / 2位=--text の 65% / 3位=--chart のチント /
+   4位=--bg / 5番目(その他)=--text の 20%。明度差で識別する(色相に依存しない)。
+   この節(と §7)で「地」として --bg を塗ったり混ぜ先にしたりしているのは、--bg が地だった頃の名残。
+   いまの本文の地は --surface(白)なので、4位のマスやツリーマップの下地は白より一段沈んで見える。
+   --surface へ寄せると見た目が変わるので、直すなら見た目の変更として扱う */
 .origin-case {
   display: flex;
   align-items: flex-start;
@@ -4286,10 +4292,11 @@ a.sound-matrix__cell:hover {
 }
 
 /* エンティティ型のツリーマップ。面積 = 語義数(squarified、座標は%)。
-   罫は各セルの 1px 枠の重なりで引く。塗りはアクセント色のチントの濃淡 */
+   罫は各セルの 1px 枠の重なりで引く。塗りは --chart のチントの濃淡(混ぜ先は --bg) */
 .entity-treemap {
   position: relative;
-  /* 仮想キャンバス(StatsHelper::TREEMAP_WIDTH / _HEIGHT)と必ず同じ比にする */
+  /* 仮想キャンバス(StatsHelper::TREEMAP_WIDTH / _HEIGHT)と必ず同じ比にする。
+     767px 以下だけは下の @media で 3 / 5 に引き伸ばす(面積の比は保たれる) */
   aspect-ratio: 3 / 2;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -4330,7 +4337,9 @@ a.entity-treemap__cell:hover {
   overflow: hidden;
 }
 
-/* 小さいマスの名前は折り返さず「…」で切る(全文はマスの title に残る)。
+/* 級数の段は StatsHelper#treemap_scale の値(:normal / :small / :tiny)を補間した修飾子で付ける。
+   --normal は既定の級数なので規則を持たない。
+   小さいマスの名前は折り返さず「…」で切る(全文はマスの title に残る)。
    折り返させると、マスの高さが 2 行に足りないときに 2 行目が半分だけ見える。
    マスの高さは面積しだいで連続的に変わるので、行数を決め打ちしても防げない。 */
 .entity-treemap__cell--small .entity-treemap__name,
@@ -4394,7 +4403,8 @@ a.entity-treemap__cell:hover {
 }
 
 /* --- 統計ページ §7 母音スペクトルと頭子音 ---
-   帯は文字色の明度4段 + オ段のみアクセントのチントの5値。右端の段名で識別する */
+   帯は --text の濃淡4段 + オ段のみ --chart のチントの5値。右端の段名で識別する。
+   帯の混ぜ先と遷移グラフのノードの hover・フォーカスの --bg は、§6 と同じく --bg が地だった頃の名残 */
 .vowel-spectrum {
   display: block;
   width: 100%;
@@ -4435,7 +4445,8 @@ a.entity-treemap__cell:hover {
 
 /* --- 統計ページ §7 母音の遷移グラフ ---
    層 = 拍位置、ノード = 母音、エッジ = 隣り合う層の全結合。
-   太さと濃さで多寡を出し、最多の1本だけ --chart(「最」にだけ色を使う作法) */
+   太さと濃さで多寡を出す。色(--chart)を持つのは押して選んだ線だけ(最多の 1 本に塗るのはやめた。
+   経緯は下の .vowel-graph__edge.is-selected) */
 /* 「多い遷移だけ」の切替。checkbox + 兄弟セレクタで JS を持たない。
    図の右上に、極小のラベルと 26×14 のスイッチだけで置く(区画の主役は図なので、
    ボタンとして立たせない。2026-09-10 オーナー指示で墨反転のピルから作り替えた) */
@@ -4510,10 +4521,12 @@ a.entity-treemap__cell:hover {
   display: inline;
 }
 
-/* 押して選んだ2ノードと、そのあいだの1本。
+/* 押して選んだ鎖の線(何拍でもつなげる。選び方の正は docs/stats.md の統計ページ §7 の章)。
    色を持つのはこの「選んでいる状態」だけにする。最多の1本にも --chart を塗っていた時期が
    あるが(2026-09-10)、押しても消えない線が1本あることになり、選択の色と見分けが付かない。
-   最多は太さで既に出ているうえ、注記に数字つきで書いてある。 */
+   最多は太さで既に出ているうえ、注記に数字つきで書いてある。
+   stroke-width の 3.2 は StatsHelper::GRAPH_MAX_EDGE(量から決める線の最大幅)と同じ値。
+   選んだ線が最も太い線より細くならないよう、変えるなら両方を揃える。 */
 .vowel-graph__edge.is-selected {
   stroke: var(--chart);
   stroke-opacity: 1;
@@ -4600,7 +4613,7 @@ a.entity-treemap__cell:hover {
   fill: var(--text-subtle);
 }
 
-/* 頭子音の横棒。行ラベル + グレーの棒(最多のみアクセント) + 件数 */
+/* 頭子音の横棒。行ラベル + グレーの棒(最多のみ --chart) + 件数 */
 .stats-bars {
   list-style: none;
   margin: 0;
@@ -4638,6 +4651,8 @@ a.entity-treemap__cell:hover {
   transition: background 0.15s;
 }
 
+/* 最多の色は DOM の先頭行に付ける。SiteStatistics#head_consonants が件数の多い順に返すことに頼る
+   (ビューの棒の長さも同じ前提。同数のどれが先頭かは決まっていない) */
 .stats-bars__row:first-child .stats-bars__fill {
   background: var(--chart);
 }
@@ -4710,6 +4725,7 @@ a.entity-treemap__cell:hover {
   background: var(--text-subtle);
 }
 
+/* 最多の色は DOM の先頭行に付ける。SiteStatistics#feature_ranking が件数の多い順に返すことに頼る */
 .feature-rank__row:first-child .feature-rank__fill {
   background: var(--chart);
 }
@@ -4724,7 +4740,7 @@ a.entity-treemap__cell:hover {
 }
 
 /* --- ランキング(/rankings): 切替タブ + 細罫パネルのランキング --- */
-/* 種類が多いので目次を兼ねた切替タブにする(タグの文法・現在地はアクセントの淡い面) */
+/* 種類が多いので目次を兼ねた切替タブにする(タグの文法・現在地は本文色(--text)のベタで文字は反転) */
 .rank-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -4767,7 +4783,7 @@ a.entity-treemap__cell:hover {
   margin-bottom: var(--space-6);
 }
 
-/* 見出し行は細罫で仕切る */
+/* 見出し行(題と 1 位の値)。罫は引かず、余白で順位表と分ける */
 .rank-board__header {
   display: flex;
   align-items: flex-start;
@@ -5000,6 +5016,8 @@ a.entity-treemap__cell:hover {
 
 /* 重複チェックの判定。その語の入力欄の真下に置く。
    既に載っている・似ている場合だけ赤枠で引き止め、未収録は枠なしで静かに伝える */
+/* 判定の kind(WordRequestDuplicateCheck の :exact / :similar / :none)を補間して修飾子を付ける。
+   --none(未収録)は枠なしで静かに伝える既定の見た目なので、規則を持たない */
 .dup-note {
   margin: var(--space-2) 0 0;
   font-size: 12px;
@@ -5220,7 +5238,7 @@ a.entity-treemap__cell:hover {
   white-space: nowrap;
 }
 
-/* 未着手だけ色を付けて残件を目立たせる。処理済みの3状態は沈める */
+/* 未着手だけ本文色(--text)で残して残件を目立たせる。処理済みの3状態は --text-subtle に沈める */
 .admin-requests-table__status--pending {
   color: var(--text);
   font-weight: 400;
