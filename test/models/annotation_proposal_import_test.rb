@@ -48,6 +48,30 @@ class AnnotationProposalImportTest < ActiveSupport::TestCase
     assert_nil words(:pending_bermuda).reload.annotation_proposal.payload["evil"]
   end
 
+  # 選別するのはトップレベルのキーだけ(PAYLOAD_KEYS)。旧形式の reading は legacy_sense_hash が読みに行くが、
+  # 取り込みで先に捨てられているので届かない。
+  test "トップレベルの reading・linguistic_features・sense_id は捨て、旧形式の語義の読みと特徴は空になる" do
+    import_json([ {
+      word_id: words(:pending_bermuda).id, meaning: "大西洋の海域。", reading: "バミューダトライアングル",
+      linguistic_features: [ { name: "連濁", target: "バミューダ", target_reading: "バミューダ" } ], sense_id: 123
+    } ])
+
+    proposal = words(:pending_bermuda).reload.annotation_proposal
+    assert_equal %w[meaning], proposal.payload.keys
+    assert_nil proposal.senses.first.reading
+    assert_empty proposal.senses.first.linguistic_features
+  end
+
+  test "senses の要素は中身を丸ごと保持する(genre_new・target_start・未知のキーも残る)" do
+    sense = { meaning: "意味。", genre_new: true, extra_in_sense: "残る",
+              linguistic_features: [ { name: "連濁", target: "トライアングル", target_reading: "トライアングル", target_start: 5 } ] }
+    import_json([ { word_id: words(:pending_bermuda).id, genre_new: true, senses: [ sense ] } ])
+
+    payload = words(:pending_bermuda).reload.annotation_proposal.payload
+    assert_equal true, payload["genre_new"]
+    assert_equal sense.deep_stringify_keys, payload["senses"].first
+  end
+
   test "立項スコアと懸念理由を保持する(Issue 39)" do
     import_json([ {
       word_id: words(:pending_bermuda).id, entry_score: 2, entry_notes: "公然性を欠く。"
