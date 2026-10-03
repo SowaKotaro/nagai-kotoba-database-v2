@@ -1,12 +1,13 @@
-# AI 向け可読性改修の計画書（refactor/ai-legibility）
+# AI 向け可読性改修の計画書
 
-> **状態: 承認待ち（フェーズ2）**。承認されるまでコードは変更しない。
+> **状態: 承認待ち（台帳の段階 3）**。承認されるまでコードは変更しない。
 > これは改修の作業計画であり、現行仕様の正ではない（正は `CLAUDE.md`・`docs/` の各文書・コード）。
-> 改修が終わったら、この文書と監査記録（[`audits/`](audits/)）は `docs/history/` へ移す（G4-05）。
->
-> **2026-10-02 追記**: 進め方は [`STRATEGY.md`](STRATEGY.md)、進捗は [`LEDGER.md`](LEDGER.md) に移した。
-> この文書と食い違うところ（作業ブランチ名・§0.2 の「作業中のファイル」・§8 の記録先など）は、そちらを優先する。
-> この文書は段階 3（P-01）で改訂する。
+> - 進め方の決まりは [`STRATEGY.md`](STRATEGY.md)、**どの項目が済んだかは [`LEDGER.md`](LEDGER.md) だけが持つ**。
+>   この文書は項目の中身（何をなぜ直すか）だけを書き、状態は書かない。
+> - 2026-09-30 の初版を、2026-10-03 に台帳の段階 2（棚卸しと補完監査）の結果で改訂した（P-01）。
+> - **用語**: この文書の「区分 T0〜G4」は改修項目の種類（特性テスト・文書・残骸・集約・案内）を指す。
+>   台帳と STRATEGY の「段階 0〜5」は進め方の段取り（目的の確定・監査・計画・実行・片付け）を指す。初版では両方を「段階」と呼んでいた。
+> - 改修が終わったら、この文書と監査記録（[`audits/`](audits/)）は `docs/history/` へ移す（G4-05）。
 
 ## 0. 前提
 
@@ -22,8 +23,9 @@
 
 ### 0.2 この改修の制約
 
-- 作業はブランチ `refactor/ai-legibility` だけで行う。**main への push・マージはしない**
-  （main への push で `.github/workflows/deploy.yml` が本番デプロイを走らせる）。ブランチの push も指示があるまでしない。
+- 作業はブランチ `feature/refactoring` の 1 本だけで行う（STRATEGY §5）。
+  **main への push・merge は、そのまま本番デプロイになる**。`.github/workflows/deploy.yml` は main への push で動き、CI の完了を待たない。
+  main にはブランチ保護も無い（2026-10-02 に `gh api` で確認）。push・PR・merge は、オーナーの指示があるときだけ行う。
 - 外部から見える振る舞いを変えない: 公開ページの URL と HTML の意味構造、JSON API のレスポンス形式、
   og:image、収録リクエストフォーム、管理者認証。
 - 適用済みの `db/migrate` は書き換えない。スキーマは変更しない（必要なものは §7 に提案として書くだけ）。
@@ -32,9 +34,9 @@
 - MeCab / rsvg-convert が無い環境でも機能が止まらないフォールバックを維持する。
 - gem・JS ライブラリを追加・削除しない。
 - 既存テストの期待値を変えない。変える必要がある項目は実施せず、§7.3 に理由を書く。
-- **所有者の作業中のファイルには触れない**。`README.md`、`.claude/commands/expand.md`、
-  `.claude/skills/word-expansion-research/`（`SKILL.md` と未追跡の `reading_length.rb`）に未コミットの変更がある。
-  これらに関わる項目は §7.6 に回す。コミットには `git add <パス>` で明示したファイルだけを含める。
+- コミットには `git add <パス>` で明示したファイルだけを含める。
+  初版の時点で所有者の作業中だった `README.md`・`.claude/commands/expand.md`・`.claude/skills/word-expansion-research/` は、
+  その後コミットされた（83e36d2・f7b88da）。そのため改修の対象に戻した（初版の §7.6 は廃止）。
 
 ### 0.3 合格判定（各コミットで全て満たす）
 
@@ -49,6 +51,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 
 - 連結形の `bin/rails test test:system` はローカルでは `LoadError` になる（§1）。2本に分けて実行する。
 - 失敗したら直すか、そのコミットを取り消す。満たさないまま次の項目へ進まない。
+- `docs/refactoring/` だけを変えるコミット（台帳・計画書・監査記録）は、合格判定を省いてよい（STRATEGY §2.3）。
 - 既知の不安定なテストが1本ある: `test/system/admin_annotation_deck_test.rb` の「提案の新設候補をその場で作ると…」は、
   変更と関係なく落ちることがある（CI では通っている）。これだけが落ちたら、再実行して再現するかを確かめる。
 
@@ -66,26 +69,43 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 アサーションの数は、同じコードでも実行のたびに数件ずれる（条件によって assert する経路があるため）。
 2026-09-30 にこの計画書を足して再実行したときは 15301 件 / 218 件で、失敗は 0 だった。
 
+**a04f375 以降、`app`・`config`・`lib`・`db`・`test`・`vendor`・`script`・`tools` に差分は無い**（2026-10-03、HEAD = `1110261` で確認）。
+そのため、このベースラインと監査記録の行番号は、そのまま使える。
+ただし Chrome の版などの環境は動くので、**台帳の段階 4（実行）の最初に合格判定を一度通して、ベースラインを取り直す**（§6）。
+
 計画の前提として、統合担当が実行して確かめた事実は次の2つ。
 
 - **`bin/rails test test:system` はローカルでは `LoadError` になる**。`test:system` をファイルパスとして読むため。
   CI は `bin/rails db:test:prepare test test:system` で通っている（先頭が rake タスクなので、全体が rake タスクとして解釈される）。
-- **照合順序の実測**（MySQL 8.4。docker の開発用 DB で文字列リテラル同士を比較）:
+- **照合順序の実測**（docker の開発用 DB で、文字列リテラルどうしを比較した。データには触れていない）。
+  2026-09-27 に as_ci の列を、2026-10-02 に ai_ci の列・全角英字・末尾の空白を測った（MySQL 8.4.10。補完監査 A-06 のリーダーの裏取り）。
 
   | 比較 | `utf8mb4_0900_as_ci` | `utf8mb4_0900_ai_ci` |
   |---|---|---|
   | ハ / バ（清濁） | 区別する | 同一視する |
-  | ヤ / ャ、ツ / ッ（小書き） | **同一視する** | （未計測） |
-  | あ / ア（ひらがな・カタカナ） | 同一視する | （未計測） |
-  | ア / ｱ（全角・半角のカナ） | 同一視する | （未計測） |
+  | ヤ / ャ、ツ / ッ（小書き） | **同一視する** | 同一視する（ヤ / ャ で計測） |
+  | あ / ア（ひらがな・カタカナ） | 同一視する | 同一視する |
+  | ア / ｱ（全角・半角のカナ） | 同一視する | 同一視する |
+  | Ａ / A（全角・半角の英字） | 同一視する | 同一視する |
   | A / a（大文字・小文字） | 同一視する | （未計測） |
   | ー / -（長音符・ハイフン） | 区別する | （未計測） |
+  | 「名詞␣」/「名詞」（末尾の空白） | 区別する | **区別する**（0900 系の照合順序は NO PAD） |
   | `REPLACE()` | 照合順序によらずバイナリで比較する | — |
 
 ## 2. 監査の概要
 
-フェーズ1では、8体のサブエージェントが読み取りだけで監査した。docs は分量が多いので2体に分けた。
-報告の全文は [`audits/`](audits/) にある（行番号は `a04f375` 時点のもの）。
+監査は 3 回に分けて行った。どれも読み取りだけで、コードは変えていない。
+
+| 回 | 時期 | 内容 | 記録 |
+|---|---|---|---|
+| フェーズ1 | 2026-09-27〜30 | 8 領域の監査（指摘 154 件） | [`audits/*.md`](audits/)（§2.1） |
+| 棚卸し | 2026-10-02 | フェーズ1 の指摘を、いまの HEAD に照らして仕分けた（B-01〜B-08） | 各監査記録の末尾の「棚卸し」節（§2.2） |
+| 補完監査 | 2026-10-02 | フェーズ1 で確かめきれなかった範囲を 10 単位で調べた（A-01〜A-11。A-03 は見送り。指摘 93 件） | [`audits/supplement/A-*.md`](audits/supplement/)（§2.3） |
+
+### 2.1 フェーズ1
+
+8体のサブエージェントが読み取りだけで監査した。docs は分量が多いので2体に分けた。
+報告の全文は [`audits/`](audits/) にある（行番号は `a04f375` 時点のもので、いまも有効。§1）。
 
 | 領域 | ID | 件数 | 報告 |
 |---|---|---:|---|
@@ -99,7 +119,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 | 仕様・記録系の文書と、それを参照するコメント | SPEC- | 24 | [audits/docs-specs.md](audits/docs-specs.md) |
 
 - 監査は利用上限で2回中断し、再開したときに残りを重要な項目に絞った。確認しきれなかった範囲は、各報告の末尾の「未確認のまま残した範囲」に書かれている。
-- 各指摘には確度（確認済み / 推測）が付いている。**計画に採用した推測には「要確認」と書き、フェーズ3で実測してから着手する。**
+- 各指摘には確度（確認済み / 推測）が付いている。**計画に採用した推測には「要確認」と書き、実行（台帳の段階 4）で実測してから着手する。**
 - 統合担当が実物で裏取りした主な指摘は次のとおり。
   - DOC-01（deploy.yml）、DOC-02（テストコマンド）、DOC-03（スキルの旧フロー）、DOC-04（as_ci の一覧）
   - M-01（backfill の欠落）、M-07（照合順序。§1 の実測で決着）、M-16（`unannotated` の説明）
@@ -109,6 +129,64 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - 不採用にした指摘は2つ。
   - M-13 のうち `WordCandidateIntake` のコメント。「1行の失敗で他の行を巻き戻さない」は実装と合っている。
   - `WordSort::RANKING_KEYS` の削除。テストが参照している。
+
+### 2.2 棚卸し（B-01〜B-08）
+
+- **陳腐化した指摘は 0 件**。a04f375 以降、コードが 1 行も変わっていないため（§1）。
+- 監査どうしで同じ事実を指している指摘は、§9 の対応表で同じ改修項目に束ねてある。二重には数えない。
+- 監査の後にコミットされた README・/expand のスキルを照合して、**新しい指摘を 5 件**足した。
+  - T-20: system テストが、もう読んでいない Google Fonts を遮断している（[audits/test.md](audits/test.md) の棚卸し節）。
+  - DOC-17: README のジョブの行が、ジョブの実在を示唆する。
+  - DOC-18: README の「コードベースの規模」は、放っておけば古くなる数値。
+  - **DOC-19: /expand のスキル（`reading_length.rb`）が、`ReadingExtractor` の private メソッド `normalize` を `send` で呼んでいる**。
+    `.claude/` は RuboCop の対象外で、テストも無い。C3-04・C3-15 で ReadingExtractor を変えると、/expand が黙って壊れる。
+  - DOC-20: /expand のスキルにも、DOC-03 と同じ旧フローの記述が残っている。
+  - DOC-17〜20 の詳細は [audits/docs-guides.md](audits/docs-guides.md) の棚卸し節にある。
+- 確度を**推測から確認済みに上げた**もの。
+  - J-20: Plotly が importmap にピンされていない（`config/importmap.rb` に pin が無い）。
+  - C-20: マスタを新設する経路が揃っていない（補完監査 A-06 で裏取り。本番の経路は seed を入れて 4 系統）。
+  - SPEC-13: コンソールで読み 10 字未満の語義を保存できる（`WordSense` の検証は presence だけ。コードで確認。実行はしていない）。
+  - S-09 の前提: /admin 配下のコントローラは 19 本すべて `Admin::BaseController` 系（`bin/rails routes` で確認）。
+- 棚卸しで決着した確認事項（主なもの）。
+  - transactional test の中で after_commit は動いている（`word_sense_metrics_test.rb:41` が通っている）。
+  - test/integration・test/helpers は data 属性を固定していない。
+  - 読みの更新で `reading_density` が追従することのテストは無い（作成時と表層形の更新時はある）。→ T0-13
+  - `tools/claude-ai-skill/build.sh` の description が SKILL.md と違うのは意図的（バンドル版は一括の調査も受ける）。指摘にしない。
+  - reading_length.rb は RuboCop の対象外。
+- 見送ったもの。
+  - A-03（seed まわりの精読）。CFG-05〜CFG-07 で覆われていた。
+  - 記録の文書（issues.md・changelog.md・performance-report.md）を 1 行ずつ照合すること。記録であって現行の仕様ではないので、照合する代わりに G4-02 で隔離する。
+  - Issue を参照する約 274 行のコードコメントの事前照合。§4.7 のコメントの扱いに従って、G4-04 で書き換える。
+
+### 2.3 補完監査（A-01〜A-11）
+
+| 単位 | 対象 | 件数 | 報告 |
+|---|---|---:|---|
+| A-01 | 派生値の再計算（`stats_helper.rb`・`feature_range_controller.js`） | 7 | [A-01](audits/supplement/A-01.md) |
+| A-02 | `MorphemeCloud`・`ShareCardTypesetter` の内部コメント | 10 | [A-02](audits/supplement/A-02.md) |
+| A-04 | 管理ビューの精読（35 ファイル） | 15 | [A-04](audits/supplement/A-04.md) |
+| A-05 | 統計・共有パーシャルと stats.md §4〜§8 | 12 | [A-05](audits/supplement/A-05.md) |
+| A-06 | マスタを新設する経路の正規化と検証（C-20 の裏取り） | 7 | [A-06](audits/supplement/A-06.md) |
+| A-07 | CSS に定義の無いクラス名（逆方向の照合） | 5 | [A-07](audits/supplement/A-07.md) |
+| A-08 | 提案 JSON の形式（スキル ⇔ 取り込み ⇔ 反映） | 10 | [A-08](audits/supplement/A-08.md) |
+| A-09 | 公開スコープの全経路（未公開語の漏れ） | 3 | [A-09](audits/supplement/A-09.md) |
+| A-10 | design.md の未照合の節 | 11 | [A-10](audits/supplement/A-10.md) |
+| A-11 | 収録基準ガイドラインと各スキル・マスタ | 13 | [A-11](audits/supplement/A-11.md) |
+
+- 指摘の ID は単位ごとに `A01-1` の形で振った。各報告の末尾に「リーダーの裏取り」節があり、リーダーが実物で確かめた事実を書いてある。
+- **未公開の語が公開面に出る経路は無かった**（A-09）。ただし、公開を取り消した語がキャッシュに最大 1 日残る（A09-1。§7.5）。
+- リーダーが実物で確かめた主な事実。
+  - A04-1: 特徴の再調査の書き出しで、「日本語のみ」のチェックを外しても絞り込みが外れない（管理画面の不具合）。
+  - A09-1: sitemap・llms-full の版（`PublishedWordsDigest`）は、公開語が減っても変わらない。これは性能のための意図的な割り切りとして、`published_words_digest.rb` のコメントに書かれている。
+  - A06-1: マスタ名の前後の空白を落とすのは、その場追加（`InlineMasterCreatable#inline_master_name`）だけ。照合順序は末尾の空白を区別する（§1 の表）。
+  - A10-1: ΔRGB を、テストは各チャンネルの差の合計、`layout.css` のコメントと design.md は最大差で測っている。
+  - A05-4: 母音遷移の上限 15 が、`SiteStatistics::TRANSITION_MAX_POSITIONS` と `WordSenseSearch::VOWEL_TRANSITION_FORMAT` に別々に書かれている。
+  - A08-2: `genre_new` を読む箇所は無い（キーの一覧に現れるだけ）。
+  - A02-5: `.word-cloud__text` の `paint-order: stroke` は、stroke がどこにも無いので効いていない。
+  - A07-1: `sense-attrs__item--wide` は、CSS が 1f51389 で消えた後もビュー 3 か所に残っている。
+  - A11-3・A11-11: /harvest の例「メイショウタバル」は 8 文字。注釈スキルが「マスタに無い言語」の例にした「ギリシャ語」は、SeedCatalog に実在する。
+  - A01-5: `stats_helper.rb` の「15 層で 818px」は、実装の式では 1,148px。
+- A11-2 の判断材料として、開発用 DB のデータを数えた（2026-10-03。読み取りのみ）。ひらがなを含む `word_senses.reading` は 1,631 件中 0 件、ひらがなを含む `word_sense_features.target_reading` は 262 件中 0 件だった。
 
 ## 3. 横断的な発見
 
@@ -125,10 +203,35 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 4. **嘘の最大の供給源は、経緯を書いたコメントが古くなったもの**。「アクセント」「朱」「太字」「印章」「検索パネル」など、
    撤去済みの設計の語彙が残っている。コメントに日付・Issue 番号・計測値を積むほど古くなる。
 5. **範囲外の不具合も見つかった**（§7.1）。直すと振る舞いが変わるので、この改修では直さずに記録する。
+   補完監査で増えた主なものは次のとおり。
+   - 管理画面の「日本語のみ」の絞り込みが外れない（A04-1。確認済み）。
+   - 公開を取り消した語が、キャッシュに最大 1 日残る（A09-1。意図的な割り切りかどうかをオーナーに確認する）。
+   - 特徴の位置 `target_start` を誰も検証していない（A01-1）。
+   - 不完全な特徴が黙って落ちたまま公開される（A08-6）。
+   - 一括承認が 1 件の不備で全件を巻き戻す（A08-7）。
+   - 閉じたドロワーがキーボードのフォーカス順に残る（A10-4）。
+6. **調査パイプライン（スキル → 提案 JSON → 取り込み → 反映）の約束が、文書の側にしか書かれていない**。
+   - 提案 JSON のキーの一覧が 8 か所にある（M-05・A08-1）。
+   - `genre_new`・`target_start` は、スキルが書いても黙って捨てられる（A08-2・A08-3）。
+   - 必須の取り決めは SKILL.md にしか無く、schema.json と食い違う（A08-4）。
+   - 注釈の規則の正がガイドラインとスキルのどちらにあるかが、文書どうしで食い違う（A11-1）。
+   - スキルがアプリの private メソッドに依存している（DOC-19）。アプリ側を直すと、スキルが黙って壊れる。
+7. **同じ「名前が一致するか」の判定が、DB の照合順序と Ruby の比較で混ざっている**。
+   - マスタを新設する経路は 4 系統あり、名前の正規化（前後の空白の除去）は 1 系統にしか無い（C-20・A06-1）。
+   - 新しく作る名前が既存の名前と衝突したときの扱いも、3 通りある（A06-2）。
+   - マスタ名の一致を、SQL は ai_ci で、Ruby は完全一致で判定している箇所がある（A06-4）。
+8. **1 つの規則を測る式・判定が複数ある**。
+   - CLAUDE.md の「ΔRGB 19 以上」を、テストは各チャンネルの差の合計、文書とコメントは最大差で測っていて、合否が入れ替わる（A10-1）。
+   - 分布の最頻値（A01-4）、母音遷移の上限 15（A05-4）、フレーム幅 1040px（A10-8）も、それぞれ 2〜4 か所に別々に書かれている。
+9. **新しい管理画面ほど、正典が決まる前に作られている**。
+   - 登録予定単語（#162〜#164）は、段の定義が 5 か所に散らばっている（A04-7）。
+   - 提案パネル・JSON のコピー欄・用語解説パネル・下端のバーが、画面ごとに複製されている（A04-3・A04-4・A04-9・A04-10）。
+   - パーシャルのローカル変数の受け方が 3 通りある（A04-14）。
+   - 正典を先に決めて手本を示すと、次に足す画面の書き方が揃う（§4）。
 
 ## 4. 領域ごとの正典パターン（定義案）
 
-改修後の CLAUDE.md（G4-01）に載せる定義の案。「段階3の後」と書いたものは、その項目が終わるまでは既存の手本を使う。
+改修後の CLAUDE.md（G4-01）に載せる定義の案。「区分 C3 の後」と書いたものは、その項目が終わるまでは既存の手本を使う。
 
 ### 4.1 モデル・サービス
 
@@ -146,7 +249,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **派生値**
   - 手入力させない。次の3つのどれかで作る: SQL の STORED 生成カラム／値オブジェクト＋`before_validation`／`after_commit` で焼き直す代表値（`WordSenseMetrics`）。
   - 値オブジェクトは `self.call(input)` の純粋関数にする（手本 `last_char.rb`・`char_type_pattern.rb`）。
-  - 読み由来の値の組み立ては `WordSense.reading_derivations(reading)` の1か所だけにする（段階3の後）。
+  - 読み由来の値の組み立ては `WordSense.reading_derivations(reading)` の1か所だけにする（区分 C3 の後）。
   - **派生列を足したら、data-model.md §3 の表・backfill・verify を同じコミットで直す。**
 - **コールバックを通らない更新**（`update_all`・`update_columns`・生 SQL）には、その場で理由をコメントし、事後の直し方（backfill）を示す。
 - **集計とキャッシュ**
@@ -155,7 +258,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **基準値・しきい値**は、その概念の持ち主に1つだけ置く。別名の定数は作らない。
   - `WordSense::MIN_READING_LENGTH`
   - `Levenshtein::SIMILARITY_THRESHOLD`
-  - 立項スコアと確信度は `AnnotationProposal`（段階3の後）
+  - 立項スコアと確信度は `AnnotationProposal`（区分 C3 の後）
   - マスタ名は `SeedCatalog`
 - **調査 JSON の入出力**
   - 取り込みの手本は `word_candidate_notation_import.rb`。`ResearchJson.array_at` で読む。入口は `call`。形が読めなければ nil を返す。外側のトランザクションに加えて行ごとに `requires_new` を張る。結果は `Struct(keyword_init: true)` で返す。
@@ -168,7 +271,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - 失敗したら nil を返し、呼び出し側が既定値へフォールバックする。
 - **状態**は、間隔を空けた整数の enum で表す（手本 `word_candidate.rb`）。
 - **公開条件**は、語は `Word.annotated`、語義は `WordSense.published` だけを使う。語と語義で名前が違うことを word.rb に明記する。
-- **かなの畳み込み**は `KanaFold`（段階3の後）、**代表語義**は `Word#primary_sense`（段階3の後）を使う。
+- **かなの畳み込み**は `KanaFold`（区分 C3 の後）、**代表語義**は `Word#primary_sense`（区分 C3 の後）を使う。
 
 ### 4.2 コントローラ・ヘルパ・ビュー
 
@@ -184,8 +287,8 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **キャッシュ**
   - 集計値のキャッシュはモデル側に置く（4.1）。
   - コントローラには HTTP の宣言（`expires_in` / `stale?`）だけを書く。
-  - 全件出力（sitemap・llms-full）は `PublishedWordsDigest` の版と TTL を使う（段階3の後）。
-- **絶対 URL** は `SiteUrl` だけで作る（段階3の後）。
+  - 全件出力（sitemap・llms-full）は `PublishedWordsDigest` の版と TTL を使う（区分 C3 の後）。
+- **絶対 URL** は `SiteUrl` だけで作る（区分 C3 の後）。
 - **ヘルパとパーシャルの使い分け**
   - 値・属性・文字列を返すならヘルパ、マークアップのまとまりならパーシャル。
   - ヘルパでは DB を引かない。引く場合はメモ化し、そのことが分かる名前にする。
@@ -263,14 +366,14 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **管理画面のテスト**は `setup { sign_in_as(admins(:one)) }` でログインする（手本 `test/controllers/admin/candidates/lists_controller_test.rb`）。未ログインの検証は各テストに書かない。
 - **テストデータ**
   - 基本はフィクスチャを使う。
-  - 場面ごとに要る公開語は `create_published_word` で作る（`mark_annotated` を使う。段階3の後。今の手本は `test/integration/words_feed_test.rb`）。
+  - 場面ごとに要る公開語は `create_published_word` で作る（`mark_annotated` を使う。区分 C3 の後。今の手本は `test/integration/words_feed_test.rb`）。
   - `create!` に派生値を渡さない（保存時に上書きされる）。
-- **外部に出る形式**は、キーの集合ごと固定する（段階0の後の `words_api_test.rb`）。
+- **外部に出る形式**は、キーの集合ごと固定する（区分 T0 の後の `words_api_test.rb`）。
 - **時刻**は `travel_to` で固定する。
-- **キャッシュ**（段階3で test_helper に集約する）
+- **キャッシュ**（区分 C3 で test_helper に集約する）
   - フラグメントキャッシュは `with_fragment_cache`（`ActionController::Base.cache_store` を差し替える）。
   - `Rails.cache.fetch` は `with_rails_cache`。
-- **設定と ENV** は、元の値に戻す `with_config` / `with_env` を使う（段階3で test_helper に集約する）。
+- **設定と ENV** は、元の値に戻す `with_config` / `with_env` を使う（区分 C3 で test_helper に集約する）。
 - **外部コマンド**
   - 依存するテストは、サービスの `available?` を見て skip する。
   - フォールバックは、`available?` を false にスタブして確かめる。
@@ -280,7 +383,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
   - 押し直しても結果が同じ操作は `click_expecting` を使う。
   - 押し直すと困る操作は `click_via_js` を使う。
   - turbo_confirm は `click_accepting_confirm` を使う。
-- **canonical ホスト**は、test_helper の定数1つにまとめる（段階3の後）。
+- **canonical ホスト**は、test_helper の定数1つにまとめる（区分 C3 の後）。
 
 ### 4.7 文書とコメント
 
@@ -317,7 +420,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 - **中**: 構造は変えるが、出力は同一（特性テストで固定してから行う）。
 - **高**: 本番の運用・設定に関わる。この計画には入れていない。
 
-### 段階0: 特性テストの追加（テストだけを足す。アプリのコードは変えない）
+### 区分 T0: 特性テストの追加（テストだけを足す。アプリのコードは変えない）
 
 | ID | 内容 | 効果 | 影響ファイル | リスク | 先に必要な特性テスト | 出典 |
 |---|---|---|---|---|---|---|
@@ -334,7 +437,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 | T0-11 | `backfill:sense_metrics` が、崩した代表値を元に戻すことを固定する | C3-12 の安全網 | test/tasks/backfill_task_test.rb | 低 | — | T-06、CFG-02 |
 | T0-12 | 名前と中身がずれているテストを直す。テスト名を中身に合わせ、名前が約束していた検証は新しいテストとして足す（単語を消すと特徴も消える、同じ該当部分の特徴を別の語義に付けられる）。既存の assert は変えない | テスト名を信じた誤認を防ぐ | test/controllers/admin/words_controller_test.rb、test/models/word_sense_feature_test.rb、reannotation_export_test.rb | 低 | — | T-12 |
 
-### 段階1: 文書・コメントの矛盾解消（嘘を消す。振る舞いは変えない）
+### 区分 D1: 文書・コメントの矛盾解消（嘘を消す。振る舞いは変えない）
 
 | ID | 内容 | 効果 | 影響ファイル | リスク | 先に必要な特性テスト | 出典 |
 |---|---|---|---|---|---|---|
@@ -356,7 +459,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 | D1-16 | **CSS のコメントを実装に合わせる**。<br>・tokens.css の冒頭を 4.4 の方針にし、「画像帯」「構造は余白で作る」を直す。<br>・base.css の対象（`.mono` を含む）と「ヘッダー(--bg)」。<br>・application.css の冒頭に実際の配置を書く（candidates.css の役割、管理用の CSS も全ページで読まれること、読み込み順の意味）。<br>・components.css の古いコメント（「唯一」「4 箇所」「001–050」など。SPEC-15・S-12 に列挙）。<br>・admin.css の冒頭の方針と実測値。<br>・annotate.css の「青一色」「枠を緑に」、layout.css の「縦の基準線」。<br>・i18n の中にあるクラス名（shiritori__char・cand-export__num）の使用元。<br>・読み込み順に依存する規則の両側に注記する。 | 置き場所と方針を誤読するのを防ぐ | app/assets/stylesheets の全ファイル | 低 | — | S-02、S-03、S-07、S-10、S-12、SPEC-03〜05、SPEC-15 |
 | D1-17 | **設定・タスク・テストのコメントを実装に合わせる**。<br>・application.rb の INDEXING_ENABLED（解禁済み。値は見ず、設定されているかどうかで決まる）。<br>・puma.rb に理由を書く（preload_app! の分岐、ソケットのパスと deploy_to、worker_timeout）。<br>・routes.rb に公開と管理の見出しを付け、公開 URL とクエリ名は変えないことを書く。apply_research も説明に加える。<br>・stats.rake の「本番に MeCab が無い」前提を overview の外部コマンドの表へ移す。backfill.rake の冒頭を直す。<br>・db/migrate のコメントは当時の記録で、現行の正は schema.rb であることを data-model に1段落書く。<br>・テスト側:<br>　- application_system_test_case の Google Fonts と「sticky ヘッダー」<br>　- backfill_task_test の「ずれは検出される」<br>　- 管理画面のテストに残る空の見出し5つと、word_requests テストのファイル説明<br>　- fixtures/word_senses.yml の murder の読みがひらがなである意図<br>　- システムテストの入力手段についての、互いに矛盾するコメント（**要確認**: 実行して現状を確かめてから、1か所にまとめて書く）<br>　- morpheme_frequencies_test の失敗メッセージの「朱」 | 環境や設定についての誤った知識が引き継がれるのを防ぐ | config/application.rb、config/puma.rb、config/routes.rb、lib/tasks/*.rake、docs/data-model.md、docs/overview.md、test の該当ファイル | 低 | — | CFG-08、CFG-15〜18、DOC-13、DOC-16、T-02、T-06、T-09、T-19、J-18、SPEC-16 |
 
-### 段階2: 残骸の削除
+### 区分 R2: 残骸の削除
 
 | ID | 内容 | 効果 | 影響ファイル | リスク | 先に必要な特性テスト | 出典 |
 |---|---|---|---|---|---|---|
@@ -367,7 +470,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 | R2-05 | 設定とタスクの残骸を片付ける。<br>・`config/deploy/staging.rb`（全行がコメント）<br>・Capfile の、存在しないディレクトリへの glob<br>・Rails の雛形の英語コメント（routes.rb の末尾、db/seeds.rb の冒頭、deploy.rb の例示）<br>・stats.rake がトップレベルで `def` しているのをラムダにする | 使っていない設定を、使っているように見せない | config/deploy/staging.rb、Capfile、config/routes.rb、db/seeds.rb、config/deploy.rb、lib/tasks/stats.rake | 低（デプロイの設定だが、本番のデプロイ経路は変わらない） | — | CFG-14、CFG-17 |
 | R2-06 | テストの残骸を片付ける（期待値は変えない）。<br>・stats_vowel_graph_test の効果の無い `Rails.cache.delete`（test 環境は null_store）<br>・`create!` に渡している派生値の引数（保存時に上書きされるうえ、値も誤っている） | 「create! にも派生値を渡すもの」という誤解を防ぐ | test/system/stats_vowel_graph_test.rb、test/models/word_request_duplicate_check_test.rb、test/helpers/words_helper_test.rb | 低 | — | T-07、T-11 |
 
-### 段階3: 正典への集約（振る舞いを変えない）
+### 区分 C3: 正典への集約（振る舞いを変えない）
 
 リスクの低いものを先に並べている。各項目の前に、その行の「先に必要な特性テスト」がそろっていることを確かめる。
 
@@ -397,7 +500,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 | C3-22 | **テストで公開語を作る方法を create_published_word に揃える**。いま `annotated_at` だけを立てて作っている24か所を、1ファイルずつ移す（語の状態が done に変わるので、キューに関わるテストに混ざらないかを1件ずつ確かめる） | 本番では起きない状態（公開済みなのに未対応）をテストで作らなくなる | test の該当ファイル | 中 | C3-11 | T-08 |
 | C3-23 | **システムテストの操作ヘルパを ApplicationSystemTestCase に集める**。type_japanese・press・click_row の系統・with_window_size を移し、環境の制約の説明も1か所にまとめる（**要確認**: 実行して、どの入力手段が今の Chrome で通るかを確かめてから行う） | system テストの書き方の手本が1つになる | test/application_system_test_case.rb、system テスト4ファイル | 中（system テストは不安定になりやすい） | 変更後に test:system を3回続けて通す | T-09 |
 
-### 段階4: AI 向けの案内の整備（フェーズ4）
+### 区分 G4: AI 向けの案内の整備
 
 | ID | 内容 | 効果 | 影響ファイル | リスク | 先に必要な特性テスト | 出典 |
 |---|---|---|---|---|---|---|
@@ -431,7 +534,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 
 ### 7.1 外部から見える振る舞いが変わるもの（範囲外で見つかった不具合を含む）
 
-直すと出力や挙動が変わるので、この改修では直さない。このうちコメントで表明できるものは、段階1で表明する。**別の PR で直すことを推奨する**（特に C-01・C-03・J-03・J-17）。
+直すと出力や挙動が変わるので、この改修では直さない。このうちコメントで表明できるものは、区分 D1 で表明する。**別の PR で直すことを推奨する**（特に C-01・C-03・J-03・J-17）。
 
 | ID | 内容 | 変わるもの |
 |---|---|---|
@@ -559,7 +662,7 @@ CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャーの Chr
 
 ## 10. 承認のときに決めてほしいこと
 
-1. この計画（段階0〜4）を進めてよいか。外したい項目があれば ID で指定してほしい。
+1. この計画（区分 T0〜G4）を進めてよいか。外したい項目があれば ID で指定してほしい。
 2. §7.5 の各項目の判断。この改修ではどれも実施しない。判断が出たら §8 に移して扱う。
 3. D1-09 の方針（CSS を正として design.md を直す）でよいか。
 4. 監査の記録（`docs/refactoring/audits/`）をリポジトリに残してよいか（改修が終わったら docs/history/ へ移す）。
