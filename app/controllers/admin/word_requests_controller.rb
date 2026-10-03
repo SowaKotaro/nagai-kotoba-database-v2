@@ -11,13 +11,13 @@ class Admin::WordRequestsController < Admin::BaseController
   def index
     @status = params[:status].presence_in(WordRequestItem.statuses.keys)
     @ip_address = params[:ip].presence
-    @page = [ params[:page].to_i, 1 ].max
+    @page = Pagination.page_number(params[:page])
 
     scope = filtered_items
-    @total_count = scope.count
-    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
-    @items = scope.includes(:word_request).recent_first
-                  .limit(PER_PAGE).offset((@page - 1) * PER_PAGE).to_a
+    pagination = Pagination.new(page: @page, per_page: PER_PAGE, total_count: scope.count)
+    @total_count = pagination.total_count
+    @total_pages = pagination.total_pages
+    @items = pagination.paginate(scope.includes(:word_request).recent_first).to_a
     @registered_surfaces = registered_surfaces_for(@items)
   end
 
