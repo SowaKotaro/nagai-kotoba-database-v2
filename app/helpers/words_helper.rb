@@ -18,7 +18,7 @@ module WordsHelper
   # 単語ごとの共有カード(og:image)。焼ける環境の、読みのある語だけ(それ以外は nil で既定のカードのまま)。
   def word_share_card(word)
     card = WordShareCard.new(word)
-    card if card.drawable? && ShareCardRenderer.available?
+    card if card.renderable?
   end
 
   # 単語詳細の自己完結リード文(定義文)を決定的に組み立てる(Issue 18)。

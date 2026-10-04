@@ -10,7 +10,6 @@ class LlmsController < ApplicationController
   GUIDE_EXPIRES_IN = 1.day
 
   def show
-    @host = canonical_host
     expires_in GUIDE_EXPIRES_IN, public: true
     render layout: false, content_type: "text/plain"
   end
@@ -30,9 +29,6 @@ class LlmsController < ApplicationController
 
   private
 
-  # 絶対URLの基点は本番ホスト(request のホストではなく canonical を使う)。
-  def canonical_host = Rails.application.config.x.canonical_host
-
   # 公開語の最終更新日をキーにする。語義の更新は touch: true で words.updated_at を
   # 動かすので、語の追加・注釈・語義の編集はすべてキーに反映される。
   # 日単位に畳む理由は PublishedWordsDigest を参照(畳まないとアノテーション1回ごとに
@@ -40,7 +36,6 @@ class LlmsController < ApplicationController
   def full_cache_key = "llms_full/v2/#{published_words_digest}"
 
   def render_full
-    @host = canonical_host
     @generated_on = Date.current
     @word_count = Word.annotated.count
     # 語数が増えても一度に全件を抱えないよう、ビューは find_each で回す(id 順 = 登録順)。

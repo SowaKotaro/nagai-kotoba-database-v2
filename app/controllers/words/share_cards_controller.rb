@@ -3,14 +3,12 @@
 class Words::ShareCardsController < ApplicationController
   allow_unauthenticated_access only: :show
 
-  DEFAULT_CARD_PATH = "/og-default.png".freeze
-
   def show
     # 未注釈の語は公開しない(RecordNotFound → 404)。詳細ページと同じ。
     word = Word.annotated.includes(:word_senses).find(params[:word_id])
     card = WordShareCard.new(word)
     png = rendered_png(word, card)
-    return redirect_to(DEFAULT_CARD_PATH) unless png
+    return redirect_to(SiteUrl::DEFAULT_OG_IMAGE_PATH) unless png
 
     # URL の版(v)が今の版と同じなら、この URL の中身は変わらない(表記や意匠が変われば版ごと URL が変わる)。
     # 版の違う・無い URL は古い共有などから来たものなので、今のカードを返しつつ短く持たせる。
@@ -25,7 +23,7 @@ class Words::ShareCardsController < ApplicationController
   private
 
   def rendered_png(word, card)
-    return unless card.drawable? && ShareCardRenderer.available?
+    return unless card.renderable?
 
     ShareCardRenderer.new.fetch(name: "word-#{word.id}", version: card.digest, svg: card.svg)
   end

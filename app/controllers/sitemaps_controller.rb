@@ -27,8 +27,6 @@ class SitemapsController < ApplicationController
   def cache_key = "sitemap/v1/#{published_words_digest}"
 
   def render_sitemap
-    # 絶対URLの基点は本番ホスト(request のホストではなく canonical を使う)。
-    @host = Rails.application.config.x.canonical_host
     # loc/lastmod だけを最小カラムで取得(1万語規模でも1ファイルに収まる)。
     @words = Word.annotated.select(:id, :updated_at)
     render_to_string(template: "sitemaps/show", formats: :xml, layout: false)

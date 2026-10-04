@@ -2,7 +2,7 @@
 # リッチリザルトや AI 検索がページ構造を誤りなく解釈・引用できるようにする。
 module StructuredDataHelper
   # サイト全体の用語集(DefinedTermSet)の識別子。各 DefinedTerm から参照する。
-  def defined_term_set_id = absolute_site_url("/#termset")
+  def defined_term_set_id = SiteUrl.absolute("/#termset")
 
   # <script type="application/ld+json"> を安全に出力する。
   # </script> 等の混入を防ぐため JSON 内の < > & をエスケープする。
@@ -11,7 +11,7 @@ module StructuredDataHelper
   end
 
   # 運営者(Organization)ノードの識別子。WebSite の publisher から参照する。
-  def organization_id = absolute_site_url("/#organization")
+  def organization_id = SiteUrl.absolute("/#organization")
 
   # 全ページ共通: サイト自身(WebSite)+運営者(Organization)+検索アクション。
   # 運営者情報は E-E-A-T(情報源の明示)のために出力し、連絡先は About と同じ公開メールを使う。
@@ -19,14 +19,14 @@ module StructuredDataHelper
     website = {
       "@type" => "WebSite",
       "name" => t("layouts.brand"),
-      "url" => absolute_site_url("/"),
+      "url" => SiteUrl.absolute("/"),
       "inLanguage" => "ja",
       "publisher" => { "@id" => organization_id },
       "potentialAction" => {
         "@type" => "SearchAction",
         "target" => {
           "@type" => "EntryPoint",
-          "urlTemplate" => absolute_site_url("/words?q={search_term_string}")
+          "urlTemplate" => SiteUrl.absolute("/words?q={search_term_string}")
         },
         "query-input" => "required name=search_term_string"
       }
@@ -35,8 +35,8 @@ module StructuredDataHelper
       "@type" => "Organization",
       "@id" => organization_id,
       "name" => t("layouts.brand"),
-      "url" => absolute_site_url("/about"),
-      "logo" => absolute_site_url("/icon.svg"),
+      "url" => SiteUrl.absolute("/about"),
+      "logo" => SiteUrl.absolute("/icon.svg"),
       "email" => t("pages.about.contact_email")
     }
     json_ld_tag("@context" => "https://schema.org", "@graph" => [ website, organization ])
@@ -65,7 +65,7 @@ module StructuredDataHelper
         "@type" => "ListItem",
         "position" => index + 1,
         "name" => label,
-        "item" => absolute_site_url(path || request.path)
+        "item" => SiteUrl.absolute(path || request.path)
       }
     end
     json_ld_tag(
@@ -89,7 +89,7 @@ module StructuredDataHelper
 
     graph = [
       { "@type" => "DefinedTermSet", "@id" => defined_term_set_id,
-        "name" => t("layouts.brand"), "url" => absolute_site_url("/"),
+        "name" => t("layouts.brand"), "url" => SiteUrl.absolute("/"),
         "inLanguage" => "ja", "license" => CC_BY_URL }
     ] + terms
 
@@ -100,7 +100,7 @@ module StructuredDataHelper
 
   # 語義1件を DefinedTerm ノードにする。@id の #sense-N は語義カードの番号(1始まり)に対応。
   def word_sense_term(word, sense, position)
-    url = absolute_site_url(word_path(word))
+    url = SiteUrl.absolute(word_path(word))
     {
       "@type" => "DefinedTerm",
       "@id" => "#{url}#sense-#{position}",

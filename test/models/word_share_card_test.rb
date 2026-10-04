@@ -40,6 +40,16 @@ class WordShareCardTest < ActiveSupport::TestCase
     assert WordShareCard.new(words(:abc_murder)).drawable?
   end
 
+  test "焼けるのは、描ける語で、かつ rsvg-convert と日本語の書体がある環境だけ" do
+    stub_method(ShareCardRenderer, :available?, -> { true }) do
+      assert WordShareCard.new(words(:abc_murder)).renderable?
+      assert_not WordShareCard.new(Word.new(surface: "語義の無い言葉")).renderable?
+    end
+    stub_method(ShareCardRenderer, :available?, -> { false }) do
+      assert_not WordShareCard.new(words(:abc_murder)).renderable?
+    end
+  end
+
   test "いちばん長くなる組み(表層形も読みも最後の候補まで行を増やす)でも、文字は枠の内側に収まる" do
     word = Word.new(surface: "あ" * 200)
     word.word_senses.build(reading: "ア" * 200)

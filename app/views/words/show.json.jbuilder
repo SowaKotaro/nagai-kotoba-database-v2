@@ -1,9 +1,8 @@
 # 単語詳細の公開 JSON(Issue 25)。読み取り専用・注釈済みのみ(HTML と共通)。
-host = Rails.application.config.x.canonical_host
 
 json.id @word.id
 json.surface @word.surface
-json.url "#{host}#{word_path(@word)}"
+json.url SiteUrl.absolute(word_path(@word))
 json.char_type_pattern @word.char_type_pattern
 
 json.senses @word.word_senses do |sense|
