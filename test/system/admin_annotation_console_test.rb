@@ -131,6 +131,8 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_selector ".ann-feature .ann-cell", wait: 10   # feature-range が接続しストリップが描画された
 
     within all(".ann-feature").last do
+      # 選ぶ前の該当部分の表示(単語・読みとも未選択)
+      assert_selector ".ann-feature__result", exact_text: "→ （単語 未選択） / （読み 未選択）"
       # 特徴のラジオを選ぶ(ネイティブクリックの取りこぼしを避けて JS で選択・change 発火)。
       choose_hidden_input "input[type=radio][value='#{feature.id}']"
       # tap ごとにストリップが再描画されセル参照が stale になるので都度引き直す。
@@ -144,6 +146,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
       tap_cell.call(reading, 2)   # 終点
       # 隠しフィールドに単語側の出現位置(先頭からのオフセット)が入る
       assert_equal "3", find("input[name$='[target_start]']", visible: false).value
+      assert_selector ".ann-feature__result", exact_text: "→ びしょ / ビショ"
     end
 
     submit = find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")

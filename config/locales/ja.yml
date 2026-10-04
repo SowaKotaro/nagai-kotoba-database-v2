@@ -221,6 +221,11 @@ ja:
         monthly_new: "今月の新収録数"
         monthly_new_unit: "語"
   searches:
+    # 読みの文字数スライダー(range_slider)の文言。%{min}・%{max} は JS が差し込む(SearchesHelper#reading_length_slider_data)
+    reading_length_slider:
+      at_least: "%{min}文字以上"
+      exact: "%{min}文字"
+      between: "%{min}文字以上%{max}文字以下"
     title: "検索・絞り込み"
     vowel_transition: "母音の移り"
     # 検索の条件チップ(SearchesHelper)と、統計の母音グラフで選んだ並び(vowel_graph_controller が %{} を差し込む)の両方が使う
@@ -966,6 +971,10 @@ ja:
         unexpected_response: "追加できませんでした。ログインが切れている可能性があります。ページを再読み込みしてください。"
         selected_existing: "同じ名前が既にあったので、それを選びました。"
     annotations:
+      # 特徴の該当部分(feature_range)を選んでいないときの表示
+      feature_fields:
+        unselected_surface: "（単語 未選択）"
+        unselected_reading: "（読み 未選択）"
       title: "アノテーション"
       unit_word: "語"
       remaining: "未対応"

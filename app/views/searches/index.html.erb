@@ -36,23 +36,23 @@
     </details>
   </div>
 
-  <%# 読みの文字数: 二つまみスライダー(10〜30)。上限30は「以上」。 %>
+  <%# 読みの文字数: 二つまみスライダー(下端は収録基準、上端まで動かすと「以上」。値と文言は reading_length_slider_data) %>
+  <% slider_min, slider_max = WordSense::MIN_READING_LENGTH, SearchesHelper::READING_LENGTH_SLIDER_MAX %>
   <fieldset class="slider-field">
     <legend class="field-legend"><%= icon "ruler" %><%= t("searches.reading_length") %></legend>
-    <div class="length-slider" data-controller="range-slider"
-         data-range-slider-min-value="10" data-range-slider-max-value="30">
+    <%= tag.div class: "length-slider", data: reading_length_slider_data do %>
       <p class="length-slider__message" data-range-slider-target="message"></p>
       <div class="length-slider__track" data-range-slider-target="track">
-        <input type="range" min="10" max="30" value="<%= @search.reading_length_min || 10 %>"
+        <input type="range" min="<%= slider_min %>" max="<%= slider_max %>" value="<%= @search.reading_length_min || slider_min %>"
                class="length-slider__thumb" data-range-slider-target="minThumb"
                data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_min') %>">
-        <input type="range" min="10" max="30" value="<%= @search.reading_length_max || 30 %>"
+        <input type="range" min="<%= slider_min %>" max="<%= slider_max %>" value="<%= @search.reading_length_max || slider_max %>"
                class="length-slider__thumb" data-range-slider-target="maxThumb"
                data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_max') %>">
       </div>
       <%= hidden_field_tag :reading_length_min, @search.reading_length_min, data: { range_slider_target: "minField" } %>
       <%= hidden_field_tag :reading_length_max, @search.reading_length_max, data: { range_slider_target: "maxField" } %>
-    </div>
+    <% end %>
   </fieldset>
 
   <%# 音の成分: 濁点・小書きのかな・長音符をいくつ以上含むか(Issue 92)。

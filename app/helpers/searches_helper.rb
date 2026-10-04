@@ -1,4 +1,21 @@
 module SearchesHelper
+  # 読みの文字数スライダーの上端。ここまで動かすと「N文字以上」(上限なし)の意味になり、上限の hidden を空で送る。
+  READING_LENGTH_SLIDER_MAX = 30
+
+  # 読みの文字数スライダー(Stimulus range_slider)へ渡す値(WordRequestsHelper#reading_counter_data と同じ形)。
+  # 下端は収録基準 WordSense::MIN_READING_LENGTH(これより短い語は収録しないので選ばせない)。
+  # 文言は ja.yml(%{min}・%{max} は JS が差し込む)。
+  def reading_length_slider_data
+    {
+      controller: "range-slider",
+      range_slider_min_value: WordSense::MIN_READING_LENGTH,
+      range_slider_max_value: READING_LENGTH_SLIDER_MAX,
+      range_slider_at_least_value: t("searches.reading_length_slider.at_least"),
+      range_slider_exact_value: t("searches.reading_length_slider.exact"),
+      range_slider_between_value: t("searches.reading_length_slider.between")
+    }
+  end
+
   # 適用中の検索条件を [ラベル, 値の文字列] の配列で返す(結果ヘッダのチップ表示用)。
   def applied_search_conditions(search)
     conditions = []
