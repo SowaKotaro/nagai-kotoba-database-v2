@@ -5,14 +5,17 @@
 #   /admin/tags で seed 管理のマスタ(タグ管理画面で「seed」印のもの)をリネーム/統合したら、
 #   本ファイルも必ず更新する。更新しないままデプロイすると、deploy:seed が旧名のマスタを
 #   再作成してしまう(2026-07-10 に本番で重複が発生した既知の事故)。
-#   - リネーム: 名前リストを新名に書き換え、RENAMES に 旧名 => 新名 を追記する。
+#   - リネーム: 名前リストを新名に書き換え、種類ごとの *_RENAMES(GENRE_RENAMES・WORD_ORIGIN_RENAMES・
+#     PART_OF_SPEECH_RENAMES・LINGUISTIC_FEATURE_RENAMES)に 旧名 => 新名 を追記する。
 #     seed 実行時に旧名のレコードを新名へ改名するため、他環境(開発・新規構築)も自動で追従する。
 #   - 統合(名前の廃止): 名前リストから削除する(残すと次回デプロイで復活する)。
-#   - RENAMES の適用時、移行先の名前が既に存在する場合は改名せずスキップして警告を出す
+#   - *_RENAMES の適用時、移行先の名前が既に存在する場合は改名せずスキップして警告を出す
 #     (データが付いている可能性があるため、機械的に統合はしない。/admin/tags で統合する)。
+# 種別: 書き込み処理。
 class SeedCatalog
   # ==== ジャンル(大分類・中分類) ====================================================
-  # 出典: docs/genres.md(日本十進分類法を基にした独自階層)。
+  # 日本十進分類法を基にした独自階層。正はこの定数で、docs/genres.md はそれを人が読める形に写したもの
+  # (いまは手作業の写し。Issue 85 で生成に切り替える予定)。
   # 小分類(level3)はここでは登録しない(アノテーション運用の中で管理画面から追加する)。
   # 分類コード列は持たない方針のため、名前＋親子関係のみで管理する。
   # 大分類 => その配下の中分類(表示順)。
@@ -198,8 +201,13 @@ class SeedCatalog
   # ==== 語種 ========================================================================
   # 「外来語」で束ねず言語ごとに切り分ける方針。混種語は語義に複数の語種を紐づけて
   # 表現するため、ここには単一の語源としての値のみを並べる(開いた集合)。
+  # 和語・漢語をまとめた語種の名前。WordSense.with_japanese_origin(特徴の調査対象を絞る。Issue 76)が
+  # この名前で引くので、/admin/tags で改名すると黙って 0 件になる(改名するならこの定数と
+  # WORD_ORIGIN_RENAMES をそろえる。test/models/seed_catalog_test.rb が改名の対象でないことを確かめる)。
+  JAPANESE_ORIGIN_NAME = "日本語".freeze
+
   WORD_ORIGINS = [
-    "日本語",
+    JAPANESE_ORIGIN_NAME,
     "中国語",
     "韓国語",
     "英語",
@@ -231,7 +239,8 @@ class SeedCatalog
   # 方針: 傘語(音便 など)は置かず、具体的な種類(葉)だけを並べる。
   #   ― 音便は4種に分ける。オノマトペは擬音語/擬態語の2種とし、上位語が認知されやすいため
   #     ラベルに「オノマトペ(...)」を残す(この項目だけの例外)。
-  # 特徴を追加したら用語解説(config/linguistic_features_glossary.yml)も更新すること。
+  # 特徴を追加したら用語解説(config/linguistic_features_glossary.yml)と、注釈スキルの特徴の対応表
+  # (.claude/skills/word-annotation-research/SKILL.md の手順8)も更新すること。
   LINGUISTIC_FEATURES = [
     # --- 読みの変化(連濁系) ---
     "連濁",        # 例: 硫黄島(いおうジマ) ― 後部要素の頭が濁音になる
@@ -296,6 +305,7 @@ class SeedCatalog
         end
       end
 
+      # 競合は find_or_create_by!(Rails 8.1 では find_by の後に create_or_find_by! を呼ぶ)が吸収する。
       names.each { |name| model.find_or_create_by!(name: name) }
     end
 
@@ -319,6 +329,7 @@ class SeedCatalog
     end
 
     # レコードが seed 管理(本カタログ収載)かどうか。タグ統括管理の「seed」印・警告表示に使う。
+    # 名前は Ruby の完全一致で比べる(DB の一意制約は ai_ci なので、清濁などだけが違う名前は DB では同じとみなされる)。
     # genre_index は id => Genre の索引(一覧表示での親参照の N+1 回避用。省略時は record.parent を辿る)。
     def seeded?(kind_key, record, genre_index: nil)
       case kind_key

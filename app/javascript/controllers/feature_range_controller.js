@@ -2,7 +2,8 @@ import { Controller } from "@hotwired/stimulus"
 
 // 言語学的特徴の「該当部分」を、単語と読みの文字を始点→終点でタップして指定する。
 // 宿泊予約のチェックイン/アウト式:
-//   1タップ目=始点(アクセント枠) / 2タップ目=終点(範囲をアクセントの塗り) / 3タップ目=始点を選び直す。
+//   1タップ目=始点(濃い枠と淡い面。.ann-cell.is-start) / 2タップ目=終点(範囲を文字色で塗って反転。.is-sel) /
+//   3タップ目=始点を選び直す。色は annotate.css が持つ。
 // 選んだ範囲の部分文字列を隠しフィールド(target / target_reading)へ書き込む。
 // キーボードを使わずに指定できるのが目的(スマホ/タブレット対応)。
 export default class extends Controller {
@@ -38,6 +39,12 @@ export default class extends Controller {
   // 永続化済みの target / target_reading から範囲を復元する。
   // 単語側は保存済みの出現位置(target_start)があればその箇所を、無ければ最初の一致箇所を採る
   // (同じ文字列が繰り返す語で、どの出現かを正しく復元するため)。
+  // 前提は「表層形の target_start 文字目から target が始まる」こと(0 始まり・コードポイント単位。
+  // 数え方の正は word_sense_feature.rb の冒頭と schema.rb の target_start のコメント)。モデルは
+  // これを検証しないので、満たさないとき(表層形を後で直した等)は黙って最初の出現に切り替える。
+  // connect では commit しないので、隠しフィールドの target_start は古いまま残り、画面のハイライトと
+  // 保存される値が食い違う。表層形は描画時の値(surface value)で固定で、入力欄の変更は追わない
+  // (読みだけ input を監視する)。
   restoreFromFields() {
     const start = this.hasTargetStartFieldTarget ? parseInt(this.targetStartFieldTarget.value, 10) : NaN
     this.restoreOne("t", this.targetFieldTarget.value, Number.isNaN(start) ? null : start)

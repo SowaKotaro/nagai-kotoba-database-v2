@@ -21,7 +21,7 @@
       <details class="genre-fold" data-genre-filter-target="fold" <%= "open" if large_count.positive? %>>
         <summary class="genre-fold__summary">
           <%= icon "caret_down", "genre-fold__caret" %>
-          <span class="genre-fold__name"><%= large.name %></span>
+          <span><%= large.name %></span>
           <span class="genre-fold__count" data-genre-filter-target="count"
                 <%= "hidden" if large_count.zero? %>><%= large_count if large_count.positive? %></span>
         </summary>
@@ -42,7 +42,7 @@
                      <%= "open" if medium_count.positive? %>>
               <summary class="genre-fold__summary">
                 <%= icon "caret_down", "genre-fold__caret" %>
-                <span class="genre-fold__name"><%= medium.name %></span>
+                <span><%= medium.name %></span>
                 <span class="genre-fold__count" data-genre-filter-target="count"
                       <%= "hidden" if medium_count.zero? %>><%= medium_count if medium_count.positive? %></span>
               </summary>

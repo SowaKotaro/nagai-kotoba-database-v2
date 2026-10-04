@@ -1,4 +1,5 @@
 # Claude の提案(下書き)。pending_haruhi に未承認の提案が付いている状態。
+# payload のキーの正は AnnotationProposal::SENSE_KEYS / META_KEYS / PAYLOAD_KEYS。ここは旧形式(トップレベルに単一語義)。
 haruhi_proposal:
   word: pending_haruhi
   status: 0 # pending

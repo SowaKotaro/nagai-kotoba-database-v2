@@ -85,7 +85,7 @@
       <article class="sense-card">
         <span class="sense-card__number"><%= t("words.show.sense_number", number: number) %></span>
 
-        <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.2) %>
+        <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.4) %>
         <h2 class="sense-heading">
           <ruby><%= @word.surface %><rt><%= sense.reading %></rt></ruby>
         </h2>
@@ -121,7 +121,7 @@
         <dl class="sense-attrs">
           <%# 表示順: (言語学的特徴は上の注釈ブロック) → ジャンル → エンティティ → 品詞 →
               語種 → 文字数 → モーラ数 → 先頭文字 → 末尾文字 → 別表記。未登録は「—」で示す %>
-          <div class="sense-attrs__item sense-attrs__item--wide">
+          <div class="sense-attrs__item">
             <dt><%= icon "tag" %><%= WordSense.human_attribute_name(:genre) %></dt>
             <dd>
               <% if sense.genre %>
@@ -197,12 +197,12 @@
           </div>
 
           <%# 円環交差数: 交差数のカウントと、読みを結んだ五十音円環の折り畳みを同居させる %>
-          <div class="sense-attrs__item sense-attrs__item--wide" title="<%= t('words.show.crossings_hint') %>">
+          <div class="sense-attrs__item" title="<%= t('words.show.crossings_hint') %>">
             <dt><%= icon "pentagram" %><%= t("words.show.crossings") %></dt>
             <dd><%= render "words/kana_ring", reading: sense.reading %></dd>
           </div>
 
-          <div class="sense-attrs__item sense-attrs__item--wide">
+          <div class="sense-attrs__item">
             <dt><%= icon "variant" %><%= t("words.show.variants") %></dt>
             <dd>
               <% if sense.word_sense_variants.any? %>

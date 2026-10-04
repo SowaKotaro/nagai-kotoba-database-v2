@@ -6,15 +6,13 @@ require "test_helper"
 class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   # コンソールは未注釈語(annotated_at なし)を対象にする。
   setup do
+    sign_in_as(admins(:one))
     @word = words(:pending_haruhi)
     @sense = word_senses(:pending)
   end
 
-  # --- 認可: 未認証は弾く ---
-
   # --- index: 入口は提案付きの語を優先(Issue 69) ---
   test "入口は未承認の提案がある語へ寄せ、提案キューを辿り切ると提案キューの完了画面へ戻る" do
-    sign_in_as(Admin.take)
     # フィクスチャでは haruhi に未承認の提案が付いている
     get admin_annotations_path
     assert_redirected_to admin_annotations_path(proposed: 1)
@@ -30,7 +28,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "提案が無ければ入口は最初の未対応へ進む" do
-    sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).applied!
     get admin_annotations_path
     assert_redirected_to admin_annotation_path(Word.annotation_pending.order(:id).first)
@@ -38,7 +35,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- index: キューを捌き切ったときの完了画面の出し分け(Issue 69) ---
   test "提案キューを捌き切ると残りの未対応語数と書き出しへの導線を出す" do
-    sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).applied!
     get admin_annotations_path(proposed: 1)
     assert_response :success
@@ -48,7 +44,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "要判断で絞った提案が尽きても他の提案が残っていれば提案キューへの導線を出す" do
-    sign_in_as(Admin.take)
     # haruhi の提案は high/立項5 なので「要判断」には掛からず、review キューは空になる
     get admin_annotations_path(proposed: 1, review: 1)
     assert_response :success
@@ -57,7 +52,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "未対応の語が無ければ全完了の画面を出す" do
-    sign_in_as(Admin.take)
     Word.annotation_pending.find_each do |word|
       word.mark_annotated
       word.save!
@@ -69,7 +63,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- show ---
   test "コンソールに表層形の編集欄・チップ・特徴ストリップ・用語解説・再調査への導線が出る" do
-    sign_in_as(Admin.take)
     get admin_annotation_path(@word)
     assert_response :success
     assert_select "h1.ann-word", text: @word.surface
@@ -88,7 +81,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- update ---
   test "保存すると語種(多対多)・ジャンル・意味が入って公開され、提案は反映済みになり、次の未対応へ進む" do
-    sign_in_as(Admin.take)
     patch admin_annotation_path(@word), params: {
       word: { word_senses_attributes: { "0" => {
         id: @sense.id, reading: @sense.reading, meaning: "更新後の意味",
@@ -110,7 +102,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "表層形を訂正すると char_type_pattern が再生成される" do
-    sign_in_as(Admin.take)
     patch admin_annotation_path(@word), params: {
       word: { surface: "すずみやハルヒの憂鬱",
               word_senses_attributes: { "0" => { id: @sense.id, reading: @sense.reading } } }
@@ -121,7 +112,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "別表記と特徴をネストして保存でき、特徴の出現位置(target_start)は先頭の出現に補完される" do
-    sign_in_as(Admin.take)
     assert_difference [ "WordSenseVariant.count", "WordSenseFeature.count" ], 1 do
       patch admin_annotation_path(@word), params: {
         word: { word_senses_attributes: { "0" => {
@@ -141,7 +131,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- hold: 保留にしてキューから外し、次の未対応へ進む ---
   test "保留にすると状態が保留になりキューから外れ、次の未対応へ進む" do
-    sign_in_as(Admin.take)
     patch hold_admin_annotation_path(@word)
 
     @word.reload
@@ -154,7 +143,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- Claude の提案(Issue 38・39) ---
   test "提案のある語にだけ提案パネルが出て、立項スコアが3以下なら懸念の印と理由が出る" do
-    sign_in_as(Admin.take)
     # フィクスチャは entry_score 5(懸念なし)
     get admin_annotation_path(@word)
     assert_select ".ann-proposal" do
@@ -178,7 +166,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "注釈済みの語でも提案を状態バッジ付きで見直せる" do
-    sign_in_as(Admin.take)
     @word.update!(annotated_at: Time.current)
     annotation_proposals(:haruhi_proposal).applied!
     get admin_annotation_path(@word)
@@ -188,7 +175,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "「提案を反映」でフォームに提案値がプレフィルされる(保存はしない)" do
-    sign_in_as(Admin.take)
     get admin_annotation_path(@word, apply_proposal: 1)
     assert_response :success
 
@@ -208,7 +194,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "反映時に小分類が未登録でも大・中まで一致すればピッカーをそこまで開く" do
-    sign_in_as(Admin.take)
     # 小分類だけ既存の木に無い提案(大「文学」・中「日本文学」は在る)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "genre_path" => %w[文学 日本文学 私小説]
@@ -225,7 +210,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 複数語義の提案(同音異義語・Issue 41) ---
   test "複数語義の提案はパネルで語義ごとに区切り、反映するとフォームに語義が並ぶ" do
-    sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [
         { "meaning" => "谷川流のライトノベル。" },
@@ -244,7 +228,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 提案の言語的特徴の表示・反映(Issue 63) ---
   test "既存マスタに解決できる特徴は該当部分つきでパネルに出て、反映でフォームに組まれる(保存はしない)" do
-    sign_in_as(Admin.take)
     propose_feature("連濁")
 
     get admin_annotation_path(@word)
@@ -262,7 +245,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "未知の特徴名は新設候補の印を付け、反映でもフォームに組まない" do
-    sign_in_as(Admin.take)
     propose_feature("存在しない特徴")
 
     get admin_annotation_path(@word)
@@ -275,7 +257,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 新設候補マスタのワンタップ作成(Issue 66) ---
   test "単一語義の提案では未解決マスタに作成ボタンを出し、複数語義では印だけにする" do
-    sign_in_as(Admin.take)
     proposal = annotation_proposals(:haruhi_proposal)
     proposal.update!(payload: { "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ] })
     get admin_annotation_path(@word)
@@ -288,7 +269,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create_master でエンティティを作成し、再反映で解決してフォームに入る" do
-    sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
     })
@@ -301,7 +281,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create_master は候補が複数ある種別(語種)を指定した名前で作る" do
-    sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "word_origins" => %w[和語 タミル語] } ]
     })
@@ -312,7 +291,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create_master は作れない指定で alert を出して戻る" do
-    sign_in_as(Admin.take)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "genre_path" => %w[無い 無い 無い] } ]
     })
@@ -325,7 +303,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- キューの絞り込み・並べ替え(Issue 67) ---
   test "提案キューにだけ絞り込み・並べ替えの導線が出る" do
-    sign_in_as(Admin.take)
     get admin_annotation_path(@word, proposed: 1)
     assert_select ".ann-queue-filter"
     assert_select ".ann-queue-filter__link", text: "要判断だけ"
@@ -335,7 +312,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "review=1 は要判断の語だけに絞り、sort は要判断(review)・確実(easy)な語を先頭にする" do
-    sign_in_as(Admin.take)
     # haruhi=立項5/high(要判断でない)。bermuda に要判断(立項低・確信 low)の提案を足す
     AnnotationProposal.create!(word: words(:pending_bermuda),
       payload: { "confidence" => "low", "entry_score" => 2, "meaning" => "x。" })
@@ -351,7 +327,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "並べ替え・絞り込みは保存後のキュー移動でも保たれる" do
-    sign_in_as(Admin.take)
     AnnotationProposal.create!(word: words(:pending_bermuda),
       payload: { "confidence" => "low", "entry_score" => 2, "meaning" => "x。" })
     patch admin_annotation_path(@word), params: {
@@ -363,7 +338,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 提案あり語のロード時自動反映(Issue 64) ---
   test "?proposed=1 では明示操作なしで提案が自動反映される(保存はしない)" do
-    sign_in_as(Admin.take)
     # show は annotation_proposals を joins したキューを辿る。素の id だと words.id と
     # annotation_proposals.id で曖昧になり StatementInvalid になっていた(その回帰防止を兼ねる)
     get admin_annotation_path(@word, proposed: 1)
@@ -375,7 +349,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "通常表示や反映済みの提案では自動反映しない" do
-    sign_in_as(Admin.take)
     # 通常表示(proposed なし)はスティッキー既定のまま。パネルには出るがフォームへは入れない
     get admin_annotation_path(@word)
     assert_select "textarea.js-meaning", text: /谷川流/, count: 0
@@ -390,7 +363,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- スティッキー引き継ぎ(Issue 37) ---
   test "トグルONで保存すると、次の語にジャンル・品詞・語種が初期値として入る" do
-    sign_in_as(Admin.take)
     patch admin_annotation_path(@word), params: {
       sticky: "1",
       word: { word_senses_attributes: { "0" => {
@@ -411,7 +383,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "トグルOFF(既定)なら引き継がない" do
-    sign_in_as(Admin.take)
     patch admin_annotation_path(@word), params: {
       word: { word_senses_attributes: { "0" => {
         id: @sense.id, reading: @sense.reading, genre_id: genres(:small_novel).id
@@ -423,7 +394,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "属性が既に付いている語義には引き継ぎで上書きしない" do
-    sign_in_as(Admin.take)
     patch admin_annotation_path(@word), params: {
       sticky: "1",
       word: { word_senses_attributes: { "0" => {
@@ -438,7 +408,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 1語の再調査(/reannotation へ渡す JSON) ---
   test "再調査用データは現在の内容とマスタを含む JSON を、コンソールと同じフレームに戻り導線つきで出す" do
-    sign_in_as(Admin.take)
     word = words(:abc_murder)
     get reresearch_admin_annotation_path(word)
 

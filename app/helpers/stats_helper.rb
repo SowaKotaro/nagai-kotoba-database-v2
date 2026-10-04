@@ -1,6 +1,6 @@
 # 統計ページ(docs/stats.md)のチャート幾何計算。SVG はサーバ側(ERB)で描き、
-# チャートライブラリは導入しない。ここでは座標・パスの計算だけを行い、
-# 色・線種はビュー側の CSS クラス(components.css)に任せる。
+# チャートライブラリは導入しない。ここでは座標・パスと、量から写す値(母音の遷移の
+# 線の太さと濃さ。graph_edges)を計算する。色はビュー側の CSS クラス(components.css)に任せる。
 module StatsHelper
   # 数字の壁の値の表示用整形(nil は「—」、小数の .0 は落とす、桁区切りあり)。
   def stats_number(value)
@@ -10,7 +10,7 @@ module StatsHelper
     number_with_delimiter(value)
   end
 
-  # ==== §3 波形塗りバー ==============================================================
+  # ==== 統計ページ §3 波形塗りバー ==============================================================
 
   WAVE_BAR_WIDTH = 40
   WAVE_BAR_GAP = 10
@@ -23,6 +23,10 @@ module StatsHelper
 
   # 分布 [{ value:, count: }] から波形塗りバーの描画データを組み立てる。
   # 直書きラベルは最頻値と両端のみ(全点に数字を振らない。docs/stats.md §1)。
+  # 最頻(mode)はここで、渡されたビンの件数から決める(同数なら先のビン = 小さい値)。
+  # 数字の壁の「最頻値」は SiteStatistics#mode_from_counts が別に決めていて、あちらは
+  # 「30 以上」をまとめる前(SiteStatistics#fill_distribution の前)の件数で見る。そのため、
+  # まとめた棒の件数が単一の値の最大件数を超えると、ここでは「30+」が最頻になり、両者が食い違う。
   def stats_wave_bars(distribution)
     max_count = distribution.map { |bin| bin[:count] }.max.to_i
     mode_value = distribution.max_by { |bin| bin[:count] }&.fetch(:value)
@@ -49,7 +53,7 @@ module StatsHelper
     }
   end
 
-  # ==== §4 収録の推移(株価チャート式) ==============================================
+  # ==== 統計ページ §4 収録の推移(株価チャート式) ==============================================
 
   TIMELINE_WIDTH = 720
   TIMELINE_HEIGHT = 248
@@ -78,7 +82,7 @@ module StatsHelper
 
     {
       width: TIMELINE_WIDTH, height: TIMELINE_HEIGHT,
-      price_bottom: TIMELINE_PRICE_BOTTOM, volume_bottom: TIMELINE_VOLUME_BOTTOM,
+      volume_bottom: TIMELINE_VOLUME_BOTTOM,
       line: line, area: area, first: points.first, last: points.last,
       volume_bars: timeline_volume_bars(weeks, xs)
     }
@@ -106,6 +110,8 @@ module StatsHelper
   # ==== エンティティ型のツリーマップ ================================================
 
   # レイアウト計算に使う仮想キャンバス(横:縦 = 3:2。CSS の aspect-ratio と一致させる)。
+  # ただし 767px 以下では CSS だけが 3:5 にして縦へ引き伸ばす(面積の比は保たれるが、
+  # squarify が正方形に近づけるのは 3:2 のキャンバスに対してなので、マスは縦長になる)。
   # 2:1 から縦を伸ばしたのは、出す型を 8 → 38 に増やした 2026-09-10 に、
   # 1マスあたりの面積を確保するため(同じ幅なら 3:2 の方が 1.3 倍広い)。
   TREEMAP_WIDTH = 300.0
@@ -142,12 +148,13 @@ module StatsHelper
     end
   end
 
-  # ==== §7 母音の遷移グラフ ==========================================================
+  # ==== 統計ページ §7 母音の遷移グラフ ==========================================================
 
   # 層(拍位置)を横に並べ、各層に母音5つのノードを縦に置いて、隣り合う層を全結合で結ぶ。
   # 座標はスペクトルと同じく仮想キャンバスで持ち、viewBox 付き SVG で拡縮する。
   #
-  # キャンバスの幅は層の数から決める(15層で 818px)。画面に収まらないぶんは
+  # キャンバスの幅は層の数から決める(GRAPH_LEFT + GRAPH_COLUMN_PITCH ×(層の数 − 1)+ GRAPH_RIGHT。
+  # 15層で 1,148px)。画面に収まらないぶんは
   # 親(.stats-scroll)を横へスクロールさせ、図そのものは縮めない。
   # 間隔は「本文カラム(約 816px)に 10 拍ぶんが収まる」ところから決めている
   # (段名の 52 + 14 + 80×9 + 14 = 800。オーナー指示 2026-09-10)。11拍目からはスクロールの先。
@@ -159,12 +166,12 @@ module StatsHelper
   GRAPH_LABEL_WIDTH = 52
   GRAPH_TOP = 16
   GRAPH_BOTTOM = 26        # 下端の拍位置の逃げ
-  GRAPH_HEIGHT = GRAPH_TOP + (GRAPH_ROW_PITCH * 4) + GRAPH_BOTTOM
+  GRAPH_HEIGHT = GRAPH_TOP + (GRAPH_ROW_PITCH * (SiteStatistics::VOWELS.size - 1)) + GRAPH_BOTTOM
   # ノードは件数によらず同じ大きさ(オーナー指示 2026-09-10)。多寡はエッジだけで見せる。
   GRAPH_RADIUS = 6.5
   # 「多い遷移だけ」に絞るときの下限。偏りが無ければどの組も 1/25 = 4% になるので、
   # その 1.5 倍(6%)を「その位置で目立って多い」とみなす。
-  GRAPH_UNIFORM_SHARE = 1.0 / (5 * 5)
+  GRAPH_UNIFORM_SHARE = 1.0 / (SiteStatistics::VOWELS.size**2)
   GRAPH_SIGNIFICANT_RATIO = 1.5
   # エッジの太さと濃さ。350 本を重ねるので、細く薄く始めて上限も抑える。
   GRAPH_MIN_EDGE = 0.3
@@ -198,7 +205,7 @@ module StatsHelper
     }
   end
 
-  # ==== §7 母音スペクトル ============================================================
+  # ==== 統計ページ §7 母音スペクトル ============================================================
 
   SPECTRUM_WIDTH = 720
   SPECTRUM_HEIGHT = 240
@@ -273,6 +280,8 @@ module StatsHelper
         stroke: (GRAPH_MIN_EDGE + ((GRAPH_MAX_EDGE - GRAPH_MIN_EDGE) * ratio)).round(2),
         opacity: (GRAPH_MIN_OPACITY + ((GRAPH_MAX_OPACITY - GRAPH_MIN_OPACITY) * ratio)).round(3),
         significant: edge[:share] >= (GRAPH_UNIFORM_SHARE * GRAPH_SIGNIFICANT_RATIO),
+        # この top は「最多の 1 本」の真偽で、ビュー(_vowel_graph)が find で探し直す。
+        # 波形バー(stats_wave_bars)とツリーマップ(stats_entity_treemap)の top は座標なので取り違えない
         top: edge.equal?(top_edge)
       )
     end
@@ -353,7 +362,8 @@ module StatsHelper
     data[:genre_ids] << node[:id]
   end
 
-  # 上辺を正弦波(振幅 2.6px・2周期)にした棒のパス。「読みの息の長さ」の見立て(docs/stats.md §3)。
+  # 上辺を正弦波(振幅 WAVE_AMPLITUDE。低い棒では高さの半分まで。周期数 WAVE_CYCLES)にした
+  # 棒のパス(統計ページ §3)。
   def wave_bar_path(x, top, width, bottom)
     steps = 24
     amplitude = [ WAVE_AMPLITUDE, (bottom - top) / 2.0 ].min
@@ -392,7 +402,7 @@ module StatsHelper
 
       height = (week[:count] * (TIMELINE_VOLUME_BOTTOM - TIMELINE_VOLUME_TOP) / max_count.to_f).round(1)
       { x: (xs[index] - bar_width / 2).round(1), y: (TIMELINE_VOLUME_BOTTOM - height).round(1),
-        width: bar_width, height: height, count: week[:count], last: index == weeks.size - 1 }
+        width: bar_width, height: height, last: index == weeks.size - 1 }
     end
   end
 

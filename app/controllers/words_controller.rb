@@ -9,7 +9,7 @@ class WordsController < ApplicationController
   # 詳細/一覧の各データからの単一条件ファセットリンクの両方を受ける。
   # HTML/JSON は絞り込み+ページネーション、Atom(Issue 28)は絞り込みに依らず新着を返す。
   def index
-    @page = [ params[:page].to_i, 1 ].max
+    @page = Pagination.page_number(params[:page])
     @search = WordSenseSearch.new(search_filter_params)
     # 実在しないマスタ id を指すファセット面は、元から存在しないページなので 404 にする。
     # 黙って無視すると /words の複製や空の面が任意の数値ぶん作れてしまう(WordSenseSearch)。
@@ -72,13 +72,10 @@ class WordsController < ApplicationController
   # 絞り込み+ページネーションした一覧(HTML/JSON 用)。
   def load_paginated_words
     scope = filtered_words
-    @total_count = scope.count
-    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
-    @words = scope.includes(word_senses: entry_row_preloads)
-                  .order(@sort.order_clause)
-                  .limit(PER_PAGE)
-                  .offset((@page - 1) * PER_PAGE)
-                  .to_a
+    pagination = Pagination.new(page: @page, per_page: PER_PAGE, total_count: scope.count)
+    @total_count = pagination.total_count
+    @total_pages = pagination.total_pages
+    @words = pagination.paginate(scope.includes(word_senses: entry_row_preloads).order(@sort.order_clause)).to_a
   rescue ActiveRecord::StatementInvalid
     # MySQL が正規表現の照合を打ち切ったとき(regexp_time_limit 超過)だけ、
     # 500 にせず空の結果 + 警告で返す。正規表現を指定していないなら別の障害なので投げ直す。
@@ -130,6 +127,7 @@ class WordsController < ApplicationController
   end
 
   # 検索フォーム経由は配列、ファセットリンクは単一値で届くキーがあるため両方許可する。
+  # 詳細検索(SearchesController#search_params)はこれより許可する集合が狭い(あちらの注記を参照)。
   def search_filter_params
     params.permit(
       :q, :regexp, :reading_length_min, :reading_length_max, :reading_length, :mora_count,

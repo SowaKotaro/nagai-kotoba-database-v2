@@ -140,6 +140,16 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal 0, gap[%w[a a]][:count]
   end
 
+  test "母音の遷移: 層は読みが長くても 15(TRANSITION_MAX_POSITIONS)で打ち切る" do
+    word = Word.create!(surface: "母音の遷移の上限の見本", annotated_at: Time.current, annotation_status: :done)
+    word.word_senses.create!(reading: "アイウエオアイウエオアイウエオアイウエオ") # 20 拍
+
+    transitions = SiteStatistics.new.vowel_transitions
+    assert_equal 15, transitions[:layers].size
+    assert_equal 15, transitions[:layers].last[:position]
+    assert_equal 14, transitions[:edges].map { |edge| edge[:position] }.uniq.size
+  end
+
   test "母音の遷移: 読みが1拍しか無ければ層が作れないので空にする" do
     Word.annotated.destroy_all
     word = Word.create!(surface: "亜", annotated_at: Time.current, annotation_status: :done)
@@ -182,5 +192,12 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_empty stats.vowel_transitions[:edges]
     assert_empty stats.head_consonants
     assert_empty stats.feature_ranking[:rows]
+  end
+
+  # かなの畳み込み(T0-18): GROUP BY の結果キーを NFKC とカタカナ化で畳んでから合算する。
+  test "50音の集計キーは半角カナ・合成濁点・ひらがなを畳んで合算する" do
+    counts = { KANA_FOLD_SAMPLE[0, 2] => 1, KANA_FOLD_SAMPLE[4, 2] => 2, "ガ" => 4,
+               KANA_FOLD_SAMPLE[6] => 8, KANA_FOLD_SAMPLE[7] => 16 }
+    assert_equal({ "ガ" => 7, "ヴ" => 8, "ヵ" => 16 }, SiteStatistics.allocate.send(:normalized_kana_counts, counts))
   end
 end

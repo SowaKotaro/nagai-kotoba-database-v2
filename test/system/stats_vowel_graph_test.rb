@@ -13,10 +13,7 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
     readings.each_with_index do |head, index|
       word.word_senses.create!(reading: "#{head}カサタナハマヤラワ#{readings[(index + 3) % readings.size]}")
     end
-    Rails.cache.delete(SiteStatistics::CACHE_KEY)
   end
-
-  teardown { Rails.cache.delete(SiteStatistics::CACHE_KEY) }
 
   test "「多い遷移だけ表示」で少ない遷移だけが伏せられる" do
     visit stats_path

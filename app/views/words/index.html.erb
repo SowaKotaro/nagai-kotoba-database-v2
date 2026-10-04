@@ -1,8 +1,9 @@
 <%#
   インデックス方針(Issue 17):
-  - 単一の対象ファセット(ジャンル/品詞/エンティティ/語種/先頭文字) 1つ かつ 1ページ目 → index + 動的見出し
+  - 対象ファセット(WordSenseSearch::INDEXABLE_FACET_KEYS)が1つ・値も1つ かつ 1ページ目 → index + 動的見出し
   - 素の一覧の1ページ目 → index
   - それ以外(複数条件・キーワード・2ページ目以降) → noindex,follow
+    (既定以外の並びと、0 件のファセット面も noindex。下の indexable の注記を参照)
   canonical は重複を避けるため常に正規化した自身を指す。
 %>
 <%# シャッフル中は同じ URL でも並びが毎回変わる。Turbo はキャッシュ済みのスナップショットを
@@ -124,8 +125,10 @@
 
   <%# 探して見つからなかった瞬間が収録リクエストの一番の動機なので、ここに導線を置く(Issue 75)。
       キーワードはフォームへ引き継ぐ(条件だけの 0 件は語が特定できないので空のフォームへ)。
-      フォーム自体は埋め込まない: この一覧は public: true の HTTP キャッシュ配下にあり、
-      CSRF トークン入りのフォームを共有キャッシュに載せてしまうため。 %>
+      フォーム自体は埋め込まず、HTTP キャッシュさせない専用ページへリンクする。CSRF トークン入りの
+      フォームは共有キャッシュに載りうるページに置かない方針(WordRequestsController の冒頭)。
+      なお、この一覧の HTML はいま HTTP キャッシュを宣言していない(public なのは単語詳細と Atom)。
+      .empty-request はスタイルを持たない。結合テスト(word_requests_controller_test)の目印。 %>
   <% if requests_open? %>
     <p class="empty-request">
       <%= link_to t("words.index.request_link"), new_request_path(surface: @search.q.presence),

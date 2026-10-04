@@ -37,7 +37,7 @@
 # Ignore editor-specific settings (SQLTools 接続設定など個人環境の設定)。
 /.vscode/
 
-# Claude Code のオフライン調査スキル(/notation・/reading・/annotation)の作業ファイル。
+# Claude Code のオフライン調査スキル(/harvest・/expand・/notation・/reading・/annotation・/reannotation)の作業ファイル。
 # 手順は research/README.md。中身は毎回上書きされるのでコミットしない(器だけ残す)。
 /research/inputs/*
 /research/outputs/*

@@ -25,7 +25,7 @@ class Admin::Candidates::ListsController < Admin::Candidates::BaseController
     WordCandidate.transaction do
       candidates.each { |candidate| candidate.update!(status: move) }
     end
-    redirect_back_to_list(notice: t(".moved", count: candidates.size, status: t("admin.word_candidates.statuses.#{move}")))
+    redirect_back_to_list(notice: t(".moved", count: candidates.size, status: helpers.candidate_status_label(move)))
   end
 
   private

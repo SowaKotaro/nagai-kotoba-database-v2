@@ -11,6 +11,8 @@ class WordSenseFeature < ApplicationRecord
   belongs_to :linguistic_feature
 
   # target_start は未指定なら最初の出現位置に補完する(通常はフォームが出現位置を送る)。
+  # surface[target_start, target.length] == target を前提にしているが、検証はしていない。表層形を直すと位置がずれ、
+  # 保存済みの値は補完し直されない(feature_range_controller.js の restoreOne も同じ前提に頼る)。
   before_validation :derive_target_start, if: -> { target_start.nil? && target.present? }
 
   validates :target, presence: true

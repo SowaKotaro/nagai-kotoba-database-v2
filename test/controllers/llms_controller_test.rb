@@ -3,8 +3,6 @@ require "test_helper"
 # LLM 向けのサイト案内 llms.txt(Issue 24)と全文版 llms-full.txt(Issue 73)。
 # 全文版の条件付きGET と版の畳み方は PublishedWordsDigestTest で見る。
 class LlmsControllerTest < ActionDispatch::IntegrationTest
-  HOST = "https://nagai-kotoba-database.jp".freeze
-
   test "llms.txt は誰でも取得でき、サイト概要・収録基準・主要ページ・ライセンスと全文版への案内を載せる" do
     get "/llms.txt"
     assert_response :success
@@ -14,9 +12,10 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     assert_includes body, I18n.t("layouts.brand")
     assert_includes body, "10文字以上" # 収録基準
     %w[/words /about /stats /privacy /sitemap.xml /llms-full.txt].each do |path|
-      assert_includes body, "#{HOST}#{path}"
+      assert_includes body, "#{CANONICAL_HOST}#{path}"
     end
     assert_includes body, "CC BY 4.0"
+    assert_equal "max-age=86400, public", response.headers["Cache-Control"]
   end
 
   test "llms-full.txt は誰でも取得でき、公開語だけを属性つきで載せ、ライセンスと案内を添える" do
@@ -28,7 +27,7 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     word = words(:abc_murder)
     sense = word_senses(:murder)
     assert_includes body, "### #{word.surface}"
-    assert_includes body, "#{HOST}#{word_path(word)}"
+    assert_includes body, "#{CANONICAL_HOST}#{word_path(word)}"
     assert_includes body, "- 文字種: #{word.char_type_pattern}"
     assert_includes body, "- 読み: #{sense.reading}(#{sense.reading_length}字 / #{sense.mora_count}拍)"
     assert_includes body, "- 先頭文字 / 末尾文字: #{sense.first_char} / #{sense.last_char}"
@@ -43,8 +42,8 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes body, words(:pending_haruhi).surface
     # ライセンスと、目次版・JSON API への案内
     assert_includes body, "CC BY 4.0"
-    assert_includes body, "#{HOST}/llms.txt"
-    assert_includes body, "#{HOST}/words.json"
+    assert_includes body, "#{CANONICAL_HOST}/llms.txt"
+    assert_includes body, "#{CANONICAL_HOST}/words.json"
   end
 
   test "llms-full.txt は語義が複数ある語だけ語義見出しで区切る" do

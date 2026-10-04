@@ -6,6 +6,7 @@
 #
 # 集計は元データから常に作り直せる導出データなので、テーブルは作らない
 # (統計ページ本体が「統計テーブルを先行して作らない」方針なのと揃える)。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class MorphemeFrequencies
   DEFAULT_PATH = Rails.root.join("db/morpheme_frequencies.json")
 
@@ -14,6 +15,9 @@ class MorphemeFrequencies
   DISPLAY_LIMIT = 100
   # この回数以上現れた形態素だけを載せる(1回だけの語は「繰り返し現れる部品」ではない)。
   MIN_COUNT = 2
+  # この文字数以上の形態素だけを数える(1文字の助詞・接辞は部品として読めない)。
+  # 集計(lib/tasks/stats.rake)が当てる規則で、読み込み側では絞らない。
+  MIN_LENGTH = 2
 
   Entry = Struct.new(:text, :count, :weight, keyword_init: true) do
     # 最頻を 1.0、下限を 0.0 とした位置。活字の級数(font-size)に使う。
@@ -29,14 +33,10 @@ class MorphemeFrequencies
       reset!
     end
 
-    # 見本に並べる形態素。頻度の多い順。
+    # ワードクラウドに並べる形態素。頻度の多い順。
+    # プロセス内のメモで、再起動まで保持する(集計ファイルを差し替えたら Puma を再起動して読み直す)。
     def entries
       @entries ||= build_entries
-    end
-
-    # 集計時点の情報(生成日・対象語数)。見本の肩に添える。
-    def metadata
-      @metadata ||= data["metadata"] || {}
     end
 
     def available? = entries.any?
@@ -59,12 +59,13 @@ class MorphemeFrequencies
     # テストや再読み込み用。
     def reset!
       @entries = nil
-      @metadata = nil
       @data = nil
     end
 
     private
 
+    # 壊れた JSON は空として扱う(統計ページの §1 は丸ごと出なくなり、ログも出さない)。
+    # 読めないファイル(権限など)は例外のまま上げる。
     def data
       @data ||= path.exist? ? JSON.parse(path.read) : {}
     rescue JSON::ParserError

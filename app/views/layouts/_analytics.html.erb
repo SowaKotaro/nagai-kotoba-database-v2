@@ -1,6 +1,8 @@
 <%# GA4(Issue 19)。測定IDは環境変数 GA4_MEASUREMENT_ID。未設定なら何も出力しない。
     Turbo Drive は遷移がフルロードでないため、既定の page_view では2ページ目以降が
-    計測されない。send_page_view:false にして turbo:load ごとに page_view を送る。 %>
+    計測されない。send_page_view:false にして turbo:load ごとに page_view を送る。
+    下のインライン script に nonce は付けていない(CSP が未設定であることが前提。
+    application.html.erb のダークモード復元の注記を参照) %>
 <% if analytics_enabled? %>
   <script async src="https://www.googletagmanager.com/gtag/js?id=<%= u ga_measurement_id %>"></script>
   <script>

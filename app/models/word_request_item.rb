@@ -26,7 +26,8 @@ class WordRequestItem < ApplicationRecord
 
   def normalize
     # 表層形は textarea 貼り付けで改行が混ざりうる。内部の既存スペース(例「Dead by Daylight」)は
-    # 語の一部なので保持する(Word#strip_surface_newlines と同じ扱い)。
+    # 語の一部なので保持する(Word#strip_surface_newlines と同じ扱い)。読みの改行も空白に置き換えるが、
+    # 語義の読みは改行を除去する(WordSense#strip_reading_newlines)。読みの改行の扱いは 2 通りある。
     self.surface = surface.gsub(/[\r\n]+/, " ").strip if surface
     self.reading = reading.gsub(/[\r\n]+/, " ").strip if reading
   end

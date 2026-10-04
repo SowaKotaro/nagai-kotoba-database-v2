@@ -1,10 +1,11 @@
-# ワードクラウド(統計 §1)の配置を決める値オブジェクト(Issue 78)。
+# ワードクラウド(統計ページ §1)の配置を決める値オブジェクト(Issue 78)。
 #
 # 最頻の1語を中心に据え、残りはばらばらに置いて隙間を詰めていく
 # (オーナー指示 2026-08-11 / 中心据えと「余白が見えないくらい」は 2026-09-10)。
 # 頻度順に流す文字組ではなく、隙間が埋まっていく密度そのものを見どころにする。
 #
-# 詰まり具合(字の外接矩形が紙を埋める割合)は実データ 100 件で **77%**。
+# 詰まり具合(字の外接矩形が紙を埋める割合)は、2026-09-10 の集計(1,476 語)の上位 100 件で約 8 割
+# (書いた時点で 77%、2026-10-02 にテストと同じ式で測り直すと 79.6%。集計を作り直すと変わる)。
 # 効いているのは次の4つで、いずれも「余白を削る」ではなく「無駄な確保をやめる」もの。
 #   1. 語ごとに字面の高さを変える(欧文だけの語に和文と同じ高さを取らせない)
 #   2. 置き場所は無作為に選んだ行の空きから、**いちばん既存の語に接する位置**を採る
@@ -17,6 +18,7 @@
 #
 # 配置は乱数を使うが**種を固定**するので、同じ入力からは必ず同じ絵になる。
 # 描画のたびに動くとキャッシュも効かず、画面を見比べることもできないため。
+# 種別: 値オブジェクト（DB に触れない）。
 class MorphemeCloud
   require "zlib"
 
@@ -24,24 +26,25 @@ class MorphemeCloud
 
   # 高さは語の総面積から決める(定数にしない)。
   # 固定にすると、収録が増えて語が大きくなったときに入りきらず、黙って捨てることになる。
-  # 実際、固定 400 では 60 件中 24 件が落ちていた。
+  # (固定の高さで語が落ちた経緯の数値は docs/stats.md の統計ページ §1 の章にある)
   #
   # TARGET_FILL は「字の外接矩形が埋める割合」の目安。ここは**探索の出発点**でしかなく、
-  # 入ったあとに二分探索で詰め直すので、多少ずれていても最終的な高さは変わらない。
+  # 入ったあとに二分探索で詰め直すので、多少ずれていても最終的な高さはほぼ変わらない
+  # (HEIGHT_EPSILON の 8px 以内で揺れる。配置そのものは変わる)。
   TARGET_FILL = 0.88
   MIN_VIEWBOX_HEIGHT = 240
   # 二分探索をここまで詰めたら打ち切る(px)。
   HEIGHT_EPSILON = 8
   # 入りきらなかったときに高さを広げる倍率と、その試行回数。
   # 刻みが粗いと必要以上に広がって図が薄くなるので、細かく刻んで回数で補う
-  # (詰め直しは総当たりがビット演算になった 2026-09-10 以降は1回 30〜80ms と安い)。
+  # (pack 1 回は、総当たりがビット演算になった 2026-09-10 以降 30〜80ms と安い)。
   GROWTH = 1.06
   MAX_GROWTH_STEPS = 12
   # 入る高さが見つかったあと、下限との間を二分探索する回数。
   SEARCH_STEPS = 6
 
   # 級数の下限・上限。図の高さはこの2つでほぼ決まる。
-  # 100 件が 680 × 507 におさまる値(スマホ幅では下限が実寸 8px 前後まで縮む)。
+  # 2026-09-10 の集計で 100 件が 680 × 507 におさまる値(スマホ幅では下限が実寸 8px 前後まで縮む)。
   MIN_FONT_SIZE = 18.0
   MAX_FONT_SIZE = 64.0
 
@@ -59,7 +62,7 @@ class MorphemeCloud
   # 一律 1.08 で確保していた頃は、欧文だけの語(「NTT」「DS」)が実際の 1.5 倍の高さを
   # 押さえてしまい、そのぶん図がすかすかになっていた。
   # 和文はほぼ全角の枠いっぱいに組まれる。欧文は大文字でも 0.72 ほどしかなく、
-  # 下へ伸びるのは g p q y j と丸括弧・カンマだけ。
+  # 下へ伸びるのは g p q y j と丸括弧・カンマ・セミコロンだけ(LATIN_DESCENDER)。
   ASCENT_FULLWIDTH = 0.88
   ASCENT_LATIN_TALL = 0.75  # b d f h i k l t などアセンダを持つ小文字
   ASCENT_LATIN_CAP = 0.72   # 大文字・数字
@@ -74,6 +77,10 @@ class MorphemeCloud
   # 欧文の字幅(級数に対する比)。A〜Z / a〜z の順。
   # 環境ごとに書体が違うので、UI 書体の中では広い部類(DejaVu Sans)の値を採り、
   # 狭い書体の環境では余白側へ振れるようにしている。
+  # ただし Z(0.63。実測 0.685)と SYMBOL_WIDTH(0.45。ASCII 記号の実測平均 0.552)は実測より狭い
+  # (値を変えると配置が変わるので保留。いまの上位 100 件には Z も記号も無い)。
+  # 共有カード(ShareCardTypesetter#advance)にも別の字幅の見積もりがある。描画系が違うので表は分けているが、
+  # アクセント付き欧文の扱い(ここは 1.0、カードは 0.6)と字間の数え方が違う。
   UPPERCASE_WIDTHS = [
     0.72, 0.69, 0.70, 0.77, 0.63, 0.58, 0.78, 0.75, 0.30, 0.30, 0.68, 0.56, 0.90,
     0.75, 0.79, 0.60, 0.79, 0.70, 0.65, 0.62, 0.73, 0.69, 1.00, 0.69, 0.62, 0.63
@@ -102,22 +109,21 @@ class MorphemeCloud
   # String#hash はプロセスごとに変わる(起動のたびに色が入れ替わる)ので使わない。
   PALETTE_SIZE = 8
 
-  # 配置済みの1語。x/y は文字の左下(SVG の text の基準点)。
+  # 配置済みの1語。x はその語の左端、y はベースライン(SVG の text の基準点)。
+  # top(最頻の語か)はテストだけが使う(中心に据える語の特定。最頻の語を色で印す表示はやめた)。
   # 字面の矩形は (x, top_y) を左上とする width × height(ベースラインは矩形の途中を通る)。
-  Placed = Data.define(:text, :count, :weight, :font_size, :x, :y, :top_y, :width, :height,
+  Placed = Data.define(:text, :count, :font_size, :x, :y, :top_y, :width, :height,
                        :palette, :top) do
     def top? = top
   end
 
   # 配置の結果。描画側は height を viewBox に使う。
-  Layout = Data.define(:items, :height) do
-    def any? = items.any?
-  end
+  Layout = Data.define(:items, :height)
 
   def self.place(entries) = new(entries).place
 
   # 同じ入力なら結果も同じなので、直前の結果を1つだけ覚えておく。
-  # 詰め直すと実測 400ms 前後(100件)かかり、統計ページの表示だけで丸ごと1回分を食う。
+  # place 全体で実測 400ms 前後(100件。2026-09-10 の集計)かかり、統計ページの表示だけで丸ごと1回分を食う。
   # 入力(語と件数)が変わったら作り直すので、集計ファイルを差し替えるテストでも取り違えない。
   def self.layout(entries)
     key = Array(entries).map { |entry| [ entry.text, entry.count ] }
@@ -148,7 +154,9 @@ class MorphemeCloud
       height = (height * GROWTH).ceil
     end
 
-    # ここまでで入らなければ、最後の結果をそのまま返す(実データでは起きない)。
+    # ここまでで入らなければ、1 段広げた高さで pack をもう一度実行して返す(tighten は通さない)。
+    # 横幅が枠を超える語(最大級数で全角 11 字以上)はどの高さでも入らないので、ここで黙って落ちる
+    # (place の冒頭の「1語も捨てない」は横幅が収まる語の話。いまの実データでは起きない)。
     return Layout.new(items: pack(boxes, height), height: height) if items.nil?
 
     height, items = tighten(boxes, height, items)
@@ -273,6 +281,7 @@ class MorphemeCloud
 
   # 語がベースラインの上下へどれだけ伸びるかを、含まれる文字から決める。
   def vertical_metrics(text)
+    # ascent の初期値にも DESCENT_NONE(0.02)を使う(同じ値なので兼用している)。
     ascent = DESCENT_NONE
     descent = DESCENT_NONE
 
@@ -301,8 +310,8 @@ class MorphemeCloud
   # **いちばん詰まる位置**を選ぶ。1つも空きが無ければ総当たりで探す。
   #
   # 先着で決めていた頃は、隙間だらけの位置にも平気で置いて図がすかすかになっていた
-  # (字面 53% → 77%)。最後に総当たりを残すのは、盤面がほぼ埋まったあとの小さい語が
-  # 「空きがあるのに引けない」で捨てられるのを防ぐため(実データで 60 件中 23 件が落ちていた)。
+  # 最後に総当たりを残すのは、盤面がほぼ埋まったあとの小さい語が
+  # 「空きがあるのに引けない」で捨てられるのを防ぐため(経緯の数値は docs/stats.md の統計ページ §1 の章)。
   def find_spot(rows, width_cells, height_cells, random, total_rows)
     max_column = COLUMNS - width_cells
     max_row = total_rows - height_cells
@@ -417,7 +426,7 @@ class MorphemeCloud
     top_y = (row * CELL) + half_gap
     ascent, descent = vertical_metrics(entry.text)
     Placed.new(
-      text: entry.text, count: entry.count, weight: entry.weight, font_size: box[:font_size],
+      text: entry.text, count: entry.count, font_size: box[:font_size],
       x: ((column * CELL) + half_gap).round(1),
       top_y: top_y.round(1),
       # SVG の text はベースライン基準。字面の上端から、上に伸びる分だけ下げる。

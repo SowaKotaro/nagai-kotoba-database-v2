@@ -466,3 +466,42 @@
 - research/README.md の画面操作の説明（左端をなぞる範囲選択、系統の選択など）と UI 実装の細部。キーの割り当て E/A/H/X は一致を確認した。
 - tools/claude-ai-skill の生成物（tmp/ 配下）と、claude.ai にアップロード済みの版が最新か。
 - GitHub のブランチ保護の設定（merge 前に CI 必須かどうか）。
+
+## 棚卸し（d5a1376）
+
+- 前提: `git diff a04f375..d5a1376` で、この監査の対象のうち変わったのは README.md・.claude/commands/expand.md・word-expansion-research（SKILL.md と reading_length.rb）の 4 ファイルだけ。
+  この記録が「別枠: 未コミットの作業中の変更」として参考に書いたものが、そのまま 83e36d2・f7b88da でコミットされた。計画書 §7.6（所有者の作業中のファイル）に回していた分は、**改修の対象に戻る**。
+  CLAUDE.md・overview.md・data-model.md など、ほかの対象は変わっていない。
+- **陳腐化: 0 件。** 別枠の参考記述は、コミット版でもすべて当てはまることを確かめた（下の DOC-17〜DOC-20）。
+- **重複**（計画書 §9 で同じ改修項目に束ねてある）:
+  - DOC-01 ↔ CFG-01・CFG-05（D1-01）
+  - DOC-02 ↔ CFG-09（D1-02）
+  - DOC-04 ↔ CFG-03・M-07（D1-03）
+  - DOC-05 ↔ M-01・M-02・CFG-02（D1-04・C3-12）
+  - DOC-10 ↔ M-12（C3-03）
+- **要確認**:
+  - DOC-14（注釈スキルが参照する API のホストが canonical と違う）: オーナーの運用記録では、Cloudflare で www → apex の 301 を設定済み（2026-07-19）。したがって**到達はするが、1 回リダイレクトを挟む**。指摘の結論（canonical に揃える）は変わらない。
+  - DOC-13: 項目ごとの確度のまま。本番に MeCab が無いことは B-05 で確認済み。
+- **未確認の範囲のうち、この棚卸しで決着したもの**: GitHub のブランチ保護は無い（B-05 で確認）。DOC-01 の「main への merge がそのまま本番デプロイ」は確定。
+- **新しい指摘**（別枠の参考記述に ID を振ったもの。基準はいまの HEAD）:
+  - **[DOC-17] README のジョブの行が、ジョブの実在を示唆する**（観点: A ／ 確度: 確認済み）。
+    `README.md` の技術スタックの表に「ジョブ | ActiveJob（`:async` アダプタ）」とあるが、`app/jobs/` は `application_job.rb` だけで、`grep -rn 'perform_later' app` は 0 件。DOC-09 と同じ誤解を広げる。D1-01・D1-02 と同じく README を直す群に入れる。
+  - **[DOC-18] README の「コードベースの規模」は、放っておけば古くなる数値**（観点: A ／ 確度: 確認済み）。
+    `README.md` の「2026-09-27 時点」の表（ファイル数・行数・テストケース数）。日付は書いてあるので嘘ではないが、DOC-08 と同じ種類。消すか、生成する手段を書くか、日付付きのまま残すかを P-01 で決める。
+  - **[DOC-19] /expand のスキルが、ReadingExtractor の private メソッドに依存している**（観点: E ／ 確度: 確認済み）。
+    `.claude/skills/word-expansion-research/reading_length.rb:18` が `extractor.send(:normalize, reading)` を呼ぶ。`app/services/reading_extractor.rb:80` の `normalize` は `:47` の `private` の下にある。
+    `.claude/` は RuboCop の対象外で（B-05）、テストも無い。そのため、**C3-04（外部コマンドを包むサービスの統一）で normalize を改名・移動すると、/expand が黙って壊れる**。P-01 で C3-04 の前提に入れ、公開メソッドにするか、スキル側を直すかを決める。
+  - **[DOC-20] /expand のスキルにも DOC-03 と同じ旧フローの記述が残っている**（観点: A ／ 確度: 確認済み）。
+    - `.claude/skills/word-expansion-research/SKILL.md:85-86` と `.claude/commands/expand.md:23` に「重複は登録 step3 の重複チェックが弾く」とある。
+    - `SKILL.md:131` に「上部リストはそのまま /notation の入力」とある。
+    - あわせて、読みの表記規則が guidelines §4 に対して重複している。`SKILL.md:110` の `bin/rails runner` が、アプリと DB の起動を前提にしている点もある。
+    D1-06（DOC-03 の修正）に含める。
+- **台帳 §3.2 に回したもの**:
+  - A-08: `.claude/skills/word-annotation-research/schema.json`・`example.json` と、`AnnotationProposalImport::PAYLOAD_KEYS`・`ProposalApplication` の突き合わせ（M-05 の 3 か所の食い違いに、4 か所目が無いか）。
+  - A-09: data-model §8「一覧・検索・sitemap・API・統計のすべてが公開スコープを通る」の全経路の確認。未公開語が公開面に出ないことの主張なので、嘘であれば影響が大きい。
+- **ほかの単位に任せるもの**: design.md・stats.md・issues.md・changelog.md・annotation-guidelines.md・growth-strategy.md・performance-report.md の本文と実物の照合は B-08（docs-specs の担当範囲）。
+- **見送るもの**:
+  - overview.md §5 の画面説明の細部: D1 で overview を直す項目の中で、触る節だけ照合する。
+  - CharTypePattern の 〆・々 の境界例: 振る舞いの確認なので、P-01 で段階 0 の特性テストの候補にする。
+  - research/README.md の画面操作の細部: 効果が小さい。
+  - tools/claude-ai-skill の生成物と、claude.ai にアップロード済みの版: リポジトリの外にある。

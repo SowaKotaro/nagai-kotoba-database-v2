@@ -55,7 +55,7 @@ class Admin::AnnotationProposalsController < Admin::BaseController
       redirect_to new_admin_annotation_proposal_path, notice: import_message(result)
     else
       flash.now[:alert] = t("admin.annotation_proposals.parse_error")
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

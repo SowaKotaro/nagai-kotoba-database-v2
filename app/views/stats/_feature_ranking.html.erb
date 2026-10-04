@@ -1,13 +1,15 @@
-<%# §8 言語学的特徴の見本つきランキング(docs/stats.md §8)。
+<%# 統計ページ §8「言語学的特徴」の見本つきランキング。
     件数バーに、実例語の該当部分へ淡いハイライト(単語詳細の注釈と同じ文法)を添える。
     特徴名はチップ → 特徴での絞り込み検索へ %>
 <% ranking = @stats.feature_ranking %>
+<%# 棒の長さは先頭行の件数を 100% とし、最多の色も CSS の .feature-rank__row:first-child が付ける。
+    どちらも SiteStatistics#feature_ranking が件数の多い順に返すことが前提(_sound_breakdown の頭子音と同じ) %>
 <% max_count = ranking[:rows].first[:count].to_f %>
 <ol class="feature-rank">
   <% ranking[:rows].each do |row| %>
     <li class="feature-rank__row">
       <div class="feature-rank__head">
-        <%= link_to row[:name], words_path(linguistic_feature_id: row[:id]), class: "tag feature-rank__chip" %>
+        <%= link_to row[:name], words_path(linguistic_feature_id: row[:id]), class: "tag" %>
         <span class="feature-rank__count"><%= t("stats.index.features.count", count: number_with_delimiter(row[:count])) %></span>
         <% if (example = row[:example]) %>
           <%# 該当部分(target_start から target の文字数分)をハイライトした実例 %>

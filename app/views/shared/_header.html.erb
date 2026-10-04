@@ -1,4 +1,4 @@
-<%# グローバルヘッダー(docs/design.md §5.1)。印章ロゴ + ナビ(現在地表示)。
+<%# グローバルヘッダー(docs/design.md §5.1)。ブランドマーク(サイト名の読みの円環) + サイト名 + ナビ(現在地表示)。
     キーワード検索はヘッダーに常設せず、トップページのヒーロー中央に置く(検索を主役にするため)。
     狭幅ではナビをハンバーガーで開閉するサイドパネルに格納する(nav-drawer コントローラ)。 %>
 <header class="site-header" data-controller="nav-drawer"
@@ -68,7 +68,7 @@
         <% end %>
 
         <% if authenticated? %>
-          <%= link_to t("layouts.nav.admin"), admin_root_path, class: ("is-current" if request.path.start_with?("/admin")) %>
+          <%= link_to t("layouts.nav.admin"), admin_root_path, class: ("is-current" if admin_page?) %>
           <%= button_to t("layouts.nav.logout"), session_path, method: :delete %>
         <% end %>
       </nav>

@@ -113,4 +113,22 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     # 見ていたカードに戻る
     assert_selector "[data-deck-target='position']", text: position.to_s
   end
+
+  # 「n / m 完了」も表示中の語義だけを数える。未完了の語義を削除すると、そのカードは完了になる。
+  test "未完了の語義を削除すると、そのカードは完了として数え直される" do
+    word_senses(:pending).update!(genre: genres(:small_novel), part_of_speech: parts_of_speech(:noun),
+                                  entity_type: entity_types(:book_title), word_origins: [ word_origins(:wago) ])
+    @haruhi.word_senses.create!(reading: "ノコッタミカンリョウノゴギ")
+
+    visit admin_annotation_deck_path
+    wait_for_stimulus "deck"
+    wait_for_stimulus "sense-cloner"
+    assert_selector "[data-deck-target='complete']", text: "0"
+
+    card = find(".deck-card", text: @haruhi.surface)
+    execute_script("arguments[0].click()", card.all(".js-sense")[1].find(".ann-sense__del"))
+
+    assert_selector "[data-deck-target='complete']", text: "1"
+    assert_selector ".deck-dot.is-done", count: 1
+  end
 end

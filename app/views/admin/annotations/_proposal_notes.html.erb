@@ -1,0 +1,8 @@
+<%# locals: (proposal:) -%>
+<%# 提案の「立項の懸念」と「判断メモ」。1語コンソールとデッキが共有する -%>
+<% if proposal.entry_notes %>
+  <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>
+<% end %>
+<% if proposal.notes %>
+  <p class="ann-proposal__notes"><%= t("admin.annotations.proposal.notes") %>　<%= proposal.notes %></p>
+<% end %>

@@ -23,8 +23,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     # ヘッドレスの定番安定化(共有メモリ・GPU 由来の不安定さを避ける)
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    # Web フォント(Google Fonts)を読み込ませない。読み込み完了時の再レイアウトで
-    # クリック座標がずれて flaky になるのを防ぐ(外部ネットワークにも依存しない)。
+    # Web フォント(Google Fonts)への接続を塞ぐ。アプリはもう web フォントを読まない(CLAUDE.md)ので、
+    # いまは何も遮っていない。外部のフォントを読む変更が入ったときに、読み込み完了時の再レイアウトで
+    # クリック座標がずれて flaky になるのと、テストが外部ネットワークに依存するのを防ぐ保険として残している。
     options.add_argument("--host-resolver-rules=MAP fonts.googleapis.com 127.0.0.1, MAP fonts.gstatic.com 127.0.0.1")
   end
 
@@ -53,7 +54,8 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # **押し直しても安全(冪等)な操作にだけ使う。**
   def click_expecting(expect_css:, **expect_options, &element_finder)
     element = element_finder.call
-    # sticky ヘッダー下に隠れないよう画面中央へ出してからクリックする
+    # 画面下端に sticky で貼り付く操作バー(.ann-actionbar・.cand-bar)の下に隠れないよう、
+    # 画面中央へ出してからクリックする(ヘッダーは sticky ではない)
     page.scroll_to(element, align: :center)
     element.click
     return if has_selector?(expect_css, **expect_options)
@@ -127,6 +129,17 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     page.driver.browser.manage.window.resize_to(width, height)
   end
 
+  # 入力手段についての注記はここだけに置く(2026-10-03、Chrome 154.0.8037.92 のヘッドレスで確かめた):
+  # - ログインする前は、日本語・ASCII の fill_in / send_keys も、ネイティブのクリックとキー入力
+  #   (Actions・要素への send_keys)も、ページに届く。
+  # - system_sign_in の後は、ネイティブの入力が届かないことがある。確かめたときは、公開のフォーム・一括登録の
+  #   入力欄・仕分けの行のどれでも、fill_in・send_keys・Actions・クリックが届かなかった。fixture の管理者の
+  #   パスワード("password")で Chrome のパスワード漏洩の警告が出て、入力を奪うのが原因(ドライバの設定で
+  #   その機能を切ると届いた。設定はまだ変えていない)。警告の出る時機によっては届くこともあるので、
+  #   ログイン後にネイティブの入力に頼るテストは不安定になる。
+  # そのため、ログイン後のテストは値を JS で流し込む・keydown を JS で送る・JS の click() で押す。
+  # 各ファイルに残る「この環境では届かない」という注記は、この事情の現れ。
+  #
   # 管理画面のシステムテスト用: ログインフォームから管理者でサインインする。
   def system_sign_in(admin = admins(:one), password: "password")
     visit new_session_path

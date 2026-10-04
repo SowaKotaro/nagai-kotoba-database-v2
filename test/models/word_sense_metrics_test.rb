@@ -52,6 +52,20 @@ class WordSenseMetricsTest < ActiveSupport::TestCase
     assert_equal 1.0, word.reading_density.to_f
   end
 
+  # reading_density は STORED 生成カラムだが、元にする max_reading_length は after_commit で焼き直す代表値。
+  # 読みを変えたときも、代表値の焼き直しを経て生成カラムが追従することを固定する。
+  test "読みを変えて保存すると reading_density も追従する" do
+    word = Word.create!(surface: "あいう")
+    sense = word.word_senses.create!(reading: "アイウエオカ")
+    assert_equal 2.0, word.reload.reading_density.to_f
+
+    sense.update!(reading: "アイウエオカキクケ")
+    word.reload
+    assert_equal 9, word.max_reading_length
+    # 読み9字 / 表記3字 = 3.0
+    assert_equal 3.0, word.reading_density.to_f
+  end
+
   test "語義が複数なら最小と最大を分けて持つ" do
     word = words(:abc_murder)
     word.word_senses.create!(reading: "アイウエオカキクケコサシ")

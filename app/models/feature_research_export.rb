@@ -5,8 +5,11 @@
 # 余計な情報を渡すと調査が他の項目に散るため。
 #
 # 出力を調査に掛けて返ってくる提案 JSON は、取り込み画面(Admin::AnnotationProposalsController#new)に
-# そのまま貼れる。ProposalApplication は各項目を「提案にあれば適用」で組み立てるので、
+# 貼れる。ProposalApplication は各項目を「提案にあれば適用」で組み立てるので、
 # linguistic_features しか持たない提案を反映しても、意味・ジャンル・品詞などは書き換わらない。
+# ただし正しく反映されるのは単一語義の語だけ。sense_id は提案の形式に無く、反映は提案の語義を
+# 既存の語義に並び順で割り当てる。また取り込みは同じ語の既存の提案を payload ごと上書きする。
+# 種別: 調査 JSON の入出力。
 class FeatureResearchExport
   VERSION = "1".freeze
 
@@ -40,6 +43,8 @@ class FeatureResearchExport
 
   private
 
+  # 提案 payload の形(AnnotationProposal::SENSE_KEYS)とは別の入力形式。語義を sense_id で指し、
+  # 特徴の調査に要る項目だけを書く。
   def sense_entries
     @senses.map do |sense|
       {

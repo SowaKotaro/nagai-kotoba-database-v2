@@ -22,7 +22,7 @@
 | API | Jbuilder（JSON API） |
 | 認証 | Rails 8 標準の認証基盤（has_secure_password + セッション）。`username` + パスワード |
 | 外部コマンド | MeCab（読みの自動取得）/ rsvg-convert（og:image の共有カード）。どちらも無くても動く |
-| ジョブ | ActiveJob（`:async` アダプタ） |
+| ジョブ | 無し（重い処理は同期で実行する。ActiveJob は雛形のまま） |
 | テスト | Minitest / Capybara + Selenium（システムテスト） |
 | 静的解析 | rubocop-rails-omakase / Brakeman / bundler-audit / importmap audit |
 | CI / CD | GitHub Actions（`ci.yml`: PR 作成時・main への push 時 / `deploy.yml`: main への push で Capistrano による本番デプロイ） |
@@ -57,7 +57,7 @@ Docker で用意して接続する。
 
 ```bash
 docker compose up -d   # MySQL 8.4（ホスト側ポート 3307）
-bin/rails db:prepare   # DB 作成 → マイグレーション → seed
+bin/rails db:prepare   # DB が無ければ作って schema.rb を読み込み、seed を流す（あればマイグレーションだけ）
 bin/rails server
 ```
 
@@ -67,15 +67,19 @@ bin/rails server
 ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed
 ```
 
-## コミット前のチェック（CI と同じ）
+## コミット前のチェック（中身は CI と同じ検査）
 
 ```bash
 bundle exec rubocop
 bundle exec brakeman --no-pager
 bundle exec bundler-audit check --update
 bin/importmap audit
-bin/rails test test:system
+bin/rails test
+bin/rails test:system
 ```
+
+テストは 2 本に分けて打つ（連結形の `bin/rails test test:system` はローカルでは `LoadError` になる）。
+注意点と WSL での実行方法は [`CLAUDE.md`](CLAUDE.md) の「コミット前に必ず実行すること」にある。
 
 ## ドキュメント
 

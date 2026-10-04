@@ -1,8 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 // 最低限のアノテーション項目(読み・語種・ジャンル・品詞・エンティティ)が
-// すべて埋まった語義カードの枠を緑にする。未入力でも保存はできるので、これは
+// すべて埋まった語義カードに is-complete を付ける(見た目は番号のバッジが緑のベタになる。annotate.css)。
+// 未入力でも保存はできるので、これは
 // 「最低限の注釈が付いた」ことを示す表示だけの指標。
+// 「最低限」の定義の正はこの JS の complete だけ(サーバ側には無い)。公開前の確認(publish_guard)と
+// デッキの「n / m 完了」は、ここが付ける is-complete を数える。
 export default class extends Controller {
   static targets = ["reading", "genre", "origins", "partOfSpeech", "entityType"]
 

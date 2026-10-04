@@ -7,6 +7,10 @@
 # トランザクションが確定してから走らせる(after_commit)。ロールバックした変更で
 # 代表値だけ書き換わるのを防ぐため、また集計を確定後の DB から読むため。
 # 取り込む側は resolve_metrics_word_id で「どの語の代表値か」を返すこと。
+#
+# すべての commit(作成・更新・削除)で発火する(on: で絞っていない)。意味だけの更新でも、ネストした保存で
+# 同じ語を件数ぶん焼き直しても、焼き直しは冪等なので結果は同じ。語義を別の語へ付け替える経路は想定していない
+# (resolve_metrics_word_id は新しい word_id だけを返すので、元の語の代表値が古いまま残る)。
 module RefreshesWordMetrics
   extend ActiveSupport::Concern
 

@@ -36,10 +36,13 @@
 - **Ruby 3.4.2 / Rails 8.1**（`config.load_defaults 8.1`）
 - **MySQL 8.x（mysql2）** — 照合順序は `utf8mb4_0900_ai_ci` 基準（読みまわりだけ `as_ci`。[`data-model.md`](data-model.md) §6）
 - Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
-- CSS は手書き（`tokens → base → layout → components` ＋ `admin.css` / `annotate.css`）
+- CSS は手書き（`tokens → base → layout → components` ＋ `annotate.css` / `candidates.css` / `admin.css`）
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
-- デプロイ: **Capistrano**（`cap production deploy`。`deploy:migrate` の後に `deploy:seed` が自動実行）
-- CI: GitHub Actions（PR 作成時・main への push 時。DB は `mysql:8.4`）
+- デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で
+  `.github/workflows/deploy.yml` が自動で実行する**。CI の完了は待たず、main にブランチ保護も無い。
+  `deploy:migrate` の直後に `deploy:seed` が毎回走り、管理者とマスタ（`SeedCatalog` の `*_RENAMES` による改名を含む）を投入する
+- CI: GitHub Actions（`.github/workflows/ci.yml`。PR の作成時と PR ブランチへの push のたび、main への push 時。DB は `mysql:8.4`）。
+  main への push ではデプロイと並走するので、CI が落ちてもデプロイは止まらない
 - タイムゾーンは `Tokyo`、既定ロケールは `:ja`（表示文言は `config/locales/ja.yml` に集約）
 - 外部サービスへの実行時依存は持たない（web フォント CDN・チャート CDN・外部 API いずれも無し。
   唯一の同梱ライブラリが `vendor/javascript/plotly.min.js` で、統計ページ内でのみ遅延読み込みする）
@@ -51,8 +54,9 @@
 - **サインアップ画面は無い**。管理者は `db/seeds.rb` が credentials か環境変数
   （`ADMIN_USERNAME` / `ADMIN_PASSWORD`）から冪等に作成／更新する。
 - セッションは 2 週間のスライディング失効（`Session::LIFETIME`）。
-- `Admin::BaseController` 配下は既定で認証必須。公開閲覧は名前空間の外に置き、
-  `allow_unauthenticated_access` で明示的に開放する。
+- 認証は**全アクションで既定で必須**（`ApplicationController` が `Authentication` を include している）。
+  `Admin::BaseController` 配下はそれを継承するだけで管理者専用になる。公開閲覧は名前空間の外に置き、
+  `allow_unauthenticated_access only: %i[...]` で明示的に開放する。
 
 ## 4. データモデル（要点）
 
@@ -140,7 +144,7 @@ app/services/        reading_extractor（MeCab CLI）/ morpheme_extractor / shar
 app/controllers/     公開（words / searches / browse / genres / rankings / stats / pages / llms /
                      sitemaps / robots / word_requests / home）＋ admin/ 名前空間
 app/javascript/      Stimulus のみ（importmap）。1 コントローラ 1 目的
-app/assets/          手書き CSS（tokens → base → layout → components ＋ admin / annotate）
+app/assets/          手書き CSS（tokens → base → layout → components ＋ annotate / candidates / admin）
 db/schema.rb         スキーマの正（マイグレーション経由で更新）
 db/seeds.rb          管理者とマスタを冪等に投入（名前リストは SeedCatalog が単一の正）
 db/morpheme_frequencies.json  統計 §1 ワードクラウドの事前集計結果（コミットするデータファイル）
@@ -158,10 +162,12 @@ Docker で用意**して接続する。
 
 ```bash
 docker compose up -d   # MySQL 8.4 を起動（ホスト側 3307。既存 3306 との衝突を避けるため）
-bin/rails db:prepare   # DB 作成 → マイグレーション → seed
+bin/rails db:prepare   # DB が無ければ作って schema.rb を読み込み、seed を流す（あればマイグレーションだけ）
 bin/rails server
 ```
 
+- 新しい環境は `db:prepare`（schema.rb の読み込み）で作る。マイグレーションを最初から流し直す `db:migrate` は、
+  CI でも流しておらず、通ることは保証しない（古いマイグレーションはアプリのコードを呼んでいる）。
 - development / test は既定で `127.0.0.1:3307`（`DATABASE_HOST` / `DATABASE_PORT` で上書き可）。
   production は socket ＋ 環境変数。
 - 管理者をローカルで任意の値にする: `ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed`
@@ -171,18 +177,22 @@ bin/rails server
 
 ### 任意の外部コマンド（無くても機能は止まらない）
 
-| コマンド | 使う場所 | 無いとどうなるか |
-|---|---|---|
-| `mecab`（＋ mecab-ipadic-neologd） | 一括登録 step2 の読み自動取得（`ReadingExtractor`） | 読みが空欄になり、確認画面で手入力する |
-| `mecab`（既定辞書 ipadic） | 統計 §1 の形態素頻度の事前集計（`bin/rails stats:morphemes`） | 集計を更新できない（本番は JSON を読むだけなので影響なし） |
-| `rsvg-convert` ＋ 日本語の書体 | 単語ごとの共有カード（`ShareCardRenderer`） | og:image が既定カード `og-default.png` のままになる |
+| コマンド | 使う場所 | 無いとどうなるか | 本番・CI |
+|---|---|---|---|
+| `mecab`（＋ mecab-ipadic-neologd） | 一括登録 step2 の読み自動取得（`ReadingExtractor`） | 読みが空欄になり、確認画面で手入力する | どちらにも無い（本番の step2 は読みが空欄で出る） |
+| `mecab`（既定辞書 ipadic） | 統計 §1 の形態素頻度の事前集計（`bin/rails stats:morphemes`） | 集計を更新できない（本番は JSON を読むだけなので影響なし） | どちらにも無い（集計はローカルで行い、`db/morpheme_frequencies.json` をコミットする） |
+| `rsvg-convert` ＋ 日本語の書体 | 単語ごとの共有カード（`ShareCardRenderer`） | og:image が既定カード `og-default.png` のままになる | 本番は導入済み（下記）。CI には無い |
 
 - 読みの取得は **neologd**、形態素の分解は**既定辞書**を使う。neologd は「涼宮ハルヒの憂鬱」を
   丸ごと 1 語で持つので、部品を数える用途では逆効果になる（目的が逆なので辞書の選択も逆）。
-- 辞書の場所は `MECAB_DICT` で上書きできる。無ければ既定辞書へフォールバックする。
-- これらに依存するテストは、コマンドが無い環境では skip する（CI もこの扱い）。
+- 読みの取得（`ReadingExtractor`）の辞書の場所は `MECAB_DICT` で上書きできる。無ければ既定辞書へ
+  フォールバックする。形態素の分解（`MorphemeExtractor`）は `MECAB_DICT` を見ず、いつも既定辞書を使う。
+- これらに依存するテストは、コマンドが無い環境では skip する（CI もこの扱い）。skip の判定は、
+  各サービスのクラスメソッド `available?` を見る。
+- **有無の判定は、3 つのサービスともプロセスごとに 1 回だけ行う**（クラスの `available?` がメモする）。
+  コマンドを入れたり外したりしたら、Puma（rake なら次の実行）を起動し直すまで反映されない。
 - **本番サーバには rsvg-convert と Noto CJK を導入済み**（2026-09-15）。入れ直したら Puma を
-  再起動する（有無の判定はプロセスごとに 1 回だけ行うため）。
+  再起動する。
 - sudo の無い環境で本番と同じ描画を試すには、パッケージを展開して使う:
 
   ```bash
@@ -204,7 +214,7 @@ bin/rails server
 | `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
 | `MECAB_DICT` | 未設定 | MeCab の辞書パス。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
 | `DATABASE_HOST` / `DATABASE_PORT` | `127.0.0.1` / `3307` | development / test の接続先（CI は 3306） |
-| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | — | リポジトリの `database.yml` と `deploy.rb` が参照するが、**本番では使われていない**（下記） |
+| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | — | リポジトリの `database.yml` と `deploy.rb` が参照し、deploy.yml も GitHub の secret から渡すが、**本番では使われていない**（下記） |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | credentials | `db:seed` が作る管理者。環境変数が優先 |
 | `RAILS_MASTER_KEY` | `config/master.key` | credentials の復号鍵 |
 | `WEB_CONCURRENCY` | `1` | Puma のワーカー数。**増やすとキャッシュと `rate_limit` が worker 間で分裂する**（`:memory_store` のため） |
@@ -214,26 +224,19 @@ bin/rails server
 
 > **本番 DB の接続情報は環境変数ではない。** `config/database.yml` は Capistrano の `linked_files`
 > に入っているので、本番で読まれるのは**サーバ上の共有ファイル**で、そこにパスワードが直書きされている。
-> リポジトリ側の `production:` ブロックと `deploy.rb` の `default_env` は実質使われていない
+> リポジトリ側の `production:` ブロック、`deploy.rb` の `default_env`、deploy.yml が渡す secret は実質使われていない
 > （2026-09-16 に確認。[`issues.md`](issues.md) 確定事項 28）。
 
-## 9. コミット前の必須チェック（CI と同一）
+## 9. コミット前の必須チェック（中身は CI と同じ検査）
 
-```bash
-bundle exec rubocop
-bundle exec brakeman --no-pager
-bundle exec bundler-audit check --update
-bin/importmap audit
-bin/rails test test:system
-```
-
-これが通らないコードは「未完成」とみなす。システムテストは WSL では Chrome の版まわりで
-不安定になりやすいので、実行方法は `CLAUDE.md` とセッションのメモを参照する。
+コマンドの正は `CLAUDE.md` の「コミット前に必ず実行すること」にある（6 本。テストは `bin/rails test` と
+`bin/rails test:system` の 2 本に分けて打つ。連結形の `bin/rails test test:system` はローカルでは `LoadError` になる）。
+これが通らないコードは「未完成」とみなす。WSL でのシステムテストの実行方法（`CHROME_BIN` など）も `CLAUDE.md` にある。
 
 ## 10. 進め方の規約
 
 - **1 Issue = 1 ブランチ = 1 PR** を原則とする（[`issues.md`](issues.md)）。
-  小粒な改善は Issue を立てずに PR だけで進めてよい（その場合も完了記録は `issues.md` に残す）。
+  小粒な改善は Issue を立てずに PR だけで進めてよい（その場合も完了記録は `changelog.md` の「番号を持たない改善」節に 1 行残す）。
 - ブランチ名は `feature/<内容>`。**Issue / PR 番号は入れない**（Issue と PR で採番カウンタが
   共通なので、付けた番号が必ずずれる）。
 - 返答・コミットメッセージ・コードコメントは**日本語**。

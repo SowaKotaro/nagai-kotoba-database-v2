@@ -2,7 +2,7 @@
 # 登録は3ステップに分ける:
 #   [step1 入力] text(箇条書き)を受け取る。
 #   [step2 読み] MeCab で読みを自動取得する(#extract_readings)。画面で読みを確認・編集する。
-#                ※将来 LLM 等で読みを強化する差し込み口も、この段で readings を差し替えれば済む。
+#                ※/reading スキルの調査 JSON(research_json)を貼ると、この段で MeCab の暫定読みと突き合わせる。
 #   [step3 重複] 確定した読み(entries)で重複・類似(バッチ内 / DB 内)を判定する(#analyze_duplicates)。
 #                重複判定は「確定後の読み」に対して行うため、MeCab の誤読で取りこぼしにくい。
 #   [登録] 除外されなかったエントリ(表層形+読み)を登録する(#register)。
@@ -10,6 +10,9 @@
 # 箇条書きの bullet(行頭の「1.」「-」「・」など)は取り除き、残りを表層形として扱う。
 # 登録はジャンル等を付けず未注釈のまま行い、後段のアノテーションで整える。
 # 冪等: 既存の(表層形,読み)はスキップする。重複・類似は警告のみで、登録は妨げない。
+# 重複・類似の判定は 3 実装あり、違いは意図: ここは確定後の読みを畳み込まずに全語と Levenshtein で比べる
+# (収録リクエストは公開語だけを畳み込んでから、登録予定単語は表層形を粗く畳んだキーの完全一致で比べる)。
+# 種別: フォーム。
 class BulkWordRegistration
   include ActiveModel::Model
 
@@ -21,12 +24,9 @@ class BulkWordRegistration
   # 登録フェーズの入力(確認・編集後のエントリ配列)。
   attr_reader :entries
 
-  # 読みの正規化類似度がこの値以上なら「似ている」とみなして警告する。
-  # 公開側の収録リクエスト(Issue 75)と基準を揃えるため Levenshtein 側を正とする。
-  SIMILARITY_THRESHOLD = Levenshtein::SIMILARITY_THRESHOLD
-
-  # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
-  MIN_READING_LENGTH = WordSense::MIN_READING_LENGTH
+  # 基準値は持ち主の定数を直接使う(別名を置かない)。
+  # 読みの「似ている」は Levenshtein::SIMILARITY_THRESHOLD(公開側の収録リクエストと共有)、
+  # 収録基準の下限は WordSense::MIN_READING_LENGTH(docs/annotation-guidelines.md)。
 
   # 行頭の bullet: 「1.」「2)」「-」「*」「・」など。
   BULLET = /\A\s*(?:\d+[.)．、:：]|[-*・‣▪●○])\s*/
@@ -39,9 +39,9 @@ class BulkWordRegistration
       batch_matches.any? || db_matches.any?
     end
 
-    # 収録基準(読み MIN_READING_LENGTH 文字以上)を満たさない語。確認画面ではエラー扱いで既定除外にする。
+    # 収録基準(読み WordSense::MIN_READING_LENGTH 文字以上)を満たさない語。確認画面ではエラー扱いで既定除外にする。
     def too_short?
-      reading.present? && reading.length < MIN_READING_LENGTH
+      reading.present? && reading.length < WordSense::MIN_READING_LENGTH
     end
   end
   # 似ている相手の情報(表示用)。
@@ -56,9 +56,6 @@ class BulkWordRegistration
     :surface, :mecab_reading, :research_reading, :research_alternatives, :research_confidence, :chosen, :status,
     keyword_init: true
   ) do
-    def match? = status == :match
-    def differ? = status == :differ
-
     # 読み欄に流し込める候補(重複読みは除く)。source は mecab / research / alt。
     def candidates
       list = []
@@ -184,7 +181,7 @@ class BulkWordRegistration
     analyzed.combination(2).each do |a, b|
       next if a.reading.blank? || b.reading.blank?
 
-      sim = Levenshtein.similarity_at_least(a.reading, b.reading, SIMILARITY_THRESHOLD)
+      sim = Levenshtein.similarity_at_least(a.reading, b.reading, Levenshtein::SIMILARITY_THRESHOLD)
       next unless sim
 
       a.batch_matches << Match.new(surface: b.surface, reading: b.reading, similarity: sim)
@@ -205,7 +202,7 @@ class BulkWordRegistration
   def db_matches_for(reading)
     reading_chars = reading.chars
     existing_readings.filter_map do |existing_reading, existing_surface, existing_chars|
-      sim = Levenshtein.similarity_at_least_chars(reading_chars, existing_chars, SIMILARITY_THRESHOLD)
+      sim = Levenshtein.similarity_at_least_chars(reading_chars, existing_chars, Levenshtein::SIMILARITY_THRESHOLD)
       Match.new(surface: existing_surface, reading: existing_reading, similarity: sim) if sim
     end.sort_by { |m| -m.similarity }
   end
@@ -235,8 +232,6 @@ class BulkWordRegistration
 
     @research_error = false
     @research_index = parse_research_words.each_with_object({}) do |word, index|
-      next unless word.is_a?(Hash)
-
       data = {
         reading: normalize_reading(word["reading"]),
         alternatives: Array(word["alternatives"]).filter_map { |alt| normalize_reading(alt.is_a?(Hash) ? alt["reading"] : alt) },
@@ -249,16 +244,13 @@ class BulkWordRegistration
     end
   end
 
-  # 調査 JSON の words 配列を取り出す。空や不正な JSON は空配列(＋エラーフラグ)。
+  # 調査 JSON の words 配列(Hash の要素だけ)を取り出す。空欄は空配列、不正な JSON は空配列＋エラーフラグ。
   def parse_research_words
     return [] if research_json.blank?
 
-    parsed = JSON.parse(ResearchJson.strip_code_fence(research_json))
-    words = parsed.is_a?(Hash) ? parsed["words"] : nil
-    words.is_a?(Array) ? words : (@research_error = true) && []
-  rescue JSON::ParserError
-    @research_error = true
-    []
+    words = ResearchJson.array_at(research_json, "words")
+    @research_error = true if words.nil?
+    words || []
   end
 
   # entries の1件と、対応する調査データから MergedEntry を組み立てる。

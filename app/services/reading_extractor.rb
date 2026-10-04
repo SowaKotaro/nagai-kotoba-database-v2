@@ -9,6 +9,7 @@
 #
 # 退避: mecab 未インストール/失敗時は例外を握りつぶし、全件 nil(読み空)を返す。
 #   → 画面側で管理者が手入力できる(機能を止めない)。
+# 種別: 外部コマンドのラッパー（app/services には外部プロセスを起動するクラスだけを置く）。
 class ReadingExtractor
   require "open3"
 
@@ -28,10 +29,18 @@ class ReadingExtractor
     new.call(surfaces)
   end
 
+  # mecab が動くか(終了コードで見る)。プロセスごとに 1 回だけ調べる
+  # (MeCab を入れたり外したりしたら Puma を再起動する。ShareCardRenderer.available? と同じ形)。
+  def self.available?
+    return @available if defined?(@available)
+
+    @available = system("mecab", "--version", out: File::NULL, err: File::NULL) || false
+  end
+
   def call(surfaces)
     surfaces = Array(surfaces)
     return [] if surfaces.empty?
-    return Array.new(surfaces.size) unless mecab_available?
+    return Array.new(surfaces.size) unless self.class.available?
 
     output, status = Open3.capture2(*command, stdin_data: mecab_input(surfaces))
     return Array.new(surfaces.size) unless status.success?
@@ -42,6 +51,18 @@ class ReadingExtractor
   rescue StandardError
     # mecab 不在・辞書エラー等は握りつぶし、手入力に委ねる。
     Array.new(surfaces.size)
+  end
+
+  # MeCab は「・」「＆」などの記号や未知語を読みに素通しする。
+  # 読みはカタカナのみで扱う仕様(検索・生成カラムの前提)なので、ここでカタカナ以外を落とす。
+  #   例: 「シャーロット・リンリン」→「シャーロットリンリン」
+  # NFKC で半角カナ(ｼｬｰﾛｯﾄ)を全角に寄せ、ひらがなはカタカナへ変換してから絞り込む。
+  # /expand のスキル(.claude/skills/word-expansion-research/reading_length.rb)からも呼ばれる
+  # (スキルが決めた読みを、アプリと同じ規則で数えるため)。
+  def normalize(line)
+    reading = line.to_s.strip.unicode_normalize(:nfkc)
+    reading = reading.tr("ぁ-んゔ", "ァ-ンヴ")
+    reading.gsub(NON_KATAKANA, "").presence
   end
 
   private
@@ -65,21 +86,5 @@ class ReadingExtractor
     return env if env && Dir.exist?(env)
 
     DEFAULT_NEOLOGD_PATHS.find { |path| Dir.exist?(path) }
-  end
-
-  def mecab_available?
-    return @mecab_available if defined?(@mecab_available)
-
-    @mecab_available = system("mecab", "--version", out: File::NULL, err: File::NULL) || false
-  end
-
-  # MeCab は「・」「＆」などの記号や未知語を読みに素通しする。
-  # 読みはカタカナのみで扱う仕様(検索・生成カラムの前提)なので、ここでカタカナ以外を落とす。
-  #   例: 「シャーロット・リンリン」→「シャーロットリンリン」
-  # NFKC で半角カナ(ｼｬｰﾛｯﾄ)を全角に寄せ、ひらがなはカタカナへ変換してから絞り込む。
-  def normalize(line)
-    reading = line.to_s.strip.unicode_normalize(:nfkc)
-    reading = reading.tr("ぁ-んゔ", "ァ-ンヴ")
-    reading.gsub(NON_KATAKANA, "").presence
   end
 end

@@ -47,7 +47,7 @@ class Admin::Candidates::TriagesController < Admin::Candidates::BaseController
   def intake_summary(result)
     parts = [ t(".created", count: result.created) ]
     result.existing.each do |status, count|
-      parts << t(".existing", status: t("admin.word_candidates.statuses.#{status}"), count: count)
+      parts << t(".existing", status: helpers.candidate_status_label(status), count: count)
     end
     parts.join(" / ")
   end

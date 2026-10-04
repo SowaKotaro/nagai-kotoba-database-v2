@@ -38,6 +38,8 @@ module InlineMasterCreatable
   end
 
   # 前後の空白(全角スペースを含む)を落とす。空白だけの名前は空扱いにする。
+  # 前後の空白を落とすのは、マスタを新しく作る経路のうちこのその場追加だけ。提案の新設候補(ProposedMasterCreation)・
+  # タグ統括管理・seed は落とさない(照合順序は末尾の空白を区別するので、空白の付いた別のマスタができうる)。
   def inline_master_name
     params[:name].to_s.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
   end
@@ -47,6 +49,6 @@ module InlineMasterCreatable
   end
 
   def render_inline_master_error(messages)
-    render json: { errors: Array(messages) }, status: :unprocessable_entity
+    render json: { errors: Array(messages) }, status: :unprocessable_content
   end
 end

@@ -24,6 +24,24 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".prose", text: /現在 #{count} 語を収録しています。/
   end
 
+  # 標識の収録語数は毎リクエスト COUNT を打つほどの値ではないので 1 日キャッシュする。
+  test "About の収録語数は 1 日は数え直さず、期限が切れたら数え直す" do
+    with_rails_cache do
+      travel_to Time.zone.local(2026, 10, 4, 12, 0)
+      get about_path
+      assert_select ".prose", text: /現在 2 語を収録しています。/
+
+      create_published_word(surface: "About の語数の見本", reading: "アバウトノゴスウノミホン")
+      travel 1.day - 1.minute
+      get about_path
+      assert_select ".prose", text: /現在 2 語を収録しています。/
+
+      travel 2.minutes
+      get about_path
+      assert_select ".prose", text: /現在 3 語を収録しています。/
+    end
+  end
+
   # 線画(円環・放射図)も写真プレースホルダも、ページ内もくじも置かない(docs/design.md §5.7。オーナー判断)
   test "About は図・イラスト・もくじを持たず、文章だけで組む" do
     get about_path

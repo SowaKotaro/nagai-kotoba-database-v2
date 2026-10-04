@@ -1,16 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
-// 統計 §7「母音のつながり」。ノードを押して母音の並びをたどり、
+// 統計ページ §7「母音と子音」の母音のつながり。ノードを押して母音の並びをたどり、
 // その並びを持つ語の検索へ進む導線を出す。
 //
-// 押すのは線ではなくノードにする。線は最も太くても 3.2px しかなく、
-// 350 本が交差するので狙って押せない(交点では別の線を掴んでしまう)。
+// 押すのは線ではなくノードにする。線は最も太くても 3.2px(StatsHelper::GRAPH_MAX_EDGE。選んだ線の
+// CSS の stroke-width も同じ値)しかなく、350 本が交差するので狙って押せない(交点では別の線を掴んでしまう)。
 //
-// 選び方の決まり(オーナー指示 2026-09-10):
-//   - 鎖の端の隣を押せば、前へも後ろへも伸びる(1:ア - 2:オ - 3:イ …)
-//   - 離れた拍を押しても鎖は消さない。あいだの拍は後から埋まるかもしれないので、
-//     その節は「控え」として選んだ状態にしておくだけにする
-//   - 控えの隣を押して2つ目が決まった時点で、初めて古い鎖を捨てて新しい鎖にする
+// 選び方の決まり(鎖を伸ばす・控え・繋ぎ込み・全部外す・引き直す・控えだけ外す)の正は
+// docs/stats.md の統計ページ §7 の章にある。ここには写さないので、規則を変えるときは文書を先に直す。
 //
 // JS が無い環境では図がそのまま出るだけで、失われるのはこの導線だけ。
 export default class extends Controller {
@@ -108,6 +105,8 @@ export default class extends Controller {
       .replace("{from}", from)
       .replace("{to}", to)
       .replace("{rows}", this.chain.map((node) => node.dataset.row).join(" → "))
+    // 形式の正はサーバの WordSenseSearch::VOWEL_TRANSITION_FORMAT(並びは 2〜15 拍、拍位置は
+    // VOWEL_TRANSITION_MAX_POSITION まで)。JS は上限を知らず、範囲外の条件はサーバが黙って捨てる
     this.linkTarget.href = `${this.pathValue}?vowel_transition=${from}-${vowels}`
     this.readoutTarget.hidden = false
   }

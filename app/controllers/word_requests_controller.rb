@@ -5,11 +5,13 @@
 #   - 送信のレートリミットは保存済みレコードの COUNT(WordRequest.rate_limited?)
 #   - 重複チェックはレコードを作らないため、そこだけ Rails 標準の rate_limit
 #
-# フォームは専用ページにだけ置く。単語一覧などは public: true の HTTP キャッシュ配下にあり、
-# CSRF トークンを含むフォームを共有キャッシュに載せると別の利用者へトークンが渡るため、
-# 検索0件などからは「リンク」で誘導する(このページ自体はキャッシュさせない)。
+# フォームは専用ページにだけ置く(このページ自体は HTTP キャッシュさせない)。CSRF トークンを
+# 含むフォームを共有キャッシュに載せると別の利用者へトークンが渡るため、public: true で
+# キャッシュするページ(いまは単語詳細と Atom。WordsController)には置かない。単語一覧の HTML は
+# キャッシュを宣言していないが、検索0件などからも同じく「リンク」で誘導する。
 class WordRequestsController < ApplicationController
-  allow_unauthenticated_access
+  # 公開面に開けるのはこの 3 つだけ(受付の画面・送信・送信前の重複チェック)。
+  allow_unauthenticated_access only: %i[new create duplicates]
   before_action :ensure_accepting_requests
 
   # ハニーポット。CSS で隠した欄で、人間は触れない = 埋まっていれば自動投稿。
@@ -24,7 +26,10 @@ class WordRequestsController < ApplicationController
 
   # 重複チェックは既存語との総当たりを公開面に開くことになるので、押下自体を抑える。
   # (送信と違い保存レコードが残らず、created_at の COUNT では数えられないため)
-  rate_limit to: 10, within: 1.minute, only: :duplicates,
+  # 送信の上限は WordRequest::RATE_LIMITS が持つ。
+  DUPLICATE_CHECK_LIMIT = 10
+  DUPLICATE_CHECK_PERIOD = 1.minute
+  rate_limit to: DUPLICATE_CHECK_LIMIT, within: DUPLICATE_CHECK_PERIOD, only: :duplicates,
              store: RATE_LIMIT_STORE, with: -> { render_check_throttled }
 
   def new
@@ -48,7 +53,7 @@ class WordRequestsController < ApplicationController
       redirect_to new_request_path, notice: t(".created")
     else
       restore_form
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -90,7 +95,7 @@ class WordRequestsController < ApplicationController
   end
 
   # 入力を保持したままフォームへ戻す(書いた内容を失わせない)。
-  def reject_with(message, status: :unprocessable_entity)
+  def reject_with(message, status: :unprocessable_content)
     @word_request = WordRequest.new(word_request_params)
     restore_form
     flash.now[:alert] = message

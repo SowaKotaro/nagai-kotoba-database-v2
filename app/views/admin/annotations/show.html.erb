@@ -17,22 +17,8 @@
     </div>
 
     <%# 提案キューの絞り込み・並べ替え(Issue 67)。index へ飛んで新しい順序の先頭から辿り直す %>
-    <% if params[:proposed].present? %>
-      <nav class="ann-queue-filter">
-        <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.filter") %></span>
-        <%= link_to t("admin.annotations.queue.all"), admin_annotations_path(nav_params.except(:review)),
-              class: class_names("ann-queue-filter__link", "is-on" => params[:review].blank?) %>
-        <%= link_to t("admin.annotations.queue.review"), admin_annotations_path(nav_params.merge(review: "1")),
-              class: class_names("ann-queue-filter__link", "is-on" => params[:review] == "1") %>
-        <span class="ann-queue-filter__sep" aria-hidden="true">|</span>
-        <span class="ann-queue-filter__label"><%= t("admin.annotations.queue.sort") %></span>
-        <%= link_to t("admin.annotations.queue.sort_default"), admin_annotations_path(nav_params.except(:sort)),
-              class: class_names("ann-queue-filter__link", "is-on" => params[:sort].blank?) %>
-        <%= link_to t("admin.annotations.queue.sort_easy"), admin_annotations_path(nav_params.merge(sort: "easy")),
-              class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "easy") %>
-        <%= link_to t("admin.annotations.queue.sort_review"), admin_annotations_path(nav_params.merge(sort: "review")),
-              class: class_names("ann-queue-filter__link", "is-on" => params[:sort] == "review") %>
-      </nav>
+    <% if proposed_param %>
+      <%= render "admin/annotations/queue_filter", path_for: ->(query) { admin_annotations_path(query) } %>
     <% end %>
 
     <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.annotations.eyebrow") %></span></p>
@@ -75,7 +61,7 @@
         <span class="ann-surface__note"><%= t("admin.annotations.surface_note") %></span>
       </div>
 
-      <div class="ann-senses" data-controller="sense-cloner">
+      <div data-controller="sense-cloner">
         <div data-sense-cloner-target="container">
           <%= form.fields_for :word_senses do |sense_form| %>
             <%= render "sense_fields", form: sense_form, word: @word %>

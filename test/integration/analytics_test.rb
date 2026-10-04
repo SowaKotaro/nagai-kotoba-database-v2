@@ -25,14 +25,4 @@ class AnalyticsTest < ActionDispatch::IntegrationTest
       assert_select "meta[name='msvalidate.01'][content=?]", "bing-xyz"
     end
   end
-
-  private
-
-  def with_env(vars)
-    original = vars.keys.index_with { |key| ENV.fetch(key, :absent) }
-    vars.each { |key, value| ENV[key] = value }
-    yield
-  ensure
-    original.each { |key, value| value == :absent ? ENV.delete(key) : ENV[key] = value }
-  end
 end

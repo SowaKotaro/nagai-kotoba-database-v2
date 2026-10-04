@@ -24,7 +24,7 @@ class Genre < ApplicationRecord
     chain
   end
 
-  # 大分類(root)を返す。
+  # 大分類(root)を返す。テストだけが使う(アプリからは呼ばない)。
   def root_genre
     self_and_ancestors.first
   end
@@ -64,6 +64,8 @@ class Genre < ApplicationRecord
         twin = other.children.find_by(name: child.name)
         twin ? child.merge_into!(twin) : child.update!(parent: other)
       end
+      # update_all は touch と after_commit を通らない(words.updated_at が進まないので、sitemap・llms-full の版は最長 1 日古いまま。
+      # 詳細ページは Word#cache_dependencies が拾う)。代表値の列は変えないので WordSenseMetrics の焼き直しは要らない。
       WordSense.where(genre_id: id).update_all(genre_id: other.id) if small?
       reload
       destroy!

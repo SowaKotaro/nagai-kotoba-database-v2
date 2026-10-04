@@ -1,5 +1,5 @@
-<%# §3 波形塗りバー(docs/stats.md §3)。上辺が正弦波の棒 = 「読みの息の長さ」の見立て。
-    塗りはアクセントのチント、最頻値のみアクセントのベタ。直書きラベルは最頻値と両端のみ。棒押下で一覧へ。
+<%# 統計ページ §3「読みの長さ」の波形塗りバー(上辺が正弦波の棒。形は StatsHelper#wave_bar_path)。
+    塗りは --chart のチント、最頻値のみ --chart のベタ。直書きラベルは最頻値と両端のみ。棒押下で一覧へ。
     30以上はまとめ棒(overflow)。ツールチップは title_key + "_overflow" のキーを使い、
     overflow_param(範囲検索のパラメータ名)がある軸だけ一覧へのリンクにする。
     locals: distribution([{ value:, count:, overflow: }]) / param(:reading_length など) /

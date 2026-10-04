@@ -62,7 +62,7 @@
     <div class="sound-count-field__rows">
       <% WordSenseSearch::SOUND_COUNT_FILTERS.each_key do |key| %>
         <div class="sound-count-field__row">
-          <%= label_tag key, t("searches.sound_counts.#{key}"), class: "sound-count-field__label" %>
+          <%= label_tag key, t("searches.sound_counts.#{key}") %>
           <%= number_field_tag key, @search.public_send(key), min: 1, max: 20, inputmode: "numeric",
                 class: "sound-count-field__input", aria: { describedby: "sound-count-hint" } %>
           <span class="sound-count-field__unit"><%= t("searches.sound_counts.unit") %></span>
@@ -107,7 +107,7 @@
     <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off" %>
   </div>
 
-  <div class="field char-type-field" data-controller="char-type"
+  <div class="field" data-controller="char-type"
        data-char-type-lower-value="<%= CharTypePattern::LOWER %>"
        data-char-type-upper-value="<%= CharTypePattern::UPPER %>">
     <%= label_tag :char_type_pattern, class: "field-legend" do %><%= icon "keyboard" %><%= t("searches.char_type_pattern") %><% end %>

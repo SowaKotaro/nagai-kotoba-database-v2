@@ -2,8 +2,6 @@ require "test_helper"
 
 # 公開 JSON API(Issue 25)の結合テスト。読み取り専用・注釈済みのみ。
 class WordsApiTest < ActionDispatch::IntegrationTest
-  HOST = "https://nagai-kotoba-database.jp".freeze
-
   test "単語詳細 .json が語義の全属性とライセンスを返す" do
     word = words(:abc_murder)
     get word_path(word, format: :json)
@@ -13,7 +11,7 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal word.id, body["id"]
     assert_equal word.surface, body["surface"]
-    assert_equal "#{HOST}/words/#{word.id}", body["url"]
+    assert_equal "#{CANONICAL_HOST}/words/#{word.id}", body["url"]
 
     sense = body["senses"].first
     assert_equal word_senses(:murder).reading, sense["reading"]
@@ -25,7 +23,53 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_equal "連濁", sense["linguistic_features"].first["name"]
 
     assert_equal "CC BY 4.0", body["license"]["name"]
-    assert_includes body["license"]["credit"], HOST
+    assert_includes body["license"]["credit"], CANONICAL_HOST
+  end
+
+  # 外部に出す形式なので、キーの集合と入れ子ごと固定する(キーの欠落・改名・並びの変化を検出する)。
+  test "単語詳細 .json のキーの集合と入れ子" do
+    get word_path(words(:abc_murder), format: :json)
+    body = JSON.parse(response.body)
+
+    assert_equal %w[id surface url char_type_pattern senses license], body.keys
+    assert_equal words(:abc_murder).char_type_pattern, body["char_type_pattern"]
+
+    sense = body["senses"].first
+    assert_equal %w[reading meaning reading_length mora_count first_char last_char rhythm_pattern vowel_pattern
+                    genre part_of_speech entity_type word_origins linguistic_features variants], sense.keys
+    murder = word_senses(:murder)
+    assert_equal [ murder.mora_count, murder.first_char, murder.last_char, murder.rhythm_pattern, murder.vowel_pattern ],
+                 sense.values_at("mora_count", "first_char", "last_char", "rhythm_pattern", "vowel_pattern")
+    assert_equal [ { "id" => genres(:large_literature).id, "name" => "文学", "level" => "large" },
+                   { "id" => genres(:medium_japanese).id, "name" => "日本文学", "level" => "medium" },
+                   { "id" => genres(:small_novel).id, "name" => "小説", "level" => "small" } ],
+                 sense["genre"]
+    assert_equal murder.entity_type.name, sense["entity_type"]
+    assert_equal %w[name target target_reading], sense["linguistic_features"].first.keys
+
+    assert_equal({ "name" => "CC BY 4.0", "url" => "https://creativecommons.org/licenses/by/4.0/deed.ja",
+                   "credit" => "長い言葉のデータベース (#{CANONICAL_HOST})" }, body["license"])
+  end
+
+  test "ジャンルの無い語義の genre は null、別表記は surface と reading の配列" do
+    get word_path(words(:curry), format: :json)
+    sense = JSON.parse(response.body)["senses"].first
+
+    assert sense.key?("genre")
+    assert_nil sense["genre"]
+    assert_nil sense["entity_type"]
+    assert_equal [ { "surface" => "カリー", "reading" => "カリー" } ], sense["variants"]
+  end
+
+  test "多語義語の senses は id の順(先頭が最長でなくても)" do
+    word = Word.new(surface: "代表語義の見本")
+    word.word_senses.build(reading: "ミジカイヨミ")
+    word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ")
+    word.mark_annotated
+    word.save!
+
+    get word_path(word, format: :json)
+    assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ], JSON.parse(response.body)["senses"].map { |s| s["reading"] }
   end
 
   test "未注釈の語の .json は 404" do
@@ -43,6 +87,13 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_includes surfaces, words(:abc_murder).surface
     assert_not_includes surfaces, words(:pending_haruhi).surface
     assert_equal "CC BY 4.0", body["license"]["name"]
+
+    assert_equal %w[page total_pages total_count words license], body.keys
+    assert_equal 1, body["total_pages"]
+    word = body["words"].find { |w| w["id"] == words(:abc_murder).id }
+    assert_equal %w[id surface url readings], word.keys
+    assert_equal "#{CANONICAL_HOST}/words/#{words(:abc_murder).id}", word["url"]
+    assert_equal [ word_senses(:murder).reading ], word["readings"]
   end
 
   test "一覧 .json はファセット絞り込みを反映する" do

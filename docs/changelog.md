@@ -53,7 +53,7 @@
 - **Issue 32: エラーページの日本語化・ブランド化** [improvement] — 完了(PR #50)。404/422/500 を自前デザインで。
 
 - **Issue 34: 統計ページ(収録データの分布・集計)** [feature] — 完了。`/stats`(`StatsController` + `SiteStatistics`)。紙面構成の正は [`docs/stats.md`](stats.md)(起票時のコンセプト名「蔵版目録」は 2026-07-19 に撤回し、2026-09-16 に呼び名ごと完全廃止)。数字の壁(4群×5指標)+8章を実装し、Phase 1 で見送っていた**収録の推移**も週次で入っている(`build_timeline`)。集計は `Rails.cache`(1日)に載せ、方針どおり統計テーブルは作っていない(Phase 2 は不要なまま)。**唯一 §1「ワードクラウド」だけが未実装**で、MeCab の事前集計が要るため **Issue 78 に切り出した**。
-- **Issue 48: fragment cache の残り(browse・genres)** [improvement] — 完了。`PublishedSenseCounts`(`by_first_char` / `by_reading_length` / `by_genre`)に集約し、`/browse` の件数集計と `/genres` のツリーがこれを引く形になった。コード内の古い「Issue 26 で導入予定」コメントも解消済み。
+- **Issue 48: fragment cache の残り(browse・genres)** [improvement] — 完了。(「fragment cache」は当時の呼び名で、実際はビューの fragment cache ではなく集計結果の `Rails.cache`。)`PublishedSenseCounts`(`by_first_char` / `by_reading_length` / `by_genre`)に集約し、`/browse` の件数集計と `/genres` のツリーがこれを引く形になった。コード内の古い「Issue 26 で導入予定」コメントも解消済み。
 - **Issue 62: 五十音円環** [feature] — **統計ページの看板としては不採用**(2026-07-18。パッと見で何を示すか読めないため。頭文字→末尾文字の分布は行×行ヒートマップとして統計 §2 に吸収)。ただしその後、**単語詳細の「五十音円環」+ 円環交差数**という別の形で実装された(`app/models/kana_ring.rb` / `app/views/words/_kana_ring.html.erb`、交差数のランキングつき)。1語の読みを円環上の経路として描くもので、当初案(全語の遷移をコード図にする)とは別物。
 
 (Issue 27・33 は未完了。[`issues.md`](issues.md) を参照)
@@ -335,6 +335,9 @@ Issue 番号を取らずに PR だけで進めた、オーナー指示由来の�
 - **五十音円環と円環交差数**(PR #105・#106、2026-07-21) — `KanaRing`。読みを 50 音の円環上で一筆書きにした線画と、その弦が交わった回数(`word_senses.ring_crossing_count`)。**統計の看板としては不採用だった案(Issue 62)が、単語詳細の図として復活したもの**。のちにサイトのロゴ・favicon・共有カードもこの図になった。
 - **ダークモード**(PR #111、2026-07-24) — OS 設定に追従し、ヘッダーのトグルで上書きして `localStorage` に残す。公開側・管理画面・コンソールのすべてに適用。設計は [`design.md`](design.md) §9。
 - **オフライン調査コマンドの拡充** — `/expand`(PR #79)・`/harvest`(PR #84)・`/reannotation`(PR #117、PR #141 で claude.ai 用バンドルの生成手順)。入出力の約束は [`../research/README.md`](../research/README.md)。
+- **登録予定単語 `/admin/candidates`**(PR #162、2026-09-24) — 登録前の語の前処理(仕分け → 拡張 `/expand` → 表記 `/notation` → 登録待ち)を、ファイルではなく管理画面のステータスで管理する。各段で「コピー」した内容をスキルに渡し、結果を同じ画面に取り込む(語は書き出し時の ID で引く)。流れは [`../research/README.md`](../research/README.md) の「使う順番」。
+- **登録予定単語の「語ごとに選んで一度に確定する」流れ**(PR #163、2026-09-26) — 仕分けと表記の確認で、語ごとに処理(拡張 / 採用 / 保留 / 除外)を選んで一度に確定する形に作り直した。追加した語には最初から拡張を選んでおく。行を選んで下端のバーからまとめて処理できる。拡張待ちの語を指定した語数ずつ `/expand` に書き出せる。
+- **管理画面の共通ナビとダッシュボードの整理**(PR #164、2026-09-26) — 共通ナビの並び・余白・現在地の表示を整え、ダッシュボードを、ナビと同じ並びの作業のカードと収録状況のパネルに組み直した(並びは `AdminHelper#admin_sections` だけが持つ)。
 
 ### 磨き込み・修正
 

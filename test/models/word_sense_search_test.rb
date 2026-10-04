@@ -177,6 +177,20 @@ class WordSenseSearchTest < ActiveSupport::TestCase
                  ids(char_type_pattern: "aaa漢漢漢漢", char_type_ignore_case: "1")
   end
 
+  # words.char_type_pattern は utf8mb4_0900_ai_ci なので、大小を区別しない検索では
+  # 「あ」(ひらがな)と「ア」(カタカナ)の記号も同じとみなされる。区別する検索は utf8mb4_bin で比べる。
+  test "大小を区別しない文字種の検索では、あ と ア も同一視される" do
+    word = Word.new(surface: "ひらがなだけのことば")
+    word.word_senses.build(reading: "ヒラガナダケノコトバ")
+    word.mark_annotated
+    word.save!
+    assert_equal "ああああああああああ", word.char_type_pattern
+
+    katakana_pattern = "アアアアアアアアアア"
+    assert_includes ids(char_type_pattern: katakana_pattern, char_type_ignore_case: "1"), word.word_senses.first.id
+    assert_not_includes ids(char_type_pattern: katakana_pattern), word.word_senses.first.id
+  end
+
   test "大小を区別しないとき文字種パターンの小文字は大文字に畳まれる" do
     search = WordSenseSearch.new(char_type_pattern: "Aa1あ", char_type_ignore_case: "1")
     assert_equal "AA1あ", search.char_type_pattern
@@ -289,7 +303,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_includes ids(vowel_reading: "ケー"), word_senses(:curry).id
   end
 
-  # --- 母音の遷移(統計 §7 のグラフから来る、拍位置で固定した2拍の組) ---
+  # --- 母音の遷移(統計ページ §7 のグラフから来る、拍位置で固定した2拍の組) ---
   test "母音の遷移は指定した拍位置の2拍で絞れる" do
     # curry の母音は aee。1拍目 a → 2拍目 e。
     assert_equal [ word_senses(:curry).id ], ids(vowel_transition: "1-ae")
@@ -318,6 +332,18 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal all, ids(vowel_transition: "1-#{'a' * 16}") # 並びは15拍まで
     assert_equal all, ids(vowel_transition: "99-ae")  # 上限より後ろ
     assert_not WordSenseSearch.new(vowel_transition: "1-xy").conditions?
+  end
+
+  # 上限は 2 つの定数が別々に持つ(並びの長さは VOWEL_TRANSITION_FORMAT の 15、拍位置は
+  # VOWEL_TRANSITION_MAX_POSITION の 30)。境界の内側は条件に残り、外側は条件ごと捨てる。
+  test "母音の遷移の境界: 並びは15拍まで・拍位置は30まで受ける" do
+    fifteen = "1-#{'a' * 15}"
+    assert_equal fifteen, WordSenseSearch.new(vowel_transition: fifteen).vowel_transition
+    assert_equal "", WordSenseSearch.new(vowel_transition: "1-#{'a' * 16}").vowel_transition
+
+    assert_equal "30-ae", WordSenseSearch.new(vowel_transition: "30-ae").vowel_transition
+    assert_equal "", WordSenseSearch.new(vowel_transition: "31-ae").vowel_transition
+    assert_not WordSenseSearch.new(vowel_transition: "31-ae").conditions?
   end
 
   test "母音の遷移は引き継ぐ条件に入り、単独でもインデックスは許可しない" do

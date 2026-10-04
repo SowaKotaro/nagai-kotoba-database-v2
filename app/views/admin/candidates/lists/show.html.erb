@@ -38,7 +38,7 @@
   <% end %>
 
   <%# 行のどこを押しても選べる(Shift+クリック・選択の列をなぞって範囲)。選んだ語は下端のバーで移す(row-select) %>
-  <%= tag.div class: "cand-select", data: candidate_list_select_data do %>
+  <%= tag.div data: candidate_list_select_data do %>
     <div class="table-scroll">
       <table class="data-table cand-table">
         <thead>
@@ -51,6 +51,8 @@
         </thead>
         <tbody>
           <% @candidates.each do |candidate| %>
+            <%# 子の字下げは seed_id の有無で決める。確認の一覧・1 語の画面の「元の語」とは判定が違う
+                (admin/candidates/_word の冒頭) %>
             <tr class="cand-table__row <%= "cand-table__child" if candidate.seed_id %>" data-row-select-target="row">
               <td class="cand-table__check">
                 <%# 登録済みの語は一括登録で収録された語なので動かせない %>
@@ -91,8 +93,7 @@
             <%= button_tag t(".moves.#{move}"), type: "submit", name: "move", value: move, form: "cand-move", class: "btn btn--sm" %>
           <% end %>
         </span>
-        <button type="button" class="cand-link-button" data-js-only data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
-        <button type="button" class="cand-link-button" data-js-only data-action="row-select#clear"><%= t("admin.word_candidates.select.clear") %></button>
+        <%= render "admin/candidates/selection_controls", js_only: true %>
       </div>
     </div>
   <% end %>

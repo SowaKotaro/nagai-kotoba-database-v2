@@ -17,48 +17,56 @@
 - バージョン: **Ruby 3.4.2 / Rails 8.1**
 - 構成: Rails + **MySQL（mysql2）** + Puma + Hotwire（Turbo / Stimulus）+ importmap-rails + Sprockets
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
-- デプロイ: **Capistrano**（`cap production deploy`）。デプロイ後に `deploy:seed` が自動実行される。
+- デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で
+  `.github/workflows/deploy.yml` が本番デプロイを自動で走らせる**。CI の完了は待たない（main にブランチ保護も無い）。
+  デプロイでは `deploy:migrate` の直後に `deploy:seed` が毎回走り、管理者とマスタを投入する
+  （`SeedCatalog` の `*_RENAMES` に書いた改名も、このとき本番に適用される）。
   本番 DB の接続情報は**サーバ上の `config/database.yml`**（`linked_files` の共有ファイル）が持つ。
-  リポジトリの `database.yml` と `deploy.rb` の `default_env` は本番では使われていない。
-- CI: GitHub Actions（`.github/workflows/ci.yml`）。**PR 作成時** と **main への push 時** に実行。
+  リポジトリの `database.yml` の production ブロック、`deploy.rb` の `default_env`、deploy.yml が渡す
+  `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` は、本番では使われていない。
+- CI: GitHub Actions（`.github/workflows/ci.yml`）。PR（作成時と、PR ブランチへの push のたび）と main への push で実行。
+  main への push ではデプロイと並走し、CI が落ちてもデプロイは止まらない。関門は PR 上の CI と `/cppmtm` の手順だけ。
 
 ## データモデル（詳細は [`docs/data-model.md`](docs/data-model.md)。カラムの正は `db/schema.rb`）
 - `word` : `word_sense` = **1 : 多**（同音異義語に対応）。
 - `genres` は **隣接リスト**（`parent_id`）で 大→中→小の3階層。`word_senses.genre_id` は末端（小分類）を指す。
 - `linguistic_features` は `word_sense_features` 経由で語義と**多対多**。特徴は単語の**該当部分ごと**に
   付ける（`target` / `target_reading` / `target_start`）。`word_origins`（語種）も多対多（混種語対応）。
-- **派生値は必ず自動生成する**（手入力させない）。作る場所は3通り:
-  - **SQL の STORED 生成カラム**: `word_senses.reading_length` / `first_char`、
-    `words.surface_length` / `reading_density`
-  - **Ruby の値オブジェクト ＋ `before_validation`**: `char_type_pattern`（漢/あ/ア/1/A/a/@）・
-    `rhythm_pattern`（ヘボン式ローマ字）・`vowel_pattern`・`mora_count`・`ring_crossing_count`・`last_char`
-  - **`after_commit` で焼き直す代表値**: `words` の `min_*` / `max_*` / `sense_count` /
-    `variant_count` / `feature_count`（並び替え・ランキングの指標。`WordSenseMetrics`）
-  - `last_char` は本来 SQL の生成カラムにしたいが、生成式にマルチバイト文字を含めると
-    ActiveRecord の SchemaDumper（mysql2 アダプタ）が `schema.rb` をダンプする際に文字化けする
-    既知の制限があるため、例外的に Ruby 側で計算する（`app/models/last_char.rb`）。
-  - `update_all` や生 SQL で `reading` / `surface` を書き換えたら、`bin/rails backfill:verify` で
-    差分を検出し `backfill:reading_metrics` / `backfill:sense_metrics` で直す。
+- **派生値は必ず自動生成する**（手入力させない）。作る場所は3通り（SQL の STORED 生成カラム／
+  Ruby の値オブジェクト ＋ `before_validation`／`after_commit` で焼き直す `words` の代表値）。
+  **どの列をどこで作り、何に依存し、どう直すかの一覧の正は [`docs/data-model.md`](docs/data-model.md) §3**。
+  - 語義の読み由来の値は `WordSense.reading_derivations` の 1 か所で作る（派生列を足すときはここに足す）。
+  - `update_all` や生 SQL で `reading` / `surface` を書き換えたら、data-model §3.4 の手順で直す
+    （`bin/rails backfill:verify` で差分を検出し、`backfill:reading_metrics` で直す）。
 - **照合順序**: 日本語検索が中心のため全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。
   長い文字列カラムは prefix index（例 `surface(191)`）を使う。ただし **読み・表層形まわりは
   例外的に `utf8mb4_0900_as_ci`**（ai は濁点・半濁点を同一視して「ハ=バ=パ」になるため。as_ci なら
-  清濁を区別しつつ、ひらがな⇔カタカナ・A⇔a の同一視は保てる）。
-  対象は `words.surface` / `words.max_reading` / `min_reading` / `min_reversed_reading` /
-  `word_senses.reading` / `first_char` / `last_char` / `word_sense_variants.surface` / `reading` /
-  `word_request_items.surface` / `reading`。**読み・表層形を持つカラムを新設するときは `as_ci` を明示する。**
+  清濁を区別しつつ、ひらがな⇔カタカナ・A⇔a の同一視は保てる。小書き⇔並字（ヤ=ャ）は as_ci でも同一視される）。
+  as_ci にしてあるカラムの一覧と、それぞれの照合順序が何を同一視するか（実測）は
+  [`docs/data-model.md`](docs/data-model.md) §6 が正。**読み・表層形を持つカラムを新設するときは `as_ci` を明示する。**
 
 ---
 
 ## コミット前に必ず実行すること（強制チェック）
-コードを変更したら、コミット前に以下を実行し、**指摘をすべて解消する**こと。CI と同じ内容なので、ローカルで通れば CI も通る。
+コードを変更したら、コミット前に以下を実行し、**指摘をすべて解消する**こと。中身は CI（`.github/workflows/ci.yml`）と同じ検査。
 
 ```bash
 bundle exec rubocop                      # スタイル / 静的解析（rubocop-rails-omakase）
 bundle exec brakeman --no-pager          # セキュリティ静的スキャン
 bundle exec bundler-audit check --update # gem 依存の既知脆弱性
 bin/importmap audit                      # JS 依存の既知脆弱性
-bin/rails test test:system               # テスト（単体 + システム）
+bin/rails test                           # テスト（単体・結合）
+bin/rails test:system                    # テスト（システム。Chrome が要る）
 ```
+
+- テストは 2 本に分けて打つ。連結形の `bin/rails test test:system` は、ローカルでは `LoadError` になる
+  （`test:system` をファイルのパスとして読むため）。CI の `bin/rails db:test:prepare test test:system` は、
+  先頭が rake タスクなので全体が rake タスクとして解釈されて通る。
+- ローカルで通っても、CI で落ちることがある。test 環境の eager load は環境変数 `CI` があるときだけ効く
+  （`config/environments/test.rb`）。CI と同じ条件で試すには、`CI=1` を付けて実行する。
+- WSL では、システムテストに Chrome のパスを渡す:
+  `CHROME_BIN=<Selenium Manager が選ぶ chromedriver と同じメジャー版の Chrome> bin/rails test:system`。
+  Chrome の依存ライブラリが足りない環境では、`LD_LIBRARY_PATH` も要る。
 
 - これらが通らないコードは「未完成」とみなす。エラーは握りつぶさず修正する。
 - RuboCop は安全な範囲で `bundle exec rubocop -a` による自動修正を活用してよい。
@@ -75,8 +83,11 @@ bin/rails test test:system               # テスト（単体 + システム）
   - 動的に組む必要がある SQL 片（並び替え・集計）は**定数の文字列リテラルで書き切る**
     （`WordSort` / `WordSenseMetrics` の方針。外部入力が混ざらないことを静的解析でも追えるようにする）。
 - **認可を徹底する**。閲覧（read）は全世界に公開だが、**登録・編集・削除は管理者のみ**。
-  - 書き込み系アクションには認証必須の `before_action` を必ず付ける（管理者未ログインは弾く）。
-  - 公開閲覧アクションは `allow_unauthenticated_access` で明示的に開放し、書き込み経路を漏らさない。
+  - 認証は**全アクションで既定で必須**になっている（`ApplicationController` が `Authentication` を include し、
+    `before_action :require_authentication` が全体に掛かる）。管理側は `Admin::BaseController` を継承するだけでよく、
+    コントローラごとに認証の `before_action` を足す必要は無い。
+  - 公開閲覧アクションは `allow_unauthenticated_access only: %i[...]` で明示的に開放し、書き込み経路を漏らさない
+    （手本 `words_controller.rb`）。
 - ビュー出力は基本エスケープに任せる。`html_safe` / `raw` / `<%==` は安易に使わない。
 - 機密情報をコードに直書きしない。`Rails.application.credentials`（`config/credentials.yml.enc`）か環境変数を使う。`config/master.key` はコミットしない。
 - ログに個人情報・パスワード・トークンを出さない（`config.filter_parameters` を設定）。
@@ -111,7 +122,8 @@ bin/rails test test:system               # テスト（単体 + システム）
   **長時間の滞在と再訪で疲れないこと**が最優先で、**情報は疎でよい**。
   手本は役割で分けている: 静けさ・余白・文字組み = sizu.me ／ 標識と図としての数字 = ただ、そこ ／
   線画 = mud Inc. ／ 全幅の帯 = TOFT。
-- **色**: アクセントカラーを持たない（白 × 無彩色グレー ＋ ごく淡い青みの面）。赤／緑は
+- **色**: アクセントカラーを持たない（白 × 無彩色グレー ＋ ごく淡い青みの面。管理画面だけは作業用に
+  `--admin-accent` / `--admin-warn` の 2 色を持つ。design.md §10）。赤／緑は
   「エラー／達成」の意味を持つときだけ。チャートの塗りだけ `--chart`。
   **多色はサイト唯一の例外として統計 §1 のワードクラウドだけ**（`--cloud-1`〜`8`）。
 - **太字を使わない**（`font-weight` は 400 統一。`b`/`strong` だけ 500）。段は大きさと文字の濃さで作る。**例外は無い**。
@@ -121,7 +133,7 @@ bin/rails test test:system               # テスト（単体 + システム）
 - 囲いは罫より**淡い面（`--bg-soft`）＋大きな角丸（20px）**、ボタン・タグは**ピル**。
   **ヘッダーは罫も影も持たず sticky にしない**。本文カラムは **800px**（読み物は 640px）。
 - **過去のデザイン（活字見本帖 / 知識アーカイブ、および GitHub 寄りの「プレーン」案）はどちらも破棄済み**。
-  **明朝体・紙色の地・朱のアクセント・青いリンク・`01` 形式のゼロ埋め番号・2px の太罫・太字による強調は使わない**。
+  **明朝体・紙色の地・朱のアクセント・青いリンク・`01` 形式のゼロ埋め番号・2px の太罫・太字による強調は使わない**（ゼロ埋めの例外は、一覧の目盛り `.entry-range` の `001–100` だけ）。
   「以前そう決めた」を根拠に差し戻さない。
 - **「ただ、そこ」から移すのは構えだけで、色と罫は移さない**。手本の構造はほぼ真っ黒な 1px の罫が
   作っており、色相もわずかに緑み。**黒罫・緑み・黒いフッターは持ち込まない**。
@@ -142,7 +154,8 @@ bin/rails test test:system               # テスト（単体 + システム）
   （1度で止まる）＋ 外周の標識「NAGAI KOTOBA DATABASE」が 80 秒で1周（永続）。
   線の全長は `KanaRing.stroke_length`、回転の中心は `KanaRing::CENTER` をサーバ側から CSS 変数で渡し、
   そのためだけの JS を持たない。**`prefers-reduced-motion: reduce` では完成形を出す**。
-  他は hover の色変化（160ms）だけで、スクロール連動・視差・一斉フェードインは入れない。
+  他は hover の色変化（160ms）と、状態の変化を伝える短い動き（250ms 以下。ドロワー・キャレット・状態ラベル。
+  design.md §4）だけで、スクロール連動・視差・一斉フェードインは入れない。
 - **淡さには下限がある**: 静けさを狙って色を薄くしすぎると白飛びして目が滑る。
   **文字は最も弱い `--text-subtle` でも白地 4.5:1（面の上でも 4.5:1）、面・罫は白との差 ΔRGB 19 以上**を確保する。
   色を薄くする変更をしたら**必ず実測して確かめる**（2026-09-03 の計測で、ライトのテキストの 88% が AA 未達だったことがある）。
@@ -151,13 +164,13 @@ bin/rails test test:system               # テスト（単体 + システム）
   `:first-child` / `+` セレクタでの打ち消しが要らなくなる。**角丸は持たせない**。
   単独の区切り線（章の罫・ツールバーの上下罫など）と `<table>`、`.search-form` は対象外で `border` のまま。
 - **罫は二層で持つ**: 淡い罫（`--border`）だけだと稜線がゼロになる。**「章を分ける1本」にだけ
-  `--text-muted` を罫の色として使う**（適用は design.md §3 に列挙した4箇所だけ。黒までは濃くしない）。
+  `--text-muted` を罫の色として使う**（適用は design.md §3 に列挙した箇所だけ。黒までは濃くしない）。
 - **広い単色の面を作らない**: 全高の数割を淡い面で敷くと、中身が平坦に流れて「どこを見ればいいか」が消える。
   面を足すのではなく**外して罫で仕切る**方向で直す。**本文に面を敷く案は2通り試して、どちらも不採用**。
   困りごとは色の不足ではなく「区画の境目が分かりにくい」「中身が浮いて見える」ことなので、**色ではなく罫で解く**。
 - **区画は「面の色 ＋ 1px の細罫 ＋ 余白」だけで示す。影は使わない**。**色を持つのはヘッダーとフッター
   （`--bg-soft`）だけで、そのあいだのコンテンツは白（`--surface`）**。面は `--surface` / `--bg-soft` /
-  `--bg`（ボタンの塗り）の**3段だけ**。ただし**面は「囲い」ではなく「地層」にする**:
+  `--bg`（反転文字・ドロワー・操作バーなどの一段淡い面。`.btn`・`.tag` の塗りは `--surface`）の**3段だけ**。ただし**面は「囲い」ではなく「地層」にする**:
   角丸で四辺を閉じた面を縦に並べると島が散らばって一体感が消えるので、面が要るなら**画面端まで届く帯**にする。
   **この組み方をするのはホームだけ**（`main.container--flush` + `.band` / `.sheet`）。
   ホームの区画は**面ではなく `--border` の 1px の格子**で組む: 区画どうしの横罫（画面端まで通す）＋
@@ -170,23 +183,26 @@ bin/rails test test:system               # テスト（単体 + システム）
   再検討するなら、白抜きは**指定色ではなく「線の画素そのもの」を測って** AA を確かめること
   （細い線はアンチエイリアスで溶けるので指定色は当てにならない。塗りは従来どおり指定色で評価）。
 - **標識は 2 行目に必ず「値」を持たせる**（`1,683 ENTRIES` など）。h1 の英訳を貼っただけの標識は読まれない。
-  値は日本語側にも必ず同じ数字を置く。
+  値は日本語側にも必ず同じ数字を置く。例外（ブランド名の右の英字・フッターの `EST.`・図のキャプション）は design.md §5.8。
 - **関連データ（ジャンル・品詞・エンティティ・特徴）は雑に並べない**: 必ず専用コンポーネント
   （パンくず／丸タグ・チップ）にし、**検索の絞り込みへの導線**にする。
 - CSS は手書き（Sprockets、`tokens → base → layout → components`）。**パフォーマンス最優先**で、
   デザインのために重いフォント / CDN / 過剰な JS を入れない（**web フォントは読まない**・画像遅延・importmap 維持）。
 - **管理画面（`/admin`）は「しずか」を引き継がない**（2026-09-06 オーナー指示）。読み物ではなく**作業画面**で、
   見るのはオーナー 1 人。**ページ構成・レイアウト・HTML は公開側と共有したまま、`<body class="is-admin">` の下で
-  トークンだけ上書きする**（`app/assets/stylesheets/admin.css`）: 字間 0・行間 1.5・文字と罫を濃く・
-  角丸をほぼ直角に・ヘッダーの円環 SVG と英字を消す。個々のコンポーネントには触らない。
+  上書きする**（`app/assets/stylesheets/admin.css`）: 字間 0・行間 1.5・文字と罫を濃く・
+  角丸をほぼ直角に・ヘッダーの円環 SVG と英字を消す。公開側のコンポーネント定義は変えず、管理画面のための上書き
+  （トークンと一部のコンポーネントの見た目、管理画面専用の 2 色）は admin.css に集める。管理画面はダークに対応していない（design.md §9.4）。
   **`.is-admin *` のような全称セレクタで `transition` を潰さない**（スタイル再計算のたびに全要素へ
   マッチして逆に重くなる。実測済み）。
 
 ## 重い処理・外部連携
-- メール送信・外部 API 呼び出し・重い集計は **ActiveJob で非同期化**する。
-- 現状バックグラウンドジョブのバックエンドは未導入（既定の `:async` アダプタで、プロセス内実行）。
-  恒常的なジョブ基盤が必要になったら、Rails 8 標準の **Solid Queue** 導入を第一候補として検討・相談する。
-- ジョブは**冪等**に設計し、リトライされても問題ないようにする。
+- **現状、ジョブは 1 本も無い**（`app/jobs` は雛形の `ApplicationJob` だけで、`perform_later` / `deliver_later` の呼び出しも無い）。
+  重い処理（共有カードの描画・代表値の UPDATE・MeCab による読みの取得）は同期で実行している。
+  共有カードの描画は意図して同期にし、タイムアウト・Mutex・ファイルキャッシュで守っている（`ShareCardRenderer`。Issue 89）。
+- メール送信・外部 API 呼び出し・重い集計を新しく足すときは、ActiveJob で非同期にすることを検討・相談する。
+  ジョブ基盤が要るなら、Rails 8 標準の **Solid Queue** の導入を第一候補にする（既定の `:async` アダプタはプロセス内で実行する）。
+- ジョブを作るときは**冪等**に設計し、リトライされても問題ないようにする。
 - 外部 API 呼び出しには **タイムアウトと例外処理**を必ず入れる。
 - 外部コマンド（`mecab` / `rsvg-convert`）への依存は**必ず「無くても機能が止まらない」形**にする
   （読みは空欄で手入力、og:image は既定カードへフォールバック）。依存するテストは skip で通す。
@@ -203,7 +219,9 @@ bin/rails test test:system               # テスト（単体 + システム）
 - 変更には対応するテストを用意する。**正常系だけでなく異常系・境界値**も書く（例: `char_type_pattern` 変換の記号・数字・全角半角）。
 - 種類を目的に応じて使い分ける: モデル（`test/models`）/ コントローラ・結合（`test/controllers`・`test/integration`）/ システム（`test/system`、Capybara + Selenium）。
 - **1つの振る舞いは1つの層で検証する**。変換規則は値オブジェクト・モデルのテスト、画面の出し分けやリンクは結合テスト（`assert_select`）で書き、別の層で同じことを重ねない。
-- **システムテストは JS が無いと成立しない挙動だけに書く**（遅く、Chrome の版で不安定になりやすいため）。同じ画面で確かめる操作は1回の `visit` にまとめる。同じ前提で分けただけの結合テストも1本にまとめ、重いページ（`/stats` など）の GET を重ねない。
+- 管理画面のアクションの未ログイン拒否は、`test/integration/admin_authentication_test.rb` がルート表から全数を検証する。
+  各コントローラのテストには書かず、`setup` でログインする（Issue 96）。
+- **システムテストは、実ブラウザ（JS の実行・レイアウトの計算）が無いと確かめられない挙動だけに書く**（遅く、Chrome の版で不安定になりやすいため）。同じ画面で確かめる操作は1回の `visit` にまとめる。同じ前提で分けただけの結合テストも1本にまとめ、重いページ（`/stats` など）の GET を重ねない。
 - 開発中の確認で役目を終えたテスト（もう無いマークアップの「不在」確認、ルートヘルパ・関連の宣言そのものの確認）は残さない（2026-09-14 に 1002 本を整理した）。
 - キャッシュを有効にして検証するときは、書き込み先を差し替える。フラグメントキャッシュ（ビューの `cache`）は `Rails.cache` ではなく起動時に取り込んだ `ActionController::Base.cache_store` に書く（`Rails.cache` だけを差し替えたテストは一度もキャッシュを通っていなかった）。
 - フィクスチャは `test/fixtures` を使う。
@@ -217,5 +235,6 @@ bin/rails test test:system               # テスト（単体 + システム）
   **公開済みの URL とクエリパラメータ名は世に出ているので変えない**（`?sort=created_desc` など）。
 - 不要な Gem を増やさない。追加する場合はメンテ状況とライセンスを確認し、`Gemfile.lock` の更新も忘れない。
 - `config/deploy.rb`・`config/puma.rb`・`.github/workflows/` などインフラ/デプロイ設定の変更は影響が大きいので、内容を説明してから行う。
+- **main への merge（push）は、そのまま本番デプロイになる**（deploy.yml。CI の成否を待たない）。merge の前に PR 上の CI が通ったことを確かめる。
 - 検索エンジンから見える挙動（robots・canonical・noindex・sitemap）を変えるときは、
-  **URL 空間が無限に広がらないか**を必ず確認する（過去に 2 度クロール事故を起こしている。issues.md Issue 80・81）。
+  **URL 空間が無限に広がらないか**を必ず確認する（過去に 2 度クロール事故を起こしている。`docs/changelog.md` の Issue 80・81）。

@@ -120,7 +120,7 @@ module WordsHelper
   # (指し先も noindex なので伝播しても害が無く、既知の seed 付き URL を1本に集約できる)。
   def canonical_index_path(search, page, sort = nil)
     facet = search.indexable_facet
-    params =
+    query =
       if facet
         { facet.first => facet.last } # 単一ファセットは実際のリンクと同じスカラ形
       elsif search.conditions?
@@ -128,9 +128,9 @@ module WordsHelper
       else
         {}
       end
-    params[:sort] = sort.key if sort && !sort.default?
-    params[:page] = page if page > 1
-    words_path(params)
+    query[:sort] = sort.key if sort && !sort.default?
+    query[:page] = page if page > 1
+    words_path(query)
   end
 
   # 文字の軸(先頭文字・末尾文字)で複数の文字を渡しうるリンクのパス。

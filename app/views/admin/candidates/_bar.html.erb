@@ -22,8 +22,7 @@
         </button>
       <% end %>
     </span>
-    <button type="button" class="cand-link-button" data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
-    <button type="button" class="cand-link-button" data-action="row-select#clear"><%= t("admin.word_candidates.select.clear") %></button>
+    <%= render "admin/candidates/selection_controls" %>
   </div>
   <button type="submit" form="<%= form %>" class="btn btn--primary cand-bar__submit">
     <%= submit_label %><span class="cand-bar__kbd">Ctrl+Enter</span>

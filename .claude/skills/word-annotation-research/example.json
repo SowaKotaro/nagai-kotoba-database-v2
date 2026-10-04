@@ -51,9 +51,7 @@
           "entity_type": "ことわざ",
           "part_of_speech": "普通名詞",
           "word_origins": ["日本語"],
-          "linguistic_features": [
-            { "name": "熟字訓", "target": "上手", "target_reading": "ジョウズ" }
-          ]
+          "linguistic_features": []
         }
       ],
       "confidence": "high",

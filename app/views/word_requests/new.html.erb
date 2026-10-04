@@ -19,7 +19,7 @@
   </ul>
 <% end %>
 
-<%= form_with model: @word_request, url: requests_path, method: :post, class: "request-form",
+<%= form_with model: @word_request, url: requests_path, method: :post,
       data: { controller: "nested-form", nested_form_max_value: WordRequest::MAX_ITEMS } do |form| %>
   <%# 時間トラップ: フォームを開いた時刻を署名して持たせ、速すぎる送信を捨てる %>
   <%= hidden_field_tag :form_token, WordRequestFormToken.issue %>

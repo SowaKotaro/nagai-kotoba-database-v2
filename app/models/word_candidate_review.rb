@@ -5,8 +5,9 @@
 #   仕分け(:triage)    : 保留にしていた語は保留 / 照合で一致した語は除外 / upload したままの語は拡張
 #                        (ほとんどを拡張に回すため) / それ以外(/expand で集めた語・拡張の元にした語など)は採用
 #   表記の確認(:notation): 照合で一致した語は除外 / 立項に疑義がある語は保留 / それ以外は採用
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class WordCandidateReview
-  # 画面ごとに選べる処理(WordCandidate::DECISIONS の部分集合)。拡張は、まだ誰も判断していない語にだけ出す。
+  # 画面ごとに選べる処理。拡張は、まだ誰も判断していない語にだけ出す。
   CHOICES = { triage: %w[expand keep hold reject], notation: %w[keep hold reject] }.freeze
 
   # 行の印(絞り込みのボタンに出す順)。重複の疑い / 表記が変わった / 立項に疑義。

@@ -4,7 +4,8 @@ require "application_system_test_case"
 # 行は送信を止める。ブラウザでしか確かめられない挙動なのでシステムテストで担保する。
 # 読みの自動取得(ReadingExtractor)は CI に mecab が無くても安定させるためスタブする。
 class AdminWordsReadingFormatTest < ApplicationSystemTestCase
-  # この環境の chromedriver は日本語(CJK)の send_keys が入力欄に届かない(fill_in が空のまま)。
+  # ログイン後はネイティブの入力が届かないことがある(fill_in が空のまま。日本語に限らない。
+  # 事情は ApplicationSystemTestCase の system_sign_in の上の注記)。
   # 値を JS で流し込み、input イベントを発火して Stimulus の検証を実際に走らせる。
   def type_japanese(selector, text)
     page.execute_script(<<~JS, find(selector), text)

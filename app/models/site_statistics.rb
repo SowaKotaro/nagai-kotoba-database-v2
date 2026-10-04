@@ -1,11 +1,12 @@
 # 公開統計ページ(/stats)の集計一式(docs/stats.md)。
 # 派生カラム(reading_length / mora_count / first_char / last_char / char_type_pattern /
-# vowel_pattern / rhythm_pattern)への GROUP BY を中心に、想定1万レコード規模を
+# vowel_pattern)の集計を中心に(頭子音は first_char を RhythmPattern に通して出す)、想定1万レコード規模を
 # オンライン集計する(Issue 34 Phase 1)。結果は Rails.cache に1日置く(毎日再集計)。
 #
 # すべての集計は公開対象(注釈済みの語・その語義)だけを数える。
 # ジャンル・語種・エンティティ・特徴はアノテーション依存のため、
 # ビュー側で「集計対象は◯語義」を明示する(covered 系の値を使う)。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
   CACHE_KEY = "site_statistics/v3"
@@ -24,6 +25,7 @@ class SiteStatistics
   SPECTRUM_SUPPORT_RATIO = 0.1
   SPECTRUM_MAX_POSITIONS = 24
   # 母音の遷移グラフ(層=拍位置・ノード=母音)で見せる層の数。
+  # 「拍位置」は vowel_pattern の添字(何番目の母音か)で、撥音・促音を数えない(mora_count の拍とは別)。
   # 5母音 × 層数のノードと、隣り合う層の全結合(25本)のエッジを引く。
   # 15拍(=350本)まで伸ばし、収まらないぶんは横スクロールで見せる(オーナー指示 2026-09-10)。
   # 後ろの層ほど、そこまで読みが続く語義は減る(15拍まで届くのは全体の 7% ほど)。
@@ -103,8 +105,8 @@ class SiteStatistics
       first_char_kinds: base_kana_kinds(@first_char_counts.keys),
       last_char_kinds: base_kana_kinds(@last_char_counts.keys),
       kana_total: KanaRow::BASE_46.size,
-      katakana_only_pct: percent(Word.annotated.where("char_type_pattern REGEXP ?", "^ア+$").count, @word_count),
-      with_kanji_pct: percent(Word.annotated.where("char_type_pattern LIKE ?", "%漢%").count, @word_count),
+      katakana_only_pct: percent(Word.annotated.where("char_type_pattern REGEXP ?", "^#{CharTypePattern::KATAKANA}+$").count, @word_count),
+      with_kanji_pct: percent(Word.annotated.where("char_type_pattern LIKE ?", "%#{CharTypePattern::KANJI}%").count, @word_count),
       with_chouon_pct: percent(WordSense.published.where("reading LIKE ?", "%ー%").count, @sense_count)
     }
   end
@@ -116,7 +118,7 @@ class SiteStatistics
     first_day = Word.annotated.minimum(:annotated_at)&.to_date
     days_open = first_day ? (Date.current - first_day).to_i + 1 : 0
     {
-      this_month: Word.annotated.where(annotated_at: Time.current.all_month).count,
+      this_month: Word.annotated_this_month.count,
       genre_count: WordSense.published.where.not(genre_id: nil).distinct.count(:genre_id),
       feature_count: WordSenseFeature.joins(word_sense: :word).merge(Word.annotated)
                                      .distinct.count(:linguistic_feature_id),
@@ -125,7 +127,7 @@ class SiteStatistics
     }
   end
 
-  # ==== §2 音のはじまりとおわり(行×行マトリクス) ==================================
+  # ==== 統計ページ §2 頭文字と末尾文字(行×行マトリクス) ==================================
 
   # { cells: { [頭文字の行, 末尾文字の行] => 語義数 }, max_pair:, max_count: }
   # 行に写像できない文字(記号など)は数えない。
@@ -140,7 +142,7 @@ class SiteStatistics
     { cells: cells, max_pair: max_pair, max_count: max_count.to_i }
   end
 
-  # ==== §3 読みの長さ分布(文字数・モーラ) ==========================================
+  # ==== 統計ページ §3 読みの長さ分布(文字数・モーラ) ==========================================
 
   # 分布の横軸の上限。まれな超長語が散らばると横軸が間延びするため、
   # この値以上は「30+」の1本にまとめる。
@@ -160,7 +162,7 @@ class SiteStatistics
     bins
   end
 
-  # ==== §4 収録の推移(週次) ========================================================
+  # ==== 統計ページ §4 収録の推移(週次) ========================================================
 
   # 開帳の週から今週までを 0 件の週も含めて並べた [{ start_on:, count:, cumulative: }]。
   # 週の割り当ては build_growth と同じく annotated_at(公開日)を基準にする。
@@ -217,7 +219,7 @@ class SiteStatistics
     }
   end
 
-  # ==== §6 ことばの出どころ(語種・エンティティ型) ==================================
+  # ==== 統計ページ §6 語種とエンティティ型 ==================================
 
   # 語種構成のワッフル(100マス)。複数語種の語義は「混種語」に束ね、
   # 上位4語種 + その他に整理して各カテゴリへマスを配分する。
@@ -253,7 +255,7 @@ class SiteStatistics
     with_share.map { |category| category.except(:remainder) }
   end
 
-  # エンティティ型のタグクラウド用 [{ id:, name:, count: }](多い順)。
+  # エンティティ型のツリーマップ用 [{ id:, name:, count: }](多い順)。
   def build_entity_types
     counts = WordSense.published.where.not(entity_type_id: nil).group(:entity_type_id).count
     names = EntityType.where(id: counts.keys).pluck(:id, :name).to_h
@@ -261,10 +263,11 @@ class SiteStatistics
           .sort_by { |entity| -entity[:count] }
   end
 
-  # ==== §7 音の内訳(母音スペクトル・頭子音) ========================================
+  # ==== 統計ページ §7 母音と子音(母音スペクトル・頭子音) ========================================
 
   # 語頭からの拍位置ごとの母音構成 [{ position:, total:, counts: { "a" => n, ... } }]。
   # その位置まで読みが続く語義が全体の1割を切ったら打ち切る。
+  # 戻り値の total(全体の語義数)は画面では使わず、テストだけが参照する。
   def build_vowel_spectrum
     patterns = WordSense.published.where.not(vowel_pattern: [ nil, "" ]).pluck(:vowel_pattern)
     return { total: 0, positions: [] } if patterns.empty?
@@ -349,9 +352,11 @@ class SiteStatistics
           .sort_by { |group| -group[:count] }
   end
 
-  # ==== §8 ことばの見どころ(言語学的特徴) ==========================================
+  # ==== 統計ページ §8 言語学的特徴 ==========================================
 
   # 特徴の件数ランキングと実例(該当部分をハイライトするための surface / target / target_start)。
+  # 件数は該当部分ごとの数(word_sense_features の行数。同じ語義に 2 か所あれば 2 件)で、リンク先の一覧の件数とは単位が違う。
+  # 戻り値の total は画面では使わず、テストだけが参照する。
   def build_feature_ranking
     counts = WordSenseFeature.joins(word_sense: :word).merge(Word.annotated)
                              .group(:linguistic_feature_id).count

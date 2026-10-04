@@ -10,16 +10,18 @@ argument-hint: "[任意: コミット/PR に含める補足指示]"
 
 手順:
 
-1. **コミット前チェックを全部通す**。CLAUDE.md の強制チェックと同じ内容:
+1. **コミット前チェックを全部通す**。CLAUDE.md の「コミット前に必ず実行すること」と同じ内容:
    ```bash
    bundle exec rubocop
    bundle exec brakeman --no-pager
    bundle exec bundler-audit check --update
    bin/importmap audit
-   bin/rails test test:system
+   bin/rails test
+   bin/rails test:system
    ```
-   システムテストは WSL 環境用の実行方法（メモリ `system-tests-wsl-chrome` 参照:
-   `LD_LIBRARY_PATH` + `CHROME_BIN` 指定）で実行すること。
+   テストは 2 本に分けて打つ（連結形の `bin/rails test test:system` はローカルでは `LoadError` になる）。
+   システムテストは WSL 環境用の実行方法（CLAUDE.md の `CHROME_BIN` の説明。いまの Chrome の版はメモリ
+   `system-tests-wsl-chrome` を参照）で実行すること。
    指摘・失敗が残ったままコミットしない。
 2. **ブランチ**: main にいる場合は `feature/<内容>` ブランチを切る（Issue/PR 番号は入れない）。
    既に feature ブランチで作業中ならそのまま使う。main に直接コミットしない。
@@ -29,6 +31,8 @@ argument-hint: "[任意: コミット/PR に含める補足指示]"
      本文に実行したチェックの結果を書く）。
 4. **CI を待って merge**: `gh pr checks <番号> --watch` で CI 通過を確認してから
    `gh pr merge <番号> --merge --delete-branch`。その後ローカル main を pull して最新化する。
+   **merge はそのまま本番デプロイになる**（main への push で `.github/workflows/deploy.yml` が
+   `cap production deploy` を実行し、main 上の CI の完了は待たない）。PR 上の CI が通るまでは merge しない。
 
 注意:
 - 今回の作業と**無関係な未コミット変更は巻き込まない**。ステージから除外し、その旨を報告する。

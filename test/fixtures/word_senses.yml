@@ -2,6 +2,9 @@
 # rhythm_pattern / vowel_pattern / mora_count / ring_crossing_count / last_char はフィクスチャ読込では
 # コールバックが走らないため、reading に対応する値を明示する。
 # reading_length / first_char は DB の STORED 生成カラムのため指定しない。
+# murder の読みはひらがなにしてある(実データの読みはカタカナで統一されている)。ひらがな⇔カタカナの
+# 同一視(照合順序 as_ci と、それに揃えた Ruby 側の正規化)に頼るテストがあるので(word_requests_controller_test の
+# 「読みだけでも収録済みと分かる」)、カタカナに直すとその検証が意味を失う。
 murder:
   word: abc_murder
   genre: small_novel

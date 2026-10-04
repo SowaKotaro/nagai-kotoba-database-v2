@@ -8,6 +8,7 @@
 # 置き場: tmp/cache/share_cards。本番は Capistrano の linked_dirs(tmp/cache)なのでデプロイをまたいで残る。
 #   ファイル名は「名前-版.png」で、版(SVG の digest)が変われば別のファイルになる。古い版は焼いたときに消す。
 #   Rails.cache(本番は :memory_store)に画像を載せると、全件出力などのキャッシュを追い出してしまうので使わない。
+# 種別: 外部コマンドのラッパー（app/services には外部プロセスを起動するクラスだけを置く）。
 class ShareCardRenderer
   require "open3"
 
@@ -34,6 +35,8 @@ class ShareCardRenderer
   end
 
   # 書体が無くても rsvg-convert は豆腐(□)のまま焼いてしまうので、先に確かめる。
+  # 字幅の見積もり(ShareCardTypesetter)は Noto Sans CJK JP が前提。ここでは何か日本語の書体があるかしか見ないので、
+  # ほかの書体で焼くと組みがずれうる。
   def self.japanese_font_installed?
     output, status = Open3.capture2("fc-list", ":lang=ja", "family")
     status.success? && output.strip.present?

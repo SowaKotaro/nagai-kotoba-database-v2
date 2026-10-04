@@ -34,7 +34,7 @@ strip_frontmatter() {
 cat > "$OUT/SKILL.md" <<'HEADER'
 ---
 name: nagai-kotoba-reannotation
-description: 「長い言葉のデータベース」(nagai-kotoba-database-v2)の単語アノテーションを、チャットに貼られた JSON だけで調べ直すオフライン調査。アノテーション・コンソールの「再調査用JSON」や「調査用データの書き出し」JSON を貼って起動し、意味・ジャンル・エンティティ・品詞・語種・言語的特徴・別表記・立項スコアを調査して、取り込み画面に貼れる提案 JSON をチャットに返す。「再アノテーションして」「この語の注釈を調べ直して」「アノテーションを調べて」と言われたときに使う。
+description: 「長い言葉のデータベース」(nagai-kotoba-database-v2)の単語アノテーションを、チャットに貼られた JSON だけで調べ直すオフライン調査。アノテーション・コンソールの「再調査用JSON」や「調査用データの書き出し」JSON を貼って起動し、意味・ジャンル・エンティティ・品詞・語種・言語学的特徴・別表記・立項スコアを調査して、取り込み画面に貼れる提案 JSON をチャットに返す。「再アノテーションして」「この語の注釈を調べ直して」「アノテーションを調べて」と言われたときに使う。
 ---
 
 # 運用（このバンドル版の上書き・最優先）
@@ -52,7 +52,7 @@ description: 「長い言葉のデータベース」(nagai-kotoba-database-v2)�
   箇所は、次に読み替える。
   - 調査手順・判定基準の正 → `references/annotation-procedure.md`
   - 収録基準・立項スコア・表記/読みの基準の正 → `references/annotation-guidelines.md`
-  - 言語的特徴の定義と例の正 → `references/linguistic-features-glossary.yml`
+  - 言語学的特徴の定義と例の正 → `references/linguistic-features-glossary.yml`
   - 提案 JSON のスキーマと実例 → `references/schema.json` / `references/example.json`
 - **まとめての調査（`words` 配列 + `masters` の書き出し形式）が貼られたときも受け付ける。**
   語ごとに同じ手順を回し、提案を `proposals` 配列に並べて返す。

@@ -4,6 +4,7 @@
 # どの数件を出すかは語ごとに窓をずらす(WordWindow。Issue 86)
 # 語の読み込みは WordBatch に預け、しりとりの区画とまとめて1回で引く(Issue 87)。
 # 「同じ先頭文字」は語義カードの末尾文字タグと ShiritoriWords が担うため持たない。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class RelatedWords
   LIMIT = 6
 

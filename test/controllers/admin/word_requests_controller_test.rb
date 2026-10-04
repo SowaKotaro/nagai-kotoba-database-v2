@@ -1,6 +1,7 @@
 require "test_helper"
 
-# 管理側の収録リクエスト確認(Issue 75)。認可と、一括操作(状態変更・一括登録への受け渡し・削除)。
+# 管理側の収録リクエスト確認(Issue 75)。一括操作(状態変更・一括登録への受け渡し・削除)。
+# 未ログインの拒否は、ここではなく test/integration/admin_authentication_test.rb が全ルートで検証する。
 class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @request_record = WordRequest.create!(

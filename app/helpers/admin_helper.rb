@@ -4,7 +4,9 @@ module AdminHelper
   # それ以外(index/edit/update/destroy)は「単語の管理」扱いにする。
   ADMIN_REGISTER_ACTIONS = %w[new create readings apply_research duplicates].freeze
 
-  # 管理画面(Admin::BaseController 配下)かどうか。レイアウトで共通ナビの表示判定に使う。
+  # 管理画面(Admin::BaseController 配下)かどうか。管理画面の判定はこれ 1 つにする:
+  # body の is-admin(admin.css が効くか)・ヘッダーの「管理」の現在地・共通ナビの表示。
+  # /admin 配下のルートはすべてこの型のコントローラが受ける(パスで見ても同じ結果になる)。
   def admin_page?
     controller.is_a?(Admin::BaseController)
   end

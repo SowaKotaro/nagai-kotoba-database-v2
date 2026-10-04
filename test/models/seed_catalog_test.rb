@@ -129,4 +129,11 @@ class SeedCatalogTest < ActiveSupport::TestCase
 
     assert_equal counts, [ Genre.count, WordOrigin.count, PartOfSpeech.count, LinguisticFeature.count ]
   end
+
+  # WordSense.with_japanese_origin は語種を名前(JAPANESE_ORIGIN_NAME)で引く。カタログの語種名を改名すると、
+  # 黙って 0 件を返すようになるので、カタログに載っていることを確かめておく。
+  test "JAPANESE_ORIGIN_NAME はカタログの語種名に含まれ、改名の対象になっていない" do
+    assert_includes SeedCatalog::WORD_ORIGINS, SeedCatalog::JAPANESE_ORIGIN_NAME
+    assert_not_includes SeedCatalog::WORD_ORIGIN_RENAMES.keys, SeedCatalog::JAPANESE_ORIGIN_NAME
+  end
 end

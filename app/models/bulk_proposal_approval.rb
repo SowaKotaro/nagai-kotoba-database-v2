@@ -5,6 +5,7 @@
 #
 # ゲート判定は各提案の payload と各マスタの find_by で行うため、対象数に比例してクエリが増える
 # (管理者が随時叩く操作なので許容。件数が桁違いに増えたら事前絞り込みを検討)。
+# 種別: 書き込み処理。
 class BulkProposalApproval
   Result = Struct.new(:approved, keyword_init: true)
 
@@ -12,8 +13,8 @@ class BulkProposalApproval
   # 1つでも欠けたら対象外(=人手キューでコンソール承認する)。
   def self.eligible?(proposal)
     return false unless proposal.pending?
-    return false unless proposal.confidence == "high"
-    return false unless proposal.entry_score && proposal.entry_score >= 4
+    return false unless proposal.confidence == AnnotationProposal::HIGH_CONFIDENCE
+    return false unless proposal.entry_score && proposal.entry_score > AnnotationProposal::ENTRY_CONCERN_MAX_SCORE
     return false unless proposal.senses.size == 1
 
     sense = proposal.senses.first

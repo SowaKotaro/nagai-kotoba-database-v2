@@ -1,11 +1,12 @@
-<%# §7 母音の遷移(docs/stats.md §7)。
+<%# 統計ページ §7「母音と子音」の母音の遷移グラフ。
     層 = 語頭からの拍位置、ノード = その位置の母音(ア〜オ段)、
     エッジ = 隣り合う位置の母音の組を全結合(25本 × 層間)。
     太さ・濃さはその層間の遷移に占める割合。ノードは件数によらず同じ大きさ。
     多層ニューラルネットワークの概念図の組み方(オーナー指示 2026-09-10)。
 
     「多い遷移だけ」の切替は checkbox + 兄弟セレクタで JS を持たない。
-    ノードを2つ押して検索へ進む導線だけ Stimulus(vowel-graph)で足している。 %>
+    ノードを押して母音の並び(鎖)を選び、検索へ進む導線だけ Stimulus(vowel-graph)で足している
+    (選び方の正は docs/stats.md の統計ページ §7 の章)。 %>
 <h3 class="stats-subheading"><%= t("stats.index.sound.graph_heading") %></h3>
 <p class="stats-section__lead"><%= t("stats.index.sound.graph_lead", positions: graph[:layers].size) %></p>
 <div class="vowel-graph-panel" data-controller="vowel-graph"
@@ -16,7 +17,7 @@
   <input class="visually-hidden vowel-graph-panel__toggle" type="checkbox" id="vowel-graph-filter">
   <div class="vowel-graph-panel__head">
     <label class="vowel-graph-panel__switch" for="vowel-graph-filter">
-      <span class="vowel-graph-panel__switch-text"><%= t("stats.index.sound.graph_filter") %></span>
+      <span><%= t("stats.index.sound.graph_filter") %></span>
       <span class="vowel-graph-panel__switch-track" aria-hidden="true"></span>
     </label>
   </div>
@@ -74,12 +75,14 @@
   <%# ノードを2つ以上つないだときだけ出る導線。JS が無ければ現れない。
       検索(母音の遷移)は拍位置で固定した細かい面なので必ず nofollow %>
   <p class="vowel-graph-panel__readout" data-vowel-graph-target="readout" hidden>
-    <span class="vowel-graph-panel__pick" data-vowel-graph-target="pick"></span>
+    <span data-vowel-graph-target="pick"></span>
     <%= link_to t("stats.index.sound.graph_link"), "#", class: "vowel-graph-panel__link icon-label",
           rel: "nofollow", data: { vowel_graph_target: "link" } %>
   </p>
 </div>
 <% last = graph[:layers].last %>
+<%# 最多の遷移。stats_vowel_graph が edge[:top] に真偽で立てた 1 本を探し直す。SiteStatistics の
+    データでは層が 2 つ以上あれば件数が正の遷移が必ずあるので、nil にはならない %>
 <% top = graph[:edges].find { |edge| edge[:top] } %>
 <p class="stats-hint"><%= t("stats.index.sound.graph_hint",
       top_position: top[:position],

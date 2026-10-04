@@ -14,8 +14,8 @@
 
 min_length = WordSense::MIN_READING_LENGTH
 extractor = ReadingExtractor.new
-# 正規化の規則は ReadingExtractor の private メソッドが持つ。定義を複製しないよう send で借りる。
-normalize = ->(reading) { extractor.send(:normalize, reading) }
+# 正規化の規則は ReadingExtractor#normalize が持つ。ここで定義を複製しない。
+normalize = ->(reading) { extractor.normalize(reading) }
 
 rows = $stdin.each_line.map(&:chomp).reject(&:blank?).map { |line| line.split("\t", 2) }
 mecab_readings = ReadingExtractor.call(rows.map(&:first))

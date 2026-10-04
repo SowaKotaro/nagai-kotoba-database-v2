@@ -234,6 +234,8 @@
   flex: none;
 }
 
+/* 使用元はビューではなく ja.yml(admin.word_candidates.export の count_html・count_limited_html)。
+   ビューだけを grep すると未使用に見える */
 .cand-export__num {
   margin: 0 2px;
   font-size: 20px;
@@ -352,7 +354,6 @@
 
 .cand-toolbar__keys {
   display: flex;
-  margin-left: auto;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
@@ -510,7 +511,8 @@
 
 /* --- 行の選択の列(仕分け・表記の確認・すべての語で共用。row-select) ---
    行の高さいっぱい・幅 44px を当たり判定にする。checkbox は列いっぱいに透明に敷き、印は描き起こす。
-   なぞって範囲を選ぶため、この列ではタッチでスクロールさせない */
+   なぞって範囲を選ぶため、この列ではタッチでスクロールさせない。
+   .row-check は row_select_controller.js も探す(見た目用のクラスを JS も参照する。改名するなら JS も直す) */
 .row-check {
   position: relative;
   display: flex;
@@ -602,6 +604,7 @@
   white-space: nowrap;
 }
 
+/* 見た目用のクラスだが、decision_list_controller.js も探す(改名するなら JS も直す) */
 .cand-word__edit {
   font-size: 12px;
   white-space: nowrap;
@@ -638,7 +641,8 @@
   color: var(--text-subtle);
 }
 
-/* 処理の選択。ラジオを隠し、ラベルを隙間 1px で並べたボタンの組にする */
+/* 処理の選択。ラジオを隠し、ラベルを隙間 1px で並べたボタンの組にする。
+   .cand-choice は row_select_controller.js が「行の選択を始めない場所」(INTERACTIVE)として参照する */
 .cand-choice {
   display: inline-grid;
   grid-auto-columns: minmax(3.5em, auto);
@@ -691,7 +695,9 @@
   color: var(--text);
 }
 
-/* 採用(大半の行)は淡い面にとどめ、例外の処理だけを色のベタにする */
+/* 採用(大半の行)は淡い面にとどめ、例外の処理だけを色のベタにする。
+   ビューは処理名(WordCandidateReview::CHOICES)を補間して --expand / --keep / --hold / --reject を付けるが、
+   --keep(採用)は既定の見た目に任せるので規則を持たない(.cand-bar__count・.cand-bar__action も同じ) */
 .cand-choice__option input:checked + .cand-choice__label {
   background: var(--bg-tint);
   color: var(--text);
@@ -1023,7 +1029,9 @@
   color: var(--text-muted);
 }
 
-/* 状態の文字。色は意味を持つものだけ(保留 = 要対応 / 登録待ち・登録済み = 達成 / 除外 = 沈める) */
+/* 状態の文字。色は意味を持つものだけ(保留 = 要対応 / 登録待ち・登録済み = 達成 / 除外 = 沈める)。
+   ビューは status を補間して --<status> を付けるが、前処理中の 4 値(--triage・--expanding・--notating・
+   --notated)は既定の見た目に任せるので規則を持たない */
 .cand-status {
   font-size: 12px;
   white-space: nowrap;
@@ -1074,10 +1082,6 @@
 
 /* --- 狭い幅: 行は語の下に処理の選択を全幅で置き、押しやすい高さにする(選択の列は2段ぶんの高さ) --- */
 @media (max-width: 767px) {
-  .cand-steps__list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .cand-steps__link {
     padding: 6px var(--space-2) var(--space-2);
   }

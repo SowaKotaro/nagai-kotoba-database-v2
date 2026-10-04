@@ -57,6 +57,8 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# 本番では使われていない。Capistrano の linked_files により、本番ではサーバ上の
+# config/database.yml(パスワードは直書き)が読まれる(docs/issues.md 確定事項 28)。
 production:
   <<: *default
   database: nagai_kotoba_database_production

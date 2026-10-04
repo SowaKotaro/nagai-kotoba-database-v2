@@ -1,6 +1,7 @@
 # アノテーション調査でスキルに渡すマスタ一覧(選択肢)。まとめての書き出し
 # (AnnotationResearchExport)と1語の再調査(ReannotationExport)で同じ形を渡すため共通化する。
 # スキル側は「ここにある名前と一字一句同じ表記」で提案を書く約束なので、形を分岐させない。
+# 種別: 調査 JSON の入出力。
 class AnnotationMasters
   def self.as_json
     new.as_json

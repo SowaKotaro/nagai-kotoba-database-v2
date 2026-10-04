@@ -12,15 +12,13 @@ class SitemapsController < ApplicationController
 
   allow_unauthenticated_access only: :show
 
-  CACHE_TTL = 1.day
-
   def show
     return unless stale?(etag: cache_key, last_modified: published_words_last_modified, public: true)
 
-    body = Rails.cache.fetch(cache_key, expires_in: CACHE_TTL,
+    body = Rails.cache.fetch(cache_key, expires_in: PublishedWordsDigest::CACHE_TTL,
                                         race_condition_ttl: PublishedWordsDigest::RACE_CONDITION_TTL) { render_sitemap }
     # クローラの取得は日次で十分。CDN/プロキシにもキャッシュさせる。
-    expires_in CACHE_TTL, public: true
+    expires_in PublishedWordsDigest::CACHE_TTL, public: true
     render plain: body, content_type: "application/xml"
   end
 

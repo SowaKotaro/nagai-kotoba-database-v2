@@ -8,8 +8,10 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/plain", response.media_type
     assert_includes robots_directives, "Disallow: /admin"
     assert_includes robots_directives, "Disallow: /session"
-    # ホストは config.x.canonical_host(テストでは既定値)に連動する
-    assert_includes robots_directives, "Sitemap: #{Rails.application.config.x.canonical_host}/sitemap.xml"
+    # ホストは config.x.canonical_host に連動する。テストが前提にする既定値(CANONICAL_HOST)と同じであることも
+    # ここで確かめる(環境変数 CANONICAL_HOST を設定した環境では、ここで先に分かる)
+    assert_equal CANONICAL_HOST, Rails.application.config.x.canonical_host
+    assert_includes robots_directives, "Sitemap: #{CANONICAL_HOST}/sitemap.xml"
   end
 
   # 検索フォームは noindex を読ませるためにクロールを許す。シード付き URL も、既知の分は

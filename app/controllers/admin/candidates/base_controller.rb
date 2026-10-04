@@ -8,6 +8,7 @@ class Admin::Candidates::BaseController < Admin::BaseController
 
   # 調査スキルの出力 JSON を取り込み、次に見る画面へ移る。読めない JSON はフォームを出し直す。
   # waiting はスキルの結果を待つステータス。数十語ずつ渡したとき、まだ待っている語数を知らせに添える。
+  # 読めない JSON のときは load_stage を呼んで show を描き直すので、サブクラスに load_stage と show テンプレートが要る。
   def run_import(importer_class, redirect_to_path, waiting:)
     result = importer_class.new(params[:json]).call
     unless result
@@ -35,7 +36,7 @@ class Admin::Candidates::BaseController < Admin::BaseController
     return unless count.positive?
 
     t("admin.word_candidates.import_results.remaining",
-      status: t("admin.word_candidates.statuses.#{status}"), count: count)
+      status: helpers.candidate_status_label(status), count: count)
   end
 
   # 画面で語ごとに選んだ処理(decisions[ID] = 処理)を当て、移した先ごとの語数を返す。
@@ -47,7 +48,7 @@ class Admin::Candidates::BaseController < Admin::BaseController
   # 確定の結果(「表記待ち 9 語 / 不要 1 語」)。流れの順に並べる。何も動かなければ nil。
   def decisions_summary(counts)
     counts.sort_by { |status, _| WordCandidate.statuses.fetch(status) }.map do |status, count|
-      t("admin.word_candidates.decisions.moved", status: t("admin.word_candidates.statuses.#{status}"), count: count)
+      t("admin.word_candidates.decisions.moved", status: helpers.candidate_status_label(status), count: count)
     end.join(" / ").presence
   end
 end

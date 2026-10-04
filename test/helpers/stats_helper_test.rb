@@ -46,7 +46,7 @@ class StatsHelperTest < ActionView::TestCase
     assert_in_delta 1.5, areas.first / areas.last, 0.01
   end
 
-  # --- §7 母音の遷移グラフ ---
+  # --- 統計ページ §7 母音の遷移グラフ ---
 
   # 層(拍位置) × 母音の件数から、そのまま描ける座標へ展開する。
   def transitions(layer_counts, edge_counts)

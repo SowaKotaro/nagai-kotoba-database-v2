@@ -8,6 +8,7 @@
 #   有望な軸が無く words が空の元の語も同じく戻す(拡張せずに進めるかを仕分けで決める)。
 # - すでに入っている語(不要にした語を含む)・収録済みの語は入れない。
 # - 拡張待ちにいない元の語は見送る。同じ JSON を2回貼っても増えない。
+# 種別: 調査 JSON の入出力。
 class WordCandidateExpansionImport
   Result = Struct.new(:counts, :messages, keyword_init: true)
 
@@ -21,6 +22,9 @@ class WordCandidateExpansionImport
     return nil unless seeds
 
     @result = Result.new(counts: Hash.new(0), messages: [])
+    # 外側のトランザクションの中で、行ごとの RecordNotUnique・RecordInvalid を捕まえて続行する(下の rescue)。
+    # savepoint は張らない。MySQL は失敗した文だけを巻き戻すので続けられる(DB に依存する。
+    # WordCandidateNotationImport は requires_new で行ごとに savepoint を張る)。
     WordCandidate.transaction do
       seeds.each { |entry| import_seed(entry) }
     end

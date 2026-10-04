@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // 文字種(char_type_pattern)の入力補助。手入力は無く、キー入力はこのコントローラだけが行う。
-// 「あ」「ア」「漢」「A」「@」のキーで末尾へ1文字追記し、⌫(backspace)キーで末尾の1文字を
-// 削除する。値は送信用の hidden(field) に持ち、ターミナル風の表示欄(display)へ反映する。
+// 「あ」「ア」「漢」「1」「A」「a」「@」の 7 つのキー(「a」は大文字小文字を区別するときだけ出る)で
+// 末尾へ1文字追記し、⌫(backspace)キーで末尾の1文字を削除する。値は送信用の hidden(field) に持ち、ターミナル風の表示欄(display)へ反映する。
 // これで常に妥当なパターンだけが入る(バリデーション兼用)。
 export default class extends Controller {
   static targets = ["field", "display", "lowerKey"]
@@ -22,6 +22,8 @@ export default class extends Controller {
   // 大文字小文字トグル(Aa)の状態変化を受け取る。区別しないときは「a」が「A」として
   // 扱われるため、「a」キーを隠し、組み立て済みのパターンの「a」も「A」に畳む
   // (表示と検索の意味を一致させる。畳んだ「a」はトグルを戻しても復元しない)。
+  // 畳み方の正はサーバ(WordSenseSearch#char_type_pattern が tr(LOWER, UPPER) で畳む)で、
+  // ここは表示を合わせるための写し。
   caseSensitivityChanged(event) {
     const strict = event.detail.strict
     if (this.hasLowerKeyTarget) this.lowerKeyTarget.hidden = !strict

@@ -1,6 +1,8 @@
 # 提案の「新設候補」マスタを1つ作成する(Issue 66)。コンソールの提案パネルの作成ボタンから
-# 呼ばれ、作成後に提案を再反映すると解決してフォームに入る。field で種別を絞り、未知の名前だけを
-# その場でマスタ化する(ジャンルは既存の木で解決できた中分類の下に小分類を作る)。
+# 呼ばれ、作成後に提案を再反映すると解決してフォームに入る。field で種別を絞り、提案の名前のうち既存の
+# マスタで引けないものをその場でマスタ化する(ジャンルは既存の木で解決できた中分類の下に小分類を作る)。
+# ただし語種(word_origin)は、呼び出し側が渡した name で作る(提案の未知の名前に含まれるかは確かめない)。
+# 種別: 書き込み処理。
 class ProposedMasterCreation
   Error = Class.new(StandardError)
 
@@ -28,6 +30,9 @@ class ProposedMasterCreation
 
   private
 
+  # 名前は提案の値をそのまま使う(前後の空白を落とさない)。find_or_create_by! の find_by は照合順序 ai_ci で引くので、
+  # 表記の違う既存のマスタ(清濁・かなの種類だけが違うもの)があれば、作らずにそれを返す。
+  # 競合は find_or_create_by!(Rails 8.1 では find_by の後に create_or_find_by! を呼ぶ)が吸収する。
   def create_named(model, name)
     raise Error, "blank name" if name.blank?
 

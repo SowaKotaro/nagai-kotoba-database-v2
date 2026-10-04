@@ -13,6 +13,16 @@ class WordTest < ActiveSupport::TestCase
     assert dup.errors.added?(:surface, :taken, value: words(:abc_murder).surface)
   end
 
+  # 一意性は DB の照合順序(words.surface は utf8mb4_0900_as_ci)で判定される。
+  # かなの種類・小書きの違いは同じ語とみなし、清濁の違いは別の語とみなす(docs/data-model.md §6)。
+  test "surface の一意性は、かなの種類・小書きを同一視し、清濁は区別する" do
+    Word.create!(surface: "シャーロット")
+
+    assert_not Word.new(surface: "しゃーろっと").valid?, "ひらがな⇔カタカナは同じ語"
+    assert_not Word.new(surface: "シヤーロット").valid?, "小書き⇔並字は同じ語"
+    assert Word.new(surface: "ジャーロット").valid?, "清濁が違えば別の語"
+  end
+
   test "保存時に surface から char_type_pattern が自動生成される" do
     word = Word.create!(surface: "令和6年")
     assert_equal "漢漢1漢", word.char_type_pattern
@@ -90,5 +100,19 @@ class WordTest < ActiveSupport::TestCase
     word.mark_on_hold
     assert word.annotation_on_hold?
     assert_nil word.annotated_at
+  end
+
+  # 「今月の新収録」(ホームと統計)の定義。月の境界は Time.zone で切り、created_at は見ない。
+  test "annotated_this_month は今月 annotated_at が立った公開語だけで、created_at は見ない" do
+    travel_to Time.zone.local(2026, 10, 15, 12, 0) do
+      first_moment = Word.create!(surface: "月初の語", annotated_at: Time.zone.local(2026, 10, 1, 0, 0, 0),
+                                  created_at: Time.zone.local(2026, 9, 1))
+      last_moment = Word.create!(surface: "月末の語", annotated_at: Time.zone.local(2026, 10, 31, 23, 59, 59))
+      Word.create!(surface: "先月末の語", annotated_at: Time.zone.local(2026, 9, 30, 23, 59, 59),
+                   created_at: Time.zone.local(2026, 10, 2))
+      Word.create!(surface: "今月作った未公開の語")
+
+      assert_equal [ first_moment, last_moment ].sort_by(&:id), Word.annotated_this_month.order(:id).to_a
+    end
   end
 end

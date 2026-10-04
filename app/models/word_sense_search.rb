@@ -1,10 +1,11 @@
 # 語義(WordSense)の検索・絞り込みを組み立てるクエリオブジェクト(Issue 9)。
 # 生成カラム(reading_length / first_char)や last_char(Ruby 側で計算)のインデックスを
 # 活かした条件を、指定されたものだけ AND で積み重ねて Relation を返す。
+# 種別: クエリ・集計（読み取りとキャッシュ）。
 class WordSenseSearch
   # 母音の遷移条件("<拍位置>-<母音の並び>"。例 "3-ou" / "3-ouia")。
-  # 並びは2拍以上(遷移なので1拍では意味を成さない)、上限は統計 §7 のグラフの層数。
-  VOWEL_TRANSITION_FORMAT = /\A(\d{1,2})-([aiueo]{2,15})\z/
+  # 並びは2拍以上(遷移なので1拍では意味を成さない)、上限は統計ページ §7 のグラフの層数。
+  VOWEL_TRANSITION_FORMAT = /\A(\d{1,2})-([aiueo]{2,#{SiteStatistics::TRANSITION_MAX_POSITIONS}})\z/
   # 拍位置の上限。ここを開けておくと、意味の無い位置ぶんだけ URL が湧く
   # (どれも 0 件で、しかも無限に作れる)。実在する読みの長さに合わせて閉じておく。
   VOWEL_TRANSITION_MAX_POSITION = 30
@@ -83,7 +84,7 @@ class WordSenseSearch
   # 母音パターン検索のフォーム入力(押韻したい読みのカナ)。表示はこの生入力のまま返す。
   def vowel_reading = @params[:vowel_reading].to_s.strip
 
-  # 母音の遷移(統計 §7 のグラフから来る)。"3-ou" = 3拍目がオ段・4拍目がウ段。
+  # 母音の遷移(統計ページ §7 のグラフから来る)。"3-ou" = 3拍目がオ段・4拍目がウ段。
   # 3拍以上つなげた並び("3-ouia" = 3拍目から オ→ウ→イ→ア)も受ける。
   # 形が違う/位置が範囲外なら空にして条件から外す(SQL エラーにも 0 件ページにもしない)。
   def vowel_transition

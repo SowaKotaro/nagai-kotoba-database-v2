@@ -15,6 +15,7 @@
 #
 # SQL 片はすべて定数の文字列リテラルで書き切る(メソッドやブロックで組み立てない)。
 # 外部入力が混ざらないことを静的解析でも追えるようにするため、重複を承知で並べている。
+# 種別: 値オブジェクト（DB に触れない）。
 class WordSort
   # 基本の並び。並びはセレクタの表示順を兼ね、既定を先頭に置く。
   # created_desc / created_asc は annotated_at(注釈完了 = 公開した日時)で並べる。created_at は
@@ -69,6 +70,7 @@ class WordSort
   ORDERS = BASE_ORDERS.merge(RANKING_ORDERS).freeze
 
   SHUFFLE_KEY = "shuffle"
+  # テストだけが参照する(アプリからは使わない)。
   RANKING_KEYS = RANKING_ORDERS.keys.freeze
 
   # 並び順セレクタに出すキーと、その表示順。

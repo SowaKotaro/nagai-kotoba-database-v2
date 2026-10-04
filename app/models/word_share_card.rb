@@ -4,6 +4,7 @@
 # 左の袖に読みの五十音円環、右の本体に 表層形 → 読み(文字数) → 罫 → 標識 を積む(docs/design.md §5.1)。
 # ここで決めるのは寸法と文字の組みまでで、SVG は share_cards/word.svg.erb が描き、
 # PNG に焼くのは ShareCardRenderer。
+# 種別: 値オブジェクト（DB に触れない）。
 class WordShareCard
   WIDTH = 1200
   HEIGHT = 630
@@ -41,6 +42,7 @@ class WordShareCard
   # 字面どうしの間合い(px)は既定カードの 見出し → 説明 → 罫 → 標識 に合わせてある。
   SURFACE_LEADING = 1.4
   READING_LEADING = 1.7
+  # Noto Sans CJK JP の ascender 880 / descender -120。MorphemeCloud の ASCENT_FULLWIDTH / DESCENT_FULLWIDTH と同じ値。
   ASCENT = 0.88
   DESCENT = 0.12
   SURFACE_TO_READING = 36
@@ -49,6 +51,8 @@ class WordShareCard
   LABEL_LEADING = 40
 
   # 円環は既定カードの印と同じ大きさ(viewBox 200 を 268px に)で、袖の中央に置く。
+  # Web の shared/_kana_ring_art・shared/_brand_mark と同じ図を、share_cards/word.svg.erb が別に組む
+  # (座標は KanaRing から取る。3 か所の違いは shared/_kana_ring_art の冒頭にまとめてある)。
   RING_SCALE = 1.34
   RING_CENTER_X = (FRAME_LEFT + PILLAR) / 2.0
   RING_CENTER_Y = FRAME_MIDDLE

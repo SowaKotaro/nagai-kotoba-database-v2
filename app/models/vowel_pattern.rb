@@ -4,6 +4,7 @@
 #
 # rhythm_pattern は長音を母音展開済み(とうきょう→toukyou / カレー→karee)のため、
 # ここから母音だけを残せば母音パターン(toukyou→ouou / karee→aee)が得られる。
+# 種別: 値オブジェクト（DB に触れない）。
 class VowelPattern
   NON_VOWEL = /[^aeiou]/
 

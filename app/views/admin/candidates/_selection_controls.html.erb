@@ -1,0 +1,5 @@
+<%# locals: (js_only: false) -%>
+<%# 行の選択(row-select)の「すべて選ぶ」「選択を外す」。確認の一覧の下端のバー(_bar)と「すべての語」が共有する。
+    js_only: JS が無いと働かないので、row-select が接続するまで隠す(data-js-only。JS が無くても見えるバーで使う) -%>
+<button type="button" class="cand-link-button"<%= " data-js-only" if js_only %> data-action="row-select#selectAll"><%= t("admin.word_candidates.select.all") %></button>
+<button type="button" class="cand-link-button"<%= " data-js-only" if js_only %> data-action="row-select#clear"><%= t("admin.word_candidates.select.clear") %></button>

@@ -20,6 +20,7 @@
 class WordCandidate < ApplicationRecord
   MAX_SURFACE_LENGTH = 255
   MAX_NOTE_LENGTH = 1000
+  # 確信度の語彙。AnnotationProposal::HIGH_CONFIDENCE・LOW_CONFIDENCE と同じ(どちらも Claude の調査スキルの出力)。
   CONFIDENCES = %w[high medium low].freeze
   # notation の立項スコアがこれ以下の語は「立項に疑義がある語」として、確認のときに保留を選んでおく
   # (word-notation-research が上部リストから外す基準と同じ)。
@@ -35,9 +36,6 @@ class WordCandidate < ApplicationRecord
   STAGES = {
     "triage" => %w[triage], "expand" => %w[expanding], "notation" => %w[notating notated], "ready" => %w[ready]
   }.freeze
-
-  # 仕分け・表記の確認で、語ごとに選べる処理。行き先は #destination_for が決める。
-  DECISIONS = %w[expand keep hold reject].freeze
 
   # 「すべての語」の一覧でまとめて移せる先(本流から外した語を戻す・外すのに使う)。
   MOVES = %w[triage held rejected].freeze
@@ -59,7 +57,7 @@ class WordCandidate < ApplicationRecord
 
   validates :surface, presence: true, length: { maximum: MAX_SURFACE_LENGTH }, uniqueness: true
   validates :note, length: { maximum: MAX_NOTE_LENGTH }
-  validates :entry_score, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
+  validates :entry_score, numericality: { only_integer: true, in: AnnotationProposal::ENTRY_SCORE_RANGE }, allow_nil: true
   validates :confidence, inclusion: { in: CONFIDENCES }, allow_nil: true
 
   before_validation :normalize_surface
@@ -86,7 +84,7 @@ class WordCandidate < ApplicationRecord
     I18n.t("admin.word_candidates.not_unique")
   end
 
-  # 選んだ処理(DECISIONS)の行き先。除外は照合で一致があれば重複、無ければ不要。
+  # 選んだ処理(WordCandidateReview::CHOICES の値)の行き先。除外は照合で一致があれば重複、無ければ不要。
   # 採用は、表記を確かめ済みの語(保留から戻した語など)なら登録待ち、まだなら表記待ちへ進める。
   def destination_for(decision, duplicate: false)
     case decision

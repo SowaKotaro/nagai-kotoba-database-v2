@@ -16,6 +16,8 @@ class Admin::TagsController < Admin::BaseController
   end
 
   # 新規追加。頻繁な操作ではないので、追加口はこの画面だけに置く(TagKind#creatable? の種別のみ)。
+  # 名前は入力のまま使う(前後の空白を落とさない)。既存の名前との衝突は、一意性の検証の汎用のエラー(taken)で返す。
+  # 同時に作られて一意索引で弾かれた場合(RecordNotUnique)は捕まえていないので 500 になる。
   def create
     raise ActiveRecord::RecordNotFound, "tag kind not creatable: #{@kind.key}" unless @kind.creatable?
 
@@ -24,7 +26,7 @@ class Admin::TagsController < Admin::BaseController
       redirect_to admin_tag_kind_path(@kind.key), notice: t("admin.tags.flash.created", name: @new_record.name)
     else
       load_records
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 
@@ -38,7 +40,7 @@ class Admin::TagsController < Admin::BaseController
     if @record.update(tag_params)
       redirect_to admin_tag_kind_path(@kind.key), notice: t("admin.tags.flash.updated", name: @record.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

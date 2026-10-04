@@ -3,23 +3,21 @@ require "test_helper"
 # 構造化データ(JSON-LD。Issue 16)の結合テスト。どのテストも JSON-LD を JSON.parse してから見るので、
 # エスケープが壊れて妥当な JSON でなくなればここで落ちる。
 class StructuredDataTest < ActionDispatch::IntegrationTest
-  HOST = "https://nagai-kotoba-database.jp".freeze
-
   test "全ページに SearchAction つきの WebSite と、その publisher として運営者の Organization が出る" do
     get root_path
     site = find_type("WebSite")
     assert_equal I18n.t("layouts.brand"), site["name"]
-    assert_equal "#{HOST}/", site["url"]
+    assert_equal "#{CANONICAL_HOST}/", site["url"]
     action = site["potentialAction"]
     assert_equal "SearchAction", action["@type"]
-    assert_equal "#{HOST}/words?q={search_term_string}", action["target"]["urlTemplate"]
-    assert_equal({ "@id" => "#{HOST}/#organization" }, site["publisher"])
+    assert_equal "#{CANONICAL_HOST}/words?q={search_term_string}", action["target"]["urlTemplate"]
+    assert_equal({ "@id" => "#{CANONICAL_HOST}/#organization" }, site["publisher"])
 
     org = find_type("Organization")
-    assert_equal "#{HOST}/#organization", org["@id"]
+    assert_equal "#{CANONICAL_HOST}/#organization", org["@id"]
     assert_equal I18n.t("layouts.brand"), org["name"]
-    assert_equal "#{HOST}/about", org["url"]
-    assert_equal "#{HOST}/icon.svg", org["logo"]
+    assert_equal "#{CANONICAL_HOST}/about", org["url"]
+    assert_equal "#{CANONICAL_HOST}/icon.svg", org["logo"]
     assert_equal I18n.t("pages.about.contact_email"), org["email"]
   end
 
@@ -52,16 +50,16 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     get word_path(word)
 
     set = flat_map_graph.find { |n| n["@type"] == "DefinedTermSet" }
-    assert_equal "#{HOST}/#termset", set["@id"]
+    assert_equal "#{CANONICAL_HOST}/#termset", set["@id"]
     assert_equal StructuredDataHelper::CC_BY_URL, set["license"]
     assert_equal "ja", set["inLanguage"]
 
     term = flat_map_graph.find { |n| n["@type"] == "DefinedTerm" }
     assert_equal word.surface, term["name"]
     assert_equal [ word_senses(:murder).reading ], term["alternateName"]
-    assert_equal({ "@id" => "#{HOST}/#termset" }, term["inDefinedTermSet"])
-    assert_equal "#{HOST}/words/#{word.id}#sense-1", term["@id"]
-    assert_equal "#{HOST}/words/#{word.id}", term["url"]
+    assert_equal({ "@id" => "#{CANONICAL_HOST}/#termset" }, term["inDefinedTermSet"])
+    assert_equal "#{CANONICAL_HOST}/words/#{word.id}#sense-1", term["@id"]
+    assert_equal "#{CANONICAL_HOST}/words/#{word.id}", term["url"]
     assert_equal word.id.to_s, term["identifier"]
     assert_includes term["description"], "日本語の長い言葉"
 

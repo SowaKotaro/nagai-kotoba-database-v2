@@ -1,7 +1,7 @@
 <%# 語種の構成(左: 10×10 ワッフル、右: 同じ100マスを語種ごとの横棒に並べ替えたもの)と、
     エンティティ型のツリーマップ(面積が語義数に比例)。
-    塗りは順位で固定: 1位=アクセント / 2位=文字色 / 3位=アクセントのチント /
-    4位=地のまま / 5番目(その他)=文字色のチント(明度差で識別する) %>
+    塗りは順位で固定(.waffle__cell--f1〜f5): 1位=--chart / 2位=--text の 65% /
+    3位=--chart のチント / 4位=--bg / 5番目(その他)=--text の 20%(明度差で識別する) %>
 <% categories = @stats.origins[:categories] %>
 <% if categories.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.origins.waffle_heading") %></h3>
@@ -35,6 +35,8 @@
 <% if @stats.entity_types.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.origins.entity_heading") %></h3>
   <p class="stats-section__lead"><%= t("stats.index.origins.entity_lead") %></p>
+  <%# 先頭行を最大とみなす(SiteStatistics#entity_types が件数の多い順に返すことが前提)。
+      下の「集計対象」も、語種は SiteStatistics の covered を使うが、こちらはビューで件数を合計している %>
   <% max_count = @stats.entity_types.first[:count].to_f %>
   <div class="entity-treemap">
     <% stats_entity_treemap(@stats.entity_types).each do |rect| %>

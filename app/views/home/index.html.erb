@@ -18,7 +18,6 @@
   </div>
 </section>
 
-<%# 看板: 紙に載せず、地の上に直接置く。左に見出しと検索、右のレールに収録語数 %>
 <%# 看板: 紙に載せず、地の上に直接置く。手本(しずかなインターネット)と同じく
     見出し → 説明 → 検索 → 詳細検索 を 1 列に中央揃えで積み、最後に収録の規模を置く %>
 <section class="band band--hero">
@@ -90,7 +89,7 @@
       <% end %>
     </div>
     <div class="home-featured__body">
-      <div class="home-featured__headword">
+      <div>
         <%= link_to @featured_word.surface, word_path(@featured_word), class: "home-featured__word" %>
         <p class="home-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
         <% if featured_sense&.meaning.present? %>
@@ -195,7 +194,7 @@
         <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
       <% end %>
     </div>
-    <% @longest_words.take(5).each_with_index do |word, index| %>
+    <% @longest_words.each_with_index do |word, index| %>
       <%= link_to word_path(word), class: "home-column__item" do %>
         <span class="home-column__mark"><%= index + 1 %></span>
         <span class="home-column__body">

@@ -3,14 +3,12 @@ require "test_helper"
 # ファセット付き一覧のインデックス方針(Issue 17・80・81)の結合テスト。
 # index させる面・させない面・存在しない面(404)・canonical の向き先を固定する。
 class FacetIndexingTest < ActionDispatch::IntegrationTest
-  HOST = "https://nagai-kotoba-database.jp".freeze
-
   test "素の一覧(1ページ目)は index で canonical は /words" do
     get words_path
     assert_response :success
     assert_select "meta[name=robots]", count: 0
     assert_select "h1.page-title", text: I18n.t("words.index.title")
-    assert_select "link[rel=canonical][href=?]", "#{HOST}/words"
+    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/words"
   end
 
   # 値域が有限で、それ自体が検索需要になる面(「読みが15文字の長い言葉」など)。
@@ -32,7 +30,7 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
       assert_select "h1.page-title", text: heading
       assert_select "title", text: "#{heading} | #{I18n.t('layouts.brand')}"
       assert_select "meta[name=description][content=?]", I18n.t("words.index.facet_description", label: heading)
-      assert_select "link[rel=canonical][href=?]", "#{HOST}#{canonical}"
+      assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}#{canonical}"
       # 条件を引き継ぐ /search?... はファセットの数だけ増えるので、「検索条件を編集」はクロールさせない
       assert_select "a.active-facet__edit[rel=nofollow]", count: 1
     end
@@ -57,12 +55,12 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
     get words_path(page: 2)
     assert_response :success
     assert_select "meta[name=robots][content=?]", "noindex,follow"
-    assert_select "link[rel=canonical][href=?]", "#{HOST}/words?page=2"
+    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/words?page=2"
 
     get words_path(first_char: "カ", page: 2)
     # assert_select は実体参照を解いてから照合するので、ここで「& が1回だけエスケープされている」ことまで
     # 担保できる。二重エスケープの再発が一目で分かるよう、生の本文も直接見ておく
-    canonical = "#{HOST}/words?first_char=%E3%82%AB&page=2"
+    canonical = "#{CANONICAL_HOST}/words?first_char=%E3%82%AB&page=2"
     assert_select "link[rel=canonical][href=?]", canonical
     assert_select "meta[property='og:url'][content=?]", canonical
     assert_not_includes response.body, "&amp;amp;"
@@ -84,7 +82,7 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
       get path
       assert_response :success
       assert_select "meta[name=robots][content=?]", "noindex,follow"
-      assert_select "link[rel=canonical][href=?]", "#{HOST}#{canonical}"
+      assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}#{canonical}"
     end
 
     get words_path(sort: "created_desc")
@@ -98,7 +96,7 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
       get path
       assert_response :success
       assert_select "meta[name=robots][content=?]", "noindex,follow"
-      assert_select "link[rel=canonical][href=?]", "#{HOST}/words?sort=shuffle"
+      assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/words?sort=shuffle"
       assert_select ".entry-toolbar__shuffle[rel=nofollow]", count: 1
     end
   end

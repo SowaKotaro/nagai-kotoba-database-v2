@@ -4,12 +4,12 @@ require "test_helper"
 # 書き出し対象の抽出条件は FeatureResearchExportTest で見る。
 class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as(Admin.take)
+    sign_in_as(admins(:one))
   end
 
   def published_word_without_features(surface: "特徴未調査の語", reading: "トクチョウミチョウサノゴ")
-    word = Word.create!(surface: surface, annotated_at: Time.current)
-    sense = word.word_senses.create!(reading: reading, meaning: "テスト用")
+    word = create_published_word(surface: surface, reading: reading, meaning: "テスト用")
+    sense = word.word_senses.first
     sense.word_origins << word_origins(:nihongo)
     [ word, sense ]
   end
@@ -31,6 +31,8 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
     get export_features_admin_annotation_proposals_path(limit: 9999)
     assert_response :success
     assert_select "input#export_limit[value=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
+    # 入力欄の上限もサーバの上限と同じ値(ずれると、ブラウザが上限までの値を拒む)
+    assert_select "input#export_limit[max=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
   end
 
   # --- 「特徴なしで確定」 ---

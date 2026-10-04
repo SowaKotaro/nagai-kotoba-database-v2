@@ -1,6 +1,6 @@
-<%# §7 音の内訳(docs/stats.md §7)。
+<%# 統計ページ §7「母音と子音」の母音スペクトルと頭子音。
     母音スペクトル: 横=語頭からの拍位置、縦=母音(ア〜オ段)構成比の積み上げ面。
-    帯は文字色/アクセントの明度5段 + 右端に段名の直書き(識別を色に依存させない)。
+    帯は --text の濃淡4段(ア〜エ段)と --chart の淡い1段(オ段) + 右端に段名の直書き(識別を色に依存させない)。
     頭の子音: 読み第1拍の子音(ヘボン式)の横棒ランキング。棒押下で頭文字の絞り込みへ %>
 <% spectrum = stats_vowel_spectrum(@stats.vowel_spectrum[:positions]) %>
 <% if spectrum %>
@@ -36,6 +36,9 @@
 <% if @stats.head_consonants.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
   <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
+  <%# 棒の長さは先頭行の件数を 100% とし、最多の色も CSS の .stats-bars__row:first-child が付ける。
+      どちらも SiteStatistics#head_consonants が件数の多い順に返すことが前提(並びを変えると
+      棒が 100% を超え、色も別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>
   <% max_count = @stats.head_consonants.first[:count].to_f %>
   <ol class="stats-bars">
     <% @stats.head_consonants.each do |group| %>

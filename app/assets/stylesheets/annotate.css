@@ -1,7 +1,9 @@
 /* =====================================================================
  アノテーション・コンソール(管理者専用)。docs/design.md 準拠。
- 本編と同じ器(白い面・細罫・角丸・アクセントは青一色)のまま、
+ 本編と同じ器(白い面・細罫・角丸)のまま、
  1画面で多くを捌けるよう級数と余白だけを詰めた高密度レイアウト。
+ このファイルの色は無彩色のトークンと --bg-tint(選択中の淡い面)、状態の --success / --danger だけ。
+ 管理画面の青(--admin-accent)は admin.css がリンクやボタンに付ける。
  チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
  ===================================================================== */
 
@@ -21,7 +23,7 @@
 .ann-bar__legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-subtle); }
 .ann-bar__legend key { font-family: var(--font-mono); color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 1px 5px; margin-right: 6px; }
 
-/* 提案キューの絞り込み・並べ替え(Issue 67)。小さなリンク、選択中はアクセント色 */
+/* 提案キューの絞り込み・並べ替え(Issue 67)。小さなリンク、選択中は本文色(--text) */
 .ann-queue-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; margin-bottom: var(--space-4); }
 .ann-queue-filter__label { color: var(--text-subtle); }
 .ann-queue-filter__link { color: var(--text-muted); text-decoration: none; }
@@ -53,14 +55,17 @@
  .ann-glossary__item { grid-template-columns: 1fr; }
 }
 
-/* Claude の提案パネル(Issue 38)。左罫のアクセントで「機械の下書き」であることを示す */
+/* Claude の提案パネル(Issue 38)。左の太い罫(3px の --text)で「機械の下書き」であることを示す */
 .ann-proposal { border: 1px solid var(--border); border-left: 3px solid var(--text); border-radius: var(--radius); background: var(--bg-soft); padding: var(--space-3) var(--space-4); margin-top: var(--space-4); }
 .ann-proposal__head { display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-2); }
 .ann-proposal__head .spacer { flex: 1; }
 .ann-proposal__title { font-size: 12px; font-weight: 400; color: var(--text); }
 .ann-proposal__confidence { font-size: 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--text-muted); }
 .ann-proposal__confidence--low { color: var(--danger); border-color: var(--danger); }
-/* 反映済み/見送りの状態バッジ(注釈済みの語を見直しているとき) */
+/* 反映済み/見送りの状態バッジ(注釈済みの語を見直しているとき)。--applied(反映済み)は基本の
+   .ann-proposal__status(--success)のままなので規則を持たない。
+   確信度の修飾子(.ann-proposal__confidence--*)は提案 JSON の値をそのまま補間していて、規則があるのは
+   --low だけ。--high・--medium と想定外の値は既定の見た目になる(取り込み側は値域を検証しない) */
 .ann-proposal__status { font-size: 11px; border: 1px solid var(--success); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--success); }
 .ann-proposal__status--dismissed { color: var(--text-subtle); border-color: var(--border-strong); }
 /* 立項スコア(Issue 39)。3以下は赤でオーナー判断を促す */
@@ -109,8 +114,7 @@
 .ann-sense { border-radius: var(--radius-lg); background: var(--surface); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
 /* 最低限の項目(読み・語種・ジャンル・品詞・エンティティ)が揃った語義。
  保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
- 枠を緑に替え、番号のバッジも緑のベタにする。 */
-.ann-sense.is-complete { border-color: var(--success); }
+ 番号のバッジを緑のベタにする(.ann-sense は枠を持たない)。 */
 .ann-sense.is-complete .ann-sense__stamp { background: var(--success); color: var(--bg); }
 .ann-sense__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-3); }
 .ann-sense__stamp { background: var(--bg-soft); color: var(--text-muted); border-radius: var(--radius-pill); font-size: 12px; font-weight: 400; padding: 3px 12px; }
@@ -132,11 +136,12 @@
 .ann-derived { display: flex; gap: 14px; flex-wrap: wrap; margin-top: var(--space-2); font-size: 12px; color: var(--text-subtle); }
 .ann-derived b { font-family: var(--font-mono); color: var(--text); font-weight: 400; }
 
-/* チップ(隠し input + :has) */
+/* チップ(隠し input + :has)。見た目用のクラスだが、JS も参照する: .ann-chip は genre_picker_controller.js が
+   作って探し、.ann-chip__input は inline_add_controller.js が探す。改名するなら JS も直す */
 .ann-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .ann-chip {
  position: relative; display: inline-flex; align-items: center; gap: 6px;
- border: none; border-radius: var(--radius-pill);
+ border-radius: var(--radius-pill);
  color: var(--text-muted); background: var(--surface); border: 1px solid var(--border-strong);
  font-family: inherit; font-size: 13.5px; line-height: 1.3;
  padding: 6px 14px; min-height: 32px; cursor: pointer; user-select: none;
@@ -150,7 +155,8 @@
 /* ジャンルのボタン型チップ(JS で is-on を付与) */
 .ann-chip.is-on { background: var(--text); border-color: var(--text); color: var(--bg); }
 
-/* その場追加 */
+/* その場追加。.ann-add(と __btn・__input・__msg)は genre_picker_controller.js が作り、.ann-add__msg は
+   inline_add_controller.js も作って探す(見た目用のクラスを JS も参照する。改名するなら JS も直す) */
 .ann-add { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ann-add__btn { font-size: 12px; color: var(--text-muted); background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; min-height: 32px; }
 .ann-add__btn:hover { border-color: var(--text); color: var(--text); }
@@ -163,7 +169,6 @@
 .ann-genre__current { font-size: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .ann-genre__current .sep { color: var(--text-subtle); }
 .ann-genre__change { font-size: 12px; color: var(--text); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
-.ann-genre__change:hover { color: var(--text); }
 .ann-genre__level { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 5px 0; }
 /* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
  (ジャンルが確定済みの語では大・中・小の選択肢を出さず、「変更」で選び直しに入る) */
@@ -256,7 +261,7 @@
 .deck-nav__arrow:disabled { border-color: var(--border); color: var(--text-subtle); cursor: default; }
 .deck-nav__position { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .deck-nav__dots { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中はアクセントの淡い面 */
+/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中は --bg-tint の淡い面と濃い枠 */
 .deck-dot { font-size: 11px; line-height: 1; min-width: 26px; height: 26px; padding: 0; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text-subtle); cursor: pointer; }
 .deck-dot:hover { border-color: var(--text-subtle); color: var(--text); }
 .deck-dot.is-done { background: var(--success); border-color: var(--success); color: var(--bg); }
@@ -298,7 +303,8 @@
 }
 
 /* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。
- このファイルは components より後に読まれるため、ここの小さめ入力は個別に上げる */
+ .ann-add__input は input[type="text"] なので、実際には components.css の @media の
+ input[type="text"](特異度が高い)だけで 16px になる。ここは同じ値の重ねで、読み込み順には頼っていない */
 @media (max-width: 767px) {
  .ann-add__input { font-size: 16px; }
 }

@@ -14,6 +14,7 @@
 #    カタカナの連続は元の表層形では地続きなので、畳んで1語として数える方が実態に合う。
 #
 # 退避: mecab 未インストール/失敗時は例外を握りつぶして空配列を返す(集計タスクが警告を出す)。
+# 種別: 外部コマンドのラッパー（app/services には外部プロセスを起動するクラスだけを置く）。
 class MorphemeExtractor
   require "open3"
 
@@ -31,12 +32,25 @@ class MorphemeExtractor
     new.call(surfaces)
   end
 
+  # mecab を起動できるか(終了コードは見ず、起動できれば真)。プロセスごとに 1 回だけ調べる
+  # (MeCab を入れたり外したりしたら再起動する。ShareCardRenderer.available? と同じ形)。
+  def self.available?
+    return @available if defined?(@available)
+
+    @available = begin
+      Open3.capture2("mecab", "--version")
+      true
+    rescue Errno::ENOENT, SystemCallError
+      false
+    end
+  end
+
   # 表層形の配列を受け取り、入力と同じ並びで「形態素(名詞)の配列」の配列を返す。
   # 1回のプロセス起動でまとめて解析する(1件ずつ起動しない)。
   def call(surfaces)
     surfaces = Array(surfaces)
     return [] if surfaces.empty?
-    return Array.new(surfaces.size) { [] } unless available?
+    return Array.new(surfaces.size) { [] } unless self.class.available?
 
     output, status = Open3.capture2(*command, stdin_data: mecab_input(surfaces))
     return Array.new(surfaces.size) { [] } unless status.success?
@@ -46,12 +60,8 @@ class MorphemeExtractor
     Array.new(surfaces.size) { [] }
   end
 
-  def available?
-    Open3.capture2("mecab", "--version")
-    true
-  rescue Errno::ENOENT, SystemCallError
-    false
-  end
+  # lib/tasks/stats.rake はインスタンスから聞く。
+  def available? = self.class.available?
 
   private
 

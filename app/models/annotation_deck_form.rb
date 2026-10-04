@@ -7,6 +7,7 @@
 # そこで送信内容をそのまま Word へ流し込み、入力済みの内容を保ったまま描き直す。
 #
 # 保存は AnnotationDeckSave が担う。こちらは「描き直すためだけ」に組み立てる。
+# 種別: フォーム。
 class AnnotationDeckForm
   # deck_params: { "12" => 許可済みの語パラメータ, ... }(キーは語 id・並びはカードの順)
   def initialize(deck_params)

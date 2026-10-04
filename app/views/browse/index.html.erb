@@ -14,7 +14,7 @@
 <section class="browse-section">
   <h2 class="section-heading"><%= icon "grid_nine" %><%= t("browse.index.by_first_char") %></h2>
   <div class="kana-grid">
-    <% SearchesHelper::KANA_COLUMNS.each do |column| %>
+    <% KanaRow::TABLE_COLUMNS.each do |column| %>
       <div class="kana-col">
         <% column.each do |kana| %>
           <% if kana.nil? %>
@@ -55,7 +55,7 @@
         <li>
           <%= link_to words_path(reading_length: length), class: "tag browse-length browse-length--heat",
                 style: "--fill: #{fill}" do %>
-            <span class="browse-length__label"><%= t("words.show.chars", count: length) %></span>
+            <span><%= t("words.show.chars", count: length) %></span>
             <span class="browse-length__count mono"><%= t("browse.index.count_unit", count: @reading_length_counts[length]) %></span>
           <% end %>
         </li>

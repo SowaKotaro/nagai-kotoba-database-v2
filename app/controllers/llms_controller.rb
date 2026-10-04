@@ -5,11 +5,13 @@ class LlmsController < ApplicationController
 
   allow_unauthenticated_access only: %i[show full]
 
-  CACHE_TTL = 1.day
+  # llms.txt(案内。中身は文言とリンクだけ)の Cache-Control の猶予。Rails.cache には置かない。
+  # 全文版の猶予は PublishedWordsDigest::CACHE_TTL(版と一緒に決まる)。
+  GUIDE_EXPIRES_IN = 1.day
 
   def show
     @host = canonical_host
-    expires_in CACHE_TTL, public: true
+    expires_in GUIDE_EXPIRES_IN, public: true
     render layout: false, content_type: "text/plain"
   end
 
@@ -20,9 +22,9 @@ class LlmsController < ApplicationController
   def full
     return unless stale?(etag: full_cache_key, last_modified: published_words_last_modified, public: true)
 
-    body = Rails.cache.fetch(full_cache_key, expires_in: CACHE_TTL,
+    body = Rails.cache.fetch(full_cache_key, expires_in: PublishedWordsDigest::CACHE_TTL,
                                              race_condition_ttl: PublishedWordsDigest::RACE_CONDITION_TTL) { render_full }
-    expires_in CACHE_TTL, public: true
+    expires_in PublishedWordsDigest::CACHE_TTL, public: true
     render plain: body, content_type: "text/plain"
   end
 

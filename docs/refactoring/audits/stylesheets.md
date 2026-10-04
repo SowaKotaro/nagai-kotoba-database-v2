@@ -260,3 +260,26 @@
 - app/assets/stylesheets/components.css
 - app/assets/stylesheets/application.css
 - test/assets/design_tokens_test.rb
+
+## 棚卸し（8da8a6f）
+
+- 前提: `git diff a04f375..8da8a6f -- app config lib db test` は空。行番号はそのまま使える。
+- **陳腐化: 0 件。**
+- **重複**（計画書 §9 で同じ改修項目に束ねてある）:
+  - S-09 ↔ C-18（管理画面の判定。C3-06）
+  - S-04 ↔ M-15・C-16・J-19（未使用。R2-04）
+  - S-08 ↔ T0-09（ダークの二重定義。テストで固定する）
+- **要確認**:
+  - S-01（管理画面のダークで文字が溶ける）は、描画しての実測はまだしていない。ただし、オーナーが既存の不具合として把握している（2026-09、PR #163 で報告。未対応）。計画書では D1-09・§7.5 に回してある。
+  - S-02 の行数は概算、S-03 の意図は推測。どちらも計画上の扱いは変わらない。
+- **未確認の範囲のうち、この棚卸しで決着したもの**:
+  - S-09 の前提「/admin 配下は Admin::BaseController 系だけ」: `bin/rails routes` で /admin に載るコントローラは 19 本（annotation_decks・annotation_proposals・annotations・bulk_annotations・bulk_proposal_approvals・candidates/{expansions,lists,notations,registrations,triages}・dashboard・entity_types・genres・parts_of_speech・tags・word_candidates・word_origins・word_requests・words）。
+    すべて `Admin::BaseController` を継承している（candidates/* は `Admin::Candidates::BaseController < Admin::BaseController` を経由する）。
+    ただし、ルートに無い `/admin/...` への要求（404）では、パスによる判定だけが is-admin を付ける。C3-06 で `admin_page?` に一本化するときは、この差を特性テストで固定するかを決める。
+  - B-03 から預かった「CSS の reduced-motion 対応の全体」: S-11 で覆われている（分岐は 2 か所だけで、ドロワー・ハンバーガー・キャレットは対象外）。
+- **見送るもの**:
+  - S-01・S-03 の描画による目視・実測、16px の入力欄の全件の洗い出し: 直すと見た目が変わる（計画書 §7.4）。この改修の目的の外にある。
+  - 複合セレクタ・子孫セレクタが実際の DOM に一致するかの全件確認: 量に比べて効果が小さい。R2-04 で消すセレクタだけ、その場で確かめる。
+- **台帳 §3.2 に回したもの**: A-07（逆方向の照合。ビューや JS が付けるクラスのうち、CSS に定義が無いもの）。将来のエージェントが「スタイルがどこかにあるはず」と探し回る原因になるので、目的に合う。
+- **ほかの単位に任せるもの**: system テストが固定している CSS 上の性質は B-06。
+- **実行時に確かめる前提**: `font-weight: 400` の 49 か所は代表例しか確かめていない。R2-04 で消すときは、1 か所ずつ効いていないことを確かめる。

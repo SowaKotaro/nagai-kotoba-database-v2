@@ -30,11 +30,9 @@ class WordSense < ApplicationRecord
 
   # 収録基準の下限(docs/annotation-guidelines.md)。読みがこれ未満の語は収録対象外。
   # 一括登録の確認画面と公開の収録リクエスト・フォームで同じ基準を示すため、ここを単一の正とする。
+  # モデルの検証には入れていない(validates は presence だけ)。当てているのは一括登録の確認画面・収録リクエストの表示・
+  # 重複確認の画面だけで、コンソールや一括承認からは 10 文字未満の読みの語義も保存できる。
   MIN_READING_LENGTH = 10
-
-  # 語種マスタ(SeedCatalog::WORD_ORIGINS)の和語・漢語をまとめた名前。
-  # 特徴の調査対象を絞るスコープで参照する(Issue 76)。
-  JAPANESE_ORIGIN_NAME = "日本語".freeze
 
   validates :reading, presence: true
   validate :genre_must_be_small
@@ -87,7 +85,7 @@ class WordSense < ApplicationRecord
   # 母音パターン(vowel_pattern)の部分一致。押韻検索(母音の並びで韻を探す)に使う。
   scope :vowel_containing, ->(text) { where("vowel_pattern LIKE ?", "%#{sanitize_sql_like(text)}%") }
   # 語頭から position 拍目以降の母音が pattern("ou" "aoi" など)と一致する語義。
-  # 統計 §7 の母音遷移グラフ(拍位置で固定した母音の並び)から来る条件で、
+  # 統計ページ §7 の母音遷移グラフ(拍位置で固定した母音の並び)から来る条件で、
   # 位置を問わない vowel_containing とは別物。読みがそこまで続かない語義は
   # SUBSTRING が pattern の長さに満たないので自然に外れる。
   scope :vowel_transition_at, lambda { |position, pattern|
@@ -96,7 +94,8 @@ class WordSense < ApplicationRecord
   # 文字種(words.char_type_pattern)で絞り込む。
   # partial:        真なら部分一致(LIKE %...%)、偽なら完全一致(=)。
   # case_sensitive: 真なら大文字小文字を区別する。カラムは utf8mb4_0900_ai_ci で
-  #                 既定では A=a とみなすため、区別する時だけ utf8mb4_bin で厳密比較する。
+  #                 既定では A=a に加えて、ひらがなの記号「あ」とカタカナの記号「ア」も同じとみなす
+  #                 (docs/data-model.md §6)。区別する時だけ utf8mb4_bin で厳密比較する。
   # ワイルドカードはエスケープする。
   scope :char_type_pattern_matching, lambda { |pattern, partial:, case_sensitive:|
     column = case_sensitive ? "words.char_type_pattern COLLATE utf8mb4_bin" : "words.char_type_pattern"
@@ -128,31 +127,41 @@ class WordSense < ApplicationRecord
   # 含む語義だけを見る。本番実データでは、日本語を含まない語の特徴付与率は 1% しかなく
   # 調査しても空振りが濃厚だった(日本語を含む語は 21%)。
   scope :with_japanese_origin, lambda {
-    where(id: WordSenseOrigin.where(word_origin: WordOrigin.where(name: JAPANESE_ORIGIN_NAME))
+    where(id: WordSenseOrigin.where(word_origin: WordOrigin.where(name: SeedCatalog::JAPANESE_ORIGIN_NAME))
                              .select(:word_sense_id))
   }
+
+  # 読み(reading)から導く派生値。保存時の before_validation と、修復タスクの backfill:reading_metrics・
+  # backfill:verify の 3 か所がこれだけを使う(派生値の列を足すときはここに足せば 3 か所に効く。
+  # 一覧と直し方は docs/data-model.md §3)。vowel_pattern は rhythm_pattern から作る。
+  def self.reading_derivations(reading)
+    rhythm = RhythmPattern.call(reading)
+    {
+      rhythm_pattern: rhythm,
+      vowel_pattern: VowelPattern.call(rhythm),
+      mora_count: MoraCount.call(reading),
+      # 円環交差数は弦の総当たり判定で SQL では書けないため Ruby 側で計算する(KanaRing 参照)。
+      ring_crossing_count: KanaRing.crossing_count(reading),
+      # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
+      last_char: LastChar.call(reading)
+    }
+  end
 
   # 読みは textarea 入力(折り返し表示)のため、混入した改行を先に除去する。
   before_validation :strip_reading_newlines
   # 読み(reading)由来の派生値は常に reading から導出する(手入力させない)。
-  # vowel_pattern は rhythm_pattern から作るため、rhythm_pattern の後に生成する。
   before_validation :assign_reading_derivations
 
   private
 
   def strip_reading_newlines
-    # 読みは空白を持たないため、混入した改行は除去して前後の空白も落とす。
+    # 読みは空白を持たないため、混入した改行は除去して前後の空白も落とす
+    # (収録リクエストの読みは改行を空白に置き換える。WordRequestItem と扱いが違う)。
     self.reading = reading.gsub(/[\r\n]+/, "").strip if reading
   end
 
   def assign_reading_derivations
-    self.rhythm_pattern = RhythmPattern.call(reading)
-    self.vowel_pattern = VowelPattern.call(rhythm_pattern)
-    self.mora_count = MoraCount.call(reading)
-    # 円環交差数は弦の総当たり判定で SQL では書けないため Ruby 側で計算する(KanaRing 参照)。
-    self.ring_crossing_count = KanaRing.crossing_count(reading)
-    # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
-    self.last_char = LastChar.call(reading)
+    assign_attributes(self.class.reading_derivations(reading))
   end
 
   # 代表値の焼き直し対象(RefreshesWordMetrics)。

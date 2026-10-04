@@ -26,7 +26,7 @@ class PublishedSenseCountsTest < ActiveSupport::TestCase
   end
 
   test "集計はキャッシュされ、期限内は数え直さない" do
-    with_memory_cache do
+    with_rails_cache do
       assert_equal 1, PublishedSenseCounts.by_first_char["さ"]
 
       # キャッシュが効いていれば、その後に公開した語はまだ現れない。
@@ -39,15 +39,5 @@ class PublishedSenseCountsTest < ActiveSupport::TestCase
         assert_equal 1, PublishedSenseCounts.by_first_char["ツ"]
       end
     end
-  end
-
-  private
-
-  def with_memory_cache
-    original = Rails.cache
-    Rails.cache = ActiveSupport::Cache::MemoryStore.new
-    yield
-  ensure
-    Rails.cache = original
   end
 end

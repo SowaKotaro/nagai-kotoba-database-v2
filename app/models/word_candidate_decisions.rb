@@ -4,6 +4,7 @@
 # (表示のあとに別の画面で動かした語や、あとから入ってきた語を確認なしで動かさないため)。
 # 行き先は WordCandidate#destination_for が決める。除外は照合をやり直し、一致があれば重複
 # (相手をメモに残す)、無ければ不要にする。
+# 種別: 書き込み処理。
 class WordCandidateDecisions
   # decisions は { 語の ID => 処理 }。choices はその画面で選べる処理。
   def initialize(decisions, statuses:, choices:)
