@@ -62,7 +62,7 @@ class WordShareCard
 
   def initialize(word)
     @word = word
-    @sense = word.word_senses.min_by(&:id)
+    @sense = word.primary_sense
   end
 
   # 読みが無い(語義が無い)語は円環も文字数も描けないので、既定のカードに任せる。

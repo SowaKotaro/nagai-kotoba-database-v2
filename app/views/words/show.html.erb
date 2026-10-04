@@ -63,7 +63,7 @@
 
   <%# 右のレール: この語の一番の指標(読みの文字数)を線だけの数字で置き、
       その下に読みを五十音の円環で一筆書きにした線画を常時出す(docs/design.md §5.9) %>
-  <% headline_sense = @word.word_senses.first %>
+  <% headline_sense = @word.primary_sense %>
   <% if headline_sense&.reading_length %>
     <div class="page-header__rail">
       <div>
@@ -80,7 +80,7 @@
   <p class="empty-note"><%= icon "binoculars" %><%= t("words.show.no_senses") %></p>
 <% else %>
   <div class="sense-list">
-    <% @word.word_senses.each.with_index(1) do |sense, number| %>
+    <% @word.ordered_senses.each.with_index(1) do |sense, number| %>
       <%# 語義カードは見出し+意味+属性で自己完結する辞書項目なので article %>
       <article class="sense-card">
         <span class="sense-card__number"><%= t("words.show.sense_number", number: number) %></span>

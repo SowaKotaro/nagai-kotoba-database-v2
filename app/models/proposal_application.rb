@@ -25,7 +25,7 @@ class ProposalApplication
 
   # 提案の各語義を word_senses へ割り当てる(build のみ。persist: true のときの語種を除いて保存しない)。組み立てた word を返す。
   def build
-    base_reading = @word.word_senses.first&.reading
+    base_reading = @word.primary_sense&.reading
     existing = @word.word_senses.reject(&:marked_for_destruction?)
 
     @proposal.senses.each_with_index do |sense_proposal, index|

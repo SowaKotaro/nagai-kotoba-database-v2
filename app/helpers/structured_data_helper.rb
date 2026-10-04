@@ -83,7 +83,7 @@ module StructuredDataHelper
   # 読み・文字数・韻・ジャンル等の属性を PropertyValue として添え、
   # 検索エンジンや LLM が本文を読まずに引用できる粒度まで構造化する(LLMO)。
   def word_json_ld(word)
-    terms = word.word_senses.each.with_index(1).map do |sense, position|
+    terms = word.ordered_senses.each.with_index(1).map do |sense, position|
       word_sense_term(word, sense, position)
     end
 

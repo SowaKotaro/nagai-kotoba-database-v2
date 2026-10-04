@@ -28,7 +28,7 @@ module WordsHelper
   # 語義数と各語義の意味を①②…で並べる(ジャンルは下の語義カードにあるので省く)。
   # 語義が無ければ空文字を返す。
   def word_lead_sentence(word)
-    senses = word.word_senses.sort_by(&:id)
+    senses = word.ordered_senses
     return "" if senses.empty?
     return word_sense_lead_sentence(word, senses.first) if senses.one?
 

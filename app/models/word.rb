@@ -53,6 +53,15 @@ class Word < ApplicationRecord
     self.annotated_at = nil
   end
 
+  # 代表の語義(id が最小 = 最初に登録した語義)。詳細の見出し・一覧の行・ホーム・関連語・しりとり・
+  # 共有カード・提案の反映・一括適用が、この 1 つの定義を使う(保存済みの語義が前提)。
+  # words/index のレールの「表示中の語義のうち読みが最長のもの」は、代表ではない別の選び方。
+  def primary_sense = word_senses.min_by(&:id)
+
+  # 語義の並び(id 順 = 登録順)。読み込み済みなら並べ替えるだけで、問い合わせ直さない。
+  # has_many には order を付けていないので、並びが意味を持つところはこれを使う。
+  def ordered_senses = word_senses.sort_by(&:id)
+
   # 詳細ページの鮮度判定(条件付きGET)に関わるレコード一式。
   # word_senses は touch: true で Word の updated_at を動かすが、ジャンル・品詞などの
   # マスタは touch しない。名称を変えただけでは Word が古いままになり、ETag/Last-Modified が

@@ -363,8 +363,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 多語義語の代表語義と語義の順序 ---
-  # いまは「id が最小の語義」が代表で、語義は id 順に並ぶ(preload の返す順に頼っている)。
-  # 先頭の語義が最長でない語で、いまの振る舞いを固定する。
+  # 代表は Word#primary_sense(id が最小の語義)、語義の並びは Word#ordered_senses(id 順)。
+  # 先頭の語義が最長でない語で、この振る舞いを固定する。
   test "多語義語の一覧の行は先頭の語義の文字数を出し、読みは語義の順に並べる。詳細の語義も同じ順" do
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい

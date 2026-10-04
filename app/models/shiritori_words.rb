@@ -19,7 +19,7 @@ class ShiritoriWords
   def initialize(word, batch: WordBatch.new)
     @word = word
     @batch = batch
-    @sense = word.word_senses.min_by(&:id)
+    @sense = word.primary_sense
     @word_ids = @batch.reserve(candidate_word_ids)
   end
 

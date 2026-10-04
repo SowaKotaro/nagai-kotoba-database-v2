@@ -45,7 +45,7 @@ class BulkAnnotation
   private
 
   def apply_to(word)
-    sense = word.word_senses.first
+    sense = word.primary_sense
     sense.genre_id = genre_id if genre_id.present?
     sense.entity_type_id = entity_type_id if entity_type_id.present?
     sense.part_of_speech_id = part_of_speech_id if part_of_speech_id.present?

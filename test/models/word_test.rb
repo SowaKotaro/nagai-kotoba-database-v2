@@ -102,6 +102,22 @@ class WordTest < ActiveSupport::TestCase
     assert_nil word.annotated_at
   end
 
+  # 代表の語義と語義の並びは id(登録順)で決め、読みの長さや読み込みの順には左右されない。
+  test "primary_sense は id が最小の語義、ordered_senses は id 順で、語義が無ければ nil と空" do
+    word = Word.create!(surface: "語義の順序の見本")
+    first = word.word_senses.create!(reading: "ミジカイヨミ")
+    second = word.word_senses.create!(reading: "トテモナガイニバンメノヨミ")
+    third = word.word_senses.create!(reading: "サンバンメノヨミ")
+
+    loaded = Word.includes(:word_senses).find(word.id)
+    assert_equal first, loaded.primary_sense
+    assert_equal [ first, second, third ], loaded.ordered_senses
+
+    empty = Word.create!(surface: "語義の無い見本")
+    assert_nil empty.primary_sense
+    assert_empty empty.ordered_senses
+  end
+
   # 「今月の新収録」(ホームと統計)の定義。月の境界は Time.zone で切り、created_at は見ない。
   test "annotated_this_month は今月 annotated_at が立った公開語だけで、created_at は見ない" do
     travel_to Time.zone.local(2026, 10, 15, 12, 0) do
