@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { allSensesComplete } from "controllers/support/senses"
 
 // 「保存して次へ」で語を公開する前のガード(Issue 68)。語義が最低限(読み・語種・ジャンル・
 // 品詞・エンティティ)揃っていなければ確認を挟み、未完了のまま公開する事故を防ぐ。
@@ -9,14 +10,8 @@ export default class extends Controller {
 
   guard(event) {
     if (event.submitter && event.submitter.hasAttribute("data-publish-guard-skip")) return
-    if (this.allComplete) return
+    // 表示中(削除されていない)の語義がすべて完了なら確認しない(数え方は support/senses。deck と同じ)
+    if (allSensesComplete(this.element)) return
     if (!window.confirm(this.messageValue)) event.preventDefault()
-  }
-
-  // 表示中(削除されていない)の語義がすべて完了(sense-completeness の is-complete)か。
-  get allComplete() {
-    const senses = [ ...this.element.querySelectorAll(".js-sense") ]
-      .filter((sense) => sense.style.display !== "none")
-    return senses.length > 0 && senses.every((sense) => sense.classList.contains("is-complete"))
   }
 }

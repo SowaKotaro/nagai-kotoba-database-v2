@@ -52,6 +52,9 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
     node(3, "a").click
     assert_picked nodes: 4, edges: 3
     assert_selector ".vowel-graph-panel__link[href$='vowel_transition=1-aaaa']"
+    # 選んだ並びの文言(検索の条件チップと同じ書き方)
+    assert_selector "[data-vowel-graph-target='pick']",
+                    exact_text: I18n.t("searches.vowel_transition_value", from: 1, to: 4, rows: ([ I18n.t("vowel_rows.a") ] * 4).join(" → "))
 
     # また離れた拍(6)を押しても鎖は残り、その隣(7)が決まって初めて新しい鎖に引き直す
     node(6, "a").click

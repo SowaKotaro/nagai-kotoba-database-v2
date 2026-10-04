@@ -143,7 +143,7 @@ app/models/          ActiveRecord ＋ 値オブジェクト ＋ フォーム/ク
 app/services/        reading_extractor（MeCab CLI）/ morpheme_extractor / share_card_renderer（rsvg-convert）
 app/controllers/     公開（words / searches / browse / genres / rankings / stats / pages / llms /
                      sitemaps / robots / word_requests / home）＋ admin/ 名前空間
-app/javascript/      Stimulus のみ（importmap）。1 コントローラ 1 目的
+app/javascript/      Stimulus のみ（importmap）。1 コントローラ 1 目的。複数のコントローラが使う関数は controllers/support/（コントローラではない）
 app/assets/          手書き CSS（tokens → base → layout → components ＋ annotate / candidates / admin）
 db/schema.rb         スキーマの正（マイグレーション経由で更新）
 db/seeds.rb          管理者とマスタを冪等に投入（名前リストは SeedCatalog が単一の正）

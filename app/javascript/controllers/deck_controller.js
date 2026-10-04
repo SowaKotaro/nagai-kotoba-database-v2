@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { allSensesComplete } from "controllers/support/senses"
 
 // アノテーション・デッキ(まとめてアノテーション)のカード送り。
 //   スマホ: 横スワイプ(CSS の scroll-snap がスクロールを担い、ここは位置の追従だけ)。
@@ -100,22 +101,17 @@ export default class extends Controller {
   }
 
   // 「n / m 完了」。カードは、表示中の語義がすべて is-complete なら完了とみなす
-  // (publish-guard の判定と同じ数え方)。ドットにも印を移す。
+  // (数え方は support/senses の allSensesComplete。publish-guard と同じ)。ドットにも印を移す。
   // 各語義の sense-completeness:changed(接続時にも飛ぶ)と、語義の削除など DOM が
   // 変わる操作(click)を合図に数え直す。
   recount() {
     let complete = 0
     this.cardTargets.forEach((card, i) => {
-      const done = this.cardComplete(card)
+      const done = allSensesComplete(card)
       if (done) complete += 1
       this.dotTargets[i]?.classList.toggle("is-done", done)
     })
     this.completeTarget.textContent = complete
     this.element.classList.toggle("is-all-complete", complete === this.cardTargets.length)
-  }
-
-  cardComplete(card) {
-    const senses = [ ...card.querySelectorAll(".js-sense") ].filter((sense) => sense.style.display !== "none")
-    return senses.length > 0 && senses.every((sense) => sense.classList.contains("is-complete"))
   }
 }

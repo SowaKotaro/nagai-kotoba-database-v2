@@ -101,10 +101,11 @@ export default class extends Controller {
     const from = this.positionOf(this.chain[0])
     const to = this.positionOf(this.chain[this.chain.length - 1])
     const vowels = this.chain.map((node) => node.dataset.vowel).join("")
+    // 文言は検索の条件チップと同じ searches.vowel_transition_value(%{} 記法)
     this.pickTarget.textContent = this.labelValue
-      .replace("{from}", from)
-      .replace("{to}", to)
-      .replace("{rows}", this.chain.map((node) => node.dataset.row).join(" → "))
+      .replace("%{from}", from)
+      .replace("%{to}", to)
+      .replace("%{rows}", this.chain.map((node) => node.dataset.row).join(" → "))
     // 形式の正はサーバの WordSenseSearch::VOWEL_TRANSITION_FORMAT(並びは 2〜15 拍、拍位置は
     // VOWEL_TRANSITION_MAX_POSITION まで)。JS は上限を知らず、範囲外の条件はサーバが黙って捨てる
     this.linkTarget.href = `${this.pathValue}?vowel_transition=${from}-${vowels}`

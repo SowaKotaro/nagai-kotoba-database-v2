@@ -11,7 +11,7 @@
 <p class="stats-section__lead"><%= t("stats.index.sound.graph_lead", positions: graph[:layers].size) %></p>
 <div class="vowel-graph-panel" data-controller="vowel-graph"
      data-vowel-graph-path-value="<%= words_path %>"
-     data-vowel-graph-label-value="<%= t("stats.index.sound.graph_pick_label") %>">
+     data-vowel-graph-label-value="<%= t("searches.vowel_transition_value") %>">
   <%# 切替は checkbox のまま(JS を持たない)。input は .vowel-graph-frame の兄弟に置き、
       見えるスイッチは図の右上へ。ラベルは for で結ぶので、離れていても押せる %>
   <input class="visually-hidden vowel-graph-panel__toggle" type="checkbox" id="vowel-graph-filter">
