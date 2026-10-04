@@ -7,8 +7,7 @@ class FeatureResearchExportTest < ActiveSupport::TestCase
 
   # 公開済み・特徴0件・未調査 の語義を1件だけ用意する。
   def published_sense_without_features(surface: "調査対象の語", reading: "チョウサタイショウノゴ", japanese: true)
-    word = Word.create!(surface: surface, annotated_at: Time.current)
-    sense = word.word_senses.create!(reading: reading, meaning: "テスト用")
+    sense = create_published_word(surface: surface, reading: reading, meaning: "テスト用").word_senses.first
     sense.word_origins << @japanese if japanese
     sense
   end

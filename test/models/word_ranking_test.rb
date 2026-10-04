@@ -107,8 +107,7 @@ class WordRankingTest < ActiveSupport::TestCase
   # 濁点・小書き・長音を含まない読みの公開語を count 語つくる
   def publish_words(count, offset: 0)
     count.times do |i|
-      word = Word.create!(surface: "順位の母集団#{offset + i}", annotated_at: Time.current)
-      word.word_senses.create!(reading: "ナナナナナ" + "ア" * (offset + i))
+      create_published_word(surface: "順位の母集団#{offset + i}", reading: "ナナナナナ" + "ア" * (offset + i))
     end
   end
 end

@@ -8,8 +8,8 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
   end
 
   def published_word_without_features(surface: "特徴未調査の語", reading: "トクチョウミチョウサノゴ")
-    word = Word.create!(surface: surface, annotated_at: Time.current)
-    sense = word.word_senses.create!(reading: reading, meaning: "テスト用")
+    word = create_published_word(surface: surface, reading: reading, meaning: "テスト用")
+    sense = word.word_senses.first
     sense.word_origins << word_origins(:nihongo)
     [ word, sense ]
   end

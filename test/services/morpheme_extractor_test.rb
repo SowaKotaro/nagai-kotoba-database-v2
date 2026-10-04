@@ -67,12 +67,10 @@ class MorphemeExtractorFallbackTest < ActiveSupport::TestCase
 
   # 判定のあとで mecab が消えた(起動に失敗した)ときも止めない。
   test "判定が真でも起動できなければ、入力と同じ数の空配列を返す" do
-    original_path = ENV["PATH"]
-    ENV["PATH"] = ""
-    stub_method(MorphemeExtractor, :available?, -> { true }) do
-      assert_equal [ [], [] ], MorphemeExtractor.new.call([ "天上天下唯我独尊", "殺人事件" ])
+    with_env("PATH" => "") do
+      stub_method(MorphemeExtractor, :available?, -> { true }) do
+        assert_equal [ [], [] ], MorphemeExtractor.new.call([ "天上天下唯我独尊", "殺人事件" ])
+      end
     end
-  ensure
-    ENV["PATH"] = original_path
   end
 end

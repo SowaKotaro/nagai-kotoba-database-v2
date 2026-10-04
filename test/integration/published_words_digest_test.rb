@@ -62,7 +62,7 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
     etags_on(Time.zone.local(2026, 8, 6, 10, 5)) # 版を 8/6 に揃える(このときはまだキャッシュしない)
     withdrawn = words(:curry)
 
-    with_memory_cache do
+    with_rails_cache do
       travel_to Time.zone.local(2026, 8, 6, 10, 10) do
         PATHS.each { |path| get path }
         withdrawn.update_columns(annotated_at: nil, annotation_status: Word.annotation_statuses[:on_hold])
@@ -85,14 +85,6 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
   end
 
   private
-
-  def with_memory_cache
-    original = Rails.cache
-    Rails.cache = ActiveSupport::Cache::MemoryStore.new
-    yield
-  ensure
-    Rails.cache = original
-  end
 
   # 公開語の最終更新を time の日に揃え、その時点の各出力の ETag を控える。
   def etags_on(time)

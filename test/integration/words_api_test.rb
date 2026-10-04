@@ -2,8 +2,6 @@ require "test_helper"
 
 # 公開 JSON API(Issue 25)の結合テスト。読み取り専用・注釈済みのみ。
 class WordsApiTest < ActionDispatch::IntegrationTest
-  HOST = "https://nagai-kotoba-database.jp".freeze
-
   test "単語詳細 .json が語義の全属性とライセンスを返す" do
     word = words(:abc_murder)
     get word_path(word, format: :json)
@@ -13,7 +11,7 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal word.id, body["id"]
     assert_equal word.surface, body["surface"]
-    assert_equal "#{HOST}/words/#{word.id}", body["url"]
+    assert_equal "#{CANONICAL_HOST}/words/#{word.id}", body["url"]
 
     sense = body["senses"].first
     assert_equal word_senses(:murder).reading, sense["reading"]
@@ -25,7 +23,7 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_equal "連濁", sense["linguistic_features"].first["name"]
 
     assert_equal "CC BY 4.0", body["license"]["name"]
-    assert_includes body["license"]["credit"], HOST
+    assert_includes body["license"]["credit"], CANONICAL_HOST
   end
 
   # 外部に出す形式なので、キーの集合と入れ子ごと固定する(キーの欠落・改名・並びの変化を検出する)。
@@ -50,7 +48,7 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_equal %w[name target target_reading], sense["linguistic_features"].first.keys
 
     assert_equal({ "name" => "CC BY 4.0", "url" => "https://creativecommons.org/licenses/by/4.0/deed.ja",
-                   "credit" => "長い言葉のデータベース (#{HOST})" }, body["license"])
+                   "credit" => "長い言葉のデータベース (#{CANONICAL_HOST})" }, body["license"])
   end
 
   test "ジャンルの無い語義の genre は null、別表記は surface と reading の配列" do
@@ -94,7 +92,7 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_equal 1, body["total_pages"]
     word = body["words"].find { |w| w["id"] == words(:abc_murder).id }
     assert_equal %w[id surface url readings], word.keys
-    assert_equal "#{HOST}/words/#{words(:abc_murder).id}", word["url"]
+    assert_equal "#{CANONICAL_HOST}/words/#{words(:abc_murder).id}", word["url"]
     assert_equal [ word_senses(:murder).reading ], word["readings"]
   end
 

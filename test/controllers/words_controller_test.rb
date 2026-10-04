@@ -257,8 +257,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
     # X 共有(intent リンク・canonical URL をエンコードして含む)と URL コピー(Stimulus)
     assert_select "a.share__btn[href^=?]", "https://x.com/intent/post"
-    assert_select "a.share__btn[href*=?]", "nagai-kotoba-database.jp%2Fwords%2F#{word.id}"
-    assert_select "div.share[data-clipboard-text-value=?]", "https://nagai-kotoba-database.jp/words/#{word.id}"
+    assert_select "a.share__btn[href*=?]", "#{URI(CANONICAL_HOST).host}%2Fwords%2F#{word.id}"
+    assert_select "div.share[data-clipboard-text-value=?]", "#{CANONICAL_HOST}/words/#{word.id}"
     assert_select "button.share__btn[data-action=?]", "clipboard#copy"
 
     # ランダム導線は見出し語ストリップに置く

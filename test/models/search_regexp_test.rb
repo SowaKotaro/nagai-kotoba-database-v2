@@ -48,7 +48,7 @@ class SearchRegexpTest < ActiveSupport::TestCase
   end
 
   test "同じ式の構文チェックは覚えておき、2回目は MySQL に問い合わせない(壊れた式も同じ)" do
-    with_memory_cache do
+    with_rails_cache do
       assert_nil SearchRegexp.new("^ア.*ン$").error
       assert_equal :syntax, SearchRegexp.new("(ア").error
 
@@ -57,16 +57,6 @@ class SearchRegexpTest < ActiveSupport::TestCase
         assert_equal :syntax, SearchRegexp.new("(ア").error
       end
     end
-  end
-
-  private
-
-  def with_memory_cache
-    original = Rails.cache
-    Rails.cache = ActiveSupport::Cache::MemoryStore.new
-    yield
-  ensure
-    Rails.cache = original
   end
 
   # かなの畳み込み(T0-18): NFKC をかけないので、半角カナと合成濁点は残り、ひらがな部分だけカタカナになる。

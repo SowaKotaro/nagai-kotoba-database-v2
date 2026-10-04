@@ -155,19 +155,6 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
 
   private
 
-  # フラグメントキャッシュの書き込み先は Rails.cache ではなく、起動時に取り込んだ
-  # ActionController::Base.cache_store(テストでは NullStore)。差し替えるのはこちら。
-  def with_fragment_cache
-    original_perform_caching = ActionController::Base.perform_caching
-    original_store = ActionController::Base.cache_store
-    ActionController::Base.perform_caching = true
-    ActionController::Base.cache_store = ActiveSupport::Cache::MemoryStore.new
-    yield
-  ensure
-    ActionController::Base.perform_caching = original_perform_caching
-    ActionController::Base.cache_store = original_store
-  end
-
   def assert_genre_checked(genre, checked)
     assert_select "input[type=checkbox][name=?][value=?][checked]", "genre_id[]", genre.id.to_s, count: checked ? 1 : 0
   end

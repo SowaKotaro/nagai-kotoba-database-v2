@@ -167,7 +167,7 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "受付を止めているときはフォームを出さず、送信も受け付けない" do
-    with_requests_disabled do
+    with_config(requests_enabled: false) do
       get new_request_path
       assert_redirected_to about_path
 
@@ -188,21 +188,11 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     get no_hit
     assert_select ".empty-request #{request_link}"
 
-    with_requests_disabled do
+    with_config(requests_enabled: false) do
       [ root_path, no_hit, about_path ].each do |path|
         get path
         assert_select request_link, { count: 0 }, path
       end
     end
-  end
-
-  private
-
-  def with_requests_disabled
-    original = Rails.application.config.x.requests_enabled
-    Rails.application.config.x.requests_enabled = false
-    yield
-  ensure
-    Rails.application.config.x.requests_enabled = original
   end
 end

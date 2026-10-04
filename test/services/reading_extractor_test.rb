@@ -15,13 +15,11 @@ class ReadingExtractorTest < ActiveSupport::TestCase
 
   # 判定のあとで mecab が消えた(起動に失敗した)ときも止めない。
   test "判定が真でも起動できなければ、入力と同じ数の nil を返す" do
-    original_path = ENV["PATH"]
-    ENV["PATH"] = ""
-    stub_method(ReadingExtractor, :available?, -> { true }) do
-      assert_equal [ nil, nil ], ReadingExtractor.call([ "天上天下唯我独尊", "資本主義" ])
+    with_env("PATH" => "") do
+      stub_method(ReadingExtractor, :available?, -> { true }) do
+        assert_equal [ nil, nil ], ReadingExtractor.call([ "天上天下唯我独尊", "資本主義" ])
+      end
     end
-  ensure
-    ENV["PATH"] = original_path
   end
 
   test "表層形の並びに対応した読み(カタカナ)を返す" do

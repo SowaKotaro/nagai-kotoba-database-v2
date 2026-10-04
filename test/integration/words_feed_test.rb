@@ -30,7 +30,7 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
     feed = Nokogiri::XML(response.body).remove_namespaces!
     titles = feed.css("entry > title").map(&:text)
     assert_equal WordsController::FEED_LIMIT, titles.size
-    assert(feed.css("entry > link").all? { |link| link["href"].start_with?("https://nagai-kotoba-database.jp/words/") })
+    assert(feed.css("entry > link").all? { |link| link["href"].start_with?("#{CANONICAL_HOST}/words/") })
 
     get words_path(format: :atom, first_char: word_senses(:curry).first_char)
     assert_equal titles, Nokogiri::XML(response.body).remove_namespaces!.css("entry > title").map(&:text)

@@ -2,8 +2,6 @@ require "test_helper"
 
 # レイアウトが出力する SEO / OGP メタ情報(Issue 14)の結合テスト。
 class MetaTagsTest < ActionDispatch::IntegrationTest
-  HOST = "https://nagai-kotoba-database.jp".freeze
-
   test "トップページにタグライン付き title と専用の description・canonical・OGP が出力される" do
     get root_path
     assert_response :success
@@ -11,12 +9,12 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     title = "#{I18n.t('home.index.title_tagline')} | #{I18n.t('layouts.brand')}"
     assert_select "title", text: title
     assert_select "meta[name=description][content=?]", I18n.t("home.index.meta_description")
-    assert_select "link[rel=canonical][href=?]", "#{HOST}/"
+    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/"
     assert_select "meta[property='og:type'][content=?]", "website"
     assert_select "meta[property='og:site_name'][content=?]", I18n.t("layouts.brand")
     assert_select "meta[property='og:locale'][content=?]", "ja_JP"
-    assert_select "meta[property='og:url'][content=?]", "#{HOST}/"
-    assert_select "meta[property='og:image'][content=?]", "#{HOST}/og-default.png"
+    assert_select "meta[property='og:url'][content=?]", "#{CANONICAL_HOST}/"
+    assert_select "meta[property='og:image'][content=?]", "#{CANONICAL_HOST}/og-default.png"
     assert_select "meta[property='og:image:width'][content=?]", "1200"
     assert_select "meta[property='og:image:height'][content=?]", "630"
     assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
@@ -43,20 +41,20 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[name=description][content=?]", lead
     assert_select "meta[property='og:description'][content=?]", lead
     assert_select "meta[property='og:type'][content=?]", "article"
-    assert_select "link[rel=canonical][href=?]", "#{HOST}/words/#{word.id}"
-    assert_select "meta[property='og:url'][content=?]", "#{HOST}/words/#{word.id}"
+    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/words/#{word.id}"
+    assert_select "meta[property='og:url'][content=?]", "#{CANONICAL_HOST}/words/#{word.id}"
   end
 
   test "単語詳細の og:image は語ごとの共有カード(版つき)で、焼けない環境では既定のカードのまま" do
     word = words(:abc_murder)
     stub_method(ShareCardRenderer, :available?, -> { true }) { get word_path(word) }
     assert_select "meta[property='og:image'][content=?]",
-                  "#{HOST}/words/#{word.id}/share_card.png?v=#{WordShareCard.new(word).digest}"
+                  "#{CANONICAL_HOST}/words/#{word.id}/share_card.png?v=#{WordShareCard.new(word).digest}"
     assert_select "meta[property='og:image:alt'][content=?]",
                   I18n.t("words.share_card.alt", surface: word.surface, reading: word_senses(:murder).reading)
 
     stub_method(ShareCardRenderer, :available?, -> { false }) { get word_path(word) }
-    assert_select "meta[property='og:image'][content=?]", "#{HOST}/og-default.png"
+    assert_select "meta[property='og:image'][content=?]", "#{CANONICAL_HOST}/og-default.png"
     assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
   end
 
@@ -64,6 +62,6 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     # /words は Issue 17 で canonical を正規化上書きするため、上書きしない /search で既定挙動を確認する。
     get search_path(q: "テスト", genre_id: 1)
     assert_response :success
-    assert_select "link[rel=canonical][href=?]", "#{HOST}/search"
+    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/search"
   end
 end
