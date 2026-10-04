@@ -32,18 +32,12 @@
 - `genres` は **隣接リスト**（`parent_id`）で 大→中→小の3階層。`word_senses.genre_id` は末端（小分類）を指す。
 - `linguistic_features` は `word_sense_features` 経由で語義と**多対多**。特徴は単語の**該当部分ごと**に
   付ける（`target` / `target_reading` / `target_start`）。`word_origins`（語種）も多対多（混種語対応）。
-- **派生値は必ず自動生成する**（手入力させない）。作る場所は3通り:
-  - **SQL の STORED 生成カラム**: `word_senses.reading_length` / `first_char`、
-    `words.surface_length` / `reading_density`
-  - **Ruby の値オブジェクト ＋ `before_validation`**: `char_type_pattern`（漢/あ/ア/1/A/a/@）・
-    `rhythm_pattern`（ヘボン式ローマ字）・`vowel_pattern`・`mora_count`・`ring_crossing_count`・`last_char`
-  - **`after_commit` で焼き直す代表値**: `words` の `min_*` / `max_*` / `sense_count` /
-    `variant_count` / `feature_count`（並び替え・ランキングの指標。`WordSenseMetrics`）
-  - `last_char` は本来 SQL の生成カラムにしたいが、生成式にマルチバイト文字を含めると
-    ActiveRecord の SchemaDumper（mysql2 アダプタ）が `schema.rb` をダンプする際に文字化けする
-    既知の制限があるため、例外的に Ruby 側で計算する（`app/models/last_char.rb`）。
-  - `update_all` や生 SQL で `reading` / `surface` を書き換えたら、`bin/rails backfill:verify` で
-    差分を検出し `backfill:reading_metrics` / `backfill:sense_metrics` で直す。
+- **派生値は必ず自動生成する**（手入力させない）。作る場所は3通り（SQL の STORED 生成カラム／
+  Ruby の値オブジェクト ＋ `before_validation`／`after_commit` で焼き直す `words` の代表値）。
+  **どの列をどこで作り、何に依存し、どう直すかの一覧の正は [`docs/data-model.md`](docs/data-model.md) §3**。
+  - 語義の読み由来の値は `WordSense.reading_derivations` の 1 か所で作る（派生列を足すときはここに足す）。
+  - `update_all` や生 SQL で `reading` / `surface` を書き換えたら、data-model §3.4 の手順で直す
+    （`bin/rails backfill:verify` で差分を検出し、`backfill:reading_metrics` で直す）。
 - **照合順序**: 日本語検索が中心のため全テーブルを **`utf8mb4_0900_ai_ci`** に統一する方針。
   長い文字列カラムは prefix index（例 `surface(191)`）を使う。ただし **読み・表層形まわりは
   例外的に `utf8mb4_0900_as_ci`**（ai は濁点・半濁点を同一視して「ハ=バ=パ」になるため。as_ci なら

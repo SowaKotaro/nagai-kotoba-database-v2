@@ -67,31 +67,43 @@ genres ──< genres (parent_id)               大 → 中 → 小 の隣接リ
 
 ## 3. 派生値をどこで作るか
 
-読み・表層形から機械的に決まる値は**すべて自動生成**し、人に入力させない。生成場所は 3 通りある。
+読み・表層形から機械的に決まる値は**すべて自動生成**し、人に入力させない。作る場所は 3 通りある
+（SQL の STORED 生成カラム／Ruby の値オブジェクト ＋ `before_validation`／`after_commit` で焼き直す代表値）。
+**派生値の一覧・依存関係・直し方の正はこの節**で、CLAUDE.md からはここを参照する。
 
-### 3.1 SQL の STORED 生成カラム
+### 3.1 一覧
 
-`db/schema.rb` では `t.virtual ..., stored: true`。DB が値を保証するので、直接 UPDATE しても狂わない。
+| カラム | 作る場所 | 依存する値 | 直接 UPDATE したあとの直し方（§3.4） | `backfill:verify` |
+|---|---|---|---|---|
+| `word_senses.reading_length` | STORED `CHAR_LENGTH(reading)`（「きゃ」は 2 文字として数える） | `reading` | 不要（DB が追従する） | 見ない（常に整合） |
+| `word_senses.first_char` | STORED `LEFT(reading, 1)` | `reading` | 不要 | 見ない |
+| `words.surface_length` | STORED `CHAR_LENGTH(surface)` | `surface` | 不要 | 見ない |
+| `words.reading_density` | STORED `max_reading_length / NULLIF(CHAR_LENGTH(surface), 0)`（1 字あたりの読みの長さ） | **`words.max_reading_length`（代表値）**・`surface` | 代表値を直すと追従する（`reading_metrics` か `sense_metrics`）。STORED でも、読みを直接 UPDATE しただけでは古いまま | `max_reading_length` を通して見る |
+| `words.char_type_pattern` | Ruby `CharTypePattern`（`Word` の `before_validation`） | `surface` | 一括のタスクは無い。該当の `Word` を保存し直す | 見る |
+| `word_senses.rhythm_pattern` | Ruby `RhythmPattern` | `reading` | `reading_metrics` | 見る |
+| `word_senses.vowel_pattern` | Ruby `VowelPattern` | `rhythm_pattern` | `reading_metrics` | 見る |
+| `word_senses.mora_count` | Ruby `MoraCount` | `reading` | `reading_metrics` | 見る |
+| `word_senses.ring_crossing_count` | Ruby `KanaRing.crossing_count` | `reading`（と `KanaRow` の行の写像） | `reading_metrics` | 見る |
+| `word_senses.last_char` | Ruby `LastChar`（§3.2 の例外） | `reading` | `reading_metrics` | 見る |
+| `words` の代表値（`sense_count`・`variant_count`・`feature_count`・`min_*`・`max_*` の 14 列） | `after_commit` → `WordSenseMetrics.refresh!`（§3.3） | 語義の `reading`・`reading_length`・`mora_count`・`ring_crossing_count`、別表記と特徴の件数 | `sense_metrics`（`reading_metrics` も最後に全件焼き直す） | 見る（焼き直しと同じ式で突き合わせる） |
 
-| カラム | 式 |
-|---|---|
-| `word_senses.reading_length` | `CHAR_LENGTH(reading)`（「きゃ」は 2 文字として数える） |
-| `word_senses.first_char` | `LEFT(reading, 1)` |
-| `words.surface_length` | `CHAR_LENGTH(surface)` |
-| `words.reading_density` | `max_reading_length / NULLIF(CHAR_LENGTH(surface), 0)`（1 字あたりの読みの長さ） |
+- 語義の読み由来の 5 つ（`rhythm_pattern`〜`last_char`）は `WordSense.reading_derivations` の 1 か所で作る。
+  保存時の `before_validation`・`backfill:reading_metrics`・`backfill:verify` がそれを使うので、列を足すときはここに足す。
+- 代表値の列とその式は `WordSenseMetrics::COLUMN_EXPRESSIONS` の 1 か所にあり、焼き直し（UPDATE）と verify が共有する。
+- `KanaRow` の写像（濁音を清音の行に入れる、など）を変えたら、保存済みの `ring_crossing_count` を `reading_metrics` で作り直す。
 
-### 3.2 Ruby の値オブジェクト ＋ `before_validation`
+### 3.2 Ruby で作る理由
 
 SQL では書けない（または書くと副作用がある）ため Ruby 側で作る。
 
-| カラム | 生成 | なぜ SQL にしないか |
-|---|---|---|
-| `words.char_type_pattern` | `CharTypePattern` | 文字種の判定規則が複雑。仕様は [`char_type_pattern.md`](char_type_pattern.md) |
-| `word_senses.rhythm_pattern` | `RhythmPattern` | ヘボン式ローマ字化。仕様は [`rhythm_pattern.md`](rhythm_pattern.md) |
-| `word_senses.vowel_pattern` | `VowelPattern`（`rhythm_pattern` から） | 上と同じ理由。`rhythm_pattern` の後に生成する |
-| `word_senses.mora_count` | `MoraCount` | 拗音を 1 拍に畳む規則が SQL で書けない |
-| `word_senses.ring_crossing_count` | `KanaRing.crossing_count` | 弦の総当たり交差判定は SQL で書けない |
-| `word_senses.last_char` | `LastChar` | **下記の例外** |
+| カラム | なぜ SQL にしないか |
+|---|---|
+| `words.char_type_pattern` | 文字種の判定規則が複雑。仕様は [`char_type_pattern.md`](char_type_pattern.md) |
+| `word_senses.rhythm_pattern` | ヘボン式ローマ字化。仕様は [`rhythm_pattern.md`](rhythm_pattern.md) |
+| `word_senses.vowel_pattern` | 上と同じ理由。`rhythm_pattern` の後に作る |
+| `word_senses.mora_count` | 拗音を 1 拍に畳む規則が SQL で書けない |
+| `word_senses.ring_crossing_count` | 弦の総当たり交差判定は SQL で書けない |
+| `word_senses.last_char` | **下記の例外** |
 
 > **`last_char` だけは「本当は生成カラムにしたい」例外**。末尾の長音符「ー」を飛ばして直前の
 > 文字を採る必要があり、生成式にマルチバイト文字（`ー`）が入ると ActiveRecord の SchemaDumper
@@ -103,16 +115,22 @@ SQL では書けない（または書くと副作用がある）ため Ruby 側�
 `words` の `min_*` / `max_*` / `sense_count` / `variant_count` / `feature_count` は
 語義側から集計した代表値（§5）。`WordSense` / `WordSenseVariant` / `WordSenseFeature` の
 `after_commit`（`RefreshesWordMetrics`）が `WordSenseMetrics.refresh!` を呼んで焼き直す。
+焼き直しは `words.updated_at` を進めない（表示内容を変えないので、詳細ページの ETag や sitemap の版を動かさない）。
 
 ### 3.4 直接 UPDATE したあとの直し方
 
-`update_all` や生 SQL で `reading` / `surface` を書き換えると §3.2・§3.3 の値が古いまま残る。
+`update_all` や生 SQL で `reading` / `surface` を書き換えると、コールバックを通らないので、
+§3.1 で「直し方」が「不要」以外の値が古いまま残る。
 
 ```bash
-bin/rails backfill:verify          # 差分の検出だけ（読み取り専用）
-bin/rails backfill:reading_metrics # 読み由来の派生値を再生成
-bin/rails backfill:sense_metrics   # words の代表値を全件焼き直す
+bin/rails backfill:verify          # 差分の検出だけ（読み取り専用）。語義の読み由来の値・char_type_pattern・words の代表値を見る
+bin/rails backfill:reading_metrics # 読み由来の派生値を再生成し、最後に words の代表値も全件焼き直す
+bin/rails backfill:sense_metrics   # words の代表値だけを全件焼き直す
 ```
+
+`words.char_type_pattern` は一括で直すタスクが無いので、verify が挙げた `Word` を保存し直す
+（`before_validation` で作り直す）。どのタスクも `words.updated_at` を進めないので、詳細ページの ETag や
+sitemap の版は動かない。
 
 ---
 

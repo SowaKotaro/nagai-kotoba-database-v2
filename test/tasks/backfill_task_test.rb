@@ -60,13 +60,67 @@ class BackfillTaskTest < ActiveSupport::TestCase
   end
 
   test "verify は不整合が無ければその旨だけを報告し、何も変更しない" do
-    # フィクスチャの派生値は読み・表層形と整合させてある。verify が見る値がずれていればここで検出されるが、
-    # verify は ring_crossing_count を見ないので、円環交差数のずれはここでは検出されない
-    before_senses = WordSense.order(:id).pluck(:rhythm_pattern, :vowel_pattern, :mora_count, :last_char)
+    # フィクスチャの派生値は読み・表層形と整合させてある(円環交差数も)。words の代表値は test_helper の
+    # setup で焼き直してある。どれかがずれていれば、ここで検出される
+    sense_columns = WordSense.reading_derivations("").keys
+    before_senses = WordSense.order(:id).pluck(*sense_columns)
+    before_words = Word.order(:id).pluck(*METRIC_COLUMNS)
 
     out, _err = capture_io { Rake::Task["backfill:verify"].invoke }
 
     assert_includes out, "派生カラムの不整合はありません"
-    assert_equal before_senses, WordSense.order(:id).pluck(:rhythm_pattern, :vowel_pattern, :mora_count, :last_char)
+    assert_equal before_senses, WordSense.order(:id).pluck(*sense_columns)
+    assert_equal before_words, Word.order(:id).pluck(*METRIC_COLUMNS)
+  end
+
+  # 円環交差数は、ほかの読み由来の値より後(2026-07-21)に足した列で、以前は修復タスクの対象から漏れていた。
+  test "円環交差数を崩すと verify が語義と words の代表値の両方を報告し、reading_metrics がまとめて直す" do
+    sense = word_senses(:curry)
+    original = sense.ring_crossing_count
+    sense.update_columns(ring_crossing_count: 99) # コールバックを通らないので、words の代表値は崩す前の値のまま
+
+    out, _err = capture_io { Rake::Task["backfill:verify"].invoke }
+    assert_includes out, "word_senses##{sense.id} ring_crossing_count: 99 → #{original}"
+    assert_includes out, "words##{sense.word_id} min_ring_crossing_count: #{original} → 99"
+    assert_includes out, "不整合: 3 件"
+
+    capture_io { Rake::Task["backfill:reading_metrics"].invoke }
+    assert_equal original, sense.reload.ring_crossing_count
+    assert_equal [ original, original ], words(:curry).reload.values_at(:min_ring_crossing_count, :max_ring_crossing_count)
+
+    Rake::Task["backfill:verify"].reenable
+    out, _err = capture_io { Rake::Task["backfill:verify"].invoke }
+    assert_includes out, "派生カラムの不整合はありません"
+  end
+
+  test "verify は words の代表値のずれも報告する(直すのは sense_metrics)" do
+    words(:curry).update_columns(sense_count: 5, max_reading: "崩")
+
+    out, _err = capture_io { Rake::Task["backfill:verify"].invoke }
+
+    assert_includes out, "words##{words(:curry).id} sense_count: 5 → 1"
+    assert_includes out, "words##{words(:curry).id} max_reading: \"崩\" → \"カレー\""
+    assert_includes out, "不整合: 2 件"
+  end
+
+  # CLAUDE.md・docs/data-model.md §3 の修復手順: 読みを直接書き換えたら、verify で見つけ、reading_metrics で直す。
+  test "読みを直接書き換えたあと、verify が見つけ、reading_metrics だけで語義と words の代表値がそろう" do
+    sense = word_senses(:curry)
+    sense.update_columns(reading: "カレーライス") # コールバックを通らない(reading_length だけは STORED で追従する)
+
+    out, _err = capture_io { Rake::Task["backfill:verify"].invoke }
+    assert_includes out, "word_senses##{sense.id} rhythm_pattern"
+    assert_includes out, "words##{sense.word_id} max_reading_length: 3 → 6"
+
+    capture_io { Rake::Task["backfill:reading_metrics"].invoke }
+    assert_equal [ "kareeraisu", 6 ], sense.reload.values_at(:rhythm_pattern, :mora_count)
+    curry = words(:curry).reload
+    assert_equal [ 6, "カレーライス" ], [ curry.max_reading_length, curry.max_reading ]
+    # reading_density は STORED だが、max_reading_length(代表値)から作るので代表値と一緒に追従する
+    assert_equal (BigDecimal("6") / curry.surface_length).round(4), curry.reading_density
+
+    Rake::Task["backfill:verify"].reenable
+    out, _err = capture_io { Rake::Task["backfill:verify"].invoke }
+    assert_includes out, "派生カラムの不整合はありません"
   end
 end

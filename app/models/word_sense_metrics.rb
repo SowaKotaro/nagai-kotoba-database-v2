@@ -71,30 +71,59 @@ class WordSenseMetrics
     GROUP BY word_senses.word_id
   SQL
 
+  # words の代表値の列と、その値を求める式。UPDATE の SET と、backfill:verify の突き合わせ(mismatches)が
+  # この 1 つの表を共有する(代表値の列を足すときはここと、上の集計 SQL に足す)。
   # 語義が1つも無い語は各集計が NULL になる。件数系は 0 に畳み、指標系は NULL のままにする
   # (0 と「該当なし」を区別したいため。ランキングは下限で NULL を落とす)。
+  COLUMN_EXPRESSIONS = {
+    "sense_count"             => "COALESCE(sense_metrics.sense_count, 0)",
+    "variant_count"           => "COALESCE(variant_metrics.variant_count, 0)",
+    "feature_count"           => "COALESCE(feature_metrics.feature_count, 0)",
+    "min_reading_length"      => "sense_metrics.min_reading_length",
+    "max_reading_length"      => "sense_metrics.max_reading_length",
+    "max_mora_count"          => "sense_metrics.max_mora_count",
+    "max_small_kana_count"    => "sense_metrics.max_small_kana_count",
+    "max_chouon_count"        => "sense_metrics.max_chouon_count",
+    "max_dakuten_count"       => "sense_metrics.max_dakuten_count",
+    "min_ring_crossing_count" => "sense_metrics.min_ring_crossing_count",
+    "max_ring_crossing_count" => "sense_metrics.max_ring_crossing_count",
+    "min_reading"             => "sense_metrics.min_reading",
+    "max_reading"             => "sense_metrics.max_reading",
+    "min_reversed_reading"    => "sense_metrics.min_reversed_reading"
+  }.freeze
+
+  METRICS_JOINS = <<~SQL.freeze
+    LEFT JOIN (%<sense_metrics>s) AS sense_metrics   ON sense_metrics.word_id   = words.id
+    LEFT JOIN (%<variant_metrics>s) AS variant_metrics ON variant_metrics.word_id = words.id
+    LEFT JOIN (%<feature_metrics>s) AS feature_metrics ON feature_metrics.word_id = words.id
+  SQL
+
+  # UPDATE の SET 句(COLUMN_EXPRESSIONS から組む)。
+  SET_CLAUSE = COLUMN_EXPRESSIONS.map { |column, expression| "words.#{column} = #{expression}" }.join(",\n").freeze
+
   # updated_at は意図的に更新しない: 代表値は表示内容を変えないので、ここで進めてしまうと
   # 詳細ページの ETag と llms-full.txt のキャッシュが無意味に失効する。
   UPDATE_SQL = <<~SQL.freeze
     UPDATE words
-    LEFT JOIN (%<sense_metrics>s) AS sense_metrics   ON sense_metrics.word_id   = words.id
-    LEFT JOIN (%<variant_metrics>s) AS variant_metrics ON variant_metrics.word_id = words.id
-    LEFT JOIN (%<feature_metrics>s) AS feature_metrics ON feature_metrics.word_id = words.id
-    SET words.sense_count             = COALESCE(sense_metrics.sense_count, 0),
-        words.variant_count           = COALESCE(variant_metrics.variant_count, 0),
-        words.feature_count           = COALESCE(feature_metrics.feature_count, 0),
-        words.min_reading_length      = sense_metrics.min_reading_length,
-        words.max_reading_length      = sense_metrics.max_reading_length,
-        words.max_mora_count          = sense_metrics.max_mora_count,
-        words.max_small_kana_count    = sense_metrics.max_small_kana_count,
-        words.max_chouon_count        = sense_metrics.max_chouon_count,
-        words.max_dakuten_count       = sense_metrics.max_dakuten_count,
-        words.min_ring_crossing_count = sense_metrics.min_ring_crossing_count,
-        words.max_ring_crossing_count = sense_metrics.max_ring_crossing_count,
-        words.min_reading             = sense_metrics.min_reading,
-        words.max_reading             = sense_metrics.max_reading,
-        words.min_reversed_reading    = sense_metrics.min_reversed_reading
+    #{METRICS_JOINS}SET #{SET_CLAUSE}
     %<word_filter>s
+  SQL
+
+  # 代表値が集計と食い違う語を探す SELECT(backfill:verify 用。読み取りだけ)。列ごとに、いまの値・あるべき値・
+  # 食い違うかを返す。比べるのは NULL を等しいとみなす <=> で、文字列の列はカラムの照合順序(as_ci)で比べる
+  # (並び替えの結果が変わらない違い、たとえばひらがなとカタカナの違いは不整合としない)。
+  MISMATCH_COLUMNS = COLUMN_EXPRESSIONS.map do |column, expression|
+    "words.#{column} AS actual_#{column}, #{expression} AS expected_#{column}, " \
+      "NOT (words.#{column} <=> #{expression}) AS #{column}_differs"
+  end.join(",\n").freeze
+  MISMATCH_CONDITION = COLUMN_EXPRESSIONS.map { |column, expression| "NOT (words.#{column} <=> #{expression})" }
+                                         .join("\nOR ").freeze
+  MISMATCH_SQL = <<~SQL.freeze
+    SELECT words.id AS word_id,
+    #{MISMATCH_COLUMNS}
+    FROM words
+    #{METRICS_JOINS}WHERE #{MISMATCH_CONDITION}
+    ORDER BY words.id
   SQL
 
   class << self
@@ -106,22 +135,37 @@ class WordSenseMetrics
       ApplicationRecord.connection.execute(update_sql(ids))
     end
 
+    # 代表値が語義側の集計と食い違う語と列(backfill:verify が使う。読み取りだけで、何も直さない)。
+    # [{ word_id:, column:, actual:, expected: }, ...]
+    def mismatches
+      sql = format(MISMATCH_SQL, **metrics_subqueries(""))
+      ApplicationRecord.connection.select_all(sql).flat_map do |row|
+        COLUMN_EXPRESSIONS.keys.filter_map do |column|
+          next unless row["#{column}_differs"].to_i == 1
+
+          { word_id: row["word_id"], column: column, actual: row["actual_#{column}"], expected: row["expected_#{column}"] }
+        end
+      end
+    end
+
     # 実行される UPDATE 文(refresh! から呼ぶ)。
     def update_sql(ids)
       # 1語の焼き直しでも派生表を全件 GROUP BY しないよう、内側にも同じ絞り込みを掛ける。
       sense_filter = ids ? sanitize("WHERE word_senses.word_id IN (?)", ids) : ""
       word_filter  = ids ? sanitize("WHERE words.id IN (?)", ids) : ""
 
-      format(
-        UPDATE_SQL,
-        sense_metrics: format(SENSE_METRICS_SQL, sense_filter: sense_filter),
-        variant_metrics: format(VARIANT_METRICS_SQL, sense_filter: sense_filter),
-        feature_metrics: format(FEATURE_METRICS_SQL, sense_filter: sense_filter),
-        word_filter: word_filter
-      )
+      format(UPDATE_SQL, **metrics_subqueries(sense_filter), word_filter: word_filter)
     end
 
     private
+
+    def metrics_subqueries(sense_filter)
+      {
+        sense_metrics: format(SENSE_METRICS_SQL, sense_filter: sense_filter),
+        variant_metrics: format(VARIANT_METRICS_SQL, sense_filter: sense_filter),
+        feature_metrics: format(FEATURE_METRICS_SQL, sense_filter: sense_filter)
+      }
+    end
 
     def sanitize(condition, ids)
       ApplicationRecord.sanitize_sql_array([ condition, ids ])

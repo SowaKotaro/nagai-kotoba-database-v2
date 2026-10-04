@@ -131,10 +131,25 @@ class WordSense < ApplicationRecord
                              .select(:word_sense_id))
   }
 
+  # 読み(reading)から導く派生値。保存時の before_validation と、修復タスクの backfill:reading_metrics・
+  # backfill:verify の 3 か所がこれだけを使う(派生値の列を足すときはここに足せば 3 か所に効く。
+  # 一覧と直し方は docs/data-model.md §3)。vowel_pattern は rhythm_pattern から作る。
+  def self.reading_derivations(reading)
+    rhythm = RhythmPattern.call(reading)
+    {
+      rhythm_pattern: rhythm,
+      vowel_pattern: VowelPattern.call(rhythm),
+      mora_count: MoraCount.call(reading),
+      # 円環交差数は弦の総当たり判定で SQL では書けないため Ruby 側で計算する(KanaRing 参照)。
+      ring_crossing_count: KanaRing.crossing_count(reading),
+      # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
+      last_char: LastChar.call(reading)
+    }
+  end
+
   # 読みは textarea 入力(折り返し表示)のため、混入した改行を先に除去する。
   before_validation :strip_reading_newlines
   # 読み(reading)由来の派生値は常に reading から導出する(手入力させない)。
-  # vowel_pattern は rhythm_pattern から作るため、rhythm_pattern の後に生成する。
   before_validation :assign_reading_derivations
 
   private
@@ -146,13 +161,7 @@ class WordSense < ApplicationRecord
   end
 
   def assign_reading_derivations
-    self.rhythm_pattern = RhythmPattern.call(reading)
-    self.vowel_pattern = VowelPattern.call(rhythm_pattern)
-    self.mora_count = MoraCount.call(reading)
-    # 円環交差数は弦の総当たり判定で SQL では書けないため Ruby 側で計算する(KanaRing 参照)。
-    self.ring_crossing_count = KanaRing.crossing_count(reading)
-    # last_char は SQL 生成カラムにできない事情があり Ruby 側で計算する(LastChar 参照)。
-    self.last_char = LastChar.call(reading)
+    assign_attributes(self.class.reading_derivations(reading))
   end
 
   # 代表値の焼き直し対象(RefreshesWordMetrics)。
