@@ -640,12 +640,11 @@ a.tag:hover {
   margin-top: var(--space-6);
 }
 
-/* .section-heading は 2 か所で定義している(もう 1 つは後ろの「セクション見出し」)。
-   margin は後ろの定義が記述順で勝つので、ここの margin は効いていない。下罫と padding はここだけが持つ */
+/* 索引ページの節の見出し(.section-heading を使うのはここだけ) */
 .section-heading {
   font-size: 17px;
   color: var(--text-muted);
-  margin: 0 0 var(--space-4);
+  margin: var(--space-7) 0 var(--space-4);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
 }
@@ -1970,8 +1969,7 @@ a.tag:hover .genre-hub__count {
 }
 
 /* 右はそのほかの数。ラベル左・値右の等幅の行で積み、縦罫で左と分ける。
-   罫は区画の高さいっぱいに通したいので、行のほうを縦中央に寄せる。
-   767px 以下の gap は、ずっと後ろの @media の .stats-grid が同じ特異度の記述順で勝ち、8px 16px になる */
+   罫は区画の高さいっぱいに通したいので、行のほうを縦中央に寄せる(767px 以下の gap はすぐ下の @media) */
 .stats-grid--rows {
   flex-direction: column;
   align-items: stretch;
@@ -1994,6 +1992,12 @@ a.tag:hover .genre-hub__count {
 .stats-grid--rows .stats-grid__item dd {
   font-family: var(--font-mono);
   font-size: 11px;
+}
+
+@media (max-width: 767px) {
+  .stats-grid--rows {
+    gap: var(--space-2) var(--space-4);
+  }
 }
 
 /* 狭幅では左右に割らず、数の下に内訳を積む(縦罫も外す) */
@@ -2302,14 +2306,6 @@ a.tag:hover .genre-hub__count {
 @media (max-width: 700px) {
   .home-featured__body {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* 同じ特異度の .stats-grid--rows の gap(2px)を記述順で上書きする。実際に効くのはホームの --rows だけ
-   (管理画面は admin.css の .is-admin .stats-grid が特異度で勝つ) */
-@media (max-width: 767px) {
-  .stats-grid {
-    gap: var(--space-2) var(--space-4);
   }
 }
 
@@ -2722,14 +2718,6 @@ a.tag:hover .genre-hub__count {
 .admin-words-table__unannotated,
 .admin-words-table__on-hold {
   font-size: 13px;
-}
-
-/* --- セクション見出し ---
-   .section-heading の 2 つ目の定義(1 つ目は索引ページの節)。margin はこちらが記述順で勝つ */
-.section-heading {
-  margin: var(--space-7) 0 var(--space-4);
-  font-size: 17px;
-  color: var(--text-muted);
 }
 
 /* --- ページネーション --- */

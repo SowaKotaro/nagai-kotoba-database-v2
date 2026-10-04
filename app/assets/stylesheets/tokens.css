@@ -92,6 +92,9 @@
   /* 本文カラムは狭く。読み物は 640px、一覧・データ面は 800px まで */
   --content-width: 800px;
   --reading-width: 640px;
+  /* ヘッダー・管理ナビ・フッター(2 か所)の枠の幅。本文より少し広く、ブランドマークとフッターの
+     1 列目の左端を揃える(docs/design.md §5.1) */
+  --frame-width: 1040px;
 
   --transition: 160ms ease;
 
