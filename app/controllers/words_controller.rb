@@ -102,19 +102,14 @@ class WordsController < ApplicationController
   def feed_words
     Word.annotated
         .includes(word_senses: { genre: { parent: :parent } })
-        .order(annotated_at: :desc, id: :desc)
+        .order(WordSort.new("created_desc").order_clause)
         .limit(FEED_LIMIT)
         .to_a
   end
 
-  # フィードの鮮度判定(条件付きGET)に関わるレコード一式。エントリ本文のリード文は
-  # ジャンル階層の名称を含むが、マスタは touch されず Word が古いままになるため、
-  # ジャンル(祖先含む)も明示的に加える(words#show の cache_dependencies と同じ理由)。
+  # フィードの鮮度判定(条件付きGET)に関わるレコード一式(エントリごとの中身は Word#feed_cache_dependencies)。
   def feed_cache_records
-    @words.flat_map do |word|
-      genres = word.word_senses.flat_map { |sense| sense.genre&.self_and_ancestors }
-      [ word, *genres.compact ]
-    end
+    @words.flat_map(&:feed_cache_dependencies)
   end
 
   # 条件指定があれば、その条件を満たす語義を持つ注釈済みの語だけに絞る。

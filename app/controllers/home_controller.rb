@@ -16,7 +16,7 @@ class HomeController < ApplicationController
     # (words#index の atom 形式。WordsController#feed_words)と同じ基準。
     @recent_words = Word.annotated
                         .includes(word_senses: [ :part_of_speech, :entity_type ])
-                        .order(annotated_at: :desc, id: :desc)
+                        .order(WordSort.new("created_desc").order_clause)
                         .limit(RECENT_WORDS_LIMIT)
     # 最長ランキング(読みが長い順)。ビューでは「読みが長い言葉」として新着の下に置く。
     @longest_words = Word.annotated
@@ -28,20 +28,7 @@ class HomeController < ApplicationController
     # load してから first を取る。未読込のリレーションに first を呼ぶと LIMIT 1 の
     # 問い合わせが別に飛び、ビューで改めて RANKING_LIMIT 件を引き直すことになる。
     @longest_reading_length = @longest_words.load.first&.primary_sense&.reading_length
-    @featured_word = featured_word
-  end
-
-  private
-
-  # 「今日の一語」: 日付から決まる語(日替わり・同じ日は同じ語)。注釈済みから選ぶ。
-  def featured_word
-    return nil if @word_count.zero?
-
-    # ジャンル・エンティティ・品詞・語種まで見せるので、1語ぶんとはいえ個別に引かないよう先読みする
-    Word.annotated
-        .includes(word_senses: [ { genre: { parent: :parent } }, :entity_type, :part_of_speech, :word_origins ])
-        .order(:id)
-        .offset(Date.current.jd % @word_count)
-        .first
+    # 今日の一語。選ぶときの語数は、看板と同じキャッシュした語数(理由は Word.featured_on)。
+    @featured_word = Word.featured_on(Date.current, count: @word_count)
   end
 end

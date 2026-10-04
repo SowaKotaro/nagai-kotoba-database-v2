@@ -62,6 +62,19 @@ class Word < ApplicationRecord
   # has_many には order を付けていないので、並びが意味を持つところはこれを使う。
   def ordered_senses = word_senses.sort_by(&:id)
 
+  # 「今日の一語」: 日付から決まる公開語(日替わり・同じ日は同じ語。id 順に並べて date.jd % count 番目)。
+  # count は公開語の数で、ホームはキャッシュした語数(HomeStatistics)を渡す。ここで数え直すと、
+  # 公開・保留の直後(キャッシュの語数と実数がずれる間)に別の語が出て、キャッシュで省いた COUNT も毎回に戻る。
+  # ホームで語義のジャンル(祖先まで)・エンティティ・品詞・語種まで見せるので、1 語ぶんでも先読みする。
+  def self.featured_on(date, count:)
+    return nil if count.zero?
+
+    annotated.includes(word_senses: [ { genre: { parent: :parent } }, :entity_type, :part_of_speech, :word_origins ])
+             .order(:id)
+             .offset(date.jd % count)
+             .first
+  end
+
   # 詳細ページの鮮度判定(条件付きGET)に関わるレコード一式。
   # word_senses は touch: true で Word の updated_at を動かすが、ジャンル・品詞などの
   # マスタは touch しない。名称を変えただけでは Word が古いままになり、ETag/Last-Modified が
@@ -73,6 +86,14 @@ class Word < ApplicationRecord
         *sense.word_origins, *sense.word_sense_features.map(&:linguistic_feature) ]
     end
     [ self, *masters.compact ]
+  end
+
+  # 新着フィード(Atom)の 1 エントリの鮮度判定に関わるレコード。エントリ本文のリード文はジャンル階層の
+  # 名称を含むが、マスタは touch されず Word が古いままになるため、ジャンル(祖先含む)も加える
+  # (cache_dependencies と同じ理由。リード文に出ない品詞・語種などは含めない)。
+  def feed_cache_dependencies
+    genres = word_senses.flat_map { |sense| sense.genre&.self_and_ancestors }
+    [ self, *genres.compact ]
   end
 
   # 表層形は textarea 入力(折り返し表示)のため、混入した改行を先に除去する。

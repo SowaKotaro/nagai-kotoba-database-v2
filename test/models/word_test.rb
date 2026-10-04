@@ -118,6 +118,19 @@ class WordTest < ActiveSupport::TestCase
     assert_empty empty.ordered_senses
   end
 
+  # 今日の一語は、公開語を id 順に並べた date.jd % count 番目。count は渡された数で、数え直さない。
+  test "featured_on は日付と渡された語数で決まり、語数が 0 なら nil" do
+    ordered = Word.annotated.order(:id).to_a # フィクスチャの公開語は 2 語
+    date = Date.new(2026, 10, 1)
+    date += 1 until date.jd.even?
+
+    assert_equal ordered[0], Word.featured_on(date, count: 2)
+    assert_equal ordered[1], Word.featured_on(date + 1, count: 2)
+    # 渡された語数で割る(実際は 2 語でも、1 と渡せばいつも先頭)
+    assert_equal ordered[0], Word.featured_on(date + 1, count: 1)
+    assert_nil Word.featured_on(date, count: 0)
+  end
+
   # 「今月の新収録」(ホームと統計)の定義。月の境界は Time.zone で切り、created_at は見ない。
   test "annotated_this_month は今月 annotated_at が立った公開語だけで、created_at は見ない" do
     travel_to Time.zone.local(2026, 10, 15, 12, 0) do
