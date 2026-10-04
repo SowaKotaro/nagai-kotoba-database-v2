@@ -77,7 +77,6 @@ module StructuredDataHelper
 
   # 収録データのライセンス。DefinedTermSet(CreativeWork 派生)に付与する。
   # DefinedTerm(Intangible 派生)は license を持てないため Set 側に置く。
-  CC_BY_URL = "https://creativecommons.org/licenses/by/4.0/deed.ja".freeze
 
   # 単語詳細: 語義ごとの DefinedTerm と、それらが属する DefinedTermSet。
   # 読み・文字数・韻・ジャンル等の属性を PropertyValue として添え、
@@ -90,7 +89,7 @@ module StructuredDataHelper
     graph = [
       { "@type" => "DefinedTermSet", "@id" => defined_term_set_id,
         "name" => t("layouts.brand"), "url" => SiteUrl.absolute("/"),
-        "inLanguage" => "ja", "license" => CC_BY_URL }
+        "inLanguage" => "ja", "license" => DataLicense::URL }
     ] + terms
 
     json_ld_tag("@context" => "https://schema.org", "@graph" => graph)
@@ -140,8 +139,8 @@ module StructuredDataHelper
     end
   end
 
-  # ジャンルを「大 › 中 › 小」のパス文字列にする(リード文と同じ区切り)。
+  # ジャンルを「大 › 中 › 小」のパス文字列にする(リード文と同じ Genre#path_text)。
   def genre_path_name(genre)
-    genre&.self_and_ancestors&.map(&:name)&.join(t("words.lead.genre_separator"))
+    genre&.path_text
   end
 end

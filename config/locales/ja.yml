@@ -385,7 +385,6 @@ ja:
       base_multi_reading: "「%{surface}」は、読み%{readings}の日本語の長い言葉。"
       reading: "「%{reading}」"
       metrics_separator: "・"
-      genre_separator: " › "
       genre: "ジャンルは %{path}。"
       meaning: "%{meaning}"
       sense_count: "語義は%{count}つ。"
@@ -1273,6 +1272,8 @@ ja:
         count: "%{count}件"
 
   genres:
+    # ジャンルのパス(大 › 中 › 小)を 1 行の文字列にするときの区切り(Genre.join_path)。
+    path_separator: " › "
     index:
       title: "ジャンルから探す"
       eyebrow: "ジャンル一覧"

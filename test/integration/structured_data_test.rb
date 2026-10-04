@@ -51,7 +51,7 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
 
     set = flat_map_graph.find { |n| n["@type"] == "DefinedTermSet" }
     assert_equal "#{CANONICAL_HOST}/#termset", set["@id"]
-    assert_equal StructuredDataHelper::CC_BY_URL, set["license"]
+    assert_equal DataLicense::URL, set["license"]
     assert_equal "ja", set["inLanguage"]
 
     term = flat_map_graph.find { |n| n["@type"] == "DefinedTerm" }

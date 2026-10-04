@@ -84,4 +84,12 @@ class GenreTest < ActiveSupport::TestCase
   test "階層の違うジャンル同士は統合できない" do
     assert_raises(ArgumentError) { genres(:small_novel).merge_into!(genres(:medium_japanese)) }
   end
+
+  # 1 行のパスの区切りは i18n の genres.path_separator だけ(リード文・JSON-LD・llms-full・タグ管理が共有する)。
+  test "path_names は大→中→小の名前、path_text と join_path は 1 つの区切りでつなぐ" do
+    assert_equal %w[文学 日本文学 小説], genres(:small_novel).path_names
+    assert_equal "文学 › 日本文学 › 小説", genres(:small_novel).path_text
+    assert_equal "文学", genres(:large_literature).path_text
+    assert_equal "芸術 › 音楽", Genre.join_path(%w[芸術 音楽])
+  end
 end

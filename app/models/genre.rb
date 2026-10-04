@@ -24,6 +24,16 @@ class Genre < ApplicationRecord
     chain
   end
 
+  # 大→中→小の名前の並び(自分を含む)。
+  def path_names = self_and_ancestors.map(&:name)
+
+  # 「大 › 中 › 小」の 1 行。区切りは i18n の genres.path_separator の 1 つだけ
+  # (画面のパンくずは区切りをマークアップで持つ。shared/_genre_path など)。
+  def path_text = self.class.join_path(path_names)
+
+  # 名前の並び(大→中→小)を 1 行にする。提案の genre_path のように、レコードでない並びにも使う。
+  def self.join_path(names) = names.join(I18n.t("genres.path_separator"))
+
   # 大分類(root)を返す。テストだけが使う(アプリからは呼ばない)。
   def root_genre
     self_and_ancestors.first

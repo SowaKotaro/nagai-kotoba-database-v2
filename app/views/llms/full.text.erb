@@ -54,7 +54,7 @@
 - 意味: <%= sense.meaning.squish %>
 <% end %>
 <% if sense.genre %>
-- ジャンル: <%= sense.genre.self_and_ancestors.map(&:name).join(" › ") %>
+- ジャンル: <%= sense.genre.path_text %>
 <% end %>
 <% if sense.part_of_speech %>
 - 品詞: <%= sense.part_of_speech.name %>

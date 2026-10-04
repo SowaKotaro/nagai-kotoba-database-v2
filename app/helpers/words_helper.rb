@@ -45,7 +45,7 @@ module WordsHelper
                  metrics: sense_metrics(sense))
 
     if sense.genre
-      path = sense.genre.self_and_ancestors.map(&:name).join(t("words.lead.genre_separator"))
+      path = sense.genre.path_text
       sentence += t("words.lead.genre", path: path)
     end
 
