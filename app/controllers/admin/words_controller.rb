@@ -39,7 +39,7 @@ class Admin::WordsController < Admin::BaseController
     @registration = BulkWordRegistration.new(text_params)
     unless @registration.analyzable?
       flash.now[:alert] = t("admin.words.bulk.empty")
-      return render :new, status: :unprocessable_entity
+      return render :new, status: :unprocessable_content
     end
 
     @rows = @registration.reading_rows
@@ -84,7 +84,7 @@ class Admin::WordsController < Admin::BaseController
       # 正常な行は登録済み。エラー行を示す(貼り付け画面に結果を表示)。
       flash.now[:alert] = t("admin.words.bulk.partial")
       @registration = BulkWordRegistration.new
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

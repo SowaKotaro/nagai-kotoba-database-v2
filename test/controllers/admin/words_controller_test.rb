@@ -5,7 +5,10 @@ require "test_helper"
 # BulkWordRegistrationTest、読み欄のフロント検証は AdminWordsReadingFormatTest で見る。
 # 読みの自動取得(ReadingExtractor)は CI に mecab が無くても安定させるためスタブする。
 class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
-  setup { @word = words(:abc_murder) }
+  setup do
+    sign_in_as(admins(:one))
+    @word = words(:abc_murder)
+  end
 
   # 表層形→読みの対応表を返すスタブ。未知の語は読み空(nil)にする。
   def stub_readings(map)
@@ -15,7 +18,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 一覧 ---
   test "一覧に読み・注釈状態・件数とコンソールへのリンクが出る" do
-    sign_in_as(Admin.take)
     get admin_words_path
     assert_response :success
     # 表層形はコンソール(ピンポイント・アノテーション)へのリンク
@@ -30,7 +32,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "一覧に一括適用パネルと選択チェックボックスが出る(Issue 37)" do
-    sign_in_as(Admin.take)
     get admin_words_path
     # パネル(ジャンルピッカー・チップ・テンプレ文・注釈済みチェック)
     assert_select ".bulk-annotation form#bulk-annotation-form" do
@@ -46,7 +47,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "一覧を表層形・読み・別表記で検索できる" do
-    sign_in_as(Admin.take)
     # 表層形の部分一致
     get admin_words_path(q: "ハルヒ")
     assert_select "td a", text: words(:pending_haruhi).surface
@@ -61,7 +61,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "一覧を注釈状態(未対応/保留/完了)で絞り込める" do
-    sign_in_as(Admin.take)
     # 未対応: 保留・完了の語は出さない
     get admin_words_path(status: "annotation_pending")
     assert_select "td a", text: words(:pending_haruhi).surface
@@ -82,7 +81,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "一覧をタグ(品詞・エンティティ・語種・ジャンル)で絞り込め、ジャンルは大分類でも配下ごと絞る" do
-    sign_in_as(Admin.take)
     # 品詞「名詞」: murder と curry の語義に付いている
     get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id)
     assert_select "td a", text: @word.surface
@@ -114,7 +112,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   # ジャンルを配下へ広げる処理は、管理一覧が WordSenseSearch とは別に持っている(Genre#self_and_descendant_ids)。
   # 独立した 大 → 中 2 つ → 小 3 つ の木で、いまの結果を集合ごと固定する。未公開の語も出る。
   test "ジャンル絞り込みは大・中・小のどれを選んでも配下だけに広げる(兄弟の分類は混ぜない)" do
-    sign_in_as(Admin.take)
     large = Genre.create!(level: :large, name: "法律")
     medium_labor = Genre.create!(level: :medium, name: "労働法", parent: large)
     medium_civil = Genre.create!(level: :medium, name: "民法", parent: large)
@@ -122,7 +119,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     small_rules = Genre.create!(level: :small, name: "規則", parent: medium_labor)
     small_family = Genre.create!(level: :small, name: "家族法", parent: medium_civil)
 
-    words = {
+    surfaces = {
       cases: [ "残業手当不払い請求事件", small_cases, true ], rules: [ "就業規則の不利益変更", small_rules, true ],
       family: [ "親権者変更の申立て事件", small_family, true ], draft: [ "未公開の判例の見本", small_cases, false ]
     }.transform_values do |surface, genre, published|
@@ -134,17 +131,16 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     end
     listed = lambda do |genre|
       get admin_words_path(genre_id: genre.id)
-      css_select("td a").map(&:text).map(&:strip) & words.values
+      css_select("td a").map(&:text).map(&:strip) & surfaces.values
     end
 
-    assert_equal words.values_at(:cases, :rules, :family, :draft).sort, listed.(large).sort
-    assert_equal words.values_at(:cases, :rules, :draft).sort, listed.(medium_labor).sort
-    assert_equal words.values_at(:family).sort, listed.(medium_civil).sort
-    assert_equal words.values_at(:cases, :draft).sort, listed.(small_cases).sort
+    assert_equal surfaces.values_at(:cases, :rules, :family, :draft).sort, listed.(large).sort
+    assert_equal surfaces.values_at(:cases, :rules, :draft).sort, listed.(medium_labor).sort
+    assert_equal surfaces.values_at(:family).sort, listed.(medium_civil).sort
+    assert_equal surfaces.values_at(:cases, :draft).sort, listed.(small_cases).sort
   end
 
   test "タグ絞り込みは検索・注釈状態と組み合わせられる(AND)" do
-    sign_in_as(Admin.take)
     # 品詞「名詞」× 表層形「カレー」→ curry のみ
     get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id, q: "カレー")
     assert_select "td a", text: words(:curry).surface
@@ -156,7 +152,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "タグ絞り込みは状態タブ・一括適用フォーム・セレクトに引き継がれる" do
-    sign_in_as(Admin.take)
     pos_id = parts_of_speech(:noun).id
     get admin_words_path(part_of_speech_id: pos_id)
 
@@ -170,7 +165,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "一覧は100語ごとにページ送りする" do
-    sign_in_as(Admin.take)
     # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)
     Word.insert_all((1..110).map { |i| { surface: "ページ送り検証語#{format('%03d', i)}", char_type_pattern: "漢" } })
 
@@ -185,7 +179,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- step2: 読みの取得 ---
   test "箇条書きから読みを取得すると編集可能な読み欄が出る(重複判定はしない)" do
-    sign_in_as(Admin.take)
     readings = { "天上天下唯我独尊" => "テンジョウテンゲユイガドクソン" }
 
     stub_readings(readings) do
@@ -204,15 +197,13 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "テキストが空だと読み取得は 422 を返す" do
-    sign_in_as(Admin.take)
     post readings_admin_words_path, params: { bulk_word_registration: { text: "" } }
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_select "p.form-alert"
   end
 
   # --- step2: 調査 JSON の反映 ---
   test "調査 JSON を反映すると不一致行に候補チップと不一致バッジが出る" do
-    sign_in_as(Admin.take)
     json = {
       version: "1",
       words: [ { input: "花は桜木人は武士", surface: "花は桜木人は武士",
@@ -234,7 +225,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "壊れた調査 JSON は警告を出し MeCab の読みを保つ" do
-    sign_in_as(Admin.take)
     post apply_research_admin_words_path, params: {
       bulk_word_registration: {
         entries: [ { surface: "猫", reading: "ネコ" } ],
@@ -250,7 +240,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   # step2 フォームは formaction で duplicates と apply_research の2つに送るため、グローバル CSRF
   # トークンを埋める(per-form トークンだと apply_research 側で弾かれる)。CSRF を実際に有効化して確認。
   test "readings フォームのトークンで formaction 先(apply_research)も CSRF を通る" do
-    sign_in_as(Admin.take)
     ActionController::Base.allow_forgery_protection = true
 
     # step1 → step2(readings) を描画(ヘッダのログアウト等と混ざらないよう action で特定)
@@ -280,7 +269,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- step3: 重複チェック(確定した読みに対して) ---
   test "確定した読みで DB の既存読みに似た語に警告を出す" do
-    sign_in_as(Admin.take)
     # murder フィクスチャの読み「さつじんじけん」に一致する読みを渡す
     post duplicates_admin_words_path, params: {
       bulk_word_registration: { entries: [ { surface: "殺人事件", reading: "さつじんじけん" } ] }
@@ -293,7 +281,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "読みが収録基準(10文字)未満の語はエラー表示し、除外に既定でチェックを入れる" do
-    sign_in_as(Admin.take)
     post duplicates_admin_words_path, params: {
       bulk_word_registration: { entries: [
         { surface: "資本主義", reading: "シホンシュギ" },            # 6文字: 収録基準未満
@@ -311,8 +298,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 登録(create) ---
   test "確認後のエントリを未注釈のまままとめて登録し、除外(_exclude)にチェックした行は登録しない" do
-    sign_in_as(Admin.take)
-
     assert_difference [ "Word.count", "WordSense.count" ], 2 do
       post admin_words_path, params: {
         bulk_word_registration: { entries: [
@@ -331,20 +316,16 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "読み欠落のエントリはエラーにして 422 を返す" do
-    sign_in_as(Admin.take)
-
     assert_no_difference -> { Word.count } do
       post admin_words_path, params: {
         bulk_word_registration: { entries: [ { surface: "読みなし語", reading: "" } ] }
       }
     end
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_select ".bulk-result__errors li"
   end
 
   test "エントリが無いと貼り付け画面へ戻す" do
-    sign_in_as(Admin.take)
-
     assert_no_difference -> { Word.count } do
       post admin_words_path, params: { bulk_word_registration: { entries: [] } }
     end
@@ -353,7 +334,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 削除(編集はコンソールへ統合済み。Issue 36) ---
   test "単語を削除すると語義も消える" do
-    sign_in_as(Admin.take)
     word = word_senses(:murder).word
 
     assert_difference -> { Word.count }, -1 do
@@ -364,7 +344,6 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "単語を削除すると、語義に付いた言語学的特徴も消える" do
-    sign_in_as(Admin.take)
     feature_ids = word_senses(:murder).word_sense_features.ids
     assert_equal 2, feature_ids.size
 

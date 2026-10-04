@@ -4,12 +4,12 @@ require "test_helper"
 # 一覧で選択した語への共通属性の一括適用(Issue 37)。適用の中身は BulkAnnotationTest で見る。
 class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as(admins(:one))
     @haruhi = words(:pending_haruhi)
     @bermuda = words(:pending_bermuda)
   end
 
   test "選択した語に一括適用し、検索・注釈状態・タグの絞り込みを保って一覧へ戻る" do
-    sign_in_as(Admin.take)
     filters = { q: "ハルヒ", status: "annotation_pending",
                 genre_id: genres(:large_literature).id, part_of_speech_id: parts_of_speech(:noun).id }
     post admin_bulk_annotation_path, params: filters.merge(
@@ -27,7 +27,6 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "複数語義の語はスキップし、件数をフラッシュで知らせる" do
-    sign_in_as(Admin.take)
     @haruhi.word_senses.create!(reading: "すずみやはるひのゆううつべつぎ")
 
     post admin_bulk_annotation_path, params: {
@@ -39,7 +38,6 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "適用する属性が無いとエラーを知らせて一覧へ戻す" do
-    sign_in_as(Admin.take)
     post admin_bulk_annotation_path, params: { bulk_annotation: { word_ids: [ @haruhi.id ] } }
 
     assert_redirected_to admin_words_path

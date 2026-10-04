@@ -53,7 +53,7 @@ class WordRequestsController < ApplicationController
       redirect_to new_request_path, notice: t(".created")
     else
       restore_form
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -95,7 +95,7 @@ class WordRequestsController < ApplicationController
   end
 
   # 入力を保持したままフォームへ戻す(書いた内容を失わせない)。
-  def reject_with(message, status: :unprocessable_entity)
+  def reject_with(message, status: :unprocessable_content)
     @word_request = WordRequest.new(word_request_params)
     restore_form
     flash.now[:alert] = message

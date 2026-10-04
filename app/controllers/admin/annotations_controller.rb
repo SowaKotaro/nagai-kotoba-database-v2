@@ -49,7 +49,7 @@ class Admin::AnnotationsController < Admin::BaseController
       @proposal = AnnotationProposal.find_by(word_id: @word.id)
       load_masters
       set_navigation
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

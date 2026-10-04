@@ -4,7 +4,7 @@ require "test_helper"
 # 書き出し対象の抽出条件は FeatureResearchExportTest で見る。
 class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as(Admin.take)
+    sign_in_as(admins(:one))
   end
 
   def published_word_without_features(surface: "特徴未調査の語", reading: "トクチョウミチョウサノゴ")

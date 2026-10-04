@@ -26,7 +26,7 @@ class Admin::TagsController < Admin::BaseController
       redirect_to admin_tag_kind_path(@kind.key), notice: t("admin.tags.flash.created", name: @new_record.name)
     else
       load_records
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 
@@ -40,7 +40,7 @@ class Admin::TagsController < Admin::BaseController
     if @record.update(tag_params)
       redirect_to admin_tag_kind_path(@kind.key), notice: t("admin.tags.flash.updated", name: @record.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

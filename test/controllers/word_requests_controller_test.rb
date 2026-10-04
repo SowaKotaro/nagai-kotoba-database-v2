@@ -80,12 +80,12 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: too_many)
     end
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
 
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: { "0" => { surface: "", reading: "" } })
     end
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_select ".form-errors"
   end
 
@@ -107,7 +107,7 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: one_item, token: "tampered")
     end
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_equal I18n.t("word_requests.create.expired"), flash[:alert]
   end
 
@@ -116,7 +116,7 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: one_item, token: expired)
     end
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_equal I18n.t("word_requests.create.expired"), flash[:alert]
   end
 

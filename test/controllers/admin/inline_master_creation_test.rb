@@ -20,7 +20,7 @@ class Admin::InlineMasterCreationTest < ActionDispatch::IntegrationTest
   end
 
   test "名前だけで作成でき、同名が既にあれば二重に作らず既存を返す" do
-    sign_in_as(Admin.take)
+    sign_in_as(admins(:one))
 
     ENDPOINTS.each do |model, (path, name)|
       assert_difference -> { model.count }, 1, model.name do

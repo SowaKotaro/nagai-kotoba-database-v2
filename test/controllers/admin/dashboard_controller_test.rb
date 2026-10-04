@@ -2,8 +2,9 @@ require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
 class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
+  setup { sign_in_as(admins(:one)) }
+
   test "認証済みなら収録状況と各作業への導線を表示する" do
-    sign_in_as(Admin.take)
     get admin_root_path
     assert_response :success
 
@@ -23,7 +24,6 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
 
   test "単語が 1 語も無くても表示でき、注釈の進捗は 0% になる" do
     Word.destroy_all
-    sign_in_as(Admin.take)
     get admin_root_path
     assert_response :success
 

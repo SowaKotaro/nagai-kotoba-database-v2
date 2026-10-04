@@ -82,8 +82,8 @@ class WordRankingTest < ActiveSupport::TestCase
   end
 
   test "同じ値の語は同順位になり、その分だけ次の順位を飛ばす" do
-    words = [ { value: 5 }, { value: 5 }, { value: 3 } ]
-    ranks = board("length_desc").send(:with_ranks, words).map { |row| row[:rank] }
+    rows = [ { value: 5 }, { value: 5 }, { value: 3 } ]
+    ranks = board("length_desc").send(:with_ranks, rows).map { |row| row[:rank] }
     assert_equal [ 1, 1, 3 ], ranks
   end
 

@@ -49,6 +49,6 @@ module InlineMasterCreatable
   end
 
   def render_inline_master_error(messages)
-    render json: { errors: Array(messages) }, status: :unprocessable_entity
+    render json: { errors: Array(messages) }, status: :unprocessable_content
   end
 end

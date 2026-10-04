@@ -39,7 +39,7 @@ class Admin::AnnotationDecksController < Admin::BaseController
     @remaining = queue_scope.count
     load_masters
     flash.now[:alert] = t(".partially_saved", saved: result.saved.size, failed: result.failed.size)
-    render :show, status: :unprocessable_entity
+    render :show, status: :unprocessable_content
   end
 
   # 提案の「新設候補」マスタをその場で作る(1語コンソールの create_master のデッキ版・Issue 66)。

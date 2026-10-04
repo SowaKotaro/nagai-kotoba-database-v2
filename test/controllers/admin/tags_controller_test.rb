@@ -3,9 +3,10 @@ require "test_helper"
 # タグ統括管理。ジャンル等のマスタを横断して一覧・リネーム・削除・統合する。
 # 使用件数・削除可否・統合の中身は TagMasterTest / GenreTest / TagKindTest で見る。
 class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
+  setup { sign_in_as(admins(:one)) }
+
   # --- 表示 ---
   test "ハブと編集画面(現在の名前つき)を表示でき、未知の種別は 404" do
-    sign_in_as(Admin.take)
     get admin_tags_path
     assert_response :success
 
@@ -18,7 +19,6 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "種別一覧は使用中のタグに削除ボタンを出さず、ジャンルは木の順に階層ぶんインデントして並べる" do
-    sign_in_as(Admin.take)
     get admin_tag_kind_path("entity_types")
     assert_response :success
     # 人名(未使用)の行には削除ボタン、書籍名(語義に付与済み)の行は「使用中」
@@ -42,18 +42,16 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 更新・削除・統合 ---
   test "リネームすると付与済みデータの表示名が変わり、重複名は 422 で再描画する" do
-    sign_in_as(Admin.take)
     patch admin_tag_path("entity_types", entity_types(:book_title)), params: { tag: { name: "作品名" } }
     assert_redirected_to admin_tag_kind_path("entity_types")
     assert_equal "作品名", word_senses(:murder).reload.entity_type.name
 
     patch admin_tag_path("parts_of_speech", parts_of_speech(:verb)), params: { tag: { name: "名詞" } }
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_equal "動詞", parts_of_speech(:verb).reload.name
   end
 
   test "未使用タグは削除でき、使用中タグの削除はブロックする" do
-    sign_in_as(Admin.take)
     assert_difference -> { EntityType.count }, -1 do
       delete admin_tag_path("entity_types", entity_types(:person_name))
     end
@@ -67,7 +65,6 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "統合すると統合元が消えデータが付け替わる" do
-    sign_in_as(Admin.take)
     post admin_merge_tags_path("parts_of_speech"),
          params: { source_id: parts_of_speech(:noun).id, target_id: parts_of_speech(:verb).id }
     assert_redirected_to admin_tag_kind_path("parts_of_speech")
@@ -76,7 +73,6 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "統合先が未指定のときや、階層の違うジャンル同士は統合しない" do
-    sign_in_as(Admin.take)
     post admin_merge_tags_path("parts_of_speech"), params: { source_id: parts_of_speech(:noun).id }
     assert_redirected_to admin_tag_kind_path("parts_of_speech")
     assert_equal I18n.t("admin.tags.flash.merge_no_target"), flash[:alert]
@@ -91,7 +87,6 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 新規追加(言語学的特徴のみ) ---
   test "言語学的特徴を追加でき、追加パネルは特徴の一覧にだけ出る" do
-    sign_in_as(Admin.take)
     get admin_tag_kind_path("linguistic_features")
     assert_select "details.tag-add", 1
     get admin_tag_kind_path("parts_of_speech")
@@ -105,14 +100,13 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "空や既存と同じ名前は 422 で再描画し、追加を許可していない種別は 404" do
-    sign_in_as(Admin.take)
     assert_no_difference -> { LinguisticFeature.count } do
       post admin_create_tag_path("linguistic_features"), params: { tag: { name: "" } }
-      assert_response :unprocessable_entity
+      assert_response :unprocessable_content
       assert_select "ul.form-errors li"
 
       post admin_create_tag_path("linguistic_features"), params: { tag: { name: "連濁" } }
-      assert_response :unprocessable_entity
+      assert_response :unprocessable_content
     end
 
     assert_no_difference -> { PartOfSpeech.count } do
@@ -123,8 +117,6 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
 
   # --- seed 管理タグの印と警告(Issue 49) ---
   test "seed 管理タグには一覧で seed 印、編集画面で警告が出る" do
-    sign_in_as(Admin.take)
-
     get admin_tag_kind_path("word_origins")
     assert_response :success
     assert_select "span.tag-table__seed", minimum: 1 # 英語(カタログ収載)に印が付く
@@ -135,8 +127,6 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "カタログ外のタグには seed 印・警告が出ない" do
-    sign_in_as(Admin.take)
-
     # 和語はカタログ外(UI 追加扱い)なので警告なし
     get admin_edit_tag_path("word_origins", word_origins(:wago))
     assert_response :success

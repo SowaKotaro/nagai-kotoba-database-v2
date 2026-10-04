@@ -3,7 +3,7 @@ require "test_helper"
 # 管理者のログイン・ログアウトと、セッションの有効期限(Issue 50)。
 # 期限切れ・延長の判定そのものは SessionTest で見る。
 class SessionsControllerTest < ActionDispatch::IntegrationTest
-  setup { @admin = Admin.take }
+  setup { @admin = admins(:one) }
 
   test "正しい ID とパスワードでログインでき、そのとき期限切れのセッションを掃除する" do
     stale_session = @admin.sessions.create!(updated_at: (Session::LIFETIME + 1.day).ago)

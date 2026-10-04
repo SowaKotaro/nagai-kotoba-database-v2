@@ -3,8 +3,8 @@ require "test_helper"
 # 調査用データの書き出し(Issue 38)。対象語とマスタ一覧をスキル入力用の JSON にまとめる。
 class AnnotationResearchExportTest < ActiveSupport::TestCase
   test "対象語(word_id・表層形・読み)とマスタ一覧を JSON にまとめる" do
-    words = Word.unannotated.includes(:word_senses).order(:id)
-    data = AnnotationResearchExport.new(words).as_json
+    targets = Word.unannotated.includes(:word_senses).order(:id)
+    data = AnnotationResearchExport.new(targets).as_json
 
     assert_equal "2", data["version"]
 

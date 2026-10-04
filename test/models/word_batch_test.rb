@@ -26,8 +26,8 @@ class WordBatchTest < ActiveSupport::TestCase
     batch.words_for(first) # ここでまとめて読む
 
     assert_no_queries do
-      words = batch.words_for(second)
-      words.each { |word| word.word_senses.each { |sense| sense.genre.parent.parent } }
+      loaded_words = batch.words_for(second)
+      loaded_words.each { |word| word.word_senses.each { |sense| sense.genre.parent.parent } }
     end
   end
 

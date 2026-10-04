@@ -7,7 +7,7 @@ class AdminBodyClassTest < ActionDispatch::IntegrationTest
     get new_session_path
     assert_select "body.is-admin", 0
 
-    sign_in_as(Admin.take)
+    sign_in_as(admins(:one))
     [ admin_root_path, admin_words_path, admin_tags_path ].each do |path|
       get path
       assert_select "body.is-admin", { count: 1 }, path

@@ -69,7 +69,7 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
   end
 
   test "すべての語で行を押して選び(Shift+クリックで範囲)、下端のバーからまとめて移す" do
-    words = %w[一番目の言葉 二番目の言葉 三番目の言葉 四番目の言葉].map { |surface| WordCandidate.create!(surface: surface, status: :rejected) }
+    candidates = %w[一番目の言葉 二番目の言葉 三番目の言葉 四番目の言葉].map { |surface| WordCandidate.create!(surface: surface, status: :rejected) }
     registered = WordCandidate.create!(surface: words(:curry).surface, status: :registered)
 
     system_sign_in
@@ -77,14 +77,14 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
     wait_for_stimulus "row-select"
     assert_selector ".cand-bar__hint"
 
-    click_table_row(words[0])
-    click_table_row(words[2], shift: true)
+    click_table_row(candidates[0])
+    click_table_row(candidates[2], shift: true)
     # 登録済みの語は選べない
     click_table_row(registered)
     assert_selector ".cand-bar__selected", text: "3 語を選択中"
 
     click_via_js(expect_css: "#flash", text: "3 語を「仕分け待ち」にしました。") { find(".cand-bar button[value=triage]") }
-    assert_equal %w[triage triage triage rejected registered], [ *words, registered ].map { |candidate| candidate.reload.status }
+    assert_equal %w[triage triage triage rejected registered], [ *candidates, registered ].map { |candidate| candidate.reload.status }
   end
 
   private

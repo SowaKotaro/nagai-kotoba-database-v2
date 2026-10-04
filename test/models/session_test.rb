@@ -2,7 +2,7 @@ require "test_helper"
 
 class SessionTest < ActiveSupport::TestCase
   setup do
-    @admin = Admin.take
+    @admin = admins(:one)
   end
 
   test "作成直後のセッションは失効していない" do
