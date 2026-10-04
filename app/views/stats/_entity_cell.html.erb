@@ -1,7 +1,8 @@
 <%# ツリーマップの1マス。畳んだ「その他」(id: nil)だけは絞り込み先が無いので
-    リンクにせず、淡いグレーの面として置く(名前・件数の組みは同じ)。 %>
+    リンクにせず、淡いグレーの面として置く(名前・件数の組みは同じ)。
+    座標・級数・塗りの濃さは stats_entity_treemap が決めて返す。 %>
 <% style = "left: #{rect[:left]}%; top: #{rect[:top]}%; width: #{rect[:width]}%; height: #{rect[:height]}%; " \
-           "--fill: #{(rect[:count] / max_count).round(3)}" %>
+           "--fill: #{rect[:fill]}" %>
 <%# 面が小さいマスは余白と級数を落とす(名前と件数の組みはどの段でも同じ) %>
 <% cell_class = "entity-treemap__cell entity-treemap__cell--#{rect[:scale]}" %>
 <% if rect[:id] %>

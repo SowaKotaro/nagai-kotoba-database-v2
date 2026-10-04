@@ -129,9 +129,14 @@ module StatsHelper
   # [{ id:, name:, count: }](多い順) を、面積が件数に比例する矩形(squarified treemap)へ
   # 展開する。座標はコンテナに対する % (left/top/width/height)。
   # 細かすぎる型は「その他」(id: nil)にまとめてから割り付ける。
+  # fill は塗りの濃さ(CSS の --fill)。先頭の型(最も件数が多い型)に対する比で、級数の段(scale)が
+  # 全体に対する比で決まるのとは基準が違う。先頭が最多なのは SiteStatistics#entity_types が件数の多い順に
+  # 返すことが前提(畳んだ「その他」が先頭を超えることも理屈の上ではありえ、そのときは 1 を超える)。
   def stats_entity_treemap(entities)
     total = entities.sum { |entity| entity[:count] }.to_f
     return [] if total.zero?
+
+    max_count = entities.first[:count].to_f
 
     items = fold_small_entities(entities, total)
              .map { |entity| entity.merge(area: entity[:count] / total * TREEMAP_WIDTH * TREEMAP_HEIGHT) }
@@ -143,9 +148,21 @@ module StatsHelper
         top: (rect[:y] / TREEMAP_HEIGHT * 100).round(3),
         width: (rect[:w] / TREEMAP_WIDTH * 100).round(3),
         height: (rect[:h] / TREEMAP_HEIGHT * 100).round(3),
-        scale: treemap_scale(rect[:count] / total)
+        scale: treemap_scale(rect[:count] / total),
+        fill: (rect[:count] / max_count).round(3)
       )
     end
+  end
+
+  # ==== 統計ページ §8 言語学的特徴の見本 ========================================================
+
+  # 特徴の実例 { surface:, target:, target_start: } を、表層形の [該当部分の前, 該当部分, 後] に切り分ける
+  # (ビューは真ん中だけを強調する)。該当部分は target_start から target の文字数ぶん。
+  def feature_example_segments(example)
+    surface = example[:surface]
+    start = example[:target_start]
+    length = example[:target].length
+    [ surface[0, start], surface[start, length], surface[(start + length)..] ]
   end
 
   # ==== 統計ページ §7 母音の遷移グラフ ==========================================================

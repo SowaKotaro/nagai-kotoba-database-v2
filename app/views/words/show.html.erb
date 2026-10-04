@@ -199,7 +199,7 @@
           <%# 円環交差数: 交差数のカウントと、読みを結んだ五十音円環の折り畳みを同居させる %>
           <div class="sense-attrs__item" title="<%= t('words.show.crossings_hint') %>">
             <dt><%= icon "pentagram" %><%= t("words.show.crossings") %></dt>
-            <dd><%= render "words/kana_ring", reading: sense.reading %></dd>
+            <dd><%= render "words/kana_ring", sense: sense %></dd>
           </div>
 
           <div class="sense-attrs__item">

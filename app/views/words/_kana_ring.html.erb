@@ -1,8 +1,10 @@
-<%# 円環交差数の値。図(五十音の円環を一筆書きにした線画)はページ頭のレールに出しているので、
-    ここでは数値だけを静かに置く(docs/design.md §5.4 / §5.9)。 %>
-<% crossings = KanaRing.crossing_count(reading) %>
-<% if crossings %>
-  <span class="mono kana-ring__count"><%= t("words.show.crossings_count", count: crossings) %></span>
+<%# locals: (sense:) -%>
+<%# 円環交差数の値。保存列 word_senses.ring_crossing_count を出す(読みからここで計算し直さない。
+    値の作り方と直し方は docs/data-model.md §3)。保存列は NULL を許すので、NULL のときは「—」にする。
+    図(五十音の円環を一筆書きにした線画)はページ頭のレールに出しているので、
+    ここでは数値だけを静かに置く(docs/design.md §5.4 / §5.9)。 -%>
+<% if sense.ring_crossing_count %>
+  <span class="mono kana-ring__count"><%= t("words.show.crossings_count", count: sense.ring_crossing_count) %></span>
 <% else %>
   <span class="sense-undefined"><%= t("words.show.undefined") %></span>
 <% end %>

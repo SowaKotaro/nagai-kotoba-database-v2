@@ -35,12 +35,10 @@
 <% if @stats.entity_types.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.origins.entity_heading") %></h3>
   <p class="stats-section__lead"><%= t("stats.index.origins.entity_lead") %></p>
-  <%# 先頭行を最大とみなす(SiteStatistics#entity_types が件数の多い順に返すことが前提)。
-      下の「集計対象」も、語種は SiteStatistics の covered を使うが、こちらはビューで件数を合計している %>
-  <% max_count = @stats.entity_types.first[:count].to_f %>
+  <%# 下の「集計対象」は、語種は SiteStatistics の covered を使うが、こちらはビューで件数を合計している %>
   <div class="entity-treemap">
     <% stats_entity_treemap(@stats.entity_types).each do |rect| %>
-      <%= render "entity_cell", rect: rect, max_count: max_count %>
+      <%= render "entity_cell", rect: rect %>
     <% end %>
   </div>
   <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.entity_types.sum { |entity| entity[:count] })) %></p>

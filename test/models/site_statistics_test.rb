@@ -131,6 +131,9 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_in_delta 1.0, first["a"][:share]
     assert_equal 0, first["i"][:count]
 
+    # その層まで読みが続く語義の割合(auiie は 5 拍、aee は 3 拍)
+    assert_equal [ 100.0, 100.0, 100.0, 50.0, 50.0 ], transitions[:layers].map { |layer| layer[:reach_percent] }
+
     # エッジは 25 通り × 4 区間(0 件の組も持つ)
     assert_equal 100, transitions[:edges].size
     gap = transitions[:edges].select { |edge| edge[:position] == 1 }.index_by { |edge| [ edge[:from], edge[:to] ] }

@@ -243,6 +243,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_match sense.meaning, response.body
     # 読み・文字数・ジャンルを散文化した定義文(Issue 18)。文面の組み立ては WordsHelperTest で見る
     assert_select ".word-flavor .word-flavor__text", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
+    # 円環交差数(さつじんじけん は 3 回)
+    assert_select ".kana-ring__count", text: I18n.t("words.show.crossings_count", count: 3)
   end
 
   test "詳細に Web 検索(別タブ)・シェア(X・URL コピー)・ランダムの導線がある" do
@@ -284,6 +286,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.chip[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id), text: "連濁"
     assert_select "ruby.annotation-target", text: /殺人/
     assert_select "ruby.annotation-target rt", text: "さつじん"
+  end
+
+  # 円環交差数は保存列(word_senses.ring_crossing_count)を出し、読みから計算し直さない。
+  # 保存列は NULL を許すので、NULL の語義は「—」にする(値の直し方は docs/data-model.md §3.4)。
+  test "詳細の円環交差数は保存列の値を出し、NULL なら「—」にする" do
+    sense = word_senses(:murder) # 読みから求めると 3 回
+    crossings = ".sense-attrs__item[title='#{I18n.t('words.show.crossings_hint')}']"
+
+    sense.update_columns(ring_crossing_count: 7)
+    get word_path(sense.word)
+    assert_select "#{crossings} .kana-ring__count", text: I18n.t("words.show.crossings_count", count: 7)
+
+    sense.update_columns(ring_crossing_count: nil)
+    get word_path(sense.word)
+    assert_select "#{crossings} .kana-ring__count", count: 0
+    assert_select "#{crossings} .sense-undefined", text: I18n.t("words.show.undefined")
   end
 
   test "詳細は未登録の属性を「—」で示す" do

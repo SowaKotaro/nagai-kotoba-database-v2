@@ -90,4 +90,4 @@
       top_to: t("vowel_rows.#{top[:to]}"),
       top_count: number_with_delimiter(top[:count]),
       last: last[:position], last_count: number_with_delimiter(last[:total]),
-      last_percent: (last[:total] * 100.0 / @stats.vowel_transitions[:total]).round(1)) %></p>
+      last_percent: last[:reach_percent]) %></p>
