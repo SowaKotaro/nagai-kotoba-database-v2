@@ -61,11 +61,9 @@ class WordRequestDuplicateCheck
     "word_request_duplicate_check/#{scope.count}-#{scope.maximum(:updated_at)&.to_i}"
   end
 
-  # NFKC 正規化(半角カナ・合成濁点を畳む)し、ひらがなをカタカナへ寄せる。
-  # DB 側の照合順序(utf8mb4_0900_as_ci)と同じく、かなの種類は同一視し清濁は区別する。
-  def self.fold(value)
-    value.to_s.unicode_normalize(:nfkc).tr("ぁ-ゖ", "ァ-ヶ")
-  end
+  # 照合キー。かなの畳み込み(KanaFold.to_katakana)で、DB 側の照合順序(utf8mb4_0900_as_ci)と同じく
+  # かなの種類は同一視し清濁は区別する。
+  def self.fold(value) = KanaFold.to_katakana(value)
 
   private
 

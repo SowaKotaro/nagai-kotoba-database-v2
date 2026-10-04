@@ -14,14 +14,7 @@ class MoraCount
 
   # reading からモーラ数を返す。nil / 空文字は 0。
   def self.call(reading)
-    normalize(reading).chars.count { |char| !SMALL_KANA.include?(char) }
+    # RhythmPattern と同じく、ひらがなへ寄せてから数える(半角カナ・合成濁点も畳む)。
+    KanaFold.to_hiragana(reading).chars.count { |char| !SMALL_KANA.include?(char) }
   end
-
-  # NFKC 正規化(半角カナ・合成濁点を畳む)してからカタカナをひらがなへ寄せる。
-  # RhythmPattern と同じ正規化にそろえ、カナ表記でも同じ結果を得る。
-  def self.normalize(reading)
-    reading.to_s.unicode_normalize(:nfkc).tr("ァ-ヶ", "ぁ-ゖ")
-  end
-
-  private_class_method :normalize
 end

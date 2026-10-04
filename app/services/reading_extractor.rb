@@ -57,6 +57,8 @@ class ReadingExtractor
   # 読みはカタカナのみで扱う仕様(検索・生成カラムの前提)なので、ここでカタカナ以外を落とす。
   #   例: 「シャーロット・リンリン」→「シャーロットリンリン」
   # NFKC で半角カナ(ｼｬｰﾛｯﾄ)を全角に寄せ、ひらがなはカタカナへ変換してから絞り込む。
+  # 変換の範囲は KanaFold.to_katakana(ぁ-ゖ)と違い「ぁ-んゔ」で、ゕ・ゖ はカタカナにならずに落ちる
+  # (今の振る舞い。T0-18 で固定。KanaFold に揃えると読みの出力が変わる)。
   # /expand のスキル(.claude/skills/word-expansion-research/reading_length.rb)からも呼ばれる
   # (スキルが決めた読みを、アプリと同じ規則で数えるため)。
   def normalize(line)

@@ -390,7 +390,7 @@ class SiteStatistics
   # DB の照合(as_ci)はひらがな⇔カタカナを同一視するが、返るキーは格納値のままのため。
   def normalized_kana_counts(counts)
     counts.each_with_object(Hash.new(0)) do |(char, count), folded|
-      key = char.to_s.unicode_normalize(:nfkc).tr("ぁ-ゖ", "ァ-ヶ")
+      key = KanaFold.to_katakana(char)
       folded[key] += count
     end
   end

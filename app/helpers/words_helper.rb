@@ -143,14 +143,11 @@ module WordsHelper
 
   private
 
-  # キーワード突き合わせ用の畳み込み。ひらがな→カタカナ(同じ並びの2つの範囲)と、
-  # 欧字の大文字小文字だけを吸収する。
-  HIRAGANA_RANGE = "ぁ-ゖ".freeze
-  KATAKANA_RANGE = "ァ-ヶ".freeze
-  private_constant :HIRAGANA_RANGE, :KATAKANA_RANGE
-
+  # キーワード突き合わせ用の畳み込み。ひらがな→カタカナ(KanaFold)と、欧字の大文字小文字だけを吸収する。
+  # NFKC は掛けない(今の振る舞い。T0-18 で固定)。DB の検索(as_ci)は全角と半角のカナを同一視するので、
+  # 半角カナを含むキーワードでは、検索で当たっても「別表記だけが一致した」の判定がずれうる。
   def fold_for_keyword_match(text)
-    text.to_s.strip.tr(HIRAGANA_RANGE, KATAKANA_RANGE).downcase
+    KanaFold.to_katakana(text.to_s.strip, nfkc: false).downcase
   end
 
   # 読みの文字数・モーラ数。モーラ数は未算出のことがある。
