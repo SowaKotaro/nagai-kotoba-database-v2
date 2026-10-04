@@ -52,8 +52,7 @@ class WordRankingTest < ActiveSupport::TestCase
   test "拗音・促音は促音「ッ」も含めて小書きのかなを1字ずつ数える" do
     # 「文字数 - 拍数」では促音・長音が独立した拍のため現れない。小書きを直接数えて
     # ッ ョ ッ ゥ ャ の 5 個になることを担保する(退行防止)。
-    word = Word.create!(surface: "小書き検証語", annotated_at: Time.current)
-    word.word_senses.create!(reading: "イックションペカットゥーヂャ")
+    word = create_published_word(surface: "小書き検証語", reading: "イックションペカットゥーヂャ")
 
     row = board("small_kana_desc").top.find { |candidate| candidate[:id] == word.id }
     assert_equal 5, row[:value]
@@ -66,8 +65,7 @@ class WordRankingTest < ActiveSupport::TestCase
   end
 
   test "円環の交差が少ない順は交差 0 回の語も載せ、同値なら読みが長い語を上位にする" do
-    zero_long = Word.create!(surface: "五十音順の長い語", annotated_at: Time.current)
-    zero_long.word_senses.create!(reading: "あいうえおかきくけこ")
+    create_published_word(surface: "五十音順の長い語", reading: "あいうえおかきくけこ")
 
     rows = board("ring_crossing_asc").top
     # 交差 0 回が2語(読み10字 と カレー3字)並び、長い方が先。次に交差 3 回の さつじんじけん。

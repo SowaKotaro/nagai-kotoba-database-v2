@@ -8,11 +8,10 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
   setup do
     # 少ない遷移(その区間の 6% 未満)が生まれるだけの語義を用意する。
     # 20 語義あれば1本しか通らない組は 5% になり、伏せる対象になる。
-    word = Word.create!(surface: "母音遷移の検証語", annotated_at: Time.current, annotation_status: :done)
-    readings = %w[ア イ ウ エ オ カ キ ク ケ コ サ シ ス セ ソ タ チ ツ テ ト]
-    readings.each_with_index do |head, index|
-      word.word_senses.create!(reading: "#{head}カサタナハマヤラワ#{readings[(index + 3) % readings.size]}")
-    end
+    heads = %w[ア イ ウ エ オ カ キ ク ケ コ サ シ ス セ ソ タ チ ツ テ ト]
+    readings = heads.each_with_index.map { |head, index| "#{head}カサタナハマヤラワ#{heads[(index + 3) % heads.size]}" }
+    word = create_published_word(surface: "母音遷移の検証語", reading: readings.first)
+    readings.drop(1).each { |reading| word.word_senses.create!(reading: reading) }
   end
 
   test "「多い遷移だけ表示」で少ない遷移だけが伏せられる" do

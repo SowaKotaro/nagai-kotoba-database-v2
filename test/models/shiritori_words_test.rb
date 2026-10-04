@@ -74,7 +74,10 @@ class ShiritoriWordsTest < ActiveSupport::TestCase
   end
 
   test "語義が無い語では起点文字を持たない" do
-    word = Word.create!(surface: "語義なしの言葉", annotated_at: Time.current)
+    # 語義の無い公開語(create_published_word は語義を 1 つ作るので使わず、公開の印だけを立てる)
+    word = Word.new(surface: "語義なしの言葉")
+    word.mark_annotated
+    word.save!
 
     shiritori = ShiritoriWords.new(word.reload)
 
@@ -86,8 +89,6 @@ class ShiritoriWordsTest < ActiveSupport::TestCase
   private
 
   def make_word(surface, reading)
-    word = Word.create!(surface: surface, annotated_at: Time.current)
-    word.word_senses.create!(reading: reading)
-    word
+    create_published_word(surface: surface, reading: reading)
   end
 end

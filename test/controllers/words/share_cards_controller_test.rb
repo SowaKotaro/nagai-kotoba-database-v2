@@ -29,7 +29,10 @@ class Words::ShareCardsControllerTest < ActionDispatch::IntegrationTest
   test "焼けなかった(fetch が nil)ときと、描けない語(語義が無い)のときは既定のカードへ回す" do
     renderer = Object.new
     renderer.define_singleton_method(:fetch) { |**| nil }
-    no_sense_word = Word.create!(surface: "語義の無い公開語のテスト", annotated_at: Time.current)
+    # 語義の無い公開語(create_published_word は語義を 1 つ作るので使わず、公開の印だけを立てる)
+    no_sense_word = Word.new(surface: "語義の無い公開語のテスト")
+    no_sense_word.mark_annotated
+    no_sense_word.save!
 
     stub_method(ShareCardRenderer, :available?, -> { true }) do
       stub_method(ShareCardRenderer, :new, -> { renderer }) do

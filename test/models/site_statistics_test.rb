@@ -24,8 +24,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
   end
 
   test "同音異義の組: 同じ読みの語義が2つ以上ある読みを数える" do
-    word = Word.create!(surface: "撮つ人事件", annotated_at: Time.current, annotation_status: :done)
-    word.word_senses.create!(reading: "さつじんじけん")
+    create_published_word(surface: "撮つ人事件", reading: "さつじんじけん")
 
     assert_equal 1, SiteStatistics.new.scale[:homophone_groups]
   end
@@ -60,8 +59,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
 
   test "長さの分布は30以上をまとめ棒(overflow)1本に畳む" do
     [ 32, 40 ].each_with_index do |length, index|
-      word = Word.create!(surface: "長い開発語#{index}", annotated_at: Time.current, annotation_status: :done)
-      word.word_senses.create!(reading: "ナ" * length)
+      create_published_word(surface: "長い開発語#{index}", reading: "ナ" * length)
     end
 
     distribution = SiteStatistics.new.reading_length_distribution
@@ -144,8 +142,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
   end
 
   test "母音の遷移: 層は読みが長くても 15(TRANSITION_MAX_POSITIONS)で打ち切る" do
-    word = Word.create!(surface: "母音の遷移の上限の見本", annotated_at: Time.current, annotation_status: :done)
-    word.word_senses.create!(reading: "アイウエオアイウエオアイウエオアイウエオ") # 20 拍
+    create_published_word(surface: "母音の遷移の上限の見本", reading: "アイウエオアイウエオアイウエオアイウエオ") # 20 拍
 
     transitions = SiteStatistics.new.vowel_transitions
     assert_equal 15, transitions[:layers].size
@@ -155,8 +152,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
 
   test "母音の遷移: 読みが1拍しか無ければ層が作れないので空にする" do
     Word.annotated.destroy_all
-    word = Word.create!(surface: "亜", annotated_at: Time.current, annotation_status: :done)
-    word.word_senses.create!(reading: "ア")
+    create_published_word(surface: "亜", reading: "ア")
 
     transitions = SiteStatistics.new.vowel_transitions
     assert_equal 1, transitions[:total]

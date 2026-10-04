@@ -8,8 +8,7 @@ class RankingsTest < ApplicationSystemTestCase
   # 枠は該当語が TOP_LIMIT 件を超えないと出ない(WordRanking#board)ので、濁点を含む読みの語を足す。
   setup do
     WordRanking::TOP_LIMIT.times do |i|
-      word = Word.create!(surface: "順位の母集団#{i}", annotated_at: Time.current)
-      word.word_senses.create!(reading: "ガガガガガ" + "ア" * i)
+      create_published_word(surface: "順位の母集団#{i}", reading: "ガガガガガ" + "ア" * i)
     end
   end
 

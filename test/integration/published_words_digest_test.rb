@@ -38,8 +38,7 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
     etags = etags_on(Time.zone.local(2026, 8, 6, 10, 5))
 
     travel_to Time.zone.local(2026, 8, 7, 9, 30) do
-      word = Word.create!(surface: "翌日に公開した語", annotated_at: Time.current)
-      word.word_senses.create!(reading: "ヨクジツニコウカイシタゴ")
+      word = create_published_word(surface: "翌日に公開した語", reading: "ヨクジツニコウカイシタゴ")
 
       PATHS.each do |path|
         get path, headers: { "If-None-Match" => etags[path] }

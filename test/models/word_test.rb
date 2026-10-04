@@ -134,11 +134,13 @@ class WordTest < ActiveSupport::TestCase
   # 「今月の新収録」(ホームと統計)の定義。月の境界は Time.zone で切り、created_at は見ない。
   test "annotated_this_month は今月 annotated_at が立った公開語だけで、created_at は見ない" do
     travel_to Time.zone.local(2026, 10, 15, 12, 0) do
+      # 公開日(annotated_at)の値そのものを試すので create_published_word は使わず、状態は「完了」で揃える
       first_moment = Word.create!(surface: "月初の語", annotated_at: Time.zone.local(2026, 10, 1, 0, 0, 0),
-                                  created_at: Time.zone.local(2026, 9, 1))
-      last_moment = Word.create!(surface: "月末の語", annotated_at: Time.zone.local(2026, 10, 31, 23, 59, 59))
+                                  annotation_status: :done, created_at: Time.zone.local(2026, 9, 1))
+      last_moment = Word.create!(surface: "月末の語", annotated_at: Time.zone.local(2026, 10, 31, 23, 59, 59),
+                                 annotation_status: :done)
       Word.create!(surface: "先月末の語", annotated_at: Time.zone.local(2026, 9, 30, 23, 59, 59),
-                   created_at: Time.zone.local(2026, 10, 2))
+                   annotation_status: :done, created_at: Time.zone.local(2026, 10, 2))
       Word.create!(surface: "今月作った未公開の語")
 
       assert_equal [ first_moment, last_moment ].sort_by(&:id), Word.annotated_this_month.order(:id).to_a

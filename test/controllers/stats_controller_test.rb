@@ -90,8 +90,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "読みの長さの30以上はまとめ棒になり、文字数側だけ nofollow の範囲検索へリンクする" do
-    word = Word.create!(surface: "とても長い開発語", annotated_at: Time.current, annotation_status: :done)
-    word.word_senses.create!(reading: "ナ" * 35)
+    create_published_word(surface: "とても長い開発語", reading: "ナ" * 35)
 
     get stats_path
     # 35 は単独の棒にならず「30+」のまとめ棒になる。範囲指定(reading_length_min)は noindex の面

@@ -6,8 +6,7 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
   # 濁点・小書き・長音を含まない読みで足すので、長さの枠は出て、濁点・語義数などの枠は出ない。
   setup do
     WordRanking::TOP_LIMIT.times do |i|
-      word = Word.create!(surface: "順位の母集団#{i}", annotated_at: Time.current)
-      word.word_senses.create!(reading: "ナナナナナ" + "ア" * i)
+      create_published_word(surface: "順位の母集団#{i}", reading: "ナナナナナ" + "ア" * i)
     end
   end
 

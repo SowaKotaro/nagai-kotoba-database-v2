@@ -139,8 +139,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
 
   # --- 清音・濁音・半濁音の区別(utf8mb4_0900_as_ci) ---
   test "先頭文字は清音と濁音・半濁音を区別する" do
-    word = Word.create!(surface: "バナナジュース", annotated_at: Time.current)
-    sense = word.word_senses.create!(reading: "バナナジュース")
+    sense = create_published_word(surface: "バナナジュース", reading: "バナナジュース").word_senses.first
 
     assert_includes ids(first_char: "バ"), sense.id
     assert_not_includes ids(first_char: "ハ"), sense.id

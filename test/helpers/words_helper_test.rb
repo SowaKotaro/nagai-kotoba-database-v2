@@ -65,8 +65,7 @@ class WordsHelperTest < ActionView::TestCase
   end
 
   test "リード文: 語義ごとに読みが違えば読みを並べ、文字数・モーラは添えない" do
-    word = Word.create!(surface: "一日", annotated_at: Time.current)
-    word.word_senses.create!(reading: "イチニチ", meaning: "24時間。")
+    word = create_published_word(surface: "一日", reading: "イチニチ", meaning: "24時間。")
     word.word_senses.create!(reading: "ツイタチ", meaning: "月の第1日。")
 
     expected = "「一日」は、読み「イチニチ」「ツイタチ」の日本語の長い言葉。" \
@@ -78,10 +77,9 @@ class WordsHelperTest < ActionView::TestCase
 
   # 同じ読みで意味の異なる語義を持つ語(同音異義語)を作る。
   def multi_sense_word(*sense_attrs)
-    word = Word.create!(surface: "ピーターパンシンドローム", annotated_at: Time.current)
-    sense_attrs.each do |attrs|
-      word.word_senses.create!(reading: "ピーターパンシンドローム", **attrs)
-    end
+    first, *rest = sense_attrs
+    word = create_published_word(surface: "ピーターパンシンドローム", reading: "ピーターパンシンドローム", **first)
+    rest.each { |attrs| word.word_senses.create!(reading: "ピーターパンシンドローム", **attrs) }
     word
   end
 

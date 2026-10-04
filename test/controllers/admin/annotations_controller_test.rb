@@ -166,7 +166,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "注釈済みの語でも提案を状態バッジ付きで見直せる" do
-    @word.update!(annotated_at: Time.current)
+    @word.mark_annotated
+    @word.save!
     annotation_proposals(:haruhi_proposal).applied!
     get admin_annotation_path(@word)
     assert_response :success
@@ -355,7 +356,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
     # 反映済みの提案は proposed でも入れない(二重反映を避ける)
     annotation_proposals(:haruhi_proposal).applied!
-    @word.update!(annotated_at: Time.current)
+    @word.mark_annotated
+    @word.save!
     get admin_annotation_path(@word, proposed: 1)
     assert_response :success
     assert_select "textarea.js-meaning", text: /谷川流/, count: 0

@@ -151,10 +151,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "sort=reverse_kana は読みを末尾から見た辞書順になる" do
     # 反転読みは チカ→カチ、アシ→シア。カ < シ なので チカ の語が先に来る。
-    early = Word.create!(surface: "逆引きで先", annotated_at: Time.current)
-    early.word_senses.create!(reading: "チカ")
-    late = Word.create!(surface: "逆引きで後", annotated_at: Time.current)
-    late.word_senses.create!(reading: "アシ")
+    early = create_published_word(surface: "逆引きで先", reading: "チカ")
+    late = create_published_word(surface: "逆引きで後", reading: "アシ")
 
     get words_path(sort: "reverse_kana")
     assert_operator body_position(early), :<, body_position(late)
@@ -316,8 +314,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "詳細に同じジャンルの関連語が並び、「ん」で終わる語のしりとりは行き止まりになる" do
     # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
-    sibling = Word.create!(surface: "同ジャンルの別語", annotated_at: Time.current)
-    sibling.word_senses.create!(reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
+    sibling = create_published_word(surface: "同ジャンルの別語", reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
 
     get word_path(words(:abc_murder)) # 読み さつじんじけん
     assert_response :success
@@ -332,8 +329,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "しりとりの次の一手は末尾文字から始まる公開語へ繋がる" do
     # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
-    next_word = Word.create!(surface: "レンタルビデオ店の閉店", annotated_at: Time.current)
-    next_word.word_senses.create!(reading: "レンタルビデオテンノヘイテン")
+    next_word = create_published_word(surface: "レンタルビデオ店の閉店", reading: "レンタルビデオテンノヘイテン")
 
     get word_path(words(:curry))
     assert_response :success
