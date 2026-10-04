@@ -6,19 +6,8 @@ class HomeController < ApplicationController
   RANKING_LIMIT = 5
 
   def index
-    # 公開統計は毎リクエスト COUNT を3本発行していた。短TTLでキャッシュする(Issue 26)。
-    # 「今月の」を含むのでキー自体に年月を持たせ、月をまたいだ瞬間に作り直す。
-    stats = Rails.cache.fetch("home/stats/#{Date.current.strftime('%Y-%m')}", expires_in: 1.hour) do
-      {
-        words: Word.annotated.count,
-        senses: WordSense.published.count,
-        genres: Genre.small.count,
-        # 更新が続いていることが一目で分かる指標(統計ページ「今月の新収録」と同じ定義)。
-        # 基準は annotated_at(公開日)。created_at は一括登録で下書きを作った日でしかなく、
-        # 注釈を終えて公開した月とは限らないため、公開面の「収録日」には使わない。
-        monthly_new: Word.annotated.where(annotated_at: Time.current.all_month).count
-      }
-    end
+    # 看板の数(キャッシュの長さと、月の変わり目で作り直す理由は HomeStatistics)。
+    stats = HomeStatistics.fetch
     @word_count = stats[:words]
     @sense_count = stats[:senses]
     @genre_count = stats[:genres]

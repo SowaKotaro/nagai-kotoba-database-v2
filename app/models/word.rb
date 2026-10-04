@@ -21,6 +21,10 @@ class Word < ApplicationRecord
   scope :unannotated, -> { where(annotated_at: nil) }
   # 公開対象。注釈済み(annotated_at あり = 完了)の語だけを全世界に見せる。
   scope :annotated, -> { where.not(annotated_at: nil) }
+  # 今月公開した語(「今月の新収録」。ホーム(HomeStatistics)と統計(SiteStatistics)が同じ定義で数える)。
+  # 基準は annotated_at(公開日)。created_at は一括登録で下書きを作った日でしかなく、
+  # 注釈を終えて公開した月とは限らないので、公開面の「収録日」には使わない。
+  scope :annotated_this_month, -> { annotated.where(annotated_at: Time.current.all_month) }
   # 未承認の提案(Claude の下書き)が付いている語。コンソールの「提案あり」フィルタ用(Issue 38)。
   scope :with_pending_proposal, -> { joins(:annotation_proposal).merge(AnnotationProposal.pending) }
 

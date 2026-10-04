@@ -108,4 +108,51 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
   ensure
     Rails.cache = original_cache
   end
+
+  # 看板の数は毎リクエスト COUNT を打たないよう 1 時間キャッシュする(Issue 26)。
+  # 「今月の」を含むのでキーに年月を持たせ、月が変われば期限内でも数え直す。
+  test "看板の数は 1 時間は数え直さず、期限が切れるか月が変わると数え直す" do
+    with_memory_cache do
+      travel_to Time.zone.local(2026, 10, 31, 22, 0)
+      get root_path
+      assert_equal %w[2 0], masthead_counts
+
+      publish_word("看板の数の見本の一語目", "カンバンノカズノミホンノイチゴメ")
+      travel 59.minutes
+      get root_path
+      assert_equal %w[2 0], masthead_counts, "1 時間のうちは数え直さない"
+
+      travel 2.minutes
+      get root_path
+      assert_equal %w[3 1], masthead_counts, "期限が切れたら数え直す"
+
+      publish_word("看板の数の見本の二語目", "カンバンノカズノミホンノニゴメ")
+      travel_to Time.zone.local(2026, 11, 1, 0, 0, 30)
+      get root_path
+      assert_equal %w[4 0], masthead_counts, "月が変われば期限内でも数え直す(先月の公開は今月の新収録に入らない)"
+    end
+  end
+
+  private
+
+  def with_memory_cache
+    original = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    Rails.cache = original
+  end
+
+  def publish_word(surface, reading)
+    word = Word.new(surface: surface)
+    word.word_senses.build(reading: reading)
+    word.mark_annotated
+    word.save!
+  end
+
+  # [看板の収録語数, 今月の新収録]
+  def masthead_counts
+    monthly = css_select(".stats-grid__item").find { |item| item.css("dt").text == I18n.t("home.index.stats.monthly_new") }
+    [ css_select(".masthead__figures-main .figure-number").first.text, monthly.css("dd").text.gsub(/[^0-9]/, "") ]
+  end
 end

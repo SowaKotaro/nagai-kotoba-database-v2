@@ -118,7 +118,7 @@ class SiteStatistics
     first_day = Word.annotated.minimum(:annotated_at)&.to_date
     days_open = first_day ? (Date.current - first_day).to_i + 1 : 0
     {
-      this_month: Word.annotated.where(annotated_at: Time.current.all_month).count,
+      this_month: Word.annotated_this_month.count,
       genre_count: WordSense.published.where.not(genre_id: nil).distinct.count(:genre_id),
       feature_count: WordSenseFeature.joins(word_sense: :word).merge(Word.annotated)
                                      .distinct.count(:linguistic_feature_id),

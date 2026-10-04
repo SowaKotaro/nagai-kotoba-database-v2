@@ -17,6 +17,7 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
       assert_includes body, "#{HOST}#{path}"
     end
     assert_includes body, "CC BY 4.0"
+    assert_equal "max-age=86400, public", response.headers["Cache-Control"]
   end
 
   test "llms-full.txt は誰でも取得でき、公開語だけを属性つきで載せ、ライセンスと案内を添える" do
