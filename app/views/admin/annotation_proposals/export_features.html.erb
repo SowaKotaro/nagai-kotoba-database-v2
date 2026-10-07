@@ -11,6 +11,9 @@
   <%= render "admin/annotation_proposals/export_limit", from_id: @from_id, to_id: @to_id, limit: @limit %>
 
   <label class="check-chip">
+    <%# チェックボックスは外すと何も送らないので、外したことを hidden の "0" で伝える(form.check_box と同じ形)。
+        付けたまま送ると 0 と 1 の両方が届き、後ろの 1 が勝つ %>
+    <%= hidden_field_tag :japanese_only, "0", id: nil %>
     <%= check_box_tag :japanese_only, "1", @japanese_only, id: nil, class: "visually-hidden" %>
     <span class="check-chip__face"><%= t("admin.annotation_proposals.export_features.japanese_only") %></span>
   </label>
