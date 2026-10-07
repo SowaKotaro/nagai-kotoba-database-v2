@@ -27,6 +27,29 @@ class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
     assert_includes json["senses"].map { _1["sense_id"] }, sense.id
   end
 
+  test "「語種に日本語を含む語だけ」は既定で効き、チェックを外して送ると全語種を書き出す" do
+    _word, japanese_sense = published_word_without_features
+    english = create_published_word(surface: "英語だけの未調査の語", reading: "エイゴダケノミチョウサノゴ", meaning: "テスト用")
+    english_sense = english.word_senses.first
+    english_sense.word_origins << word_origins(:eigo)
+    exported_ids = -> { JSON.parse(css_select("textarea#export_json").first.text)["senses"].map { _1["sense_id"] } }
+
+    get export_features_admin_annotation_proposals_path
+    assert_includes exported_ids.call, japanese_sense.id
+    assert_not_includes exported_ids.call, english_sense.id
+    # チェックボックスは外すと何も送らないので、直前の hidden が "0" を送る(form.check_box と同じ形)
+    assert_select "input[type=hidden][name=japanese_only][value='0'] + input[type=checkbox][name=japanese_only][value='1']"
+
+    # チェックを外して送った(hidden の 0 だけが届く)
+    get export_features_admin_annotation_proposals_path(japanese_only: "0")
+    assert_includes exported_ids.call, english_sense.id
+    assert_select "input[type=checkbox][name=japanese_only]:not([checked])"
+
+    # チェックを入れて送った(hidden の 0 と checkbox の 1 の両方が届き、後ろの 1 が勝つ)
+    get "#{export_features_admin_annotation_proposals_path}?japanese_only=0&japanese_only=1"
+    assert_not_includes exported_ids.call, english_sense.id
+  end
+
   test "件数の上限を超える指定は丸められる" do
     get export_features_admin_annotation_proposals_path(limit: 9999)
     assert_response :success
