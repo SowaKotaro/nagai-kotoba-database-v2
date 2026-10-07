@@ -16,6 +16,13 @@ module SearchesHelper
     }
   end
 
+  # 詳細検索のフォームに欄の無い条件(単語一覧の文字数ちょうど・モーラ数のファセットと、統計の母音のつながり)。
+  # 単語一覧の「条件を変える」で来たときに落とさないよう、フォームが hidden で持ち回す。
+  def search_carried_conditions(search)
+    { reading_length: search.reading_length, mora_count: search.mora_count,
+      vowel_transition: search.vowel_transition.presence }.compact
+  end
+
   # 適用中の検索条件を [ラベル, 値の文字列] の配列で返す(結果ヘッダのチップ表示用)。
   def applied_search_conditions(search)
     conditions = []

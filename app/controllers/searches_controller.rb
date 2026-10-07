@@ -29,20 +29,9 @@ class SearchesController < ApplicationController
     @linguistic_features = LinguisticFeature.order(:id)
   end
 
+  # 受け付ける条件の正は WordSenseSearch::PERMITTED_PARAMS(単語一覧と同じ集合。一覧の「条件を変える」は
+  # 一覧のクエリをそのまま渡すので、同じ集合でないと条件が黙って落ちる)。
   def search_params
-    # genre_id / word_origin_id はフォームからは配列、ファセットリンクからは単一値で
-    # 届くため両方許可する。vowel_reading は母音パターン検索用の生カナ入力。
-    # 単語一覧(WordsController#search_filter_params)とは許可する集合が違う: こちらは
-    # first_char / last_char / part_of_speech_id / entity_type_id / linguistic_feature_id の
-    # 単一値と、reading_length / mora_count / vowel_transition を持たない。一覧の「条件を変える」
-    # (search_path に一覧のクエリをそのまま渡す)で来ると、これらの条件はここで黙って落ちる。
-    params.permit(
-      :q, :regexp, :reading_length_min, :reading_length_max,
-      :dakuten_min, :small_kana_min, :chouon_min,
-      :char_type_pattern, :char_type_partial, :char_type_ignore_case,
-      :rhythm_pattern, :vowel_reading, :genre_id, :word_origin_id,
-      genre_id: [], first_char: [], last_char: [], word_origin_id: [],
-      part_of_speech_id: [], entity_type_id: [], linguistic_feature_id: []
-    )
+    params.permit(*WordSenseSearch::PERMITTED_PARAMS)
   end
 end

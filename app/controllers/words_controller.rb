@@ -121,18 +121,8 @@ class WordsController < ApplicationController
     scope.where(id: @search.results.reorder(nil).select(:word_id))
   end
 
-  # 検索フォーム経由は配列、ファセットリンクは単一値で届くキーがあるため両方許可する。
-  # 詳細検索(SearchesController#search_params)はこれより許可する集合が狭い(あちらの注記を参照)。
+  # 受け付ける条件の正は WordSenseSearch::PERMITTED_PARAMS(詳細検索と同じ集合)。
   def search_filter_params
-    params.permit(
-      :q, :regexp, :reading_length_min, :reading_length_max, :reading_length, :mora_count,
-      :dakuten_min, :small_kana_min, :chouon_min,
-      :char_type_pattern, :char_type_partial, :char_type_ignore_case,
-      :rhythm_pattern, :vowel_reading, :vowel_transition, :word_origin_id,
-      :genre_id, :first_char, :last_char,
-      :part_of_speech_id, :entity_type_id, :linguistic_feature_id,
-      genre_id: [], first_char: [], last_char: [], word_origin_id: [],
-      part_of_speech_id: [], entity_type_id: [], linguistic_feature_id: []
-    )
+    params.permit(*WordSenseSearch::PERMITTED_PARAMS)
   end
 end

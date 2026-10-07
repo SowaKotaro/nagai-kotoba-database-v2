@@ -33,6 +33,23 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#q[value=?]", "カレー"
   end
 
+  test "単語一覧の「条件を変える」から来た条件を、単一値もフォームに欄の無い条件も落とさずに引き継ぐ" do
+    noun = parts_of_speech(:noun)
+    carried = { reading_length: "12", mora_count: "11", vowel_transition: "1-ae" }
+
+    # ファセットのリンクは単一値で来る(first_char=ア)。フォームのチェックに反映する
+    get search_path, params: { first_char: "ア", part_of_speech_id: noun.id.to_s, **carried }
+    assert_response :success
+    assert_select "input[name='first_char[]'][value=?][checked]", "ア"
+    assert_select "input[name='part_of_speech_id[]'][value=?][checked]", noun.id.to_s
+    # フォームに欄の無い条件(文字数ちょうど・モーラ数・母音のつながり)は、hidden で持ち回す
+    carried.each { |key, value| assert_select "input[type=hidden][name=?][value=?]", key.to_s, value }
+
+    # 検索を実行しても、それらの条件は単語一覧へ引き継がれる
+    get search_path, params: { commit: "1", first_char: "ア", **carried }
+    assert_redirected_to words_path(first_char: [ "ア" ], reading_length: 12, mora_count: 11, vowel_transition: "1-ae")
+  end
+
   test "不正・長すぎる正規表現はリダイレクトせず、入力を残して理由を伝える" do
     get search_path, params: { commit: I18n.t("searches.submit"), regexp: "(ア" }
     assert_response :success
