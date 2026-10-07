@@ -388,6 +388,24 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_modified
   end
 
+  test "ログイン中の詳細は、ログイン前の版で 304 にせず、共有キャッシュにも載せない" do
+    word = words(:abc_murder)
+    get word_path(word)
+    assert_includes response.headers["Cache-Control"], "public"
+    logged_out_etag = response.headers["ETag"]
+
+    sign_in_as(admins(:one))
+    # ログイン前にブラウザが持った版では 304 にしない(ヘッダーにログアウトのフォームが出る HTML を返す)
+    get word_path(word), headers: { "If-None-Match" => logged_out_etag }
+    assert_response :success
+    assert_select "form.button_to[action=?]", session_path
+    # ヘッダーがログイン中の HTML は、共有キャッシュ(public)に載せない
+    assert_not_includes response.headers["Cache-Control"], "public"
+    # ログイン中の版どうしなら、304 になる
+    get word_path(word), headers: { "If-None-Match" => response.headers["ETag"] }
+    assert_response :not_modified
+  end
+
   test "マスタ名(ジャンル・祖先のジャンル・品詞)を変えると ETag が変わり、新しい名前が返る" do
     word = words(:abc_murder)
     genre = word_senses(:murder).genre
