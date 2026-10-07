@@ -121,39 +121,8 @@
 
 ## 6. コードの地図
 
-```
-app/models/          ActiveRecord ＋ 値オブジェクト ＋ フォーム/クエリオブジェクト
-  ├ 本体            word / word_sense / word_sense_feature / word_sense_origin / word_sense_variant
-  ├ マスタ          genre / entity_type / part_of_speech / linguistic_feature / word_origin
-  ├ 認証            admin / session / current
-  ├ 値オブジェクト  char_type_pattern / rhythm_pattern / vowel_pattern / mora_count / last_char /
-  │                 levenshtein / search_regexp / kana_ring / kana_row / radial_chart / word_sort /
-  │                 word_ranking / share_card_typesetter / word_share_card
-  ├ クエリ/集計      word_sense_search / site_statistics / published_sense_counts / word_sense_metrics /
-  │                 related_words / shiritori_words / morpheme_cloud / morpheme_frequencies
-  ├ アノテーション   annotation_proposal / annotation_proposal_import / proposal_application /
-  │                 annotation_masters / annotation_deck_form / annotation_deck_save /
-  │                 bulk_annotation / bulk_proposal_approval / proposed_master_creation /
-  │                 annotation_research_export / feature_research_export / reannotation_export
-  ├ リクエスト      word_request / word_request_item / word_request_duplicate_check / word_request_form_token
-  ├ 登録予定単語    word_candidate / word_candidate_intake / word_candidate_duplicate_check /
-  │                 word_candidate_review / word_candidate_decisions / word_candidate_export /
-  │                 word_candidate_expansion_import / word_candidate_notation_import
-  └ その他          research_json（調査 JSON の貼り付けを読む）/ seed_catalog（マスタ seed の単一の正）/ tag_kind / linguistic_feature_glossary
-app/services/        reading_extractor（MeCab CLI）/ morpheme_extractor / share_card_renderer（rsvg-convert）
-app/controllers/     公開（words / searches / browse / genres / rankings / stats / pages / llms /
-                     sitemaps / robots / word_requests / home）＋ admin/ 名前空間
-app/javascript/      Stimulus のみ（importmap）。1 コントローラ 1 目的。複数のコントローラが使う関数は controllers/support/（コントローラではない）
-app/assets/          手書き CSS（tokens → base → layout → components ＋ annotate / candidates / admin）
-db/schema.rb         スキーマの正（マイグレーション経由で更新）
-db/seeds.rb          管理者とマスタを冪等に投入（名前リストは SeedCatalog が単一の正）
-db/morpheme_frequencies.json  統計 §1 ワードクラウドの事前集計結果（コミットするデータファイル）
-config/locales/ja.yml 表示文言（ハードコードしない）
-config/linguistic_features_glossary.yml  言語学的特徴の用語解説（seed のマスタ名と 1 : 1）
-lib/tasks/           backfill（派生値の再生成・検証）/ stats（形態素頻度）/ dev_samples（開発用ダミー）
-script/og_default.py 既定の共有カード public/og-default.png の生成
-tools/claude-ai-skill/build.sh  claude.ai 用の /reannotation スキル束を生成
-```
+[`CLAUDE.md`](../CLAUDE.md) の「3. 地図」へ移した（ディレクトリ → 役割 → 手本。全ファイルの列挙は古くなるので持たない）。
+ActiveRecord 以外のクラスは、ファイルの冒頭の「種別:」の行に種別を書いてある。
 
 ## 7. ローカル開発環境
 
@@ -229,14 +198,10 @@ bin/rails server
 
 ## 9. コミット前の必須チェック（中身は CI と同じ検査）
 
-コマンドの正は `CLAUDE.md` の「コミット前に必ず実行すること」にある（6 本。テストは `bin/rails test` と
+コマンドの正は `CLAUDE.md` の「4. 合格判定コマンド（コミット前に必ず実行すること）」にある（6 本。テストは `bin/rails test` と
 `bin/rails test:system` の 2 本に分けて打つ。連結形の `bin/rails test test:system` はローカルでは `LoadError` になる）。
 これが通らないコードは「未完成」とみなす。WSL でのシステムテストの実行方法（`CHROME_BIN` など）も `CLAUDE.md` にある。
 
 ## 10. 進め方の規約
 
-- **1 Issue = 1 ブランチ = 1 PR** を原則とする（[`issues.md`](issues.md)）。
-  小粒な改善は Issue を立てずに PR だけで進めてよい（その場合も完了記録は `changelog.md` の「番号を持たない改善」節に 1 行残す）。
-- ブランチ名は `feature/<内容>`。**Issue / PR 番号は入れない**（Issue と PR で採番カウンタが
-  共通なので、付けた番号が必ずずれる）。
-- 返答・コミットメッセージ・コードコメントは**日本語**。
+[`CLAUDE.md`](../CLAUDE.md) の「1. 厳守事項」の「書き方と進め方」へ移した（1 Issue = 1 ブランチ = 1 PR、ブランチ名、日本語で書くこと）。
