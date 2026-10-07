@@ -172,6 +172,11 @@
     <%= hidden_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
   </div>
 
+  <%# フォームに欄の無い条件は hidden で持ち回す(SearchesHelper#search_carried_conditions) %>
+  <% search_carried_conditions(@search).each do |key, value| %>
+    <%= hidden_field_tag key, value, id: nil %>
+  <% end %>
+
   <div class="search-actions">
     <%= submit_tag t("searches.submit"), class: "btn btn--primary" %>
     <%# 条件をクリア: パラメータ無しの検索ページへ戻る(フォームが初期状態で再描画される) %>

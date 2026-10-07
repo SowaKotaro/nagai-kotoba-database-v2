@@ -367,4 +367,19 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal ids(first_char: word_senses(:curry).first_char),
                  ids(first_char: [ word_senses(:curry).first_char ])
   end
+
+  test "受け付けるパラメータ(PERMITTED_PARAMS)は、単語一覧へ引き継ぐ条件(to_query_params)のキーをすべて含む" do
+    all = {
+      q: "a", regexp: "a", reading_length_min: "10", reading_length_max: "20", reading_length: "12", mora_count: "12",
+      dakuten_min: "1", small_kana_min: "1", chouon_min: "1", first_char: %w[ア], last_char: %w[ン], genre_id: %w[1],
+      part_of_speech_id: %w[1], entity_type_id: %w[1], linguistic_feature_id: %w[1], word_origin_id: %w[1],
+      rhythm_pattern: "a", vowel_reading: "ア", vowel_transition: "1-ae",
+      char_type_pattern: "漢", char_type_partial: "1", char_type_ignore_case: "1"
+    }
+    permitted = ActionController::Parameters.new(all).permit(*WordSenseSearch::PERMITTED_PARAMS)
+
+    assert_equal all.keys.sort, WordSenseSearch.new(permitted).to_query_params.keys.sort
+    # 複数選択の条件は、ファセットのリンクから単一値で来ても受け付ける
+    assert_equal({ "first_char" => "ア" }, ActionController::Parameters.new(first_char: "ア").permit(*WordSenseSearch::PERMITTED_PARAMS).to_h)
+  end
 end

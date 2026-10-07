@@ -17,6 +17,16 @@ class WordSenseSearch
     small_kana_min: :max_small_kana_count,
     chouon_min: :max_chouon_count
   }.freeze
+  # 複数選択(OR)の条件。詳細検索のフォームからは配列、ファセットのリンクからは単一値で届く。
+  LIST_KEYS = %i[genre_id first_char last_char part_of_speech_id entity_type_id word_origin_id linguistic_feature_id].freeze
+  # 検索の条件として受け付けるパラメータ。単語一覧(WordsController)と詳細検索(SearchesController)は、
+  # どちらもこれだけを permit する(片方だけが受け付ける条件があると、画面を行き来したときに黙って落ちる)。
+  # to_query_params が返すキーは、すべてここに含める(テストで固定)。
+  PERMITTED_PARAMS = [
+    :q, :regexp, :reading_length_min, :reading_length_max, :reading_length, :mora_count, *SOUND_COUNT_FILTERS.keys,
+    :char_type_pattern, :char_type_partial, :char_type_ignore_case, :rhythm_pattern, :vowel_reading, :vowel_transition,
+    *LIST_KEYS, LIST_KEYS.index_with { [] }
+  ].freeze
 
   def initialize(params)
     @params = params || {}
