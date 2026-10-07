@@ -115,9 +115,9 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     assert_equal "通俗心理学の用語。", @proposal.meaning
   end
 
-  # --- 言語的特徴の提案(Issue 63) ---
+  # --- 言語学的特徴の提案(Issue 63) ---
 
-  test "senses の言語的特徴を name/target/target_reading で読み出せる" do
+  test "senses の言語学的特徴を name/target/target_reading で読み出せる" do
     @proposal.payload = {
       "senses" => [ {
         "meaning" => "テスト。",

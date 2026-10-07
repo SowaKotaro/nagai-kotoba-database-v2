@@ -1,6 +1,6 @@
 require "test_helper"
 
-# 言語的特徴だけの再調査(Issue 76)の書き出し画面と、コンソールの「特徴なしで確定」の挙動。
+# 言語学的特徴だけの再調査(Issue 76)の書き出し画面と、コンソールの「特徴なしで確定」の挙動。
 # 書き出し対象の抽出条件は FeatureResearchExportTest で見る。
 class Admin::FeatureReviewTest < ActionDispatch::IntegrationTest
   setup do
