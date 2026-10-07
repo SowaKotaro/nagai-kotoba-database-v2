@@ -1276,7 +1276,7 @@ ja:
         consonant_title: "%{chars} で始まる: %{count}語義"
       features:
         title: "言語学的特徴"
-        lead: "特徴ごとの付与件数と実例です。実例の下線は特徴の該当部分です。"
+        lead: "特徴ごとの付与件数と実例です。実例の網掛けは特徴の該当部分です。"
         count: "%{count}件"
 
   genres:
