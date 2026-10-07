@@ -223,6 +223,19 @@ sitemap の版は動かない。
     **清濁だけが違う名前は作れない**（ジャンルは、同じ親の下で）。末尾の空白は区別されるので、
     前後に空白の付いた別の名前はできうる。
 
+### Ruby 側で照合順序に頼っている所
+
+照合順序を変えるときは、次も一緒に確かめる。DB の同一視をそのまま使っているか、Ruby で真似ている。
+
+| 場所 | 頼り方 |
+|---|---|
+| `WordCandidate.register_for!` | `where(surface:)` で引くので as_ci の同一視が効く。一括登録で収録した語と、かなの種類・全角半角・大文字小文字だけが違う登録予定単語も「登録済み」になる |
+| `WordCandidate.matching`（すべての語の検索） | LIKE も as_ci で比べる（かなの種類・大文字小文字を問わない） |
+| `Admin::WordRequestsController#registered_surfaces_for` | 収録済みの語を as_ci で集める。ただしビューは、集めた表層形（収録語の表記）とリクエストの表記を Ruby で完全一致で比べるので、かなの種類だけが違うリクエストには「収録済み」の印が付かない（既知の不具合。refactoring の台帳の受付箱 2026-10-07） |
+| `WordRequestDuplicateCheck` | 照合キーを `KanaFold.to_katakana` で畳み、as_ci に寄せて Ruby で比べる（清濁は畳まない） |
+| `WordsHelper#matched_variants`（別表記だけが一致した印） | ひらがな⇔カタカナと大文字小文字だけを畳む。DB の as_ci は全角・半角のカナも同一視するので、半角カナのキーワードでは印がずれうる（検索結果は変わらない） |
+| `InlineMasterCreatable`（マスタのその場追加） | マスタ名の一意制約（ai_ci）で衝突したとき、清濁・かなの種類・大文字小文字だけが違う既存の名前を、理由として返す |
+
 ### prefix インデックス
 
 utf8mb4 のインデックスキー長制限（3072 バイト）に収めるため、長い文字列カラムは先頭 191 文字で
@@ -241,6 +254,23 @@ utf8mb4 のインデックスキー長制限（3072 バイト）に収めるた�
 - マスタは参照中に削除できない（`dependent: :restrict_with_error`）。タグ統括管理
   （`/admin/tags`）の削除ガードもこれを使う。
 - 複数レコードの整合性が要る更新は `transaction` でまとめる（ジャンルの統合など）。
+
+**片側だけで担保しているもの**（`db/schema.rb` の `null: false`・`unique: true` と、各モデルの `validates`・`validate` を突き合わせた。
+両側にあるものは載せない）:
+
+| テーブル | DB だけ | モデルだけ |
+|---|---|---|
+| `admins` | `username` の NOT NULL・UNIQUE（モデルは前後の空白を落として小文字にするだけ。管理者は seed だけが作る） | — |
+| `annotation_proposals` | `word_id` の UNIQUE（1 語に提案 1 件。取り込みは同じ語の提案を上書きする） | — |
+| `genres` | — | 親と階層の整合（`parent_matches_level`）。大分類（`parent_id` が NULL）どうしの同名は、DB の UNIQUE では防げない（NULL は重複とみなされない）のでモデルが防ぐ |
+| `word_senses` | — | `genre_id` が小分類だけを指すこと（`genre_must_be_small`。上記） |
+| `word_sense_features` | — | 該当部分が表層形・読みの中にあること（`target_within_surface`・`target_reading_within_reading`） |
+| `word_candidates` | — | メモの長さ・立項スコアの範囲・確信度の語彙 |
+| `word_requests`・`word_request_items` | — | 1 通あたりの語数の上限・各欄の文字数の上限 |
+| `words` | `surface` の UNIQUE は先頭 191 文字の prefix（§6） | — |
+
+`status` などの enum の列は、DB が NOT NULL を持ち、モデルは enum の値の範囲だけを見る（`WordCandidate` は `validate: true` で検証エラーにする。
+ほかは、範囲外の値を代入すると例外になる）。派生値の列の NOT NULL（`words.char_type_pattern` など）は、`before_validation` と既定値で埋まる（§3）。
 
 ---
 

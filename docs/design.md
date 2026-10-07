@@ -31,7 +31,7 @@
 
 ## 0.5 前提（技術・運用・パフォーマンス）
 
-- **スタック**: Rails + ERB + Hotwire + importmap。**ビルドツールを入れない**。CSS は手書き（Sprockets、`tokens → base → layout → components`）。JS は最小限。
+- **スタック**: Rails + ERB + Hotwire + importmap。**ビルドツールを入れない**。CSS は手書き（Sprockets、`tokens → base → layout → components` の後に `annotate → candidates → admin`。**管理用の CSS も全ページで読まれる**。読み込み順と置き場所の実態の正は `app/assets/stylesheets/application.css` の冒頭）。JS は最小限。
 - **権限/公開範囲**: 管理者（オーナー本人）だけが CRUD、他は閲覧のみ。**公開側にアカウント機能は作らない**。
 - **パフォーマンス最優先**: **web フォントを一切読まない**（OS 標準のゴシックのみ）。外部 CDN・重い JS を足さない。
 - デザイン案モック（`/admin/design_mocks`）は**削除した**（2026-09-07 オーナー判断。役目を終えたため。5 様式 × 3 ページの試作と専用 CSS・専用レイアウトを丸ごと撤去）。

@@ -288,3 +288,36 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
   増やさない（`js-` が付いていても、JS が使うとは限らない）。
 - 見た目用のクラスを JS やテストも参照している箇所は、CSS の側に「JS（〜_controller.js）・テストも参照」と注記する（[`design.md`](design.md) §11）。
 - Plotly は importmap にピンせず、Sprockets で配信して UMD のグローバルとして使う（`config/importmap.rb` の注記。`bin/importmap audit` の対象外）。
+
+## 13. 事実ごとの正（単一の出典）
+
+既存の節番号を変えないよう、末尾に足した節（2026-10-07）。同じ事実をほかの文書に書くときは、写さずにここで指す正へリンクする。
+
+| 事実 | 正 |
+|---|---|
+| 守る規約・正典パターン・合格判定コマンド | [`CLAUDE.md`](../CLAUDE.md) |
+| カラム定義 | `db/schema.rb` |
+| テーブルの関係と設計判断 | [`data-model.md`](data-model.md) |
+| 派生値（作る場所・作り直し・verify） | [`data-model.md`](data-model.md) §3 |
+| 照合順序（何を同一視するか・as_ci の列・Ruby 側で頼っている所） | [`data-model.md`](data-model.md) §6 |
+| 整合性（DB 制約とモデルの検証） | [`data-model.md`](data-model.md) §7 |
+| 公開の境目と、公開スコープを通らない公開出力 | [`data-model.md`](data-model.md) §8 |
+| デザインの値・規約・退けた案 | [`design.md`](design.md)（ΔRGB の式は §1、ブレークポイントは §7、退けた案は §12） |
+| CSS の読み込み順と置き場所 | `app/assets/stylesheets/application.css` の冒頭 |
+| 統計の図の規則（色の段・操作・データの出どころ） | [`stats.md`](stats.md) |
+| ルート | `config/routes.rb`（画面の役割は §5） |
+| 環境変数 | §8 |
+| デプロイ・CI・定期実行・派生物の作り直し | §11 |
+| JS のコントローラ・イベント・DOM の約束事 | §12（中身の正は各ファイルの冒頭コメント） |
+| 調査の流れ（スキル → 管理画面） | [`research/README.md`](../research/README.md) |
+| 提案 JSON のキー | `AnnotationProposal` の定数（`SENSE_KEYS`・`META_KEYS`・`PAYLOAD_KEYS`）。schema.json と各 SKILL.md はその写し |
+| 書き出す調査 JSON の形 | 各書き出しクラス（`AnnotationResearchExport`・`FeatureResearchExport`・`ReannotationExport`）の `as_json` |
+| マスタ名（大分類・中分類・品詞・語種・言語学的特徴） | `SeedCatalog`（[`genres.md`](genres.md) はその写し） |
+| マスタ名（小分類・エンティティ種別） | DB（調査用の書き出しの `masters` が現況） |
+| 言語学的特徴の定義 | `config/linguistic_features_glossary.yml`（注釈スキルの対応表はその写し） |
+| 収録基準 | [`annotation-guidelines.md`](annotation-guidelines.md) §0 と `WordSense::MIN_READING_LENGTH` |
+| 立項スコア・表記の決め方・読みの表記・確信度 | [`annotation-guidelines.md`](annotation-guidelines.md) §2・§3・§4・§8 |
+| 語種・ジャンル・エンティティ・特徴の付け方、意味の文体 | 注釈スキル（`.claude/skills/word-annotation-research/SKILL.md`） |
+| 登録予定単語の段 | `WordCandidate::STAGES` |
+| オーナーの判断 | [`issues.md`](issues.md) の確定事項（失効したものは [`history/decisions.md`](history/decisions.md)） |
+| 済んだことの記録 | [`history/`](history/README.md)（[`history/changelog.md`](history/changelog.md) ほか） |
