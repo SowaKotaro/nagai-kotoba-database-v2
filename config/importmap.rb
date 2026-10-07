@@ -4,7 +4,7 @@ pin "application"
 pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
-# コントローラは preload しない。28 本を全ページで modulepreload すると、そのページで使わない
+# コントローラは preload しない。すべてを全ページで modulepreload すると、そのページで使わない
 # ものに未使用 preload の警告が出るため、data-controller が現れたものだけを遅延読み込みする
 # (controllers/index.js の lazyLoad)。公開ページでも、ヘッダーの 3 本(nav-drawer・nav-menu・theme)は
 # 毎ページ読み込まれる。
