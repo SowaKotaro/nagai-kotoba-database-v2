@@ -5,16 +5,18 @@
 # /reading は一括登録の画面で表層形のまま突き合わせるので、表層形だけを書き出す。
 # 種別: 調査 JSON の入出力。
 class WordCandidateExport
-  # 段 => 渡す語のステータスと、渡す先(スキルのコマンド・入力ファイル・取り込む出力ファイル)。
+  # 書き出しのキー(段の export。WordCandidate::STAGES) => 渡す先(スキルのコマンド・入力ファイル・取り込む出力ファイル)。
+  # 書き出す語のステータスは、その段の waiting。
   TARGETS = {
-    "expand" => { status: "expanding", command: "/expand", with_ids: true,
+    "expand" => { command: "/expand", with_ids: true,
                   input: "research/inputs/expansion.txt", output: "research/outputs/expansion.json" },
-    "notation" => { status: "notating", command: "/notation", with_ids: true,
+    "notation" => { command: "/notation", with_ids: true,
                     input: "research/inputs/notation.txt", output: "research/outputs/notation.json" },
-    "reading" => { status: "ready", command: "/reading", with_ids: false,
+    "reading" => { command: "/reading", with_ids: false,
                    input: "research/inputs/reading.txt", output: "research/outputs/reading.json" }
   }.freeze
 
+  # 書き出しのキー。
   attr_reader :step
 
   # limit を渡すと、待っている語の先頭からその語数だけを書き出す(Claude Code の利用上限に当たらないよう、
@@ -25,6 +27,11 @@ class WordCandidateExport
   end
 
   def target = TARGETS.fetch(@step)
+
+  # 書き出す語のステータス(その段でスキルの結果を待っている語)。
+  def status
+    WordCandidate::STAGES.values.find { |stage| stage.export == @step }&.waiting || raise(KeyError, "unknown export: #{@step}")
+  end
 
   # その段でスキルの結果を待っている語(limit があれば先頭からその語数)。
   def candidates
@@ -48,6 +55,6 @@ class WordCandidateExport
   private
 
   def waiting
-    WordCandidate.where(status: target[:status])
+    WordCandidate.where(status: status)
   end
 end

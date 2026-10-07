@@ -9,9 +9,6 @@ class SearchRegexp
   # 長すぎるパターンは照合コストが読めないので入口で断る。
   MAX_LENGTH = 200
 
-  HIRAGANA = "ぁ-ゖ"
-  KATAKANA = "ァ-ヶ"
-
   def initialize(source)
     @source = source.to_s.strip
   end
@@ -22,7 +19,9 @@ class SearchRegexp
 
   # 読み(word_senses.reading。カタカナ)に当てるパターン。
   # ひらがなで書かれた部分だけカタカナへ畳む(メタ文字は ASCII なので影響を受けない)。
-  def for_reading = @source.tr(HIRAGANA, KATAKANA)
+  # NFKC は掛けない: 全角の記号(（ ＊ など)が半角のメタ文字に変わり、パターンの意味が変わるため。
+  # そのため半角カナ・合成濁点は書かれたまま当たる。
+  def for_reading = KanaFold.to_katakana(@source, nfkc: false)
 
   # 表層形(words.surface)に当てるパターン。入力をそのまま使う。
   def for_surface = @source

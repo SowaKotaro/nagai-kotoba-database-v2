@@ -12,15 +12,9 @@
         <%= link_to row[:name], words_path(linguistic_feature_id: row[:id]), class: "tag" %>
         <span class="feature-rank__count"><%= t("stats.index.features.count", count: number_with_delimiter(row[:count])) %></span>
         <% if (example = row[:example]) %>
-          <%# 該当部分(target_start から target の文字数分)をハイライトした実例 %>
-          <span class="feature-rank__example"><%=
-            surface = example[:surface]
-            start = example[:target_start]
-            length = example[:target].length
-            safe_join([ surface[0, start],
-                        content_tag(:span, surface[start, length], class: "feature-rank__target"),
-                        surface[(start + length)..] ])
-          %></span>
+          <%# 該当部分をハイライトした実例(切り分けは feature_example_segments) %>
+          <% before, target, after = feature_example_segments(example) %>
+          <span class="feature-rank__example"><%= safe_join([ before, content_tag(:span, target, class: "feature-rank__target"), after ]) %></span>
         <% end %>
       </div>
       <div class="feature-rank__bar">

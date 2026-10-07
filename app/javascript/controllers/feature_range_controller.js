@@ -8,7 +8,8 @@ import { Controller } from "@hotwired/stimulus"
 // キーボードを使わずに指定できるのが目的(スマホ/タブレット対応)。
 export default class extends Controller {
   static targets = ["surfaceStrip", "readingStrip", "targetField", "targetReadingField", "targetStartField", "result"]
-  static values = { surface: String }
+  // 未選択の表示文言はサーバが渡す(ja.yml の admin.annotations.feature_fields)
+  static values = { surface: String, unselectedSurface: String, unselectedReading: String }
 
   connect() {
     this.sel = { t: { s: null, e: null }, r: { s: null, e: null } }
@@ -117,6 +118,6 @@ export default class extends Controller {
   updateResult() {
     const t = this.targetFieldTarget.value
     const r = this.targetReadingFieldTarget.value
-    this.resultTarget.textContent = "→ " + (t || "（単語 未選択）") + " / " + (r || "（読み 未選択）")
+    this.resultTarget.textContent = "→ " + (t || this.unselectedSurfaceValue) + " / " + (r || this.unselectedReadingValue)
   }
 }

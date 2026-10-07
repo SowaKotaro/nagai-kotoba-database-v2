@@ -2,12 +2,12 @@
 
 > <%= t("pages.about.lead") %>
 
-このファイルは <%= @host %>/llms.txt の全文版(llms-full.txt)です。
+このファイルは <%= SiteUrl.absolute(llms_path) %> の全文版(llms-full.txt)です。
 公開している全 <%= @word_count %> 語の内容を、1ファイルにまとめています。
 
 - 生成日: <%= @generated_on.iso8601 %>
-- サイト案内(目次版): <%= @host %>/llms.txt
-- 機械可読な JSON: <%= @host %>/words.json ・ <%= @host %>/words/{id}.json
+- サイト案内(目次版): <%= SiteUrl.absolute(llms_path) %>
+- 機械可読な JSON: <%= SiteUrl.absolute(words_path(format: :json)) %> ・ <%= SiteUrl.absolute("/words/{id}.json") %>
   (ヘボン式ローマ字・母音パターンなど、このファイルに載せていない項目も返します)
 
 ## 収録基準
@@ -31,14 +31,14 @@
 単語データは <%= t("pages.about.license_name") %> の下で提供しています。
 引用・二次利用の際は、次のクレジットを明記してください。
 
-<%= t("pages.about.license_credit", url: @host) %>
+<%= t("pages.about.license_credit", url: SiteUrl.origin) %>
 
 ## 収録データ
 <% @words.find_each do |word| %>
 
 ### <%= word.surface %>
 
-- URL: <%= @host %><%= word_path(word) %>
+- URL: <%= SiteUrl.absolute(word_path(word)) %>
 - 文字種: <%= word.char_type_pattern %>
 - 定義: <%= word_lead_sentence(word) %>
 <% multiple_senses = word.word_senses.size > 1 %>
@@ -54,7 +54,7 @@
 - 意味: <%= sense.meaning.squish %>
 <% end %>
 <% if sense.genre %>
-- ジャンル: <%= sense.genre.self_and_ancestors.map(&:name).join(" › ") %>
+- ジャンル: <%= sense.genre.path_text %>
 <% end %>
 <% if sense.part_of_speech %>
 - 品詞: <%= sense.part_of_speech.name %>

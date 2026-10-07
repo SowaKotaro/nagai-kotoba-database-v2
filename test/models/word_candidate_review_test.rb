@@ -1,8 +1,8 @@
 require "test_helper"
 
 class WordCandidateReviewTest < ActiveSupport::TestCase
-  def review(candidates, context: :triage)
-    WordCandidateReview.new(candidates, context: context)
+  def review(candidates, stage: "triage")
+    WordCandidateReview.new(candidates, stage: WordCandidate::STAGES.fetch(stage))
   end
 
   test "仕分け: upload したままの語は拡張、重複の疑いがある語は除外、保留の語は保留、それ以外は採用を最初から選んでおく" do
@@ -26,7 +26,7 @@ class WordCandidateReviewTest < ActiveSupport::TestCase
     renamed = WordCandidate.create!(surface: "ゴールドマンサックス", status: :notated)
     renamed.update!(surface: "ゴールドマン・サックス", entry_score: 5)
 
-    notation = review([ doubtful, renamed ], context: :notation)
+    notation = review([ doubtful, renamed ], stage: "notation")
 
     assert_equal %w[hold keep], notation.rows.map(&:default)
     assert_equal [ [ "doubtful" ], [ "changed" ] ], notation.rows.map(&:flags)

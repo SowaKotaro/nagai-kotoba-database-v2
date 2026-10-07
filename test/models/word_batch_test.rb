@@ -3,9 +3,7 @@ require "test_helper"
 class WordBatchTest < ActiveSupport::TestCase
   setup do
     @words = %w[ウ語の候補 ア語の候補 イ語の候補].map do |surface|
-      word = Word.create!(surface: surface, annotated_at: Time.current)
-      word.word_senses.create!(reading: "#{surface}ノヨミノナガイヨミ", genre: genres(:small_novel))
-      word
+      create_published_word(surface: surface, reading: "#{surface}ノヨミノナガイヨミ", genre: genres(:small_novel))
     end
     @ids = @words.map(&:id)
   end

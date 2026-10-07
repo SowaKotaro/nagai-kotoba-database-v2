@@ -5,12 +5,12 @@
     品詞は一覧では出さない(語の見分けに効かないわりに幅を食うため。詳細と検索には残す)。
     行全体は詳細へのリンク(surface をストレッチ)。ジャンル・タグは各ファセットの
     単語一覧(絞り込み)への実リンクなので、行リンクの上に載せる。local: word %>
-<% primary = word.word_senses.first %>
+<% primary = word.primary_sense %>
 <%# 1行 = 自己完結した見出し語エントリなので article(SEO/LLMO のセマンティクス) %>
 <article class="entry-row">
   <div class="entry-row__head">
     <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
-    <p class="entry-row__reading"><%= word.word_senses.map(&:reading).join("、") %></p>
+    <p class="entry-row__reading"><%= word.ordered_senses.map(&:reading).join("、") %></p>
   </div>
 
   <div class="entry-row__data">

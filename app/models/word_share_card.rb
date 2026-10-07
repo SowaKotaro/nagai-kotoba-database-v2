@@ -62,13 +62,18 @@ class WordShareCard
 
   def initialize(word)
     @word = word
-    @sense = word.word_senses.min_by(&:id)
+    @sense = word.primary_sense
   end
 
   # 読みが無い(語義が無い)語は円環も文字数も描けないので、既定のカードに任せる。
   def drawable?
     @sense&.reading.present?
   end
+
+  # この環境でカードを焼けるか(描ける語で、rsvg-convert と日本語の書体がある)。
+  # 詳細ページの og:image(WordsHelper#word_share_card)と、カードの配信(Words::ShareCardsController)が
+  # この 1 つの判定を使う。焼けなければ両方とも既定のカード(SiteUrl::DEFAULT_OG_IMAGE_PATH)に回す。
+  def renderable? = drawable? && ShareCardRenderer.available?
 
   def surface = @word.surface
   def reading = @sense.reading
@@ -128,7 +133,7 @@ class WordShareCard
   end
 
   def label_texts
-    [ URI.parse(Rails.application.config.x.canonical_host).host.upcase,
+    [ SiteUrl.host.upcase,
       I18n.t("labels.en.reading_characters", count: reading_length) ]
   end
 

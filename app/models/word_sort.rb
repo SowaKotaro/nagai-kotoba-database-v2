@@ -113,7 +113,6 @@ class WordSort
   def default? = key == DEFAULT_KEY
   def shuffle? = key == SHUFFLE_KEY
 
-  # Word の Relation に渡す ORDER BY。
   def order_clause
     shuffle? ? shuffle_clause : ORDERS.fetch(key)
   end

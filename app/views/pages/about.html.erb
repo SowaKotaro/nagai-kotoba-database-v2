@@ -39,11 +39,11 @@
     <p><%= t("pages.about.license_intro") %></p>
     <p>
       <%= link_to t("pages.about.license_name"),
-            "https://creativecommons.org/licenses/by/4.0/deed.ja",
+            DataLicense::URL,
             rel: "license noopener", target: "_blank" %>
     </p>
     <p><%= t("pages.about.license_credit_label") %></p>
-    <p class="prose__credit"><%= t("pages.about.license_credit", url: Rails.application.config.x.canonical_host) %></p>
+    <p class="prose__credit"><%= t("pages.about.license_credit", url: SiteUrl.origin) %></p>
     <p class="prose__note"><%= t("pages.about.license_note") %></p>
   </section>
 

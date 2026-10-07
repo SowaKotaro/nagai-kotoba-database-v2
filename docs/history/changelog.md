@@ -1,12 +1,14 @@
 # 完了アーカイブ（これまでに入れたもの）
 
+> **現行の仕様ではない**（[`docs/history/`](README.md) の記録）。済んだことの要約で、仕様の正は各文書にある。
+
 済んだ Issue と、番号を取らずに PR だけで入れた改善の記録。**経緯の詳細は git 履歴**にあるので、
 ここには「何が・なぜそうなったか」を要約だけ残す。
 
-- これから作るものは [`issues.md`](issues.md)
-- オーナー判断の記録は [`issues.md`](issues.md) の「確定事項」
-- 仕様の正は各文書（[`data-model.md`](data-model.md) / [`design.md`](design.md) /
-  [`stats.md`](stats.md) / [`annotation-guidelines.md`](annotation-guidelines.md)）
+- これから作るものは [`issues.md`](../issues.md)
+- オーナー判断の記録は [`issues.md`](../issues.md) の「確定事項」
+- 仕様の正は各文書（[`data-model.md`](../data-model.md) / [`design.md`](../design.md) /
+  [`stats.md`](../stats.md) / [`annotation-guidelines.md`](../annotation-guidelines.md)）
 
 リンク先の記述と食い違ったら、**各文書のほうが正**（本ファイルは当時の記録なので、
 後から覆った判断も「覆った」と分かる形で残してある）。
@@ -15,11 +17,11 @@
 
 ## 基盤実装(Issue 1〜12、スキーマ設計ベースの段階実装)
 
-- **Issue 1: 設計ドキュメント整備とスキーマ方針確定** [improvement] — 完了。スキーマ定義(当時は `docs/schema.sql`。現在は `db/schema.rb` が正で、設計判断は [`data-model.md`](data-model.md))・本 Issue リスト・CLAUDE.md 作成。
+- **Issue 1: 設計ドキュメント整備とスキーマ方針確定** [improvement] — 完了。スキーマ定義(当時は `docs/schema.sql`。現在は `db/schema.rb` が正で、設計判断は [`data-model.md`](../data-model.md))・本 Issue リスト・CLAUDE.md 作成。
 - **Issue 2: ジャンル(genres)マスタ** [feature] — 完了。3階層・自己参照(`parent_id`)、`utf8mb4_0900_ai_ci` 統一(既存 `admins`/`sessions` も変換)、ローカルは docker compose の MySQL 8.4(ホスト3307)。
 - **Issue 3: 単純マスタ3種** [feature] — 完了。entity_types / parts_of_speech / linguistic_features。`PartOfSpeech` の inflection 追加。
-- **Issue 4: words テーブルと char_type_pattern** [feature] — 完了。値オブジェクト `CharTypePattern` + `before_validation`。変換仕様は [`docs/char_type_pattern.md`](char_type_pattern.md)(`ー`はカタカナ扱い・`々`は漢字扱い)。
-- **Issue 5: word_senses テーブル** [feature] — 完了。STORED 生成カラム(`reading_length`/`first_char`/`last_char`)、`genre_id` は level3 のみ許可、`rhythm_pattern` はヘボン式・長音は母音展開([`docs/rhythm_pattern.md`](rhythm_pattern.md))。
+- **Issue 4: words テーブルと char_type_pattern** [feature] — 完了。値オブジェクト `CharTypePattern` + `before_validation`。変換仕様は [`docs/char_type_pattern.md`](../char_type_pattern.md)(`ー`はカタカナ扱い・`々`は漢字扱い)。
+- **Issue 5: word_senses テーブル** [feature] — 完了。STORED 生成カラム(`reading_length`/`first_char`/`last_char`)、`genre_id` は level3 のみ許可、`rhythm_pattern` はヘボン式・長音は母音展開([`docs/rhythm_pattern.md`](../rhythm_pattern.md))。
 - **Issue 6: word_sense_features(語義×特徴の多対多)** [feature] — 完了。特徴は該当部分ごと(`target`/`target_reading`。後に `target_start` 追加で同一文字列の複数出現に対応)。
 - **Issue 7: 管理者用 CRUD** [feature] — 完了。`Admin::` 名前空間・1画面フル入れ子フォーム・ジャンルの依存ドロップダウン。
 - **Issue 8: 公開閲覧(一覧・詳細)** [feature] — 完了。`allow_unauthenticated_access`、gem なしの軽量ページネーション。
@@ -52,11 +54,11 @@
 - **Issue 31: Web フォントのセルフホスト化** [improvement] — **クローズ(対応不要)**。Shippori Mincho を Google Fonts から読んでいたのを自前配信にする案だったが、**Issue 82 で web フォントの読み込み自体を撤去した**(書体は OS 標準のゴシックのみ)ため前提が消えた。将来 web フォントを足す判断をしたときだけ再検討する。
 - **Issue 32: エラーページの日本語化・ブランド化** [improvement] — 完了(PR #50)。404/422/500 を自前デザインで。
 
-- **Issue 34: 統計ページ(収録データの分布・集計)** [feature] — 完了。`/stats`(`StatsController` + `SiteStatistics`)。紙面構成の正は [`docs/stats.md`](stats.md)(起票時のコンセプト名「蔵版目録」は 2026-07-19 に撤回し、2026-09-16 に呼び名ごと完全廃止)。数字の壁(4群×5指標)+8章を実装し、Phase 1 で見送っていた**収録の推移**も週次で入っている(`build_timeline`)。集計は `Rails.cache`(1日)に載せ、方針どおり統計テーブルは作っていない(Phase 2 は不要なまま)。**唯一 §1「ワードクラウド」だけが未実装**で、MeCab の事前集計が要るため **Issue 78 に切り出した**。
+- **Issue 34: 統計ページ(収録データの分布・集計)** [feature] — 完了。`/stats`(`StatsController` + `SiteStatistics`)。紙面構成の正は [`docs/stats.md`](../stats.md)(起票時のコンセプト名「蔵版目録」は 2026-07-19 に撤回し、2026-09-16 に呼び名ごと完全廃止)。数字の壁(4群×5指標)+8章を実装し、Phase 1 で見送っていた**収録の推移**も週次で入っている(`build_timeline`)。集計は `Rails.cache`(1日)に載せ、方針どおり統計テーブルは作っていない(Phase 2 は不要なまま)。**唯一 §1「ワードクラウド」だけが未実装**で、MeCab の事前集計が要るため **Issue 78 に切り出した**。
 - **Issue 48: fragment cache の残り(browse・genres)** [improvement] — 完了。(「fragment cache」は当時の呼び名で、実際はビューの fragment cache ではなく集計結果の `Rails.cache`。)`PublishedSenseCounts`(`by_first_char` / `by_reading_length` / `by_genre`)に集約し、`/browse` の件数集計と `/genres` のツリーがこれを引く形になった。コード内の古い「Issue 26 で導入予定」コメントも解消済み。
 - **Issue 62: 五十音円環** [feature] — **統計ページの看板としては不採用**(2026-07-18。パッと見で何を示すか読めないため。頭文字→末尾文字の分布は行×行ヒートマップとして統計 §2 に吸収)。ただしその後、**単語詳細の「五十音円環」+ 円環交差数**という別の形で実装された(`app/models/kana_ring.rb` / `app/views/words/_kana_ring.html.erb`、交差数のランキングつき)。1語の読みを円環上の経路として描くもので、当初案(全語の遷移をコード図にする)とは別物。
 
-(Issue 27・33 は未完了。[`issues.md`](issues.md) を参照)
+(Issue 27・33 は未完了。[`issues.md`](../issues.md) を参照)
 
 ## 管理者機能の改善(Issue 35〜41、2026-07-07 のオーナーフィードバックより)
 
@@ -66,17 +68,17 @@
 - **Issue 36: 単語管理一覧の刷新と編集画面のコンソール統合** [improvement] — 完了。一覧に読み・注釈状態・検索・絞り込み・コンソール直リンク。編集画面は廃止しコンソールに表層形編集を追加。
 - **Issue 37: 共通属性の一括アノテーション** [feature] — 完了。一覧からジャンル・品詞・エンティティ・語種・意味テンプレを選択語へ一括適用(複数語義の語はスキップ)。コンソールに引き継ぎトグル。
 - **Issue 38: Claude Code 連携アノテーション** [feature] — 完了(本命)。調査用データ書き出し → `word-annotation-research` スキル → `annotation_proposals` へ取り込み → コンソールで承認(`annotated_at` を立てるのは人間のみ)。
-- **Issue 39: アノテーションヘルパー** [feature] — 完了。[`docs/annotation-guidelines.md`](annotation-guidelines.md)(収録4原則・立項スコア)、特徴の用語解説(glossary YAML)、提案パネルの立項スコア表示。
+- **Issue 39: アノテーションヘルパー** [feature] — 完了。[`docs/annotation-guidelines.md`](../annotation-guidelines.md)(収録4原則・立項スコア)、特徴の用語解説(glossary YAML)、提案パネルの立項スコア表示。
 - **Issue 40: 管理UIシステムテストの flake 解消** [improvement] — 完了。原因は WSL/Chrome 150 のネイティブクリック不達 + confirm 自動クローズ。`click_accepting_confirm` ヘルパー(confirm スタブ + JS クリック)で安定化。CI で再発したら再起票。ローカル実行手順は `LD_LIBRARY_PATH` + `CHROME_BIN` 方式(詳細は git 履歴)。
 - **Issue 41: AnnotationProposal の複数語義対応** [feature] — 完了。payload に `senses` 配列を持ち、同一表記の同音異義語(例: ピーターパンシンドローム)をコンソールで語義ごとに反映可能に。
 - **アノテーション FB 修正(番号なし)** — 完了。`target_start`(特徴の出現位置)/注釈済みの語でも提案表示/保存後スクロール/調査スキルの2周調査化。
 
-## グロース戦略対応(Issue 42〜48、2026-07-12 の [`growth-strategy.md`](growth-strategy.md) より)
+## グロース戦略対応(Issue 42〜48、2026-07-12 の [`growth-strategy.md`](../growth-strategy.md) より)
 
 - **Issue 42: プライバシーポリシー /privacy** [feature] — 完了(PR #82)。外部送信規律の公表事項(GA4 の送信先・送信される情報・利用目的)・Cookie・アクセスログ・連絡先。フッター・About・llms.txt・sitemap から参照。
-- **Issue 43: インデックス解禁スイッチ** [improvement] — 完了(PR #82)。`INDEXING_ENABLED` 未設定 = 全ページ noindex(ページ個別指定より優先)。解禁手順は [`launch-checklist.md`](launch-checklist.md)。テスト環境の既定は「解禁後」(test.rb)。
+- **Issue 43: インデックス解禁スイッチ** [improvement] — 完了(PR #82)。`INDEXING_ENABLED` 未設定 = 全ページ noindex(ページ個別指定より優先)。解禁手順は [`launch-checklist.md`](../launch-checklist.md)。テスト環境の既定は「解禁後」(test.rb)。
 
-(Issue 44〜47 は未完了。[`issues.md`](issues.md) を参照)
+(Issue 44〜47 は未完了。[`issues.md`](../issues.md) を参照)
 
 ## 技術監査対応(Issue 49〜56、2026-07-12 の監査より)
 
@@ -137,10 +139,10 @@
 
 ## 統計ページの看板(Issue 78、2026-08-11)
 
-- **Issue 78: 統計ページ §1「ワードクラウド」(形態素頻度)** [feature] — 完了(2026-08-11)。[`docs/stats.md`](stats.md) §1 で**看板ビジュアル**と位置づけながら唯一未実装だった章。収録語を MeCab で形態素に分け、よく現れる部品(「選手権」「シンドローム」等)を**活字の大きさ＝頻度**で組む。
+- **Issue 78: 統計ページ §1「ワードクラウド」(形態素頻度)** [feature] — 完了(2026-08-11)。[`docs/stats.md`](../stats.md) §1 で**看板ビジュアル**と位置づけながら唯一未実装だった章。収録語を MeCab で形態素に分け、よく現れる部品(「選手権」「シンドローム」等)を**活字の大きさ＝頻度**で組む。
   - **本番/CI に MeCab が無い**ため、集計は**ローカルで事前に行い、結果をコミットする**構成にした。更新は `bin/rails stats:morphemes`(冪等)、置き場所は `db/morpheme_frequencies.json`。**テーブルは作らない**(統計は元データから作り直せる導出データのため)。手元の DB が本番と同期していないときは `SURFACES_FILE=path` で本番相当の入力を渡せる(本番データは `/llms-full.txt` から取れる)。
   - **辞書は既定(ipadic)を使い、neologd は使わない**。neologd は「涼宮ハルヒの憂鬱」を丸ごと1語で持つため、部品を数えるこの用途では何も分割されない(読みの取得とは目的が逆なので、辞書の選択も逆になる)。
-  - **2026-09-10 に組み直した**(オーナー指示)。呼び名を「級数見本」から**ワードクラウド**へ改め(何の図か伝わらないため)、**ギチギチに**詰め直した。件数 60 → 100、**最頻の1語だけ中心・残りはばらばら**、字面占有 53% → 77%、級数は対数で 18〜64px。**語ごとの色(サイト唯一の多色)**もこのとき入れた。詰め方の実装(字面高さ・接触スコア・二分探索・欧文の字幅表)と実測は [`docs/stats.md`](stats.md) §1、色は [`docs/design.md`](design.md) §5.10。
+  - **2026-09-10 に組み直した**(オーナー指示)。呼び名を「級数見本」から**ワードクラウド**へ改め(何の図か伝わらないため)、**ギチギチに**詰め直した。件数 60 → 100、**最頻の1語だけ中心・残りはばらばら**、字面占有 53% → 77%、級数は対数で 18〜64px。**語ごとの色(サイト唯一の多色)**もこのとき入れた。詰め方の実装(字面高さ・接触スコア・二分探索・欧文の字幅表)と実測は [`docs/stats.md`](../stats.md) §1、色は [`docs/design.md`](../design.md) §5.10。
 
 ## クロール予算の是正(Issue 80、2026-08-20)
 
@@ -164,7 +166,7 @@
 
 ## デザイン刷新(Issue 82、2026-09-03)
 
-- **Issue 82: デザインシステムを「しずか」へ全面刷新** [improvement] — 完了(2026-09-03)。オーナー判断で**旧「活字見本帖 / 知識アーカイブ」を破棄**した。狙いは「長時間の滞在と再訪で疲れないこと」。**ロジックは変更していない**(CSS・ビュー・静的アセット・ドキュメントのみ)。正は [`docs/design.md`](design.md)。
+- **Issue 82: デザインシステムを「しずか」へ全面刷新** [improvement] — 完了(2026-09-03)。オーナー判断で**旧「活字見本帖 / 知識アーカイブ」を破棄**した。狙いは「長時間の滞在と再訪で疲れないこと」。**ロジックは変更していない**(CSS・ビュー・静的アセット・ドキュメントのみ)。正は [`docs/design.md`](../design.md)。
   - **3段階で作り直している**。1回目は GitHub / Zenn 寄りの「プレーン」案(白×グレー＋青のアクセント) → **不合格**。2回目は「**しずかなインターネット**(<https://sizu.me>)を手本に、なるべく雰囲気を掴むこと」「レイアウトを変えてよい」「情報量は疎でよい」との指示で全面刷新 → **合格(「良くなってきました」)**。3回目は **TOFT(<https://toft.jp>) / mud Inc.(<https://mud.co.jp>) / ただ、そこ(<https://tadasoko.misakikume.com>) のエッセンスを重ねる**指示で、静けさを保ったまま骨格を足した。現行は 3 回目。
   - **3回目で足したのは 4 つだけ**(色・太字・装飾は増やしていない):
     **①標識(`.label-en`)** = 区画の頭に置く等幅・大文字 10px の英字ラベル(「ただ、そこ」の `INDEPENDENT VISUAL ARCHIVE` の役割)。必ず日本語見出しと対にし、文言は `labels.en.*` に集約。
@@ -258,11 +260,11 @@
 
 ### 構成の変更
 
-- **`docs/schema.sql` を削除し [`data-model.md`](data-model.md) を新設**。5 テーブルが丸ごと欠けたまま `db/schema.rb` と二重管理になっていたため、**カラムを列挙しない「関係と設計判断」の文書**に作り替えた。カラムの正は `db/schema.rb`。
-- **完了アーカイブを本ファイル([`changelog.md`](changelog.md))へ分離**。[`issues.md`](issues.md) は「これからやること」と「確定事項」だけになった。
+- **`docs/schema.sql` を削除し [`data-model.md`](../data-model.md) を新設**。5 テーブルが丸ごと欠けたまま `db/schema.rb` と二重管理になっていたため、**カラムを列挙しない「関係と設計判断」の文書**に作り替えた。カラムの正は `db/schema.rb`。
+- **完了アーカイブを本ファイル([`changelog.md`](changelog.md))へ分離**。[`issues.md`](../issues.md) は「これからやること」と「確定事項」だけになった。
 - **`README.md` を Rails の雛形からプロジェクトの表紙へ**書き直した。
-- **[`overview.md`](overview.md) から Issue 単位の実装履歴を落とした**(issues.md と二重管理で、overview 側だけ古くなっていた)。代わりに**画面一覧**と**環境変数の一覧**を入れ、「いま何があるか」に役割を絞った。
-- **[`CLAUDE.md`](../CLAUDE.md) のデザイン節を圧縮**(ルールは落とさず、実測値と経緯は design.md へ)。あわせて、コードのコメントにしか無かった設計規約を 6 つ明文化した(SQL 片は定数リテラルで書き切る / 公開面の重い処理にはレートリミットかキャッシュ / 同じ規則を 2 画面が名乗るなら定義は 1 箇所 / 基準値は概念の持ち主に置く / 公開済みの URL とクエリ名は変えない / 検索エンジンから見える挙動を変えるときは URL 空間が閉じるか確認)。
+- **[`overview.md`](../overview.md) から Issue 単位の実装履歴を落とした**(issues.md と二重管理で、overview 側だけ古くなっていた)。代わりに**画面一覧**と**環境変数の一覧**を入れ、「いま何があるか」に役割を絞った。
+- **[`CLAUDE.md`](../../CLAUDE.md) のデザイン節を圧縮**(ルールは落とさず、実測値と経緯は design.md へ)。あわせて、コードのコメントにしか無かった設計規約を 6 つ明文化した(SQL 片は定数リテラルで書き切る / 公開面の重い処理にはレートリミットかキャッシュ / 同じ規則を 2 画面が名乗るなら定義は 1 箇所 / 基準値は概念の持ち主に置く / 公開済みの URL とクエリ名は変えない / 検索エンジンから見える挙動を変えるときは URL 空間が閉じるか確認)。
 
 ### 実装と食い違っていて直した記述
 
@@ -290,14 +292,14 @@
 
 - **Issue 70: アノテーション体験の小粒改善まとめ** [improvement] — **クローズ**。2026-07-16 の UX 調査で挙がった、単独 Issue にするほどでない磨き込みのチェックリスト(似ているマスタの提示 / キーボードパワーモード / 長い読みの範囲タップ改善 / 書き出し・取り込みのファイル入出力 / 未提案語の「調べる」導線)。**Issue 63〜69 と 79 で主要な摩擦は取れており、残りは動かないまま置かれていた**ため畳んだ。必要になった時点で個別に起票する。
 - **Issue 56: 技術監査 Low 指摘の小粒対応まとめ** [improvement] — **クローズ**。2026-07-12 の技術監査の Low 指摘のチェックリスト。**残しておくべき指摘は参照文書側へ移した**ので、リスト自体は役目を終えた。
-  - `genre_must_be_small` の DB 側担保が無い → [`data-model.md`](data-model.md) §7 に記載
-  - `words.surface` の UNIQUE が prefix(191) → [`data-model.md`](data-model.md) §6 に記載
-  - キャッシュ・`rate_limit` が `:memory_store`(worker を増やすと分裂する) → [`overview.md`](overview.md) §8 の `WEB_CONCURRENCY` の行に記載
-  - mecab 依存テストが CI で skip → [`overview.md`](overview.md) §7 に記載
+  - `genre_must_be_small` の DB 側担保が無い → [`data-model.md`](../data-model.md) §7 に記載
+  - `words.surface` の UNIQUE が prefix(191) → [`data-model.md`](../data-model.md) §6 に記載
+  - キャッシュ・`rate_limit` が `:memory_store`(worker を増やすと分裂する) → [`overview.md`](../overview.md) §8 の `WEB_CONCURRENCY` の行に記載
+  - mecab 依存テストが CI で skip → [`overview.md`](../overview.md) §7 に記載
   - **移していない 2 件**(必要になったら起票し直す): `rails/all` をロードしている(ActionCable / ActionMailbox / ActiveStorage / ActionMailer は未使用。個別 require でメモリと攻撃面を削減できる) / **CSP 未設定**(GA のインライン script があるため、入れるなら nonce の設計から)
 - **Issue 76: 言語的特徴の遡及付与(特徴だけを対象にした一括再調査)** [feature] — **アプリ側は完了、専用スキルは作らないと決定してクローズ**。
   - 実装済みで残るもの: 特徴だけを対象にした書き出し(`FeatureResearchExport` / `/admin/annotation_proposals/export_features`)、**「調べたが該当なし」の記録**(`word_senses.features_reviewed_at` と コンソールの「特徴なしで確定」)、対象語の絞り込み(公開済み・特徴0件・未調査・語種に日本語を含む)。
-  - **専用の調査スキルは作らない**(2026-09-16 オーナー判断。[`issues.md`](issues.md) 確定事項 32)。渡す先が無いので、**遡及付与が要るときは `/reannotation` で 1 語ずつ**行う。
+  - **専用の調査スキルは作らない**(2026-09-16 オーナー判断。[`issues.md`](../issues.md) 確定事項 32)。渡す先が無いので、**遡及付与が要るときは `/reannotation` で 1 語ずつ**行う。
   - 調査で分かった事実は残しておく: 2026-08-11 時点で**公開 966 語のうち特徴が付いているのは 138 語(14%)**。他の項目(意味・品詞・エンティティ・語種・読み)は 100%、ジャンル 965/966、別表記 46% で、**特徴だけが突出して空**だった。登録順に4分割すると付与率は 19% → 16% → 9% → 10% と新しい語ほど低く、「新しい語は外来語が多いから」という仮説は**逆**だった(最新区間の日本語を含む語の割合は 73% で全区間中最高)。本番で使われている特徴は 15 種で、**連声・音韻添加・音韻脱落・湯桶読み・イ音便・ウ音便 の 6 種は使用実績が 0**(Issue 77 も参照)。
 
 ## 改善調査からの起票分(Issue 84〜100、2026-09-23〜)
@@ -312,7 +314,7 @@
 - **Issue 87: 単語詳細の SQL を減らす(関連語・しりとりの preload 重複)** [improvement] — 完了(PR #155)。区画ごとに `Word.where(id:).includes(...)` を引いていたのを、`WordBatch` に id を預けて**1回でまとめて読み込む**形に。ビューの `.any?` による `EXISTS` も消えた。`/words/51` で **31 本 → 21 本**(開発 DB)。30 語ぶんの HTML が変更前と完全一致することを確認。
 - **Issue 89: 共有カード(rsvg-convert)の同時実行制限** [improvement] — 完了(PR #156)。`ShareCardRenderer` が焼くのを**プロセス内で同時に 1 本まで**にした(`RENDER_LOCK.try_lock`。先客がいれば待たずに既定のカードへ回す)。未生成の語を並べて叩かれても `rsvg-convert` が並んで CPU を握ることはない。
   - **IP ごとのレートリミットは見送り**: Cloudflare 経由で `request.remote_ip` に実 IP が入っているかをリポジトリから確かめられず、入っていない場合は中継 IP 単位の制限になって SNS のプレビュー取得をまとめて止めかねないため。前提の確認は Issue 94 に移した。アノテーション完了時に焼いておく案も、同時 1 本で足りるので入れていない。
-- **Issue 93: ダークモードで「選択中」の面(--bg-tint)が見えない** [bug] — 完了(PR #157)。`--dark-bg-tint` を `#1C2530` → **`#242E40`** に。`--dark-surface` より暗い側にあって面の上で沈んでいた(ΔRGB 11)のを、明るい側へ取り直した(ΔRGB 22・`--dark-text-subtle` を載せて 4.55:1)。選択中のチップ・特徴の該当部分・フォーカスリングなど 13 箇所に効く。[`design.md`](design.md) §9.1 に理由を記録。
+- **Issue 93: ダークモードで「選択中」の面(--bg-tint)が見えない** [bug] — 完了(PR #157)。`--dark-bg-tint` を `#1C2530` → **`#242E40`** に。`--dark-surface` より暗い側にあって面の上で沈んでいた(ΔRGB 11)のを、明るい側へ取り直した(ΔRGB 22・`--dark-text-subtle` を載せて 4.55:1)。選択中のチップ・特徴の該当部分・フォーカスリングなど 13 箇所に効く。[`design.md`](../design.md) §9.1 に理由を記録。
 - **Issue 96: 管理画面の認可をルート駆動のテスト1本で網羅する** [improvement] — 完了(PR #158)。`test/integration/admin_authentication_test.rb` がルート表から `admin/` 配下を全数(41 本)列挙し、未ログインならログイン画面へ送ること・**全テーブルの件数と最終更新が変わらないこと**を確かめる。わざと認証を外すと落ちることを確認済み。各コントローラのテストにあった未ログインの検証 11 本(145 行)は削除した(1つの振る舞いは1つの層で)。
 - **Issue 99: スキップリンクを置く** [improvement] — 完了(PR #159)。`<body>` 直後に「本文へ移動」(`.skip-link`)を置き、フォーカスされたときだけ左上に既存のピルのボタンとして出す。飛び先は `main#main`(`tabindex="-1"`)。ヘッドレス Chrome で、Tab 1 回で現れ、Enter で本文へ移り、次の Tab が本文の中から進むことを確認。
 - **Issue 100: 母集団が成立していないランキング枠を出さない** [improvement] — 完了(PR #160)。`WordRanking#board` が、該当語が `TOP_LIMIT`(10)件を**超える**ときだけ上位 10 件を返し、全員が載ってしまう枠は空にする(`/rankings` はその枠ごと出さない)。開発 DB では「語義が多い順」(該当 10 語)だけが消え、他の 10 枠は変わらない。枠そのものは消していないので、収録が進めば自然に戻る。「円環の交差が少ない順」は下限 0 で母集団が全語なので対象外。
@@ -333,9 +335,9 @@ Issue 番号を取らずに PR だけで進めた、オーナー指示由来の�
 - **正規表現検索**(PR #94、2026-07-16) — `/search` の `regexp`。値オブジェクト `SearchRegexp`。読みに当てるパターンだけカタカナへ畳み、不正な式は検索前に弾き、照合の打ち切りは空結果＋警告にフォールバックする。
 - **ランキングページ `/rankings`**(PR #103、2026-07-21) — 11 種の順位表を束ねるハブ。カタログは `WordRanking`、並びは `WordSort::RANKING_ORDERS` と共有し、各枠の「もっと見る」は同じキーの一覧へ渡す。
 - **五十音円環と円環交差数**(PR #105・#106、2026-07-21) — `KanaRing`。読みを 50 音の円環上で一筆書きにした線画と、その弦が交わった回数(`word_senses.ring_crossing_count`)。**統計の看板としては不採用だった案(Issue 62)が、単語詳細の図として復活したもの**。のちにサイトのロゴ・favicon・共有カードもこの図になった。
-- **ダークモード**(PR #111、2026-07-24) — OS 設定に追従し、ヘッダーのトグルで上書きして `localStorage` に残す。公開側・管理画面・コンソールのすべてに適用。設計は [`design.md`](design.md) §9。
-- **オフライン調査コマンドの拡充** — `/expand`(PR #79)・`/harvest`(PR #84)・`/reannotation`(PR #117、PR #141 で claude.ai 用バンドルの生成手順)。入出力の約束は [`../research/README.md`](../research/README.md)。
-- **登録予定単語 `/admin/candidates`**(PR #162、2026-09-24) — 登録前の語の前処理(仕分け → 拡張 `/expand` → 表記 `/notation` → 登録待ち)を、ファイルではなく管理画面のステータスで管理する。各段で「コピー」した内容をスキルに渡し、結果を同じ画面に取り込む(語は書き出し時の ID で引く)。流れは [`../research/README.md`](../research/README.md) の「使う順番」。
+- **ダークモード**(PR #111、2026-07-24) — OS 設定に追従し、ヘッダーのトグルで上書きして `localStorage` に残す。公開側・管理画面・コンソールのすべてに適用。設計は [`design.md`](../design.md) §9。
+- **オフライン調査コマンドの拡充** — `/expand`(PR #79)・`/harvest`(PR #84)・`/reannotation`(PR #117、PR #141 で claude.ai 用バンドルの生成手順)。入出力の約束は [`../research/README.md`](../../research/README.md)。
+- **登録予定単語 `/admin/candidates`**(PR #162、2026-09-24) — 登録前の語の前処理(仕分け → 拡張 `/expand` → 表記 `/notation` → 登録待ち)を、ファイルではなく管理画面のステータスで管理する。各段で「コピー」した内容をスキルに渡し、結果を同じ画面に取り込む(語は書き出し時の ID で引く)。流れは [`../research/README.md`](../../research/README.md) の「使う順番」。
 - **登録予定単語の「語ごとに選んで一度に確定する」流れ**(PR #163、2026-09-26) — 仕分けと表記の確認で、語ごとに処理(拡張 / 採用 / 保留 / 除外)を選んで一度に確定する形に作り直した。追加した語には最初から拡張を選んでおく。行を選んで下端のバーからまとめて処理できる。拡張待ちの語を指定した語数ずつ `/expand` に書き出せる。
 - **管理画面の共通ナビとダッシュボードの整理**(PR #164、2026-09-26) — 共通ナビの並び・余白・現在地の表示を整え、ダッシュボードを、ナビと同じ並びの作業のカードと収録状況のパネルに組み直した(並びは `AdminHelper#admin_sections` だけが持つ)。
 
@@ -343,7 +345,7 @@ Issue 番号を取らずに PR だけで進めた、オーナー指示由来の�
 
 - **狭幅レスポンシブ**(PR #75、2026-07-12) — 管理テーブルの横スクロール化ほか。PR #101 でアノテーション画面のダブルタップ拡大を無効化、PR #114 で単語詳細の横あふれ、PR #116 で語義見出しのルビ折り返し(WebKit)を修正。
 - **シャッフルの二重描画**(PR #143、2026-09-08) — 1 クリックで 2 回引き直されて見える不具合の修正。
-- **About を「文章だけのページ」に**(PR #144、2026-09-09) — 図・イラスト・もくじを置かないと確定([`design.md`](design.md) §5.6.1・§5.7)。
-- **favicon の四角化と既定共有カードの作り直し**(PR #145、2026-09-10) — 16px で潰れる角丸を外し、`og-default.png` をサイトと同じ格子で組み直した([`design.md`](design.md) §5.1)。
-- **統計の図の組み直しと母音遷移グラフ**(PR #146、2026-09-10) — ワードクラウドの詰め直し・多色化、ツリーマップの下限 3% → 0.5%、§7 の母音遷移グラフ追加([`stats.md`](stats.md) §1・§6・§7)。
-- **テストの整理**(PR #148、2026-09-14) — 重複と役目を終えたテストを削除・統合(1002 本)。方針は [`CLAUDE.md`](../CLAUDE.md) のテスト節。
+- **About を「文章だけのページ」に**(PR #144、2026-09-09) — 図・イラスト・もくじを置かないと確定([`design.md`](../design.md) §5.6.1・§5.7)。
+- **favicon の四角化と既定共有カードの作り直し**(PR #145、2026-09-10) — 16px で潰れる角丸を外し、`og-default.png` をサイトと同じ格子で組み直した([`design.md`](../design.md) §5.1)。
+- **統計の図の組み直しと母音遷移グラフ**(PR #146、2026-09-10) — ワードクラウドの詰め直し・多色化、ツリーマップの下限 3% → 0.5%、§7 の母音遷移グラフ追加([`stats.md`](../stats.md) §1・§6・§7)。
+- **テストの整理**(PR #148、2026-09-14) — 重複と役目を終えたテストを削除・統合(1002 本)。方針は [`CLAUDE.md`](../../CLAUDE.md) のテスト節。

@@ -9,7 +9,7 @@
 # 種別: クエリ・集計（読み取りとキャッシュ）。
 class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
-  CACHE_KEY = "site_statistics/v3"
+  CACHE_KEY = "site_statistics/v4"
   CACHE_TTL = 1.day
   # 集計は1万語規模で 0.8 秒かかる。期限切れの直後に複数リクエストが重なると全員が
   # 集計を始めてしまい、Puma(1プロセス・GIL)がその間ずっと塞がる。再計算は1本だけに絞る。
@@ -303,12 +303,13 @@ class SiteStatistics
     return { total: patterns.size, layers: [], edges: [] } if limit < 2
 
     { total: patterns.size,
-      layers: transition_layers(patterns, limit),
+      layers: transition_layers(patterns, limit, patterns.size),
       edges: transition_edges(patterns, limit) }
   end
 
   # 各層(拍位置)のノード。母音は必ず5つ並べる(0 件の母音も枠として残す)。
-  def transition_layers(patterns, limit)
+  # reach_percent は、その層まで読みが続く語義が全体(sense_total)に占める割合(注記の「N 拍目まで届くのは…%」)。
+  def transition_layers(patterns, limit, sense_total)
     (0...limit).map do |index|
       counts = patterns.filter_map { |pattern| pattern[index] }.tally.slice(*VOWELS)
       total = counts.values.sum
@@ -316,7 +317,7 @@ class SiteStatistics
         count = counts[vowel].to_i
         { vowel: vowel, count: count, share: total.zero? ? 0.0 : count / total.to_f }
       end
-      { position: index + 1, total: total, nodes: nodes }
+      { position: index + 1, total: total, reach_percent: percent(total, sense_total), nodes: nodes }
     end
   end
 
@@ -389,7 +390,7 @@ class SiteStatistics
   # DB の照合(as_ci)はひらがな⇔カタカナを同一視するが、返るキーは格納値のままのため。
   def normalized_kana_counts(counts)
     counts.each_with_object(Hash.new(0)) do |(char, count), folded|
-      key = char.to_s.unicode_normalize(:nfkc).tr("ぁ-ゖ", "ァ-ヶ")
+      key = KanaFold.to_katakana(char)
       folded[key] += count
     end
   end

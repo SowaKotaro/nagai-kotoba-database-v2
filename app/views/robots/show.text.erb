@@ -15,4 +15,4 @@ User-agent: *
 Disallow: /admin
 Disallow: /session
 
-Sitemap: <%= @host %><%= sitemap_path %>
+Sitemap: <%= SiteUrl.absolute(sitemap_path) %>

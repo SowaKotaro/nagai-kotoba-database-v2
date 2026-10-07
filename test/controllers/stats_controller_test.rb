@@ -22,6 +22,9 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stats-bars__row", minimum: 2
     # 特徴ランキングの実例は該当部分を span で示す
     assert_select ".feature-rank__target", text: "殺人"
+    assert_select ".feature-rank__example", text: "ABC殺人事件"
+    # エンティティのツリーマップの塗りの濃さは、件数の最も多い型に対する比(型が 1 つなら 1.0)
+    assert_select ".entity-treemap__cell[style*=?]", "--fill: 1.0", count: 1
     # アノテーション依存の章には集計対象の語義数を明示する
     assert_select ".stats-covered", text: I18n.t("stats.index.annotated_note", count: 1), minimum: 1
 
@@ -48,6 +51,11 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     # 段名(ア段〜オ段)は、横スクロールしない左の列に1度だけ
     assert_select "svg.vowel-graph text.vowel-graph__label", count: 0
     assert_select "svg.vowel-graph__rows text.vowel-graph__label", count: 5
+    # 注記: 最多の遷移(件数が同じなら位置と母音の並びで先のもの)と、最後の層まで届く語義の割合
+    # (auiie と aee のうち 5 拍目まで届くのは auiie だけ = 50.0%)
+    assert_select ".stats-hint", text: I18n.t("stats.index.sound.graph_hint",
+                                              top_position: 1, top_from: I18n.t("vowel_rows.a"), top_to: I18n.t("vowel_rows.u"),
+                                              top_count: "1", last: 5, last_count: "1", last_percent: 50.0)
 
     # ワードクラウド(Issue 78)は集計ファイルの語をすべて並べ、8色とも使う
     entries = MorphemeFrequencies.entries
@@ -82,8 +90,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "読みの長さの30以上はまとめ棒になり、文字数側だけ nofollow の範囲検索へリンクする" do
-    word = Word.create!(surface: "とても長い開発語", annotated_at: Time.current, annotation_status: :done)
-    word.word_senses.create!(reading: "ナ" * 35)
+    create_published_word(surface: "とても長い開発語", reading: "ナ" * 35)
 
     get stats_path
     # 35 は単独の棒にならず「30+」のまとめ棒になる。範囲指定(reading_length_min)は noindex の面

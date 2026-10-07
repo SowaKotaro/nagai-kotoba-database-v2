@@ -22,7 +22,6 @@ class WordSenseMetrics
   DAKUTEN_KANA =
     "ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ" \
     "がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽゔ".freeze
-  # 長音符。
   CHOUON = "ー".freeze
 
   # 並び替え用の代表読み(min_reading など)の最大長。utf8mb4 で 255 字 = 1020 バイトなら

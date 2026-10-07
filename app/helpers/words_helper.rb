@@ -18,7 +18,7 @@ module WordsHelper
   # 単語ごとの共有カード(og:image)。焼ける環境の、読みのある語だけ(それ以外は nil で既定のカードのまま)。
   def word_share_card(word)
     card = WordShareCard.new(word)
-    card if card.drawable? && ShareCardRenderer.available?
+    card if card.renderable?
   end
 
   # 単語詳細の自己完結リード文(定義文)を決定的に組み立てる(Issue 18)。
@@ -28,7 +28,7 @@ module WordsHelper
   # 語義数と各語義の意味を①②…で並べる(ジャンルは下の語義カードにあるので省く)。
   # 語義が無ければ空文字を返す。
   def word_lead_sentence(word)
-    senses = word.word_senses.sort_by(&:id)
+    senses = word.ordered_senses
     return "" if senses.empty?
     return word_sense_lead_sentence(word, senses.first) if senses.one?
 
@@ -45,7 +45,7 @@ module WordsHelper
                  metrics: sense_metrics(sense))
 
     if sense.genre
-      path = sense.genre.self_and_ancestors.map(&:name).join(t("words.lead.genre_separator"))
+      path = sense.genre.path_text
       sentence += t("words.lead.genre", path: path)
     end
 
@@ -143,14 +143,11 @@ module WordsHelper
 
   private
 
-  # キーワード突き合わせ用の畳み込み。ひらがな→カタカナ(同じ並びの2つの範囲)と、
-  # 欧字の大文字小文字だけを吸収する。
-  HIRAGANA_RANGE = "ぁ-ゖ".freeze
-  KATAKANA_RANGE = "ァ-ヶ".freeze
-  private_constant :HIRAGANA_RANGE, :KATAKANA_RANGE
-
+  # キーワード突き合わせ用の畳み込み。ひらがな→カタカナ(KanaFold)と、欧字の大文字小文字だけを吸収する。
+  # NFKC は掛けない(今の振る舞い。T0-18 で固定)。DB の検索(as_ci)は全角と半角のカナを同一視するので、
+  # 半角カナを含むキーワードでは、検索で当たっても「別表記だけが一致した」の判定がずれうる。
   def fold_for_keyword_match(text)
-    text.to_s.strip.tr(HIRAGANA_RANGE, KATAKANA_RANGE).downcase
+    KanaFold.to_katakana(text.to_s.strip, nfkc: false).downcase
   end
 
   # 読みの文字数・モーラ数。モーラ数は未算出のことがある。

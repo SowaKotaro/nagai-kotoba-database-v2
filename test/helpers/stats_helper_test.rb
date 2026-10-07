@@ -40,10 +40,26 @@ class StatsHelperTest < ActionView::TestCase
     assert_equal :tiny, scales["型3"]
   end
 
+  test "塗りの濃さは先頭の型(最多)に対する比で、畳んだその他も同じ基準で塗る" do
+    assert_equal [ 1.0, 0.6, 0.4 ], stats_entity_treemap(entities(50, 30, 20)).map { |rect| rect[:fill] }
+
+    # 3 と 2 を畳んだその他(5 件)も、先頭の 900 件に対する比
+    other = stats_entity_treemap(entities(900, 50, 30, 3, 2)).find { |rect| rect[:id].nil? }
+    assert_equal (5 / 900.0).round(3), other[:fill]
+  end
+
   test "矩形はコンテナを埋め尽くし、面積は件数に比例する" do
     areas = stats_entity_treemap(entities(60, 40)).map { |rect| rect[:width] * rect[:height] / 100.0 }
     assert_in_delta 100.0, areas.sum, 0.01
     assert_in_delta 1.5, areas.first / areas.last, 0.01
+  end
+
+  # --- 統計ページ §8 言語学的特徴の見本 ---
+
+  test "特徴の実例は該当部分の前・該当部分・後に切り分ける(先頭・末尾にあっても空の片を返す)" do
+    assert_equal %w[ABC 殺人 事件], feature_example_segments({ surface: "ABC殺人事件", target: "殺人", target_start: 3 })
+    assert_equal [ "", "ABC", "殺人事件" ], feature_example_segments({ surface: "ABC殺人事件", target: "ABC", target_start: 0 })
+    assert_equal [ "ABC殺人", "事件", "" ], feature_example_segments({ surface: "ABC殺人事件", target: "事件", target_start: 5 })
   end
 
   # --- 統計ページ §7 母音の遷移グラフ ---

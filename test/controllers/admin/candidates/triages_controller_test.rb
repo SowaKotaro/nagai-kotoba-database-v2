@@ -50,6 +50,11 @@ class Admin::Candidates::TriagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "details#held:not([open]) input[name='decisions[#{held.id}]'][value=hold][checked]"
     assert_select ".cand-bar__num[data-decision=expand]", text: "1"
     assert_select ".cand-bar__num[data-decision=keep]", text: "2"
+    # 件数は本体と保留の2つの一覧を合わせて数える(絞り込みの帯の「すべて」と、下端のバーの保留)
+    assert_select ".cand-bar__num[data-decision=hold]", text: "1"
+    assert_select ".cand-bar__num[data-decision=reject]", text: "1"
+    assert_select ".cand-filter__chip[data-flag=''] .cand-filter__count", text: "5"
+    assert_select ".cand-filter__chip[data-flag=duplicate] .cand-filter__count", text: "1"
   end
 
   test "確定すると選んだ処理の行き先へ移し、拡張を選んだ語があれば拡張の画面へ、採用だけなら表記の画面へ進む" do

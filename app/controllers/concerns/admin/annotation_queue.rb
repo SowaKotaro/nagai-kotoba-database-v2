@@ -1,5 +1,5 @@
 # アノテーションのキュー(未対応の語をどの順で辿るか)と、チップ選択に使うマスタ一式。
-# 1語ずつのコンソール(Admin::AnnotationsController)と 10件デッキ
+# 1語ずつのコンソール(Admin::AnnotationsController)とデッキ
 # (Admin::AnnotationDecksController)で同じ規則を共有するために切り出した。
 # 片方だけ絞り込み・並べ替えの規則が変わると、同じ「提案キュー」を名乗る2画面で
 # 出てくる語が食い違うため、ここを唯一の定義とする。

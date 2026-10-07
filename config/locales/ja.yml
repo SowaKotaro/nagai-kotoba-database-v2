@@ -221,8 +221,14 @@ ja:
         monthly_new: "今月の新収録数"
         monthly_new_unit: "語"
   searches:
+    # 読みの文字数スライダー(range_slider)の文言。%{min}・%{max} は JS が差し込む(SearchesHelper#reading_length_slider_data)
+    reading_length_slider:
+      at_least: "%{min}文字以上"
+      exact: "%{min}文字"
+      between: "%{min}文字以上%{max}文字以下"
     title: "検索・絞り込み"
     vowel_transition: "母音の移り"
+    # 検索の条件チップ(SearchesHelper)と、統計の母音グラフで選んだ並び(vowel_graph_controller が %{} を差し込む)の両方が使う
     vowel_transition_value: "%{from}〜%{to}拍目: %{rows}"
     description: "日本語の長い言葉の詳細検索。読みの文字数・先頭と末尾の文字・文字種・ヘボン式ローマ字・母音の韻・正規表現など、多彩な条件で絞り込めます。"
     q_label: "キーワード（表層形・読み・別表記）"
@@ -385,7 +391,6 @@ ja:
       base_multi_reading: "「%{surface}」は、読み%{readings}の日本語の長い言葉。"
       reading: "「%{reading}」"
       metrics_separator: "・"
-      genre_separator: " › "
       genre: "ジャンルは %{path}。"
       meaning: "%{meaning}"
       sense_count: "語義は%{count}つ。"
@@ -966,6 +971,10 @@ ja:
         unexpected_response: "追加できませんでした。ログインが切れている可能性があります。ページを再読み込みしてください。"
         selected_existing: "同じ名前が既にあったので、それを選びました。"
     annotations:
+      # 特徴の該当部分(feature_range)を選んでいないときの表示
+      feature_fields:
+        unselected_surface: "（単語 未選択）"
+        unselected_reading: "（読み 未選択）"
       title: "アノテーション"
       unit_word: "語"
       remaining: "未対応"
@@ -1257,8 +1266,6 @@ ja:
         graph_lead: "語頭から %{positions} 拍ぶんの母音を、拍位置ごとの5段(ア〜オ段)に並べ、隣り合う拍のつながりを線で結んだ図です。線の太さと濃さは、その拍から次の拍への移り方の多さを表します。"
         graph_aria: "拍位置ごとの母音と、隣り合う拍のあいだの母音の移り方"
         graph_filter: "多い遷移だけ"
-        # {from} {to} {rows} は JS(vowel_graph_controller)が差し込む
-        graph_pick_label: "{from}〜{to}拍目: {rows}"
         graph_link: "この移り方の語を見る"
         graph_hint: "最も多いのは %{top_position} 拍目の%{top_from} → %{top_to} で %{top_count} 語義です。下の数字は語頭からの拍位置で、後ろの拍ほど、そこまで読みが続く語義は減ります（%{last} 拍目まで届くのは %{last_count} 語義 = 全体の %{last_percent}%）。"
         graph_node_title: "%{position}拍目の%{vowel}: %{count}語義（%{percent}%）"
@@ -1273,6 +1280,8 @@ ja:
         count: "%{count}件"
 
   genres:
+    # ジャンルのパス(大 › 中 › 小)を 1 行の文字列にするときの区切り(Genre.join_path)。
+    path_separator: " › "
     index:
       title: "ジャンルから探す"
       eyebrow: "ジャンル一覧"

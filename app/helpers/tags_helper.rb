@@ -18,6 +18,6 @@ module TagsHelper
 
       names.unshift(node.name)
     end
-    names.join(" › ")
+    Genre.join_path(names)
   end
 end

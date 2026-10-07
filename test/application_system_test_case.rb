@@ -4,7 +4,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # 遅延読み込み(importmap)や fetch を挟む UI が多いため、既定の2秒より長めに待つ。
   Capybara.default_max_wait_time = 5
 
-  # ウィンドウ幅を変えるテスト(モバイル表示の確認)が元に戻すために参照する。
+  # 既定のウィンドウ幅。with_window_size が元に戻すときにも使う。
   DEFAULT_SCREEN_SIZE = [ 1400, 1400 ].freeze
 
   # ヘッドレスで実行する(CI・WSL などディスプレイの無い環境でも動かすため)。
@@ -27,6 +27,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     # いまは何も遮っていない。外部のフォントを読む変更が入ったときに、読み込み完了時の再レイアウトで
     # クリック座標がずれて flaky になるのと、テストが外部ネットワークに依存するのを防ぐ保険として残している。
     options.add_argument("--host-resolver-rules=MAP fonts.googleapis.com 127.0.0.1, MAP fonts.gstatic.com 127.0.0.1")
+    # パスワード漏洩の警告を切る。fixture の管理者のパスワード("password")でログインすると、Chrome が
+    # 「漏洩したパスワード」の警告を出して入力を奪い、以後ネイティブの入力(fill_in・send_keys・クリック)が
+    # ページに届かなくなる(下の「入力手段についての注記」)。切れるのはこの設定だけで、
+    # --disable-features=PasswordLeakDetection や credentials_enable_service では切れなかった
+    # (password_manager_enabled は効いたり効かなかったりした。2026-10-07、Chrome 155.0.8059.39)。
+    options.add_preference("profile.password_manager_leak_detection", false)
   end
 
   # 指定の Stimulus コントローラが要素に接続されるまで待つ。
@@ -50,8 +56,8 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # クリックして期待する状態(expect_css + text:/count: 等)が現れるまで待つ。
   # ブロックはクリック対象の要素を返すファインダ。まずネイティブクリックを試し、
   # 反応が無ければ JS の click()(仕様上 activation を発火する)でフォールバックする。
-  # このヘッドレス環境ではネイティブクリックがまれに要素へ届かないための保険。
-  # **押し直しても安全(冪等)な操作にだけ使う。**
+  # ネイティブクリックが要素に届かなかったときの保険(届かなかった主な原因のパスワード漏洩の警告は、
+  # 上の driven_by で切ってある)。**押し直しても安全(冪等)な操作にだけ使う。**
   def click_expecting(expect_css:, **expect_options, &element_finder)
     element = element_finder.call
     # 画面下端に sticky で貼り付く操作バー(.ann-actionbar・.cand-bar)の下に隠れないよう、
@@ -65,9 +71,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   end
 
   # JS の click() だけで押す(ネイティブクリックを使わない)。
-  # click_expecting は反応が無いとき JS click で押し直すが、このヘッドレス環境では
-  # 届かなかったはずのネイティブクリックが**後の操作(send_keys など)のあとに遅れて届く**ことがある。
-  # 「＋追加」のように、押し直されると直後の結果表示を消してしまう操作はこちらで押す。
+  # click_expecting は反応が無いとき JS click で押し直すが、届かなかったはずのネイティブクリックが
+  # **後の操作(send_keys など)のあとに遅れて届く**ことがあった(パスワード漏洩の警告を切る前に見た現象)。
+  # 「＋追加」のように、押し直されると直後の結果表示を消してしまう操作はこちらで 1 回だけ押す。
   def click_via_js(expect_css:, **expect_options, &element_finder)
     element = element_finder.call
     page.scroll_to(element, align: :center)
@@ -124,21 +130,49 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     execute_script("arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))", input)
   end
 
-  # ウィンドウ幅を変える(モバイル表示の確認)。終わったら DEFAULT_SCREEN_SIZE へ戻すこと。
-  def resize_window_to(width, height)
+  # ウィンドウ幅をブロックの間だけ変える(モバイル表示の確認)。ブラウザのセッション(ウィンドウ)は同じプロセスの
+  # 他のテストと共有されるので、縮めたままにすると後続のテストがモバイル表示になって落ちる。必ず元の幅へ戻す。
+  def with_window_size(width, height)
     page.driver.browser.manage.window.resize_to(width, height)
+    yield
+  ensure
+    page.driver.browser.manage.window.resize_to(*DEFAULT_SCREEN_SIZE)
   end
 
-  # 入力手段についての注記はここだけに置く(2026-10-03、Chrome 154.0.8037.92 のヘッドレスで確かめた):
-  # - ログインする前は、日本語・ASCII の fill_in / send_keys も、ネイティブのクリックとキー入力
-  #   (Actions・要素への send_keys)も、ページに届く。
-  # - system_sign_in の後は、ネイティブの入力が届かないことがある。確かめたときは、公開のフォーム・一括登録の
-  #   入力欄・仕分けの行のどれでも、fill_in・send_keys・Actions・クリックが届かなかった。fixture の管理者の
-  #   パスワード("password")で Chrome のパスワード漏洩の警告が出て、入力を奪うのが原因(ドライバの設定で
-  #   その機能を切ると届いた。設定はまだ変えていない)。警告の出る時機によっては届くこともあるので、
-  #   ログイン後にネイティブの入力に頼るテストは不安定になる。
-  # そのため、ログイン後のテストは値を JS で流し込む・keydown を JS で送る・JS の click() で押す。
-  # 各ファイルに残る「この環境では届かない」という注記は、この事情の現れ。
+  # 入力欄に値を JS で流し込み、input イベントを送る(Stimulus の入力の検証などを走らせる)。
+  # target は CSS セレクタか要素。打鍵の手順そのものではなく「この値になったとき」を確かめたいときに使う。
+  def set_value_via_js(target, text)
+    element = target.is_a?(String) ? find(target) : target
+    execute_script(<<~JS, element, text)
+      arguments[0].value = arguments[1];
+      arguments[0].dispatchEvent(new Event("input", { bubbles: true }));
+    JS
+  end
+
+  # フォーカスのある要素へ keydown を JS で送る(キーボードの操作の受け口を確かめる)。
+  def press_key(key, ctrl: false)
+    execute_script(<<~JS, key, ctrl)
+      const [key, ctrlKey] = arguments;
+      document.activeElement.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey, bubbles: true, cancelable: true }));
+    JS
+  end
+
+  # 要素へ click の MouseEvent を JS で送る。Shift+クリックを、修飾キーの状態ごと 1 回で送れる。
+  def dispatch_click(element, shift: false)
+    execute_script("arguments[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, shiftKey: arguments[1] }))",
+                   element, shift)
+  end
+
+  # 入力手段についての注記はここだけに置く(2026-10-07、Chrome 155.0.8059.39 のヘッドレスで確かめた):
+  # - ログインの前も後も、日本語・ASCII の fill_in / send_keys、ネイティブのクリックとキー入力はページに届く。
+  # - 以前はログイン後に届かなかった(fill_in・send_keys・クリックとも)。fixture の管理者のパスワード
+  #   ("password")で Chrome のパスワード漏洩の警告が出て、入力を奪っていたため。上の driven_by で切ってある。
+  # - そのころに書いたテストには、値を JS で流し込む・keydown を JS で送る・JS の click() で押す書き方が残る。
+  #   どれもそのままで正しく動く。新しく書くときの使い分け:
+  #   押し直しても結果が同じ操作は click_expecting、押し直すと困る操作は click_via_js、turbo_confirm の付いた操作は
+  #   click_accepting_confirm、開閉のトグルは素のクリック、視覚的に隠れた input は choose_hidden_input、
+  #   値になったときの振る舞いだけを見たい入力は set_value_via_js、Shift つきのクリックは dispatch_click、
+  #   フォーカス先へのキーは press_key、ウィンドウ幅を変えるときは with_window_size。
   #
   # 管理画面のシステムテスト用: ログインフォームから管理者でサインインする。
   def system_sign_in(admin = admins(:one), password: "password")

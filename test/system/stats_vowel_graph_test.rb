@@ -8,11 +8,10 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
   setup do
     # 少ない遷移(その区間の 6% 未満)が生まれるだけの語義を用意する。
     # 20 語義あれば1本しか通らない組は 5% になり、伏せる対象になる。
-    word = Word.create!(surface: "母音遷移の検証語", annotated_at: Time.current, annotation_status: :done)
-    readings = %w[ア イ ウ エ オ カ キ ク ケ コ サ シ ス セ ソ タ チ ツ テ ト]
-    readings.each_with_index do |head, index|
-      word.word_senses.create!(reading: "#{head}カサタナハマヤラワ#{readings[(index + 3) % readings.size]}")
-    end
+    heads = %w[ア イ ウ エ オ カ キ ク ケ コ サ シ ス セ ソ タ チ ツ テ ト]
+    readings = heads.each_with_index.map { |head, index| "#{head}カサタナハマヤラワ#{heads[(index + 3) % heads.size]}" }
+    word = create_published_word(surface: "母音遷移の検証語", reading: readings.first)
+    readings.drop(1).each { |reading| word.word_senses.create!(reading: reading) }
   end
 
   test "「多い遷移だけ表示」で少ない遷移だけが伏せられる" do
@@ -52,6 +51,9 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
     node(3, "a").click
     assert_picked nodes: 4, edges: 3
     assert_selector ".vowel-graph-panel__link[href$='vowel_transition=1-aaaa']"
+    # 選んだ並びの文言(検索の条件チップと同じ書き方)
+    assert_selector "[data-vowel-graph-target='pick']",
+                    exact_text: I18n.t("searches.vowel_transition_value", from: 1, to: 4, rows: ([ I18n.t("vowel_rows.a") ] * 4).join(" → "))
 
     # また離れた拍(6)を押しても鎖は残り、その隣(7)が決まって初めて新しい鎖に引き直す
     node(6, "a").click

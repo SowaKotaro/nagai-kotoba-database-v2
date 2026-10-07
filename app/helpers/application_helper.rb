@@ -15,7 +15,7 @@ module ApplicationHelper
   # canonical と og:url。既定は本番ホスト + 現在のパス(クエリは含めない)。
   # ファセット等でパスを差し替えたいページは canonical_path(...) で設定する(Issue 17)。
   def canonical_url
-    absolute_site_url(@canonical_path.presence || request.path)
+    SiteUrl.absolute(@canonical_path.presence || request.path)
   end
 
   # canonical のパスをページ側から指定する。
@@ -29,8 +29,8 @@ module ApplicationHelper
 
   # og:image の絶対URL。ページ側の content_for(:og_image) を優先し、無ければ既定カード。
   def page_og_image
-    path = content_for?(:og_image) ? content_for(:og_image).to_s : "/og-default.png"
-    absolute_site_url(path)
+    path = content_for?(:og_image) ? content_for(:og_image).to_s : SiteUrl::DEFAULT_OG_IMAGE_PATH
+    SiteUrl.absolute(path)
   end
 
   # og:image:alt。画像を差し替えたページ(単語の共有カード)は content_for(:og_image_alt) でその画像の説明を置く。
@@ -69,11 +69,4 @@ module ApplicationHelper
   # 値はいずれも環境変数から。未設定ならタグを出さない。
   def google_site_verification = ENV["GOOGLE_SITE_VERIFICATION"].presence
   def bing_site_verification = ENV["BING_SITE_VERIFICATION"].presence
-
-  private
-
-  # サイトの正規ホストを前置した絶対URLを返す。
-  def absolute_site_url(path)
-    "#{Rails.application.config.x.canonical_host}#{path}"
-  end
 end

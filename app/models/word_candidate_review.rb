@@ -2,14 +2,12 @@
 #
 # 初期の選択は「何も触らずに確定したらこうなる」を表す。オーナーは例外の行だけを選び直して確定する
 # (300語を1語ずつチェックさせないため)。
-#   仕分け(:triage)    : 保留にしていた語は保留 / 照合で一致した語は除外 / upload したままの語は拡張
-#                        (ほとんどを拡張に回すため) / それ以外(/expand で集めた語・拡張の元にした語など)は採用
-#   表記の確認(:notation): 照合で一致した語は除外 / 立項に疑義がある語は保留 / それ以外は採用
+#   仕分け(triage)    : 保留にしていた語は保留 / 照合で一致した語は除外 / upload したままの語は拡張
+#                       (ほとんどを拡張に回すため) / それ以外(/expand で集めた語・拡張の元にした語など)は採用
+#   表記の確認(notation): 照合で一致した語は除外 / 立項に疑義がある語は保留 / それ以外は採用
+# 選べる処理は、どちらの画面も段の choices(WordCandidate::STAGES)。
 # 種別: クエリ・集計（読み取りとキャッシュ）。
 class WordCandidateReview
-  # 画面ごとに選べる処理。拡張は、まだ誰も判断していない語にだけ出す。
-  CHOICES = { triage: %w[expand keep hold reject], notation: %w[keep hold reject] }.freeze
-
   # 行の印(絞り込みのボタンに出す順)。重複の疑い / 表記が変わった / 立項に疑義。
   FLAGS = %w[duplicate changed doubtful].freeze
 
@@ -28,15 +26,28 @@ class WordCandidateReview
     end
   end
 
-  attr_reader :context
+  # 同じフォームで確定する一覧(仕分けは本体と保留の2つ、表記の確認は1つ)を合わせた件数。
+  # 印での絞り込みの帯(admin/candidates/_toolbar)と下端のバー(_bar)に、コントローラが作って渡す。
+  Totals = Data.define(:reviews) do
+    def size = reviews.sum(&:size)
+    def flag_counts = sum_counts(reviews.map(&:flag_counts))
+    def default_counts = sum_counts(reviews.map(&:default_counts))
 
-  def initialize(candidates, context:)
+    private
+
+    def sum_counts(counts) = counts.reduce({}) { |sum, other| sum.merge(other) { |_, a, b| a + b } }
+  end
+
+  # stage は一覧を並べる画面の段(WordCandidate::STAGES の仕分けか表記)。
+  attr_reader :stage
+
+  def initialize(candidates, stage:)
     @candidates = candidates.to_a
-    @context = context
+    @stage = stage
   end
 
   def choices
-    CHOICES.fetch(context)
+    stage.choices
   end
 
   def size
@@ -68,6 +79,11 @@ class WordCandidateReview
     rows.flat_map(&:flags).tally
   end
 
+  # 初期の選択ごとの行数(何も触らずに確定したら、どの処理が何語になるか。下端のバーに出す)。
+  def default_counts
+    rows.map(&:default).tally
+  end
+
   private
 
   def family_id(candidate)
@@ -83,7 +99,7 @@ class WordCandidateReview
   def build_row(candidate, matches)
     flags = []
     flags << "duplicate" if matches.any?
-    if context == :notation
+    if stage.key == "notation"
       flags << "changed" if candidate.surface_changed_since_intake?
       flags << "doubtful" if candidate.doubtful_entry?
     end
@@ -94,7 +110,7 @@ class WordCandidateReview
     return "hold" if candidate.held?
     return "reject" if flags.include?("duplicate")
     return "hold" if flags.include?("doubtful")
-    return "expand" if context == :triage && candidate.fresh_upload?
+    return "expand" if stage.key == "triage" && candidate.fresh_upload?
 
     "keep"
   end

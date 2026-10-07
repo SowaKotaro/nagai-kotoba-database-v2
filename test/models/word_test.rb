@@ -102,14 +102,45 @@ class WordTest < ActiveSupport::TestCase
     assert_nil word.annotated_at
   end
 
+  # 代表の語義と語義の並びは id(登録順)で決め、読みの長さや読み込みの順には左右されない。
+  test "primary_sense は id が最小の語義、ordered_senses は id 順で、語義が無ければ nil と空" do
+    word = Word.create!(surface: "語義の順序の見本")
+    first = word.word_senses.create!(reading: "ミジカイヨミ")
+    second = word.word_senses.create!(reading: "トテモナガイニバンメノヨミ")
+    third = word.word_senses.create!(reading: "サンバンメノヨミ")
+
+    loaded = Word.includes(:word_senses).find(word.id)
+    assert_equal first, loaded.primary_sense
+    assert_equal [ first, second, third ], loaded.ordered_senses
+
+    empty = Word.create!(surface: "語義の無い見本")
+    assert_nil empty.primary_sense
+    assert_empty empty.ordered_senses
+  end
+
+  # 今日の一語は、公開語を id 順に並べた date.jd % count 番目。count は渡された数で、数え直さない。
+  test "featured_on は日付と渡された語数で決まり、語数が 0 なら nil" do
+    ordered = Word.annotated.order(:id).to_a # フィクスチャの公開語は 2 語
+    date = Date.new(2026, 10, 1)
+    date += 1 until date.jd.even?
+
+    assert_equal ordered[0], Word.featured_on(date, count: 2)
+    assert_equal ordered[1], Word.featured_on(date + 1, count: 2)
+    # 渡された語数で割る(実際は 2 語でも、1 と渡せばいつも先頭)
+    assert_equal ordered[0], Word.featured_on(date + 1, count: 1)
+    assert_nil Word.featured_on(date, count: 0)
+  end
+
   # 「今月の新収録」(ホームと統計)の定義。月の境界は Time.zone で切り、created_at は見ない。
   test "annotated_this_month は今月 annotated_at が立った公開語だけで、created_at は見ない" do
     travel_to Time.zone.local(2026, 10, 15, 12, 0) do
+      # 公開日(annotated_at)の値そのものを試すので create_published_word は使わず、状態は「完了」で揃える
       first_moment = Word.create!(surface: "月初の語", annotated_at: Time.zone.local(2026, 10, 1, 0, 0, 0),
-                                  created_at: Time.zone.local(2026, 9, 1))
-      last_moment = Word.create!(surface: "月末の語", annotated_at: Time.zone.local(2026, 10, 31, 23, 59, 59))
+                                  annotation_status: :done, created_at: Time.zone.local(2026, 9, 1))
+      last_moment = Word.create!(surface: "月末の語", annotated_at: Time.zone.local(2026, 10, 31, 23, 59, 59),
+                                 annotation_status: :done)
       Word.create!(surface: "先月末の語", annotated_at: Time.zone.local(2026, 9, 30, 23, 59, 59),
-                   created_at: Time.zone.local(2026, 10, 2))
+                   annotation_status: :done, created_at: Time.zone.local(2026, 10, 2))
       Word.create!(surface: "今月作った未公開の語")
 
       assert_equal [ first_moment, last_moment ].sort_by(&:id), Word.annotated_this_month.order(:id).to_a

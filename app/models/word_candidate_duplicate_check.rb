@@ -19,9 +19,9 @@ class WordCandidateDuplicateCheck
   # 空白・句読点・記号(中黒・感嘆符・括弧など)。長音符「ー」は文字(Lm)なので残る。
   IGNORED_CHARACTERS = /[\p{P}\p{S}\p{Z}\s]/
 
-  # 照合用に表層形を畳む。かなの寄せ方は公開側の重複チェックと揃える。
+  # 照合用に表層形を畳む。かなの寄せ方は公開側の重複チェック(WordRequestDuplicateCheck.fold)と同じ KanaFold。
   def self.key(surface)
-    WordRequestDuplicateCheck.fold(surface).downcase.gsub(IGNORED_CHARACTERS, "")
+    KanaFold.to_katakana(surface).downcase.gsub(IGNORED_CHARACTERS, "")
   end
 
   # candidates は画面に並べる順で渡す(先に来た語が正になる)。

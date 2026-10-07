@@ -40,8 +40,6 @@ class RelatedWordsTest < ActiveSupport::TestCase
   private
 
   def make_word(surface, reading, genre: nil)
-    word = Word.create!(surface: surface, annotated_at: Time.current)
-    word.word_senses.create!(reading: reading, genre: genre)
-    word
+    create_published_word(surface: surface, reading: reading, genre: genre)
   end
 end

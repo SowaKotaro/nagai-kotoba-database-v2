@@ -36,6 +36,13 @@ class WordCandidateTest < ActiveSupport::TestCase
     assert_equal first.id, grandchild.root_id
   end
 
+  test "まだ手が離れていない語は4段のどれかにいる語で、保留・登録済み・重複・不要の語は含めない" do
+    in_progress = %w[triage expanding notating notated ready].map { |status| WordCandidate.create!(surface: "#{status}の言葉", status: status) }
+    %w[held registered duplicated rejected].each { |status| WordCandidate.create!(surface: "#{status}の言葉", status: status) }
+
+    assert_equal in_progress.map(&:id).sort, WordCandidate.in_progress.ids.sort
+  end
+
   test "選んだ処理の行き先: 採用は表記を確かめ済みなら登録待ち、まだなら表記待ち。除外は一致があれば重複" do
     fresh = WordCandidate.new(surface: "新しい言葉")
     notated = WordCandidate.new(surface: "確かめた言葉", notated_at: Time.current)

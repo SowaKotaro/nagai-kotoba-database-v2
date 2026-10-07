@@ -11,7 +11,7 @@
 
 /* ヘッダーだけは本文より少し広く取り、ブランドとナビが1行に収まるようにする */
 .site-header__inner {
-  max-width: 1040px;
+  max-width: var(--frame-width);
   margin: 0 auto;
   /* 帯は低く。ページの主役ではないので、掴めるだけの高さがあればよい */
   padding: var(--space-3) var(--space-5);
@@ -325,7 +325,7 @@ main.container--flush > .flash {
   margin: var(--space-5) auto 0;
 }
 
-/* 帯の中身は本文カラムの幅(800px)に戻す。ヘッダー(1040px)に合わせて広げてみたが、
+/* 帯の中身は本文カラムの幅(800px)に戻す。ヘッダー(--frame-width。1040px)に合わせて広げてみたが、
    区画が横に伸びて中身が間延びしたため取りやめた(2026-09-04 オーナー指示) */
 .band__inner {
   max-width: var(--content-width);
@@ -476,7 +476,7 @@ main.container--flush > .flash {
 /* 帯そのものは上下の余白を持たず、各リンクが帯の全高を占める。
    文字の上下の余白はリンク側で同じ厚みにして、帯の中央に置く */
 .admin-nav__inner {
-  max-width: 1040px;
+  max-width: var(--frame-width);
   margin: 0 auto;
   padding: 0 var(--space-5);
   display: flex;
@@ -523,7 +523,7 @@ main.container--flush > .flash {
 }
 
 .site-footer__inner {
-  max-width: 1040px;
+  max-width: var(--frame-width);
   margin: 0 auto;
   padding: var(--space-7) var(--space-5) var(--space-6);
   display: grid;
@@ -580,7 +580,7 @@ main.container--flush > .flash {
 }
 
 .site-footer__bottom-inner {
-  max-width: 1040px;
+  max-width: var(--frame-width);
   margin: 0 auto;
   padding: var(--space-4) var(--space-5) var(--space-6);
   display: flex;

@@ -166,7 +166,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "注釈済みの語でも提案を状態バッジ付きで見直せる" do
-    @word.update!(annotated_at: Time.current)
+    @word.mark_annotated
+    @word.save!
     annotation_proposals(:haruhi_proposal).applied!
     get admin_annotation_path(@word)
     assert_response :success
@@ -226,7 +227,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea.js-meaning", text: /アニメ作品/
   end
 
-  # --- 提案の言語的特徴の表示・反映(Issue 63) ---
+  # --- 提案の言語学的特徴の表示・反映(Issue 63) ---
   test "既存マスタに解決できる特徴は該当部分つきでパネルに出て、反映でフォームに組まれる(保存はしない)" do
     propose_feature("連濁")
 
@@ -355,7 +356,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
     # 反映済みの提案は proposed でも入れない(二重反映を避ける)
     annotation_proposals(:haruhi_proposal).applied!
-    @word.update!(annotated_at: Time.current)
+    @word.mark_annotated
+    @word.save!
     get admin_annotation_path(@word, proposed: 1)
     assert_response :success
     assert_select "textarea.js-meaning", text: /谷川流/, count: 0
@@ -425,7 +427,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
   private
 
-  # haruhi の提案を、指定した名前の言語的特徴(該当部分 涼宮)を1つ持つ形にする。
+  # haruhi の提案を、指定した名前の言語学的特徴(該当部分 涼宮)を1つ持つ形にする。
   def propose_feature(name)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ {

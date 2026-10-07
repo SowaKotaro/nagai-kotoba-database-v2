@@ -5,7 +5,7 @@
 class Admin::TagsController < Admin::BaseController
   before_action :set_kind, except: :index
 
-  # ハブ。5種のマスタと登録件数の一覧。
+  # ハブ。マスタの種別(TagKind)ごとの登録件数の一覧。
   def index
     @kinds = TagKind.all
   end

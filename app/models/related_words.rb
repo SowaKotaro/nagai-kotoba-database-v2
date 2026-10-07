@@ -17,7 +17,7 @@ class RelatedWords
   def initialize(word, batch: WordBatch.new)
     @word = word
     @batch = batch
-    @sense = word.word_senses.min_by(&:id)
+    @sense = word.primary_sense
   end
 
   # 表示するグループの配列(該当が無いグループは含めない)。

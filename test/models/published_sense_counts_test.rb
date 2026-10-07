@@ -30,8 +30,7 @@ class PublishedSenseCountsTest < ActiveSupport::TestCase
       assert_equal 1, PublishedSenseCounts.by_first_char["さ"]
 
       # キャッシュが効いていれば、その後に公開した語はまだ現れない。
-      word = Word.create!(surface: "追加した語", annotated_at: Time.current)
-      word.word_senses.create!(reading: "ツイカシタゴ")
+      create_published_word(surface: "追加した語", reading: "ツイカシタゴ")
       assert_nil PublishedSenseCounts.by_first_char["ツ"]
 
       # 期限が切れれば数え直す。

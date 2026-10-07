@@ -73,7 +73,7 @@
 <div class="sheet">
 
 <% if @featured_word %>
-  <% featured_sense = @featured_word.word_senses.first %>
+  <% featured_sense = @featured_word.primary_sense %>
   <section class="band home-featured">
     <div class="band__inner">
     <div class="band__gutter">
@@ -91,7 +91,7 @@
     <div class="home-featured__body">
       <div>
         <%= link_to @featured_word.surface, word_path(@featured_word), class: "home-featured__word" %>
-        <p class="home-featured__reading"><%= @featured_word.word_senses.map(&:reading).join("、") %></p>
+        <p class="home-featured__reading"><%= @featured_word.ordered_senses.map(&:reading).join("、") %></p>
         <% if featured_sense&.meaning.present? %>
           <p class="home-featured__meaning"><%= truncate(featured_sense.meaning, length: 120) %></p>
         <% end %>
@@ -171,7 +171,7 @@
         <span class="home-column__mark home-column__mark--new"><%= t("home.index.new_badge") %></span>
         <span class="home-column__body">
           <span class="home-column__word"><%= word.surface %></span>
-          <span class="home-column__reading"><%= word.word_senses.first&.reading %></span>
+          <span class="home-column__reading"><%= word.primary_sense&.reading %></span>
         </span>
         <span class="home-column__meta"><%= l(word.annotated_at.to_date, format: :short) %></span>
       <% end %>
@@ -199,9 +199,9 @@
         <span class="home-column__mark"><%= index + 1 %></span>
         <span class="home-column__body">
           <span class="home-column__word"><%= word.surface %></span>
-          <span class="home-column__reading"><%= word.word_senses.first&.reading %></span>
+          <span class="home-column__reading"><%= word.primary_sense&.reading %></span>
         </span>
-        <% if (length = word.word_senses.first&.reading_length) %>
+        <% if (length = word.primary_sense&.reading_length) %>
           <span class="home-column__meta"><%= t("words.index.char_count", count: length) %></span>
         <% end %>
       <% end %>

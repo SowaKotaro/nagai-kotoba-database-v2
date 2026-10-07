@@ -66,7 +66,6 @@ class KanaRow
     "ヴ" => "ウ"
   }.freeze
 
-  # 小書き => 大書き。
   SMALL_TO_LARGE = {
     "ァ" => "ア", "ィ" => "イ", "ゥ" => "ウ", "ェ" => "エ", "ォ" => "オ",
     "ッ" => "ツ", "ャ" => "ヤ", "ュ" => "ユ", "ョ" => "ヨ",
@@ -85,21 +84,15 @@ class KanaRow
 
   # 文字が属する行の代表字を返す(かな以外は nil)。
   def self.row(char)
-    CHAR_TO_ROW[normalize(char)]
+    CHAR_TO_ROW[KanaFold.to_katakana(char)]
   end
 
   # 文字を基本46字へ畳んだ字を返す(基本46字に載らない文字は nil)。
   def self.base(char)
-    folded = normalize(char)
+    folded = KanaFold.to_katakana(char)
     folded = SMALL_TO_LARGE[folded] || folded
     folded = VOICED_TO_SEION[folded] || folded
     folded = OLD_TO_MODERN[folded] || folded
     folded if BASE_46.include?(folded)
   end
-
-  # NFKC 正規化(半角カナ・合成濁点を畳む)し、ひらがなをカタカナへ寄せる。
-  def self.normalize(char)
-    char.to_s.unicode_normalize(:nfkc).tr("ぁ-ゖ", "ァ-ヶ")
-  end
-  private_class_method :normalize
 end

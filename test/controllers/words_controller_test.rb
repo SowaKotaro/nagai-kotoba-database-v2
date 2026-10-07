@@ -151,10 +151,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "sort=reverse_kana は読みを末尾から見た辞書順になる" do
     # 反転読みは チカ→カチ、アシ→シア。カ < シ なので チカ の語が先に来る。
-    early = Word.create!(surface: "逆引きで先", annotated_at: Time.current)
-    early.word_senses.create!(reading: "チカ")
-    late = Word.create!(surface: "逆引きで後", annotated_at: Time.current)
-    late.word_senses.create!(reading: "アシ")
+    early = create_published_word(surface: "逆引きで先", reading: "チカ")
+    late = create_published_word(surface: "逆引きで後", reading: "アシ")
 
     get words_path(sort: "reverse_kana")
     assert_operator body_position(early), :<, body_position(late)
@@ -243,6 +241,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_match sense.meaning, response.body
     # 読み・文字数・ジャンルを散文化した定義文(Issue 18)。文面の組み立ては WordsHelperTest で見る
     assert_select ".word-flavor .word-flavor__text", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
+    # 円環交差数(さつじんじけん は 3 回)
+    assert_select ".kana-ring__count", text: I18n.t("words.show.crossings_count", count: 3)
   end
 
   test "詳細に Web 検索(別タブ)・シェア(X・URL コピー)・ランダムの導線がある" do
@@ -286,6 +286,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "ruby.annotation-target rt", text: "さつじん"
   end
 
+  # 円環交差数は保存列(word_senses.ring_crossing_count)を出し、読みから計算し直さない。
+  # 保存列は NULL を許すので、NULL の語義は「—」にする(値の直し方は docs/data-model.md §3.4)。
+  test "詳細の円環交差数は保存列の値を出し、NULL なら「—」にする" do
+    sense = word_senses(:murder) # 読みから求めると 3 回
+    crossings = ".sense-attrs__item[title='#{I18n.t('words.show.crossings_hint')}']"
+
+    sense.update_columns(ring_crossing_count: 7)
+    get word_path(sense.word)
+    assert_select "#{crossings} .kana-ring__count", text: I18n.t("words.show.crossings_count", count: 7)
+
+    sense.update_columns(ring_crossing_count: nil)
+    get word_path(sense.word)
+    assert_select "#{crossings} .kana-ring__count", count: 0
+    assert_select "#{crossings} .sense-undefined", text: I18n.t("words.show.undefined")
+  end
+
   test "詳細は未登録の属性を「—」で示す" do
     # curry は ジャンル・エンティティ・言語学的特徴が未登録(語種 英語 はあり)
     get word_path(words(:curry))
@@ -298,8 +314,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "詳細に同じジャンルの関連語が並び、「ん」で終わる語のしりとりは行き止まりになる" do
     # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
-    sibling = Word.create!(surface: "同ジャンルの別語", annotated_at: Time.current)
-    sibling.word_senses.create!(reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
+    sibling = create_published_word(surface: "同ジャンルの別語", reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
 
     get word_path(words(:abc_murder)) # 読み さつじんじけん
     assert_response :success
@@ -314,8 +329,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "しりとりの次の一手は末尾文字から始まる公開語へ繋がる" do
     # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
-    next_word = Word.create!(surface: "レンタルビデオ店の閉店", annotated_at: Time.current)
-    next_word.word_senses.create!(reading: "レンタルビデオテンノヘイテン")
+    next_word = create_published_word(surface: "レンタルビデオ店の閉店", reading: "レンタルビデオテンノヘイテン")
 
     get word_path(words(:curry))
     assert_response :success
@@ -345,8 +359,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 多語義語の代表語義と語義の順序 ---
-  # いまは「id が最小の語義」が代表で、語義は id 順に並ぶ(preload の返す順に頼っている)。
-  # 先頭の語義が最長でない語で、いまの振る舞いを固定する。
+  # 代表は Word#primary_sense(id が最小の語義)、語義の並びは Word#ordered_senses(id 順)。
+  # 先頭の語義が最長でない語で、この振る舞いを固定する。
   test "多語義語の一覧の行は先頭の語義の文字数を出し、読みは語義の順に並べる。詳細の語義も同じ順" do
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい

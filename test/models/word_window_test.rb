@@ -4,9 +4,7 @@ class WordWindowTest < ActiveSupport::TestCase
   setup do
     # id 順に並ぶ候補を 5 語つくる(読みはすべて同じ字数にして 1 つのスコープで引く)
     @ids = 5.times.map do |i|
-      word = Word.create!(surface: "窓の候補#{i}", annotated_at: Time.current)
-      word.word_senses.create!(reading: "マドノコウホノゴ#{'アイウエオ'[i]}ゴ")
-      word.id
+      create_published_word(surface: "窓の候補#{i}", reading: "マドノコウホノゴ#{'アイウエオ'[i]}ゴ").id
     end
     @scope = WordSense.where(word_id: @ids)
   end

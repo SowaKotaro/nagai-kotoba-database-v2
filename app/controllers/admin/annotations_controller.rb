@@ -4,10 +4,11 @@
 # キューから外れ、あとで単語一覧の「保留」フィルタから見直せる。
 # ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
-  # キュー(絞り込み・並べ替え)とマスタ読み込みは 10件デッキと共有する。
+  # キュー(絞り込み・並べ替え)とマスタ読み込みはデッキと共有する。
   include Admin::AnnotationQueue
 
   before_action :set_word, only: %i[show update hold create_master reresearch review_features]
+  before_action :set_proposal, only: %i[show update create_master reresearch]
 
   # キューの最初の語へ誘導。無ければ完了画面(index ビュー)を出す。
   def index
@@ -25,9 +26,8 @@ class Admin::AnnotationsController < Admin::BaseController
 
   def show
     @word.word_senses.build if @word.word_senses.empty?
-    # 提案は status を問わず表示する(注釈済みの語を「戻る」で見直すときも Claude の提案を
+    # 提案(@proposal)は status を問わず表示する(注釈済みの語を「戻る」で見直すときも Claude の提案を
     # 参照できるように)。反映(apply)は明示操作か、提案キューでの自動反映のときだけ行う。
-    @proposal = AnnotationProposal.find_by(word_id: @word.id)
     if apply_proposal?
       apply_proposal_defaults
     else
@@ -46,7 +46,6 @@ class Admin::AnnotationsController < Admin::BaseController
       mark_proposal_applied
       redirect_to_next_word(t("admin.annotations.saved"))
     else
-      @proposal = AnnotationProposal.find_by(word_id: @word.id)
       load_masters
       set_navigation
       render :show, status: :unprocessable_content
@@ -61,7 +60,7 @@ class Admin::AnnotationsController < Admin::BaseController
     redirect_to_next_word(t("admin.annotations.held"))
   end
 
-  # 言語的特徴を「調べたが該当する現象は無かった」で確定する(Issue 76)。
+  # 言語学的特徴を「調べたが該当する現象は無かった」で確定する(Issue 76)。
   #
   # 特徴が0件の語義には「まだ調べていない」と「調べたうえで該当なし」が混ざる。
   # 後者を記録しておかないと、特徴の再調査を掛けるたびに同じ語が対象に戻ってくる。
@@ -77,10 +76,9 @@ class Admin::AnnotationsController < Admin::BaseController
   # 提案の「新設候補」マスタをワンタップ作成し、提案を再反映して戻る(Issue 66)。
   # 作成後は解決してフォームに自動で入る。新設候補は基本 単一語義なので先頭語義を対象にする。
   def create_master
-    proposal = AnnotationProposal.find_by(word_id: @word.id)
-    raise ActiveRecord::RecordNotFound unless proposal
+    raise ActiveRecord::RecordNotFound unless @proposal
 
-    ProposedMasterCreation.new(proposal.senses.first, params[:field], params[:name]).create!
+    ProposedMasterCreation.new(@proposal.senses.first, params[:field], params[:name]).create!
     redirect_to admin_annotation_path(@word, nav_params.merge(apply_proposal: 1))
   rescue ProposedMasterCreation::Error, ActiveRecord::RecordInvalid
     redirect_to admin_annotation_path(@word, nav_params.merge(apply_proposal: 1)),
@@ -92,7 +90,6 @@ class Admin::AnnotationsController < Admin::BaseController
   # 調べ直した提案 JSON が返り、それを「提案 JSON の取り込み」に貼って上書きする。
   # マスタ込みで数十 KB になるためコンソール本体には埋め込まず、この画面に分ける。
   def reresearch
-    @proposal = AnnotationProposal.find_by(word_id: @word.id)
     @reresearch_json = ReannotationExport.new(@word, @proposal).to_json
   end
 
@@ -110,6 +107,11 @@ class Admin::AnnotationsController < Admin::BaseController
   def set_word
     @word = Word.includes(word_senses: %i[word_origins word_sense_features word_sense_variants])
                 .find(params[:id])
+  end
+
+  # 語に付いた Claude の提案(status を問わない)。無ければ nil。
+  def set_proposal
+    @proposal = AnnotationProposal.find_by(word_id: @word.id)
   end
 
   # --- Claude の提案(Issue 38) ---

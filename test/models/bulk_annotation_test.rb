@@ -38,7 +38,7 @@ class BulkAnnotationTest < ActiveSupport::TestCase
                  word_senses(:pending).reload.word_origin_ids.sort
   end
 
-  test "既定では注釈済みにしない(確定事項4)" do
+  test "既定では注釈済みにしない(docs/issues.md 確定事項 9)" do
     BulkAnnotation.new(word_ids: [ @haruhi.id ], genre_id: genres(:small_novel).id).apply
     assert_nil @haruhi.reload.annotated_at
   end

@@ -30,7 +30,8 @@
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ page_heading, nil ] ] %>
 
-<%# この面でいちばん読みが長い語。レールの線画に使う。語義は includes 済みなので追加のクエリは無い %>
+<%# この面でいちばん読みが長い語。レールの線画に使う。語義は includes 済みなので追加のクエリは無い。
+    代表の語義(Word#primary_sense)ではなく、表示中の語義から選ぶ %>
 <% headline_sense = @words.flat_map(&:word_senses).max_by { |sense| sense.reading_length.to_i } %>
 
 <header class="page-header page-header--rail">

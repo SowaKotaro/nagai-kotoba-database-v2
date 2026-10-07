@@ -3,7 +3,9 @@
 <%# 削除印(_destroy)の付いた行は、描き直したときも隠したままにする(語義と同じ扱い) %>
 <div class="ann-feature" data-nested-form-item data-controller="feature-range"
      style="<%= "display:none" if form.object.marked_for_destruction? %>"
-     data-feature-range-surface-value="<%= word.surface %>">
+     data-feature-range-surface-value="<%= word.surface %>"
+     data-feature-range-unselected-surface-value="<%= t("admin.annotations.feature_fields.unselected_surface") %>"
+     data-feature-range-unselected-reading-value="<%= t("admin.annotations.feature_fields.unselected_reading") %>">
   <div class="ann-feature__head">
     <span class="t"><%= t("admin.annotations.feature_no") %></span>
     <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>

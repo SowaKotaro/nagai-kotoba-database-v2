@@ -61,7 +61,8 @@ class RhythmPattern
 
   # reading から rhythm_pattern 文字列を生成する。nil は空文字として扱う。
   def self.call(reading)
-    chars = normalize(reading).chars
+    # 変換表をひらがな 1 本にするため、カタカナ語もひらがなへ寄せてから処理する(半角カナ・合成濁点も畳む)。
+    chars = KanaFold.to_hiragana(reading).chars
     result = +""
     pending_sokuon = false
     index = 0
@@ -107,12 +108,6 @@ class RhythmPattern
     result
   end
 
-  # NFKC 正規化(半角カナ・合成濁点を畳む)してからカタカナをひらがなへ寄せる。
-  # 変換表をひらがな1本に統一し、カタカナ語も同じ規則で処理できるようにする。
-  def self.normalize(reading)
-    reading.to_s.unicode_normalize(:nfkc).tr("ァ-ヶ", "ぁ-ゖ")
-  end
-
   # これまでの出力の末尾側から最初に見つかる母音を返す。
   def self.last_vowel(text)
     text.reverse.each_char { |char| return char if VOWELS.include?(char) }
@@ -127,5 +122,5 @@ class RhythmPattern
     head + romaji
   end
 
-  private_class_method :normalize, :last_vowel, :apply_sokuon
+  private_class_method :last_vowel, :apply_sokuon
 end

@@ -28,7 +28,7 @@
             <%= link_to proposal.word.surface, admin_annotation_path(proposal.word), data: { turbo_frame: "_top" } %>
           </td>
           <td><%= truncate(sense.meaning, length: 44) %></td>
-          <td class="bulk-approval__genre"><%= sense.genre_path.join(" › ") %></td>
+          <td class="bulk-approval__genre"><%= Genre.join_path(sense.genre_path) %></td>
           <td><%= sense.entity_type_name %></td>
         </tr>
       <% end %>

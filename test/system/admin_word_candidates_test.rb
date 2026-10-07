@@ -25,11 +25,11 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
 
     # キーで選ぶと次の行へ進む(↑ で戻れる)
     focus_decision(seed)
-    press "e"
+    press_key "e"
     assert_equal "decisions[#{children[0].id}]", active_element_name
-    press "a"
-    press "ArrowUp"
-    press "x"
+    press_key "a"
+    press_key "ArrowUp"
+    press_key "x"
     assert_equal "decisions[#{children[1].id}]", active_element_name
     assert_decisions "errreeer", expand: 4, keep: 0, hold: 0, reject: 4
 
@@ -37,14 +37,14 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
     click_row(singles[0])
     click_row(singles[2], shift: true)
     assert_equal singles.map(&:surface), selected_surfaces
-    press "h"
+    press_key "h"
     assert_decisions "errrhhhr", expand: 1, keep: 0, hold: 3, reject: 4
     assert_equal [], selected_surfaces
 
     # 左端の選択の列をなぞると、通った行をまとめて選ぶ。Esc で選択を外す(処理はそのまま)
     sweep_rows(children[0], children[2])
     assert_equal children.map(&:surface), selected_surfaces
-    press "Escape"
+    press_key "Escape"
     assert wait_until { selected_surfaces.empty? }, "Esc で選択が外れませんでした"
     assert_decisions "errrhhhr", expand: 1, keep: 0, hold: 3, reject: 4
 
@@ -54,15 +54,15 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
 
     # F2 で行の中に「直す」を開き、Esc で取りやめると、その行の選択にフォーカスが戻る
     focus_decision(singles[0])
-    press "F2"
+    press_key "F2"
     assert_selector "##{ActionView::RecordIdentifier.dom_id(singles[0])} .cand-edit input[name='word_candidate[surface]']"
     assert wait_until { active_element_name == "word_candidate[surface]" }, "開いたフォームの表層形にフォーカスが移りませんでした"
-    press "Escape"
+    press_key "Escape"
     assert_no_selector ".cand-edit"
     assert wait_until { active_element_name == "decisions[#{singles[0].id}]" }, "行の選択にフォーカスが戻りませんでした"
 
     # Ctrl+Enter で確定する(拡張を選んだ語があるので拡張の画面へ進む)
-    press "Enter", ctrl: true
+    press_key "Enter", ctrl: true
     assert_current_path admin_candidates_expansion_path
     assert_equal %w[expanding rejected rejected rejected held held held duplicated],
                  [ seed, *children, *singles, duplicate ].map { |candidate| candidate.reload.status }
@@ -115,16 +115,14 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
     JS
   end
 
-  # 行の語の部分を押す(shift: true で Shift+クリック)。ネイティブのクリックは届かないことがあるので JS で送る。
+  # 行の語の部分を押す(shift: true で Shift+クリック。dispatch_click)。
   def click_row(candidate, shift: false)
-    execute_script("arguments[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, shiftKey: arguments[1] }))",
-                   find("##{ActionView::RecordIdentifier.dom_id(candidate)} .cand-word__surface"), shift)
+    dispatch_click(find("##{ActionView::RecordIdentifier.dom_id(candidate)} .cand-word__surface"), shift: shift)
   end
 
   # すべての語の表の行(状態の欄)を押す。
   def click_table_row(candidate, shift: false)
-    execute_script("arguments[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, shiftKey: arguments[1] }))",
-                   find(".cand-table__row", text: candidate.surface).find(".cand-table__status"), shift)
+    dispatch_click(find(".cand-table__row", text: candidate.surface).find(".cand-table__status"), shift: shift)
   end
 
   # 左端の選択の列を、from の行から to の行までなぞる(ポインタのイベントを JS で送る)。
@@ -138,16 +136,6 @@ class AdminWordCandidatesTest < ApplicationSystemTestCase
       fire("pointerdown", at(start));
       fire("pointermove", at(finish));
       fire("pointerup", at(finish));
-    JS
-  end
-
-  # フォーカスのある要素でキーを押す。ログイン後はネイティブのキー入力がページに届かないことがある
-  # (Actions も要素の send_keys も。クリックが届かないのと同じ事情。ApplicationSystemTestCase の
-  # system_sign_in の上の注記)ので、keydown を JS で送る。
-  def press(key, ctrl: false)
-    execute_script(<<~JS, key, ctrl)
-      const [key, ctrlKey] = arguments;
-      document.activeElement.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey, bubbles: true, cancelable: true }));
     JS
   end
 
