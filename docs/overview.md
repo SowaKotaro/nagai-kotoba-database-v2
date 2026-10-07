@@ -39,11 +39,8 @@
 - Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
 - CSS は手書き（`tokens → base → layout → components` ＋ `annotate.css` / `candidates.css` / `admin.css`）
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
-- デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で
-  `.github/workflows/deploy.yml` が自動で実行する**。CI の完了は待たず、main にブランチ保護も無い。
-  `deploy:migrate` の直後に `deploy:seed` が毎回走り、管理者とマスタ（`SeedCatalog` の `*_RENAMES` による改名を含む）を投入する
-- CI: GitHub Actions（`.github/workflows/ci.yml`。PR の作成時と PR ブランチへの push のたび、main への push 時。DB は `mysql:8.4`）。
-  main への push ではデプロイと並走するので、CI が落ちてもデプロイは止まらない
+- デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で自動で実行する**（§11）
+- CI: GitHub Actions（`.github/workflows/ci.yml`。DB は `mysql:8.4`。§11）
 - タイムゾーンは `Tokyo`、既定ロケールは `:ja`（表示文言は `config/locales/ja.yml` に集約）
 - 外部サービスへの実行時依存は持たない（web フォント CDN・チャート CDN・外部 API いずれも無し。
   唯一の同梱ライブラリが `vendor/javascript/plotly.min.js` で、統計ページ内でのみ遅延読み込みする）
@@ -85,15 +82,15 @@
 | `/words/:id` | 単語詳細。語義・関連データ・五十音円環・関連語・しりとりの次の一手 |
 | `/words/random` | ランダムに 1 語へ 302 |
 | `/words/:id/share_card.png` | 単語ごとの共有カード（og:image） |
-| `/search` | 詳細検索フォーム（13 条件）。実行すると条件付きの `/words` へ |
+| `/search` | 詳細検索フォーム（条件の並びは `searches/index.html.erb`、受け付けるパラメータは `WordSenseSearch#to_query_params`）。実行すると条件付きの `/words` へ |
 | `/browse` | 50 音・読みの文字数の索引 |
 | `/genres` | ジャンル階層のハブ |
-| `/rankings` | 各種ランキング（読みの長さ・モーラ数・円環交差数など 11 種） |
-| `/stats` | 収録統計。数字の壁 ＋ 8 章。紙面の正は [`stats.md`](stats.md) |
+| `/rankings` | 各種ランキング（読みの長さ・モーラ数・円環交差数など。種類は `WordRanking::DEFINITIONS`） |
+| `/stats` | 収録統計。数字の壁と各章（紙面の正は [`stats.md`](stats.md)） |
 | `/requests/new` | 収録リクエスト（公開側で唯一の書き込み経路。`REQUESTS_ENABLED` で停止できる） |
 | `/about` `/privacy` | サイト情報・プライバシーポリシー |
 | `/words.json` `/words/:id.json` | 公開 JSON API（CC BY 4.0 表記つき） |
-| `/words.atom` | 新着単語の Atom フィード（注釈済み新着 20 件） |
+| `/words.atom` | 新着単語の Atom フィード（注釈済みの新着。件数は `WordsController::FEED_LIMIT`） |
 | `/llms.txt` `/llms-full.txt` | LLM 向けのサイト案内と、全収録データの全文版 |
 | `/sitemap.xml` `/robots.txt` | どちらも動的生成。`Sitemap:` 行は canonical ホストに連動 |
 | `/up` | ヘルスチェック（Rails 標準） |
@@ -105,19 +102,20 @@
 
 | パス | 内容 |
 |---|---|
+| `/session/new` | 管理者のログイン（`username` ＋ パスワード。§3） |
 | `/admin` | ダッシュボード。収録状況と各画面への入口 |
 | `/admin/words` | 一覧（検索・注釈状態/タグの絞り込み・一括適用・削除） |
 | `/admin/words/new` | **一括登録（3ステップ）**: 入力（箇条書き）→ 読み → 重複チェック → 登録 |
-| `/admin/annotations` | **アノテーション・コンソール**（1 語集中キュー。保存して次へ） |
-| `/admin/annotation_deck` | **アノテーション・デッキ**（既定 10 件をまとめて開き、1 回の送信で保存） |
-| `/admin/annotation_proposals` | Claude Code 連携。調査用データの書き出し／提案 JSON の取り込み |
+| `/admin/annotations` | **アノテーション・コンソール**（1 語集中キュー。保存して次へ）。1 語の再調査用の書き出しは `/admin/annotations/:id/reresearch` |
+| `/admin/annotation_deck` | **アノテーション・デッキ**（複数語をまとめて開き、1 回の送信で保存。既定の語数は `Admin::AnnotationDecksController::DEFAULT_SIZE`） |
+| `/admin/annotation_proposals/export`・`/export_features`・`/new` | Claude Code 連携。調査用データの書き出し（語・言語学的特徴）と、提案 JSON の取り込み |
 | `/admin/bulk_proposal_approval` | 厳格ゲートを満たす提案の一括承認（プレビュー → 承認・公開） |
-| `/admin/tags` | **タグ統括管理**。5 種のマスタの一覧・リネーム・削除・統合 |
+| `/admin/tags` | **タグ統括管理**。マスタ（種別は `TagKind::MODELS`）の一覧・リネーム・削除・統合 |
 | `/admin/requests` | 公開側から届いた収録リクエストの確認・一括処理 |
-| `/admin/candidates` | **登録予定単語**。入口は仕分け（貼り付けて追加し、語ごとに 拡張 / 採用 / 保留 / 除外 を選んで一度に確定）。前処理の各段は `/admin/candidates/expand`（拡張）・`/notation`（表記と、その確認）・`/ready`（登録待ち → 一括登録へ）、状態で絞り込む一覧は `/all` |
+| `/admin/candidates` | **登録予定単語**。入口は仕分け（貼り付けて追加し、語ごとに 拡張 / 採用 / 保留 / 除外 を選んで一度に確定）。前処理の各段は `/admin/candidates/expand`（拡張）・`/notation`（表記と、その確認）・`/ready`（登録待ち → 一括登録へ）、状態で絞り込む一覧は `/all`、1 語の表示と手直しは `/admin/candidates/:id` |
 
 - 管理画面は**「しずか」を引き継がない**。HTML は公開側と共有したまま、`body.is-admin` の下で
-  トークンだけ上書きする（[`design.md`](design.md) §10）。
+  トークンと一部のコンポーネントの見た目を上書きする（[`design.md`](design.md) §10）。
 - 単語の編集画面は無い。表層形の訂正も含めてアノテーション・コンソールに統合済み。
 
 ## 6. コードの地図
@@ -139,7 +137,7 @@ bin/rails server
 - 新しい環境は `db:prepare`（schema.rb の読み込み）で作る。マイグレーションを最初から流し直す `db:migrate` は、
   CI でも流しておらず、通ることは保証しない（古いマイグレーションはアプリのコードを呼んでいる）。
 - development / test は既定で `127.0.0.1:3307`（`DATABASE_HOST` / `DATABASE_PORT` で上書き可）。
-  production は socket ＋ 環境変数。
+  production の接続情報はサーバ上の `config/database.yml` で、リポジトリの production ブロックは使われていない（§8 の注記）。
 - 管理者をローカルで任意の値にする: `ADMIN_USERNAME=xxx ADMIN_PASSWORD=yyy bin/rails db:seed`
 - デザイン確認用のダミーデータ: `bin/rails dev:sample_data`（開発環境専用・冪等）
 - **開発環境はキャッシュが既定で無効**（`:null_store`）。`/stats`・`/rankings`・`/llms-full.txt`
@@ -175,22 +173,33 @@ bin/rails server
 
 ## 8. 環境変数
 
-| 変数 | 既定 | 効果 |
-|---|---|---|
-| `INDEXING_ENABLED` | 未設定 | **未設定 = 全ページ noindex**。設定すると通常ページの robots メタが消える（解禁スイッチ） |
-| `REQUESTS_ENABLED` | `true` | `false` で収録リクエストの受付を止め、導線ごと隠す |
-| `CANONICAL_HOST` | `https://nagai-kotoba-database.jp` | canonical / OGP / sitemap の絶対 URL の基点（末尾スラッシュ無し） |
-| `GA4_MEASUREMENT_ID` | 未設定 | 設定すると GA4 の gtag を出力する（Turbo 対応の page_view 送信） |
-| `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
-| `MECAB_DICT` | 未設定 | MeCab の辞書パス。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
-| `DATABASE_HOST` / `DATABASE_PORT` | `127.0.0.1` / `3307` | development / test の接続先（CI は 3306） |
-| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | — | リポジトリの `database.yml` と `deploy.rb` が参照し、deploy.yml も GitHub の secret から渡すが、**本番では使われていない**（下記） |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | credentials | `db:seed` が作る管理者。環境変数が優先 |
-| `RAILS_MASTER_KEY` | `config/master.key` | credentials の復号鍵 |
-| `WEB_CONCURRENCY` | `1` | Puma のワーカー数。**増やすとキャッシュと `rate_limit` が worker 間で分裂する**（`:memory_store` のため） |
-| `SURFACES_FILE` | 未設定 | `bin/rails stats:morphemes` に本番相当の入力（1 行 1 語）を渡す |
+種類: **アプリ** = このアプリ（設定・seed・rake・サービス）が読む変数（画面の振る舞いを変えるスイッチは `config/application.rb` で 1 回だけ読み、`config.x` に置く）／
+**Rails・Puma** = フレームワークの標準／**テスト** = テストと開発のときだけ／**Actions** = GitHub Actions のシークレット（アプリは読まない）。
 
-本番はこれらを Puma の systemd unit（override.conf）に置いている。
+| 変数 | 種類 | 既定 | 効果 |
+|---|---|---|---|
+| `INDEXING_ENABLED` | アプリ | 未設定 | **未設定 = 全ページ noindex**。設定すると通常ページの robots メタが消える（解禁スイッチ）。**値は見ず、空でなければ解禁**になる（`false` を入れても解禁） |
+| `REQUESTS_ENABLED` | アプリ | `true` | `false` で収録リクエストの受付を止め、導線ごと隠す（真偽値として読む） |
+| `CANONICAL_HOST` | アプリ | `https://nagai-kotoba-database.jp` | canonical / OGP / sitemap の絶対 URL の基点（末尾スラッシュ無し。`SiteUrl`） |
+| `GA4_MEASUREMENT_ID` | アプリ | 未設定 | 設定すると GA4 の gtag を出力する（Turbo 対応の page_view 送信） |
+| `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | アプリ | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
+| `MECAB_DICT` | アプリ | 未設定 | MeCab の辞書パス（`ReadingExtractor` が読む）。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | アプリ | credentials | `db:seed` が作る管理者。環境変数が優先 |
+| `SURFACES_FILE` | アプリ | 未設定 | `bin/rails stats:morphemes` に本番相当の入力（1 行 1 語）を渡す |
+| `RAILS_MASTER_KEY` | Rails・Puma | `config/master.key` | credentials の復号鍵 |
+| `RAILS_ENV` | Rails・Puma | `development` | 動かす環境 |
+| `RAILS_LOG_LEVEL` | Rails・Puma | `info` | production のログの段階 |
+| `WEB_CONCURRENCY` | Rails・Puma | `1` | Puma のワーカー数。**増やすとキャッシュと `rate_limit` が worker 間で分裂する**（`:memory_store` のため） |
+| `RAILS_MAX_THREADS` / `RAILS_MIN_THREADS` | Rails・Puma | `5` / 最大と同じ | Puma のスレッド数。DB のコネクションプールも最大と同じ数にする（`config/database.yml`） |
+| `PORT` / `PIDFILE` | Rails・Puma | `3000` / `tmp/pids/server.pid` | Puma の待ち受けとプロセス ID のファイル |
+| `REDIS_URL` | Rails・Puma | 未設定 | `config/cable.yml` の production の雛形の値。Action Cable を購読する画面が無いので、読まれない |
+| `DATABASE_HOST` / `DATABASE_PORT` | テスト | `127.0.0.1` / `3307` | development / test の接続先（CI は 3306） |
+| `CI` | テスト | 未設定 | 設定すると test 環境でも eager load する（CI と同じ条件で試す。[`CLAUDE.md`](../CLAUDE.md) §4） |
+| `CHROME_BIN` | テスト | 未設定 | システムテストで使う Chrome（WSL で、chromedriver と同じメジャー版を指す。[`CLAUDE.md`](../CLAUDE.md) §4） |
+| `SSH_PRIVATE_KEY` / `KNOWN_HOSTS` | Actions | — | deploy.yml が本番サーバへ SSH で入るための鍵と known_hosts |
+| `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | Actions | — | リポジトリの `database.yml` と `deploy.rb` が参照し、deploy.yml も渡すが、**本番では使われていない**（下記） |
+
+本番の環境変数は Puma の systemd unit（override.conf）に置いている（テストと Actions の行を除く）。
 
 > **本番 DB の接続情報は環境変数ではない。** `config/database.yml` は Capistrano の `linked_files`
 > に入っているので、本番で読まれるのは**サーバ上の共有ファイル**で、そこにパスワードが直書きされている。
@@ -206,3 +215,24 @@ bin/rails server
 ## 10. 進め方の規約
 
 [`CLAUDE.md`](../CLAUDE.md) の「1. 厳守事項」の「書き方と進め方」へ移した（1 Issue = 1 ブランチ = 1 PR、ブランチ名、日本語で書くこと）。
+
+## 11. 運用
+
+既存の節番号を変えないよう、末尾に足した節（2026-10-07）。デプロイ・CI・定期実行・派生物の作り直しの正はここ。
+
+- **デプロイ**: main への push（PR の merge を含む）で `.github/workflows/deploy.yml` が `cap production deploy` を実行する。
+  **CI の完了は待たず、main にブランチ保護も無い**（merge の前に PR 上の CI を確かめる。[`CLAUDE.md`](../CLAUDE.md) の厳守事項）。
+  - `deploy:migrate` の直後に `deploy:seed` が毎回走り、管理者とマスタを冪等に投入する（`SeedCatalog` の `*_RENAMES` に書いた改名もこのとき適用される）。
+  - 本番の DB 接続はサーバ上の `config/database.yml`（`linked_files`）、環境変数は Puma の systemd unit（§8）。
+  - deploy.yml が使うシークレットは §8 の「Actions」の行。
+- **CI**: `.github/workflows/ci.yml`。PR の作成時と PR ブランチへの push のたび、main への push 時に走る。
+  main への push ではデプロイと並走するので、**CI が落ちてもデプロイは止まらない**。中身は [`CLAUDE.md`](../CLAUDE.md) §4 の合格判定と同じ。
+  失敗した system テストのスクリーンショットは、成果物 `screenshots` に残る（`gh run download <run> -n screenshots`）。
+- **定期実行**: 候補語を集める `/harvest` を、オーナーのローカルの crontab がヘッドレスの Claude Code で 1 日 2 回動かしている
+  （時刻とセットは [`research/README.md`](../research/README.md) の「使う順番」）。**cron の定義はリポジトリの外にある**ので、
+  スキルが新しい権限（Bash など）を要るように変わると、黙って失敗する。ログは `research/harvest-cron.log`（git の外）。
+- **claude.ai 用のスキル束**: `/reannotation` を claude.ai で使うための束は、`tools/claude-ai-skill/build.sh` が作る派生物。
+  元は、再注釈と注釈のスキルの SKILL.md・[`annotation-guidelines.md`](annotation-guidelines.md)・`config/linguistic_features_glossary.yml`・
+  注釈スキルの `schema.json` と `example.json`。**どれかを直したら、束を作り直してアップロードし直す**（アップロードはオーナー）。
+- **本番の確かめ方**: ヘルスチェックは `/up`。派生値の整合は、サーバで `RAILS_ENV=production bin/rails backfill:verify`
+  （[`data-model.md`](data-model.md) §3.4）。インデックスの状況は Search Console を週次で見る（[`launch-checklist.md`](launch-checklist.md) §4）。

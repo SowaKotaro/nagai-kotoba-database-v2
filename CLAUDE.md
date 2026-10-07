@@ -28,7 +28,7 @@
 - **main への merge（push）は、そのまま本番デプロイになる**。deploy.yml が `cap production deploy` を実行し、CI の完了は待たない
   （main にブランチ保護も無い）。merge の前に PR 上の CI が通ったことを確かめる。関門は PR 上の CI と `/cppmtm` の手順だけ。
 - デプロイでは `deploy:migrate` の直後に `deploy:seed` が毎回走る（`SeedCatalog` の `*_RENAMES` に書いた改名も、このとき本番に効く）。
-  本番 DB の接続情報はサーバ上の `config/database.yml` が持つ（overview §8）。
+  本番 DB の接続情報はサーバ上の `config/database.yml` が持つ（overview §8）。運用（デプロイ・CI・定期実行）の全体は overview §11。
 - `config/deploy.rb`・`config/puma.rb`・`.github/workflows/` などインフラとデプロイの設定は、内容を説明してから変える。
 
 ### セキュリティ
@@ -162,7 +162,7 @@
 
 ### 文書とコメント
 - 事実ごとに正を 1 か所に置き、ほかからはリンクする（カラムは `db/schema.rb`、派生値は data-model §3、照合順序は data-model §6、
-  デザインは design.md、環境変数は overview §8、調査の流れは `research/README.md`、ルートは `config/routes.rb`）。
+  デザインは design.md、環境変数は overview §8、デプロイと CI は overview §11、調査の流れは `research/README.md`、ルートは `config/routes.rb`）。
 - コメントに残すのは、なぜ・不変条件・外部との約束・長いファイルの区画見出し。直後のコードの言い換えは書かない。
 - 参照は行番号ではなく、シンボル名と「文書名＋節」で書く。件数は書かずに出どころを指す。数値を書くなら式か出どころを添える。
 - design.md・stats.md の節番号は変えない（コードのコメントが節番号で指している）。足すなら末尾か小節、移すなら欠番にして行き先を 1 行残す。
