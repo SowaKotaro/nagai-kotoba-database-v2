@@ -71,7 +71,6 @@ class WordSense < ApplicationRecord
   scope :reading_length_at_least, ->(n) { where(reading_length: n..) }
   scope :reading_length_at_most, ->(n) { where(reading_length: ..n) }
   scope :reading_length_is, ->(n) { where(reading_length: n) }
-  # モーラ数の完全一致。
   scope :mora_count_is, ->(n) { where(mora_count: n) }
   # 先頭文字(生成カラム first_char)/末尾文字(Ruby 側で計算する last_char)。
   scope :first_char_is, ->(char) { where(first_char: char) }
@@ -109,7 +108,6 @@ class WordSense < ApplicationRecord
   scope :with_genre_ids, ->(ids) { where(genre_id: ids) }
   scope :with_part_of_speech, ->(id) { where(part_of_speech_id: id) }
   scope :with_entity_type, ->(id) { where(entity_type_id: id) }
-  # 指定した言語学的特徴を持つ語義。
   scope :with_linguistic_feature, lambda { |id|
     where(id: WordSenseFeature.where(linguistic_feature_id: id).select(:word_sense_id))
   }

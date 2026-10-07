@@ -7,7 +7,6 @@
 # 指標式・下限・表示書式はすべてこのカタログが持つ。
 # 種別: クエリ・集計（読み取りとキャッシュ）。
 class WordRanking
-  # 各ランキングで見せる件数。
   TOP_LIMIT = 10
   # 集計結果のキャッシュ。統計ページ(SiteStatistics)と同じく1日で作り直す。
   CACHE_KEY = "word_rankings/v1"

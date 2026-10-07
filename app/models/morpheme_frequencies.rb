@@ -19,8 +19,8 @@ class MorphemeFrequencies
   # 集計(lib/tasks/stats.rake)が当てる規則で、読み込み側では絞らない。
   MIN_LENGTH = 2
 
+  # weight は、最頻を 1.0、下限を 0.0 とした位置(活字の級数 font-size に使う)。
   Entry = Struct.new(:text, :count, :weight, keyword_init: true) do
-    # 最頻を 1.0、下限を 0.0 とした位置。活字の級数(font-size)に使う。
     def top? = weight >= 1.0
   end
 

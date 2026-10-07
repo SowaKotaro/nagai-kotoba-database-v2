@@ -152,7 +152,6 @@ class BulkWordRegistration
     Result.new(created: created, skipped: skipped, errors: errors)
   end
 
-  # 登録できるエントリがあるか。
   def registerable?
     Array(entries).any?
   end

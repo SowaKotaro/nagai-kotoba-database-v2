@@ -25,7 +25,6 @@ class Pagination
     (page - 1) * per_page
   end
 
-  # scope をこのページの範囲に絞る。
   def paginate(scope)
     scope.limit(per_page).offset(offset)
   end
