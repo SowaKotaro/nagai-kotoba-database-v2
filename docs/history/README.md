@@ -9,5 +9,6 @@
 | [`changelog.md`](changelog.md) | 済んだ Issue と、番号を持たない改善の記録（Issue を閉じたとき・番号を持たない改善を入れたときに足す。[`CLAUDE.md`](../../CLAUDE.md) の厳守事項） |
 | [`performance-report.md`](performance-report.md) | 2026-08 の速度調査（凍結。[`issues.md`](../issues.md) の確定事項 35） |
 | [`launch-2026-07-19.md`](launch-2026-07-19.md) | インデックス解禁の記録と、解禁後に起きた問題（手順は [`launch-checklist.md`](../launch-checklist.md)） |
+| [`design.md`](design.md) | デザインの改訂履歴（2026-09-03〜09-15）と、試作・計測の記録（仕様は [`design.md`](../design.md)、退けた案の一覧は同じ文書の §12） |
 | [`stats.md`](stats.md) | 統計ページの実装後のオーナー修正（2026-07-19）と実装フェーズ（仕様は [`stats.md`](../stats.md)） |
 | [`growth-strategy-2026-09-16.md`](growth-strategy-2026-09-16.md) | グロース戦略の現状評価と優先順位のスナップショット（現行は [`growth-strategy.md`](../growth-strategy.md)） |
