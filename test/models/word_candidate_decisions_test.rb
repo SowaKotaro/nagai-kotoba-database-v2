@@ -1,7 +1,7 @@
 require "test_helper"
 
 class WordCandidateDecisionsTest < ActiveSupport::TestCase
-  TRIAGE_CHOICES = WordCandidateReview::CHOICES[:triage]
+  TRIAGE_CHOICES = WordCandidate::STAGES.fetch("triage").choices
 
   def decide(decisions, statuses: %w[triage held], choices: TRIAGE_CHOICES)
     WordCandidateDecisions.new(decisions.transform_keys { |candidate| candidate.id.to_s }, statuses: statuses, choices: choices).call
@@ -34,7 +34,7 @@ class WordCandidateDecisionsTest < ActiveSupport::TestCase
     moved = WordCandidate.create!(surface: "ほかの画面で動かした言葉", status: :notating)
     notated = WordCandidate.create!(surface: "確かめ中の言葉", status: :notated)
 
-    counts = decide({ moved => "reject", notated => "expand" }, statuses: %w[notated], choices: WordCandidateReview::CHOICES[:notation])
+    counts = decide({ moved => "reject", notated => "expand" }, statuses: %w[notated], choices: WordCandidate::STAGES.fetch("notation").choices)
 
     assert_empty counts
     assert_equal %w[notating notated], [ moved, notated ].map { |c| c.reload.status }

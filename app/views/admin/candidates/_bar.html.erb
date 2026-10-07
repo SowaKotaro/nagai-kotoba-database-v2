@@ -1,6 +1,7 @@
+<%# locals: (choices:, form:, submit_label:, counts:) -%>
 <%# 確認の一覧の下端に貼り付くバー。
     何も選んでいないとき: 選んである処理ごとの語数(何も触らずに確定したらこうなる)。JS が選択に合わせて数え直す
-    (counts はサーバで数えた初期値)。
+    (counts はサーバで数えた初期値。WordCandidateReview::Totals#default_counts)。
     行を選んでいるとき(row-select): 選んだ語数と、その行をまとめてそろえる処理のボタン。
     確定ボタンは右端に置く(スマホで折り返しても画面下端の中ほどに来ないように。docs/design.md §10.1.2)。 %>
 <div class="cand-bar" data-row-select-target="bar">

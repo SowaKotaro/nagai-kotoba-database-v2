@@ -1,4 +1,6 @@
-<%# 各画面の頭: 4段の見出し(現在地)と、画面の名前・この画面ですること。 %>
+<%# locals: (current:, title:, lead:) -%>
+<%# 各画面の頭: 4段の見出し(現在地)と、画面の名前・この画面ですること。
+    current は段の見出しの現在地(admin/candidates/_stepper)。段の画面はコントローラが名乗った段(@stage)のキーを渡す。 %>
 <% content_for :title, t("admin.word_candidates.page_title", page: title) %>
 <%= render "admin/candidates/stepper", current: current %>
 <header class="cand-head">

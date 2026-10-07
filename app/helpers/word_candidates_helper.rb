@@ -42,19 +42,26 @@ module WordCandidatesHelper
     @candidate_status_counts ||= WordCandidate.group(:status).count
   end
 
-  # 4段の見出しの件数(その段にいる語の数)。
-  def candidate_stage_count(stage)
-    WordCandidate::STAGES.fetch(stage).sum { |status| candidate_status_counts.fetch(status, 0) }
+  # 以下の stage は WordCandidate::STAGES の 1 つ(段の定義はそこだけに置く)。
+
+  # 段の名前(段の見出しと、各段の画面の見出し)。
+  def candidate_stage_name(stage)
+    t("admin.word_candidates.stages.#{stage.key}.name")
   end
 
-  # 4段それぞれの画面。
+  # 4段の見出しの件数(その段にいる語の数)。
+  def candidate_stage_count(stage)
+    stage.statuses.sum { |status| candidate_status_counts.fetch(status, 0) }
+  end
+
+  # 段の見出しで件数に添える「確認待ち」の語数(表記の段で、/notation の結果を確かめる語)。
+  def candidate_stage_reviewing_count(stage)
+    stage.reviewing_statuses.sum { |status| candidate_status_counts.fetch(status, 0) }
+  end
+
+  # 段の画面。
   def candidate_stage_path(stage)
-    case stage
-    when "triage" then admin_candidates_triage_path
-    when "expand" then admin_candidates_expansion_path
-    when "notation" then admin_candidates_notation_path
-    when "ready" then admin_candidates_registration_path
-    end
+    public_send(:"#{stage.route}_path")
   end
 
   # 状態の表示名。コントローラのフラッシュも helpers 経由でこれを使う(キーを組み立てる場所を 1 つにする)。

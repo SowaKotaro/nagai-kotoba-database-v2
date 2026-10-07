@@ -1,5 +1,4 @@
-<%= render "admin/candidates/header", current: "expand",
-      title: t("admin.word_candidates.stages.expand.name"), lead: t(".lead") %>
+<%= render "admin/candidates/header", current: @stage.key, title: candidate_stage_name(@stage), lead: t(".lead") %>
 
 <ol class="cand-steps-local">
   <li class="cand-step">

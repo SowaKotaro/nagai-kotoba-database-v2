@@ -1,16 +1,18 @@
 # 表記: 表記待ちの語を /notation 用に書き出し、結果を取り込み、返ってきた表記と立項スコアを確かめて
 # 語ごとに 採用 / 保留 / 除外 を選んで確定する。採用した語は登録待ちになる。
 class Admin::Candidates::NotationsController < Admin::Candidates::BaseController
+  stage "notation"
+
   def show
     load_stage
   end
 
   def import
-    run_import(WordCandidateNotationImport, admin_candidates_notation_path(anchor: "review"), waiting: "notating")
+    run_import(WordCandidateNotationImport, admin_candidates_notation_path(anchor: "review"))
   end
 
   def update
-    counts = apply_decisions(statuses: %w[notated], choices: WordCandidateReview::CHOICES[:notation])
+    counts = apply_decisions(statuses: %w[notated])
     notice = decisions_summary(counts)
     return redirect_to admin_candidates_notation_path, alert: t(".nothing") unless notice
 
@@ -20,8 +22,10 @@ class Admin::Candidates::NotationsController < Admin::Candidates::BaseController
 
   private
 
+  # 確かめる一覧は、/notation の結果を取り込んだ語(update で確定して動かすのも、このステータスの語だけ)。
   def load_stage
-    @export = WordCandidateExport.new("notation")
-    @review = WordCandidateReview.new(WordCandidate.notated.in_tree_order, context: :notation)
+    @export = WordCandidateExport.new(@stage.export)
+    @review = review_of(WordCandidate.notated)
+    @totals = WordCandidateReview::Totals.new(reviews: [ @review ])
   end
 end

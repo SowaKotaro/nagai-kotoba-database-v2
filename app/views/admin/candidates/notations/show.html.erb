@@ -1,5 +1,4 @@
-<%= render "admin/candidates/header", current: "notation",
-      title: t("admin.word_candidates.stages.notation.name"), lead: t(".lead") %>
+<%= render "admin/candidates/header", current: @stage.key, title: candidate_stage_name(@stage), lead: t(".lead") %>
 
 <ol class="cand-steps-local">
   <li class="cand-step">
@@ -19,10 +18,10 @@
       <p class="cand-step__hint"><%= t(".review_hint") %></p>
       <%= form_with url: admin_candidates_notation_path, method: :patch, id: "cand-decisions" do %><% end %>
       <%= tag.div class: "cand-review", data: candidate_review_data("cand-decisions") do %>
-        <%= render "admin/candidates/toolbar", reviews: [ @review ], choices: @review.choices %>
+        <%= render "admin/candidates/toolbar", totals: @totals, choices: @review.choices %>
         <%= render "admin/candidates/review", review: @review, form: "cand-decisions" %>
         <%= render "admin/candidates/bar", choices: @review.choices, form: "cand-decisions", submit_label: t(".submit"),
-              counts: @review.rows.map(&:default).tally %>
+              counts: @totals.default_counts %>
       <% end %>
     <% end %>
   </li>

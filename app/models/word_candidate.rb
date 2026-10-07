@@ -32,16 +32,41 @@ class WordCandidate < ApplicationRecord
     held: 80, duplicated: 85, rejected: 90
   }, validate: true
 
-  # 前処理の4段(段の見出しと画面) => その段にいる語のステータス。
-  STAGES = {
-    "triage" => %w[triage], "expand" => %w[expanding], "notation" => %w[notating notated], "ready" => %w[ready]
-  }.freeze
+  # 前処理の段(STAGES の 1 行)。
+  Stage = Data.define(:key, :statuses, :route, :export, :waiting, :choices) do
+    # 段の見出しで「確認待ち N」として件数に添えるステータス。スキルに渡す段にいて、スキルを待っていない語
+    # (表記の段の notated。/notation の結果が戻り、画面での確認を待つ語)。スキルに渡さない段は空。
+    # 空でない段は、文言 admin.word_candidates.stages.<key>.reviewing を持つ。
+    def reviewing_statuses = waiting ? statuses - [ waiting ] : []
+  end
+
+  # 前処理の4段(流れの順)。段ごとの決まりはこの表だけに置き、段の見出し(WordCandidatesHelper)・
+  # 各段の画面(Admin::Candidates::*)・スキルへの書き出し(WordCandidateExport)・確認の一覧(WordCandidateReview)が引く。
+  #   key      : 段の名前(i18n の admin.word_candidates.stages.<key>。段の見出しの現在地)
+  #   statuses : その段にいる語のステータス(段の見出しの件数。4段を合わせたものが in_progress)
+  #   route    : 段の画面のルート名(パスは <route>_path)
+  #   export   : スキルへの書き出しのキー(WordCandidateExport::TARGETS。書き出しの textarea の name にもなる)。
+  #              登録待ちの段だけは、段の名前ではなく渡す先のスキルの名前 "reading"。書き出さない段は nil
+  #   waiting  : 書き出してスキルの結果を待つ語のステータス(拡張・表記は、取り込んだあとに残りの語数を知らせる)
+  #   choices  : 画面で語ごとに選んで確定する処理。拡張は、まだ誰も判断していない語(仕分け)にだけ出す。確定の無い段は空
+  # 表に入れないもの(各段のコントローラに置く): 確定で動かす語のステータス(画面に並べた一覧と同じにするので、
+  # 一覧を組むコントローラに置く)と、確定のあとに開く画面(どの段を先に見せるかは、画面ごとの導線の判断なので)。
+  STAGES = [
+    Stage.new(key: "triage", statuses: %w[triage], route: :admin_candidates_triage,
+              export: nil, waiting: nil, choices: %w[expand keep hold reject]),
+    Stage.new(key: "expand", statuses: %w[expanding], route: :admin_candidates_expansion,
+              export: "expand", waiting: "expanding", choices: []),
+    Stage.new(key: "notation", statuses: %w[notating notated], route: :admin_candidates_notation,
+              export: "notation", waiting: "notating", choices: %w[keep hold reject]),
+    Stage.new(key: "ready", statuses: %w[ready], route: :admin_candidates_registration,
+              export: "reading", waiting: "ready", choices: [])
+  ].index_by(&:key).freeze
 
   # 「すべての語」の一覧でまとめて移せる先(本流から外した語を戻す・外すのに使う)。
   MOVES = %w[triage held rejected].freeze
 
-  # まだ手が離れていない語(保留は「あとで決める」と外した語なので含めない)。
-  scope :in_progress, -> { where(status: %i[triage expanding notating notated ready]) }
+  # まだ手が離れていない語(4段のどれかにいる語。保留は「あとで決める」と外した語なので、どの段にも入れていない)。
+  scope :in_progress, -> { where(status: STAGES.values.flat_map(&:statuses)) }
   # 元の語の直後に、expand で増えた語が並ぶ順(upload した順を保つ)。
   scope :in_tree_order, -> { order(Arel.sql("COALESCE(word_candidates.root_id, word_candidates.id), word_candidates.id")) }
   # 表層形(いまの表記・upload した時点の表記)の部分一致。照合順序 as_ci なので、かなの種類・大小文字は問わない。
@@ -84,7 +109,7 @@ class WordCandidate < ApplicationRecord
     I18n.t("admin.word_candidates.not_unique")
   end
 
-  # 選んだ処理(WordCandidateReview::CHOICES の値)の行き先。除外は照合で一致があれば重複、無ければ不要。
+  # 選んだ処理(段の choices の値)の行き先。除外は照合で一致があれば重複、無ければ不要。
   # 採用は、表記を確かめ済みの語(保留から戻した語など)なら登録待ち、まだなら表記待ちへ進める。
   def destination_for(decision, duplicate: false)
     case decision

@@ -1,12 +1,13 @@
+<%# locals: (totals:, choices:) -%>
 <%# 確認の一覧の上の帯: 印での絞り込み・すべて選ぶ・キーボードの案内。
     絞り込みは見え方だけを変える(隠れた行も、選んである処理のまま一緒に確定される。行の選択は外す)。
-    reviews は同じフォームで確定する一覧(仕分けは本体と保留の2つ)。 %>
-<% flag_counts = reviews.map(&:flag_counts).inject({}) { |sum, counts| sum.merge(counts) { |_, a, b| a + b } } %>
+    totals は同じフォームで確定する一覧(仕分けは本体と保留の2つ)を合わせた件数(WordCandidateReview::Totals)。 %>
+<% flag_counts = totals.flag_counts %>
 <div class="cand-toolbar">
   <div class="cand-filter" role="group" aria-label="<%= t("admin.word_candidates.toolbar.filter_label") %>">
     <button type="button" class="cand-filter__chip" aria-pressed="true"
             data-decision-list-target="filter" data-action="decision-list#filter" data-flag="">
-      <%= t("admin.word_candidates.toolbar.all") %><span class="cand-filter__count"><%= number_with_delimiter(reviews.sum(&:size)) %></span>
+      <%= t("admin.word_candidates.toolbar.all") %><span class="cand-filter__count"><%= number_with_delimiter(totals.size) %></span>
     </button>
     <% WordCandidateReview::FLAGS.each do |flag| %>
       <% next unless flag_counts[flag].to_i.positive? %>

@@ -6,18 +6,20 @@ class Admin::Candidates::ExpansionsController < Admin::Candidates::BaseControlle
   EXPORT_DEFAULT_LIMIT = 30
   EXPORT_MAX_LIMIT = 1000
 
+  stage "expand"
+
   def show
     load_stage
   end
 
   def import
-    run_import(WordCandidateExpansionImport, admin_candidates_triage_path, waiting: "expanding")
+    run_import(WordCandidateExpansionImport, admin_candidates_triage_path)
   end
 
   private
 
   def load_stage
     @limit = (params[:limit].presence || EXPORT_DEFAULT_LIMIT).to_i.clamp(1, EXPORT_MAX_LIMIT)
-    @export = WordCandidateExport.new("expand", limit: @limit)
+    @export = WordCandidateExport.new(@stage.export, limit: @limit)
   end
 end

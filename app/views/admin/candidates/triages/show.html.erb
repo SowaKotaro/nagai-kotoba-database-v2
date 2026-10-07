@@ -1,5 +1,4 @@
-<%= render "admin/candidates/header", current: "triage",
-      title: t("admin.word_candidates.stages.triage.name"), lead: t(".lead") %>
+<%= render "admin/candidates/header", current: @stage.key, title: candidate_stage_name(@stage), lead: t(".lead") %>
 
 <%# 追加(貼り付け)。仕分ける語が無いとき・貼った内容を出し直すときは開いておき、それ以外は畳んで一覧を先に見せる %>
 <details class="cand-intake" <%= "open" if @review.empty? || !@intake.text.nil? %>>
@@ -23,7 +22,7 @@
   <%# 語ごとの選択は、このフォームに form 属性で結び付ける(一覧の中の「直す」フォームと入れ子にしないため) %>
   <%= form_with url: admin_candidates_triage_path, method: :patch, id: "cand-decisions" do %><% end %>
   <%= tag.div class: "cand-review", data: candidate_review_data("cand-decisions") do %>
-    <%= render "admin/candidates/toolbar", reviews: [ @review, @held ], choices: @review.choices %>
+    <%= render "admin/candidates/toolbar", totals: @totals, choices: @review.choices %>
 
     <% if @review.empty? %>
       <p class="cand-empty"><%= t(".empty_triage") %></p>
@@ -40,6 +39,6 @@
     <% end %>
 
     <%= render "admin/candidates/bar", choices: @review.choices, form: "cand-decisions", submit_label: t(".submit"),
-          counts: (@review.rows + @held.rows).map(&:default).tally %>
+          counts: @totals.default_counts %>
   <% end %>
 <% end %>

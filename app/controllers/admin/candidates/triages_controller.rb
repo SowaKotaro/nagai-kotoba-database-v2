@@ -1,6 +1,8 @@
 # 仕分け(登録予定単語の入口): 語を貼り付けて追加し(create)、語ごとに 拡張 / 採用 / 保留 / 除外 を選んで
 # 一度に確定する(update)。/expand で集まった語・分割でできた語もここに並ぶ。保留にした語は末尾に畳んで出す。
 class Admin::Candidates::TriagesController < Admin::Candidates::BaseController
+  stage "triage"
+
   def show
     @intake = WordCandidateIntake.new
     load_stage
@@ -19,7 +21,7 @@ class Admin::Candidates::TriagesController < Admin::Candidates::BaseController
   end
 
   def update
-    counts = apply_decisions(statuses: %w[triage held], choices: WordCandidateReview::CHOICES[:triage])
+    counts = apply_decisions(statuses: %w[triage held])
     notice = decisions_summary(counts)
     return redirect_to admin_candidates_triage_path, alert: t(".nothing") unless notice
 
@@ -28,9 +30,11 @@ class Admin::Candidates::TriagesController < Admin::Candidates::BaseController
 
   private
 
+  # 確かめる一覧は、仕分け待ちの語と末尾に畳む保留の語(update で確定して動かすのも、この2つのステータスの語だけ)。
   def load_stage
-    @review = WordCandidateReview.new(WordCandidate.triage.in_tree_order, context: :triage)
-    @held = WordCandidateReview.new(WordCandidate.held.in_tree_order, context: :triage)
+    @review = review_of(WordCandidate.triage)
+    @held = review_of(WordCandidate.held)
+    @totals = WordCandidateReview::Totals.new(reviews: [ @review, @held ])
   end
 
   def intake_params
