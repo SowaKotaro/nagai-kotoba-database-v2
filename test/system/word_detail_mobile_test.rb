@@ -4,12 +4,6 @@ class WordDetailMobileTest < ApplicationSystemTestCase
   SURFACE = "惑星ソラリスのラストの、びしょびしょの実家でびしょびしょの父親と抱き合うびしょびしょの主人公".freeze
   READING = "ワクセイソラリスノラストノビショビショノジッカデビショビショノチチオヤトダキアウビショビショノシュジンコウ".freeze
 
-  # ブラウザのセッション(ウィンドウ)は同一プロセス内の他テストと共有されるため、
-  # 縮めたままにすると後続のテストがモバイル表示になって落ちる。必ず元の幅へ戻す。
-  teardown do
-    resize_window_to(*ApplicationSystemTestCase::DEFAULT_SCREEN_SIZE)
-  end
-
   # 読みが長い語(= 円環交差数が大きい語)の詳細ページは、韻(ローマ字)・母音パターンが区切りの無い
   # 長大な英字列になる。語義カードはグリッド項目なので、折り返せない文字列があると min-width: auto で
   # 列幅ごと押し広げられ、モバイル幅で枠が画面からはみ出していた(PR #114)。
@@ -26,32 +20,33 @@ class WordDetailMobileTest < ApplicationSystemTestCase
     word.mark_annotated
     word.save!
 
-    resize_window_to(390, 844)
-    visit word_path(word)
-    assert_selector ".sense-card"
+    with_window_size(390, 844) do
+      visit word_path(word)
+      assert_selector ".sense-card"
 
-    # ページ全体が横スクロールしない
-    assert_equal page.evaluate_script("document.documentElement.clientWidth"),
-                 page.evaluate_script("document.documentElement.scrollWidth"),
-                 "ページが横方向にはみ出している"
+      # ページ全体が横スクロールしない
+      assert_equal page.evaluate_script("document.documentElement.clientWidth"),
+                   page.evaluate_script("document.documentElement.scrollWidth"),
+                   "ページが横方向にはみ出している"
 
-    # 語義カードの右端が画面内に収まり、カード内にもはみ出した要素が無い
-    overflow = page.evaluate_script(<<~JS)
-      (() => {
-        const vw = document.documentElement.clientWidth;
-        const card = document.querySelector('.sense-card');
-        const rect = card.getBoundingClientRect();
-        const inner = [...card.querySelectorAll('*')]
-          .filter(el => el.getBoundingClientRect().right > rect.right + 0.5)
-          .map(el => el.tagName + '.' + el.className);
-        return { over: Math.round(rect.right - vw), inner: inner };
-      })()
-    JS
-    assert_operator overflow["over"], :<=, 0, "語義カードが画面右端からはみ出している"
-    assert_empty overflow["inner"], "語義カード内に枠からはみ出した要素がある"
+      # 語義カードの右端が画面内に収まり、カード内にもはみ出した要素が無い
+      overflow = page.evaluate_script(<<~JS)
+        (() => {
+          const vw = document.documentElement.clientWidth;
+          const card = document.querySelector('.sense-card');
+          const rect = card.getBoundingClientRect();
+          const inner = [...card.querySelectorAll('*')]
+            .filter(el => el.getBoundingClientRect().right > rect.right + 0.5)
+            .map(el => el.tagName + '.' + el.className);
+          return { over: Math.round(rect.right - vw), inner: inner };
+        })()
+      JS
+      assert_operator overflow["over"], :<=, 0, "語義カードが画面右端からはみ出している"
+      assert_empty overflow["inner"], "語義カード内に枠からはみ出した要素がある"
 
-    assert_reading_stacked ".sense-heading ruby", "語義見出し"
-    assert_reading_stacked ".variant-list ruby", "別表記"
+      assert_reading_stacked ".sense-heading ruby", "語義見出し"
+      assert_reading_stacked ".variant-list ruby", "別表記"
+    end
   end
 
   private

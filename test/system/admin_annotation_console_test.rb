@@ -13,20 +13,19 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
   # (画面下端の中ほど)に来ると、iOS の画面下端ジェスチャ(Apple Intelligence の呼び出し)と
   # 近くて押しづらいため、折り返しても必ず右端に置く。
   test "スマホ幅でも保存ボタンは画面の右端に置く" do
-    resize_window_to(402, 874)
-    visit admin_annotation_path(@word)
-    assert_selector ".ann-actionbar"
+    with_window_size(402, 874) do
+      visit admin_annotation_path(@word)
+      assert_selector ".ann-actionbar"
 
-    edges = page.evaluate_script(<<~JS)
-      (() => {
-        const bar = document.querySelector(".ann-actionbar");
-        const save = bar.querySelector(".btn--primary");
-        return { bar: bar.getBoundingClientRect().right, save: save.getBoundingClientRect().right };
-      })()
-    JS
-    assert_in_delta edges["bar"], edges["save"], 1, "保存ボタンがアクションバーの右端に寄っていない"
-  ensure
-    resize_window_to(*ApplicationSystemTestCase::DEFAULT_SCREEN_SIZE)
+      edges = page.evaluate_script(<<~JS)
+        (() => {
+          const bar = document.querySelector(".ann-actionbar");
+          const save = bar.querySelector(".btn--primary");
+          return { bar: bar.getBoundingClientRect().right, save: save.getBoundingClientRect().right };
+        })()
+      JS
+      assert_in_delta edges["bar"], edges["save"], 1, "保存ボタンがアクションバーの右端に寄っていない"
+    end
   end
 
   test "ジャンルを大→中→小と選んで保存すると、公開前の確認を経て注釈済みになり次の語へ進む" do
@@ -125,7 +124,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
 
     visit admin_annotation_path(word)
     wait_for_stimulus "nested-form"             # 遅延読み込み完了を待ってから追加ボタンを押す
-    # 追加は冪等でない(押すたびに行が増える)ので、ヘッドレスで取りこぼしにくい JS クリックで1回だけ足す。
+    # 追加は冪等でない(押すたびに行が増える)ので、JS の click() で 1 回だけ押す(click_via_js と同じ考え方)。
     add_button = find(".ann-features button.ann-addrow", text: I18n.t("admin.annotations.add_feature"))
     execute_script("arguments[0].click()", add_button)
     assert_selector ".ann-feature .ann-cell", wait: 10   # feature-range が接続しストリップが描画された
@@ -133,10 +132,10 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     within all(".ann-feature").last do
       # 選ぶ前の該当部分の表示(単語・読みとも未選択)
       assert_selector ".ann-feature__result", exact_text: "→ （単語 未選択） / （読み 未選択）"
-      # 特徴のラジオを選ぶ(ネイティブクリックの取りこぼしを避けて JS で選択・change 発火)。
+      # 特徴のラジオを選ぶ(視覚的に隠れた input なので、JS で選んで change を送る)。
       choose_hidden_input "input[type=radio][value='#{feature.id}']"
       # tap ごとにストリップが再描画されセル参照が stale になるので都度引き直す。
-      # セルのネイティブクリックはヘッドレスで取りこぼすため JS クリックで確実に発火させる。
+      # セルは押すたびに始点・終点が進む(冪等でない)ので、JS の click() で 1 回ずつ押す。
       surface = ".ann-strip:not(.ann-strip--reading) .ann-cell"
       reading = ".ann-strip--reading .ann-cell"
       tap_cell = ->(css, i) { execute_script("arguments[0].click()", all(css)[i]) }
@@ -221,8 +220,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_selector ".js-sense", count: 2
     assert_selector ".ann-sense.is-complete", count: 1
 
-    # 未完了の 2 つ目を「この語義を削除」で画面から外す。ログイン後はネイティブのクリックが届かないことが
-    # あるので JS で押す(ApplicationSystemTestCase の注記)
+    # 未完了の 2 つ目を「この語義を削除」で画面から外す(JS の click() で 1 回だけ押す)
     execute_script("arguments[0].click()", all(".js-sense")[1].find(".ann-sense__del"))
     assert_selector ".js-sense", count: 1
 
