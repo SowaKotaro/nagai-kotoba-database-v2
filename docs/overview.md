@@ -236,3 +236,55 @@ bin/rails server
   注釈スキルの `schema.json` と `example.json`。**どれかを直したら、束を作り直してアップロードし直す**（アップロードはオーナー）。
 - **本番の確かめ方**: ヘルスチェックは `/up`。派生値の整合は、サーバで `RAILS_ENV=production bin/rails backfill:verify`
   （[`data-model.md`](data-model.md) §3.4）。インデックスの状況は Search Console を週次で見る（[`launch-checklist.md`](launch-checklist.md) §4）。
+
+## 12. JS の地図
+
+既存の節番号を変えないよう、末尾に足した節（2026-10-07）。ここは索引で、書き方の正典は [`CLAUDE.md`](../CLAUDE.md) の
+「JavaScript（Stimulus）」、各コントローラの目的・JS が無いときの振る舞い・連携するイベントは、そのファイルの冒頭のコメントにある。
+
+### コントローラ（`app/javascript/controllers/`。画面ごと）
+
+| 画面 | コントローラ |
+|---|---|
+| 共通（ヘッダー） | `nav_menu`（「検索」のプルダウン）・`nav_drawer`（狭幅のドロワー）・`theme`（ダークモード） |
+| 単語の一覧・詳細 | `auto_submit`（並び替えを選んだら送る。管理の一覧でも使う）・`clipboard`（URL のコピー。管理画面の書き出しでも使う） |
+| 詳細検索 | `genre_filter`（ジャンルの絞り込み）・`range_slider`（読みの文字数）・`char_type`・`char_type_toggle`（文字種） |
+| ランキング・統計 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（Plotly）・`vowel_graph`（母音のつながり） |
+| 収録リクエスト | `nested_form`（行の追加と削除）・`reading_counter`（読みの字数） |
+| アノテーション（コンソール・デッキ） | `nested_form`・`sense_cloner`（語義の複製）・`sense_completeness`（必須項目の充足）・`genre_picker`（ジャンルの段階表示）・`inline_add`（マスタのその場追加）・`feature_range`（特徴の該当部分）・`publish_guard`（公開前の確認）・`queue_nav`（キーボード）・`deck`（カード送り） |
+| 管理の一覧・一括登録 | `check_all`（全選択）・`genre_picker`（一括適用）・`reading_choice`（読みの候補）・`reading_format`（読みの形式） |
+| 登録予定単語 | `decision_list`（語ごとの処理）・`row_select`（行の選択）・`submit_shortcut`（Ctrl+Enter で送る） |
+
+複数のコントローラが使う関数は `controllers/support/`（いまは `senses.js`）。stimulus-loading は `_controller` で終わるファイルしか
+登録しないので、ここに置いた関数はコントローラにならない。fetch は `inline_add_controller.js` の `post()` を使う（`genre_picker` も import している）。
+
+### 独自のイベント
+
+コントローラ同士は `this.dispatch()` で出し、受け手は data-action（`<出す側>:<名前>->受け手#メソッド`）で受ける。document 全体に流すのは `theme:change` だけ。
+
+| イベント | 出す側 | 受ける側 |
+|---|---|---|
+| `theme:change`（document） | `theme` | `genre_sunburst`（Plotly の色を CSS のトークンから読み直す） |
+| `char-type-toggle:changed` | `char_type_toggle` | `char_type#caseSensitivityChanged` |
+| `genre-picker:changed` | `genre_picker` | `sense_completeness#check` |
+| `inline-add:added` | `inline_add` | `sense_completeness#check` |
+| `sense-completeness:changed` | `sense_completeness` | `deck#recount` |
+| `decision-list:applied`・`decision-list:filtered` | `decision_list` | `row_select#clear` |
+
+Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシュ前に閉じる）と `turbo:frame-render`（`decision_list` が行の手直しから戻ったときにフォーカスを戻す）を受けている。
+
+### DOM の約束事
+
+- **段階的な強化**: サーバが全部を描き、JS がつながってから畳む・見せる。`data-js-only` は JS が無いと働かない部品で、
+  `row_select` が接続するまで CSS が隠す（`candidates.css`）。`panel_switch` の `hideOnConnect` は、全パネルを描いておき、つながってから畳む。
+- `data-row-group` は「この系統を選ぶ」でまとめて選ぶ行の範囲（`row_select`）。
+- 行の `data-decision`・`data-flags`、処理のラジオの `data-key`、絞り込みのボタンの `data-flag` は `decision_list` が読み書きする。
+- `data-nested-form-item`・`data-nested-form-destroy`・`data-sense-destroy` は、`nested_form`・`sense_cloner` が行と削除の印を探す手がかり。
+- `html[data-theme]` は `theme` が付け外しする（初回の描画の前の復元だけは head のインラインスクリプト。[`design.md`](design.md) §9.2）。
+
+### フックの名前の付け方
+
+- JS から要素を探す手がかりを新しく足すときは、Stimulus の target か data 属性にする。`js-` 接頭辞のクラスは既存の注釈コンソールにだけ残し、
+  増やさない（`js-` が付いていても、JS が使うとは限らない）。
+- 見た目用のクラスを JS やテストも参照している箇所は、CSS の側に「JS（〜_controller.js）・テストも参照」と注記する（[`design.md`](design.md) §11）。
+- Plotly は importmap にピンせず、Sprockets で配信して UMD のグローバルとして使う（`config/importmap.rb` の注記。`bin/importmap audit` の対象外）。

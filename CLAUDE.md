@@ -178,7 +178,7 @@
 | `app/controllers/concerns/` | 認証 `Authentication`、全件出力の版 `PublishedWordsDigest`、注釈のキュー `Admin::AnnotationQueue` | — |
 | `app/helpers/` | ビューに渡す値・属性・data ハッシュ | `word_requests_helper.rb` |
 | `app/views/` | ERB。公開側の共通部品は `shared/`、管理画面の共通部品は `admin/shared/` | `shared/_genre_path` |
-| `app/javascript/controllers/` | Stimulus（importmap）。共有の関数は `support/`。Plotly は意図してピンせず、Sprockets で配信する | `decision_list_controller.js` |
+| `app/javascript/controllers/` | Stimulus（importmap）。共有の関数は `support/`。Plotly は意図してピンせず、Sprockets で配信する（地図は overview §12） | `decision_list_controller.js` |
 | `app/assets/stylesheets/` | 手書き CSS。tokens → base → layout → components → annotate・candidates・admin の順に読み、**管理用の CSS も全ページで読む** | `tokens.css` |
 | `config/locales/ja.yml` | 表示文言 | — |
 | `config/routes.rb` | ルートの正（画面の役割は overview §5） | — |
