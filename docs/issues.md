@@ -12,11 +12,11 @@
 1. **未完了イシュー** … これから手を付けるもの(優先度順)
 2. **確定事項** … オーナー回答の記録(後から覆った判断には、覆した先への注記を残す)
 
-済んだものの記録は [`changelog.md`](changelog.md) に分けてある。
+済んだものの記録は [`history/changelog.md`](history/changelog.md) に分けてある。
 
 ## 記述フォーマット(統一)
 
-各 Issue は次の形式で記述する。完了した Issue は詳細を落として [`changelog.md`](changelog.md) へ要約して移す(経緯の詳細は git 履歴で参照できる)。
+各 Issue は次の形式で記述する。完了した Issue は詳細を落として [`history/changelog.md`](history/changelog.md) へ要約して移す(経緯の詳細は git 履歴で参照できる)。
 
 ```
 ## Issue N: タイトル
@@ -33,7 +33,7 @@
 - 優先度の目安: P0 = 公開(インデックス解禁)の前提条件、P1 = 解禁前後に済ませたい土台、P2 = データ量・トラフィックの成長に合わせて。
 - **番号を取らずに PR だけで進める改善もある**(オーナー指示を受けたその場の磨き込み・バグ修正など)。
   番号を取るかどうかの目安は「**着手前に判断が要るか**」。要るなら Issue を立て、要らないなら
-  PR だけで進めて、**[`changelog.md`](changelog.md) の「番号を持たない改善」節に 1 行だけ記録を残す**。
+  PR だけで進めて、**[`history/changelog.md`](history/changelog.md) の「番号を持たない改善」節に 1 行だけ記録を残す**。
 - 完了した Issue を本ファイルに置いたままにしない(2026-08-11 に実態との乖離で棚卸しが発生している。確定事項 21)。
 
 ---
@@ -97,7 +97,7 @@
 - 種別: improvement
 - 状態: 未着手(**キャッシュの失効条件と容量を決めてから**。下記)
 - 優先度: P2 ／ Impact: Low〜Med ／ Effort: Med
-- 依存: なし([`performance-report.md`](performance-report.md) §2-B の続き)
+- 依存: なし([`history/performance-report.md`](history/performance-report.md) §2-B の続き)
 - 背景・現状: 2026-09-17 の改善調査(A-5)では「`/words` の 8 割がビュー描画で、主因は `icon` ヘルパーが SVG ごとに `render` を呼ぶこと」としていたが、**2026-09-23 にテンプレートをキャッシュする本番相当の条件(`ActionView::Resolver.caching = true`)で測り直すと前提が違った**。開発 DB・20 回平均で、`/words`(100 行)のビュー描画 53ms のうち:
   | 区間 | 時間 | 回数 |
   |---|---:|---:|
@@ -280,7 +280,7 @@
 - 種別: improvement
 - 状態: **保留(オーナー判断 2026-08-11)** — 収録が進めば自然に埋まる見込みのため据え置く。埋まらないまま残るようなら再検討する
 - 優先度: P2 ／ Impact: Low ／ Effort: Low
-- 依存: なし(旧 Issue 76〈特徴の遡及付与〉に依存していたが、そちらは 2026-09-16 にクローズ。[`changelog.md`](changelog.md) 参照)
+- 依存: なし(旧 Issue 76〈特徴の遡及付与〉に依存していたが、そちらは 2026-09-16 にクローズ。[`history/changelog.md`](history/changelog.md) 参照)
 - 背景・現状: `searches_controller.rb#load_filter_masters` が `LinguisticFeature.order(:id)` でマスタ全件を無条件に描画するため、**公開語が0件の選択肢もフォームに並ぶ**。2026-08-11 時点で特徴 22 種のうち 6 種(連声・音韻添加・音韻脱落・湯桶読み・イ音便・ウ音便)が該当し、選ぶと必ず0件になる。品詞・エンティティ・語種にも同種の可能性がある。単一条件のファセットは Issue 17 でインデックス許可対象のため、空ページをクロールさせることにもなる(Issue 74 のクロール導線整理と同じ問題系統)。
 - 内容:
   - [ ] 公開語数0の選択肢を隠す、または件数を添えて0件と分かるようにする
@@ -482,11 +482,11 @@
 31. **送信メタデータ(IP・User-Agent・リファラー)は無期限で保持する**。保持期間はプライバシーポリシーに書かない(Issue 75 のもう一つの TBD の決着)。保存する情報と利用目的の公表は従来どおり続ける。
 32. **言語的特徴だけを調べる専用の調査スキルは作らない**(Issue 76 はクローズ)。書き出しの口と「特徴なしで確定」の記録は実装済みのまま残るので、遡及付与が要るときは `/reannotation` で1語ずつ行う。
 33. **Bing Webmaster Tools は当面触らない**(所有権確認・sitemap 送信とも)。Google 側だけで運用する。
-34. **「小粒改善まとめ」の Issue 70・56 はクローズ**。チェックリストのまま動かない状態が続いていたため。Issue 56 の指摘のうち残すべきものは [`data-model.md`](data-model.md)・[`overview.md`](overview.md) へ移した([`changelog.md`](changelog.md) 参照)。
+34. **「小粒改善まとめ」の Issue 70・56 はクローズ**。チェックリストのまま動かない状態が続いていたため。Issue 56 の指摘のうち残すべきものは [`data-model.md`](data-model.md)・[`overview.md`](overview.md) へ移した([`history/changelog.md`](history/changelog.md) 参照)。
 35. **文書の構成を3点変更**。
-    - 完了アーカイブを [`changelog.md`](changelog.md) に分離する(本ファイルは「これからやること」と「確定事項」だけにする)。
+    - 完了アーカイブを [`history/changelog.md`](history/changelog.md) に分離する(本ファイルは「これからやること」と「確定事項」だけにする)。
     - [`genres.md`](genres.md) は **rake タスクで生成し、CI で差分を検出する**(Issue 85)。手作業の同期で実際にずれていたため。
-    - [`performance-report.md`](performance-report.md) は **2026-08 の記録として凍結**する。以後の速度調査は別文書に書く。
+    - [`history/performance-report.md`](history/performance-report.md) は **2026-08 の記録として凍結**する。以後の速度調査は別文書に書く。
 36. **文書整理で判断した5件を承認** — `docs/schema.sql` を削除して [`data-model.md`](data-model.md) に置き換え／`README.md` をプロジェクトの表紙に書き直し／`overview.md` から Issue 単位の実装履歴を落として本ファイルへ一本化／`CLAUDE.md` のデザイン節を圧縮し設計規約を6つ追加／`genres.md` を `SeedCatalog` と同期して作り直し。
 
 ## 2026-09-23(改善調査〈docs/improvements.md〉の採否)

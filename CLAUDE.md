@@ -10,7 +10,7 @@
 ### 書き方と進め方
 - 返答・コミットメッセージ・コードコメントは**日本語**で書く。
 - 1 Issue = 1 ブランチ = 1 PR（[`docs/issues.md`](docs/issues.md)）。小粒な改善は Issue を立てずに PR だけでよいが、完了の記録は
-  [`docs/changelog.md`](docs/changelog.md) の「番号を持たない改善」に 1 行残す。
+  [`docs/history/changelog.md`](docs/history/changelog.md) の「番号を持たない改善」に 1 行残す。
 - ブランチ名は `feature/<内容>`。**Issue / PR 番号は入れない**（Issue と PR で採番が共通なので、付けた番号が必ずずれる）。
 - 仕様が曖昧なまま大きな変更を進めない。不明点は先に確かめる。公開 API・ルーティング・DB スキーマを壊す変更は、影響範囲を説明してから行う。
 - 変更にはテストを付ける（正常系に加えて異常系・境界値も）。§4 の合格判定が通らないコードは未完成とみなす。エラーは握りつぶさずに直す。
@@ -190,7 +190,7 @@
 | `test/` | models・controllers・integration・system・services・helpers・tasks・assets。共通のヘルパは `test_helper.rb` と `test_helpers/`（`sign_in_as`） | `test_helper.rb`・`application_system_test_case.rb` |
 | `.claude/skills/`・`.claude/commands/`・`research/` | 調査スキル（ローカルの Claude Code）と、その入出力 | `research/README.md` |
 | `script/og_default.py`・`tools/claude-ai-skill/build.sh` | 既定の共有カード `public/og-default.png` の生成、claude.ai 用のスキル束の生成 | — |
-| `docs/` | 仕様と記録（索引は overview の冒頭） | — |
+| `docs/` | 仕様（索引は overview の冒頭）。`docs/history/` は記録で、現行の仕様ではない | — |
 
 ## 4. 合格判定コマンド（コミット前に必ず実行すること）
 

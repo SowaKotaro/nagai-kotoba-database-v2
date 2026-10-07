@@ -171,7 +171,7 @@ sitemap の版は動かない。
   `REGEXP_REPLACE` は、かな（小書きの ャ・濁点の バ で確認）については as_ci のままでも bin と同じ結果だった。
   照合順序で結果が変わったのは、`REGEXP_REPLACE` の大文字・小文字の区別だけ。
 
-計測と経緯は [`performance-report.md`](performance-report.md) §3。
+計測と経緯は [`history/performance-report.md`](history/performance-report.md) §3。
 
 ---
 
@@ -228,7 +228,7 @@ sitemap の版は動かない。
 utf8mb4 のインデックスキー長制限（3072 バイト）に収めるため、長い文字列カラムは先頭 191 文字で
 索引する（`surface(191)` / `reading(191)` / `char_type_pattern(191)` / `vowel_pattern(191)` /
 `target(191)` など）。`words.surface` の UNIQUE も prefix なので、**先頭 191 文字が同一の
-長文語は DB エラーになる**（現実的には起きないが、既知の割り切り。`changelog.md` Issue 56）。
+長文語は DB エラーになる**（現実的には起きないが、既知の割り切り。`history/changelog.md` Issue 56）。
 
 ---
 
@@ -237,7 +237,7 @@ utf8mb4 のインデックスキー長制限（3072 バイト）に収めるた�
 - **モデルと DB 制約の両方**で担保する（`NOT NULL` / `UNIQUE` ＋ `validates`）。
 - `word_senses.genre_id` が**小分類だけ**を指すのはモデルのバリデーション（`genre_must_be_small`）
   で、**DB 側の制約は無い**。現状の書き込み経路はすべてモデルを通るので安全だが、
-  直接 UPDATE では中・大分類が入りうる（`changelog.md` Issue 56）。
+  直接 UPDATE では中・大分類が入りうる（`history/changelog.md` Issue 56）。
 - マスタは参照中に削除できない（`dependent: :restrict_with_error`）。タグ統括管理
   （`/admin/tags`）の削除ガードもこれを使う。
 - 複数レコードの整合性が要る更新は `transaction` でまとめる（ジャンルの統合など）。

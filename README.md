@@ -93,10 +93,10 @@ bin/rails test:system
 | [`docs/design.md`](docs/design.md) | デザインシステム「しずか」 |
 | [`docs/annotation-guidelines.md`](docs/annotation-guidelines.md) | 収録基準（立項の4原則・表記・読み） |
 | [`docs/issues.md`](docs/issues.md) | バックログと、オーナー判断の記録 |
-| [`docs/changelog.md`](docs/changelog.md) | これまでに入れたものの記録 |
+| [`docs/history/changelog.md`](docs/history/changelog.md) | これまでに入れたものの記録 |
 | [`docs/stats.md`](docs/stats.md) | 統計ページ `/stats` の紙面設計 |
 | [`docs/genres.md`](docs/genres.md) | ジャンル階層の一覧 |
 | [`docs/char_type_pattern.md`](docs/char_type_pattern.md) / [`docs/rhythm_pattern.md`](docs/rhythm_pattern.md) | 派生値の変換仕様 |
 | [`docs/growth-strategy.md`](docs/growth-strategy.md) / [`docs/launch-checklist.md`](docs/launch-checklist.md) | グロース戦略と公開手順 |
-| [`docs/performance-report.md`](docs/performance-report.md) | 速度調査の記録 |
+| [`docs/history/performance-report.md`](docs/history/performance-report.md) | 速度調査の記録 |
 | [`research/README.md`](research/README.md) | Claude Code のオフライン調査コマンドの使い方 |

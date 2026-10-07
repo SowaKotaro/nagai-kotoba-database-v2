@@ -95,7 +95,7 @@ goo辞書・Weblio・コトバンク等の総合辞書と正面から戦わず�
 - ◎ HTTP キャッシュ(ETag・expires_in・Rails.cache。Issue 26)— 1万語規模なら現構成で耐える
 - ✗ 死活監視・エラー通知が無い(障害に気づく手段がゼロ → Issue 45)
 - ✗ DB バックアップが手動(`~/db_backups` → 日次自動化 Issue 46)
-- ◎ 集計キャッシュ(公開語義の件数の `Rails.cache`。ビューの fragment cache ではない)は `PublishedSenseCounts` に集約済み(Issue 48 完了)。速度の実測と残課題は [`performance-report.md`](performance-report.md)
+- ◎ 集計キャッシュ(公開語義の件数の `Rails.cache`。ビューの fragment cache ではない)は `PublishedSenseCounts` に集約済み(Issue 48 完了)。速度の実測と残課題は [`history/performance-report.md`](history/performance-report.md)
 - **コスト見通し(宿題)**: PV 10倍時のサーバ費用モデルは、計測(§3)でトラフィック実測が取れてから
 
 ## 7. 法務・ポリシー

@@ -10,9 +10,10 @@
 | UI を作る・変える | [`design.md`](design.md) |
 | 何を収録するか・表記と読みの決め方 | [`annotation-guidelines.md`](annotation-guidelines.md) |
 | これから作るもの | [`issues.md`](issues.md)（確定事項の記録も同じファイル） |
-| これまでに入れたもの | [`changelog.md`](changelog.md) |
+| これまでに入れたもの | [`history/changelog.md`](history/changelog.md) |
+| 記録の置き場（済んだこと・当時の計測。**現行の仕様ではない**） | [`history/`](history/README.md) |
 | 統計ページの紙面 | [`stats.md`](stats.md) |
-| 速度の話 | [`performance-report.md`](performance-report.md) |
+| 速度の話 | [`history/performance-report.md`](history/performance-report.md) |
 | ジャンルの一覧 | [`genres.md`](genres.md) |
 | Claude Code の調査コマンド | [`../research/README.md`](../research/README.md) |
 

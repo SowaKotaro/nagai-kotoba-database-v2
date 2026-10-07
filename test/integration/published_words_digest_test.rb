@@ -2,7 +2,7 @@ require "test_helper"
 
 # 全件を1レスポンスに書き出す重い出力(sitemap.xml / llms-full.txt)の版(PublishedWordsDigest)。
 # 版は公開語の最終更新「日」に畳んであり、同じ日のアノテーションでは作り直さない
-# (畳んでいないと保存のたびに全件の再組み立てが走り、その間 Puma が塞がる。docs/performance-report.md)。
+# (畳んでいないと保存のたびに全件の再組み立てが走り、その間 Puma が塞がる。docs/history/performance-report.md)。
 class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
   PATHS = %w[/sitemap.xml /llms-full.txt].freeze
 
