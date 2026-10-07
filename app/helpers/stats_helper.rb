@@ -190,7 +190,8 @@ module StatsHelper
   # その 1.5 倍(6%)を「その位置で目立って多い」とみなす。
   GRAPH_UNIFORM_SHARE = 1.0 / (SiteStatistics::VOWELS.size**2)
   GRAPH_SIGNIFICANT_RATIO = 1.5
-  # エッジの太さと濃さ。350 本を重ねるので、細く薄く始めて上限も抑える。
+  # エッジの太さと濃さ。最大で 350 本(隣り合う層の 25 本 × 区間の数。SiteStatistics の 15 拍まで)を重ねるので、
+  # 細く薄く始めて上限も抑える。
   GRAPH_MIN_EDGE = 0.3
   GRAPH_MAX_EDGE = 3.2
   GRAPH_MIN_OPACITY = 0.1

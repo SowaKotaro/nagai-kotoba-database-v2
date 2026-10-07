@@ -74,7 +74,7 @@ class AnnotationProposal < ApplicationRecord
       Array(@data["variants"]).select { |v| v.is_a?(Hash) && v["surface"].present? }
     end
 
-    # 言語的特徴の提案。name/target/target_reading が揃った要素だけを返す。
+    # 言語学的特徴の提案。name/target/target_reading が揃った要素だけを返す。
     # target_reading も必須にするのは WordSenseFeature が両方を必須にするためで、
     # 欠けたものは反映しても保存できない(パネルには出さず、反映もしない)。
     # 除外したことはどこにも表示しないので、一括承認では不完全な特徴が落ちたまま公開される(variants も同じ)。

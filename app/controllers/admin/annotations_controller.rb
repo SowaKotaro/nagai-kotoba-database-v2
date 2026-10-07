@@ -4,7 +4,7 @@
 # キューから外れ、あとで単語一覧の「保留」フィルタから見直せる。
 # ?proposed=1 を付けると、Claude の提案(pending)が付いた語だけを辿る(Issue 38)。
 class Admin::AnnotationsController < Admin::BaseController
-  # キュー(絞り込み・並べ替え)とマスタ読み込みは 10件デッキと共有する。
+  # キュー(絞り込み・並べ替え)とマスタ読み込みはデッキと共有する。
   include Admin::AnnotationQueue
 
   before_action :set_word, only: %i[show update hold create_master reresearch review_features]
@@ -60,7 +60,7 @@ class Admin::AnnotationsController < Admin::BaseController
     redirect_to_next_word(t("admin.annotations.held"))
   end
 
-  # 言語的特徴を「調べたが該当する現象は無かった」で確定する(Issue 76)。
+  # 言語学的特徴を「調べたが該当する現象は無かった」で確定する(Issue 76)。
   #
   # 特徴が0件の語義には「まだ調べていない」と「調べたうえで該当なし」が混ざる。
   # 後者を記録しておかないと、特徴の再調査を掛けるたびに同じ語が対象に戻ってくる。

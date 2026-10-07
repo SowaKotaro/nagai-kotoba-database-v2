@@ -112,7 +112,7 @@ class WordSense < ApplicationRecord
     where(id: WordSenseFeature.where(linguistic_feature_id: id).select(:word_sense_id))
   }
 
-  # 言語的特徴の調査がまだ済んでいない公開語義(Issue 76)。
+  # 言語学的特徴の調査がまだ済んでいない公開語義(Issue 76)。
   #
   # 特徴が0件の語義には「まだ調べていない」と「調べたが該当なしだった」の2種類が
   # 混ざるため、後者(features_reviewed_at が立っている)を必ず除く。除かないと

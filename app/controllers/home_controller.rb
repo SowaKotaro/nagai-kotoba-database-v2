@@ -1,5 +1,5 @@
+# トップページ。サイト名の読みの円環・看板(検索と数)・今日の一語・新着と読みが長い言葉(docs/design.md §5.2)。
 class HomeController < ApplicationController
-  # トップページは全世界に公開する（未認証でも閲覧可）。
   allow_unauthenticated_access only: :index
 
   RECENT_WORDS_LIMIT = 5

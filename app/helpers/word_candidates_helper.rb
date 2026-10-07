@@ -59,7 +59,6 @@ module WordCandidatesHelper
     stage.reviewing_statuses.sum { |status| candidate_status_counts.fetch(status, 0) }
   end
 
-  # 段の画面。
   def candidate_stage_path(stage)
     public_send(:"#{stage.route}_path")
   end

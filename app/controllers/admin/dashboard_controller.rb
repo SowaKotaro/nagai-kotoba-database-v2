@@ -10,7 +10,7 @@ class Admin::DashboardController < Admin::BaseController
     # 作業のカードに添える「まだ手を付けていない件数」。キーは admin_sections の key と揃える
     @pending_counts = {
       annotations: @unannotated_count,
-      # 登録予定単語のうち、前処理の途中(upload〜notation)と要判断にいる語の数
+      # 登録予定単語のうち、前処理の4段(仕分け〜登録待ち)のどれかにいる語の数(WordCandidate.in_progress)
       candidates: WordCandidate.in_progress.count,
       # 公開側から届いた収録リクエストのうち、まだ手を付けていない件数(Issue 75)
       requests: WordRequestItem.pending.count

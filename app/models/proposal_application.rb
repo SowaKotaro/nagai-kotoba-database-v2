@@ -84,7 +84,7 @@ class ProposalApplication
     end
   end
 
-  # 提案の言語的特徴を、既存マスタに解決できるものだけ足す(重複追加しない・Issue 63)。
+  # 提案の言語学的特徴を、既存マスタに解決できるものだけ足す(重複追加しない・Issue 63)。
   # 提案の target_start は使わない。target_start はモデルの before_validation が先頭出現に補完し、feature-range が
   # ロード時に該当部分のハイライトを復元する。target/target_reading は保存時に部分一致検証を
   # 受ける(外れていれば人が直す)。マスタに無い特徴名は反映せず、新設候補としてパネルに出る。
