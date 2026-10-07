@@ -45,7 +45,8 @@ class WordsController < ApplicationController
     # 組み立てもスキップする(Issue 26)。word_senses は touch: true で Word に伝わるが、
     # ジャンル等のマスタは touch しないので、名称変更を拾えるよう明示的に含める。
     records = @word.cache_dependencies
-    return unless stale?(etag: records, last_modified: records.map(&:updated_at).max, public: true)
+    # ログイン中の HTML は共有キャッシュに載せない(ヘッダーが違い、ログアウトのフォームに CSRF トークンが入る)。
+    return unless stale?(etag: records, last_modified: records.map(&:updated_at).max, public: !authenticated?)
 
     # 単語間の内部リンク。関連語は同ジャンル/同文字数を各数件(Issue 23)、
     # しりとりは末尾文字→先頭文字で次の一手を数件。
