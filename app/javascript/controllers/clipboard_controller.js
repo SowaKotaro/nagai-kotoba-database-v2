@@ -18,11 +18,12 @@ export default class extends Controller {
   flashCopied() {
     if (!this.hasLabelTarget) return
 
-    const original = this.labelTarget.textContent
+    // 戻す先の文言は最初の 1 回だけ覚える(完了の表示中に押し直したとき、完了の文言を「元」として覚えないように)
+    this.originalLabel ??= this.labelTarget.textContent
     this.labelTarget.textContent = this.copiedLabelValue
     clearTimeout(this.resetTimer)
     this.resetTimer = setTimeout(() => {
-      this.labelTarget.textContent = original
+      this.labelTarget.textContent = this.originalLabel
     }, 2000)
   }
 
