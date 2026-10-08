@@ -20,6 +20,9 @@
   <div class="ann-sense__head">
     <span class="ann-sense__stamp"><%= t("admin.words.senses_legend") %> <%= form.index + 1 %></span>
     <%= form.hidden_field :_destroy, data: { sense_destroy: "" } %>
+    <%# 語義の id は、この枠の中に置く(呼び出し側の fields_for は include_id: false)。fields_for に任せると枠の外に出て、
+        「この語義を削除」が保存済みの語義を新しい行と取り違え、_destroy を送らずに外していた(Issue 106) %>
+    <%= form.hidden_field :id, data: { sense_id: "" } if sense.persisted? %>
     <button type="button" class="ann-sense__del" data-action="sense-cloner#remove"><%= t("admin.annotations.remove_sense") %></button>
   </div>
 

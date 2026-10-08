@@ -280,6 +280,7 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
 - `data-row-group` は「この系統を選ぶ」でまとめて選ぶ行の範囲（`row_select`）。
 - 行の `data-decision`・`data-flags`、処理のラジオの `data-key`、絞り込みのボタンの `data-flag` は `decision_list` が読み書きする。
 - `data-nested-form-item`・`data-nested-form-destroy`・`data-sense-destroy` は、`nested_form`・`sense_cloner` が行と削除の印を探す手がかり。
+  `data-sense-id` は保存済みの語義の id で、`sense_cloner` が保存済みかを見分ける（語義の枠の中に置く。`_sense_fields`）。
 - `html[data-theme]` は `theme` が付け外しする（初回の描画の前の復元だけは head のインラインスクリプト。[`design.md`](design.md) §9.2）。
 
 ### フックの名前の付け方

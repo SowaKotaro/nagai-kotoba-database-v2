@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
+import { visibleSenses } from "controllers/support/senses"
 
-// 「語義を追加」: 直前の語義を複製し、語種・品詞・特徴(の種別と単語側の該当部分)を
+// 「語義を追加」: 表示中の最後の語義を複製し、語種・品詞・特徴(の種別と単語側の該当部分)を
 // 引き継ぎつつ、読み・意味・ジャンル・エンティティ・別表記・特徴の読み側は空にした
 // 新しい語義を下に追加する(同音異義語の入力を素早くするため)。
 // ネスト属性の添字は新しい一意値へ置換し、id/_destroy を外して新規レコード扱いにする。
@@ -12,8 +13,9 @@ export default class extends Controller {
 
   add(event) {
     event.preventDefault()
+    // 削除して隠した語義は写さない(消したはずの語種・特徴が戻らないように)。全部を削除したときだけ、隠れた最後の語義を写す
     const senses = this.containerTarget.querySelectorAll(".js-sense")
-    const last = senses[senses.length - 1]
+    const last = visibleSenses(this.containerTarget).at(-1) ?? senses[senses.length - 1]
     if (!last) return
 
     const oldIndex = last.dataset.index
@@ -53,12 +55,14 @@ export default class extends Controller {
   }
 
   // 「この語義を削除」: 永続化済みは _destroy を立てて隠す。新規行は DOM から除去。
+  // 永続化済みかは、語義自身の id(data-sense-id)の有無で見分ける。name の末尾が [id] の input では、
+  // 特徴・別表記の id と区別できない。
   remove(event) {
     event.preventDefault()
     const item = event.target.closest(".js-sense")
     if (!item) return
     const destroy = item.querySelector("input[data-sense-destroy]")
-    const persisted = item.querySelector('input[name$="[id]"]')
+    const persisted = item.querySelector("input[data-sense-id]")
     if (destroy && persisted) {
       destroy.value = "1"
       item.style.display = "none"

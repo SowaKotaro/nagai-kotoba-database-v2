@@ -63,7 +63,8 @@
 
       <div data-controller="sense-cloner">
         <div data-sense-cloner-target="container">
-          <%= form.fields_for :word_senses do |sense_form| %>
+          <%# 語義の id は sense_fields が語義の枠の中に出す %>
+          <%= form.fields_for :word_senses, include_id: false do |sense_form| %>
             <%= render "sense_fields", form: sense_form, word: @word %>
           <% end %>
         </div>

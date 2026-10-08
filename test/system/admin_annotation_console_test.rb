@@ -208,11 +208,12 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     end
   end
 
-  # 公開前の確認(publish-guard)は、表示中の語義だけを数える。削除して隠した未完了の語義は数えない。
-  test "削除した未完了の語義は、公開前の確認の数え方に入らない" do
+  # 「この語義を削除」で隠した語義は、公開前の確認(publish-guard)で数えず、「語義を追加」の複製の元にもしない。
+  # 保存すると、削除した保存済みの語義は DB からも消える(Issue 106)。
+  test "削除した未完了の語義は、数えず・複製の元にせず、保存すると消える" do
     word_senses(:pending).update!(genre: genres(:small_novel), part_of_speech: parts_of_speech(:noun),
                                   entity_type: entity_types(:book_title), word_origins: [ word_origins(:wago) ])
-    @word.word_senses.create!(reading: "ノコッタミカンリョウノゴギ")
+    removed = @word.word_senses.create!(reading: "ノコッタミカンリョウノゴギ")
 
     visit admin_annotation_path(@word)
     wait_for_stimulus "publish-guard"
@@ -222,6 +223,16 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
 
     # 未完了の 2 つ目を「この語義を削除」で画面から外す(JS の click() で 1 回だけ押す)
     execute_script("arguments[0].click()", all(".js-sense")[1].find(".ann-sense__del"))
+    assert_selector ".js-sense", count: 1
+
+    # 「語義を追加」は、隠した語義ではなく表示中の 1 つ目を複製する(語種を引き継ぐ)。
+    # 複製は元の語義の id を持たない新しい行なので、削除すると DOM から外れる
+    click_expecting(expect_css: ".js-sense", count: 2) { find("button.ann-add-sense") }
+    clone = all(".js-sense").last
+    assert clone.find("input[name$='[word_origin_ids][]'][value='#{word_origins(:wago).id}']", visible: false).checked?,
+           "隠した語義を複製した"
+    clone.assert_no_selector "input[data-sense-id]", visible: false
+    execute_script("arguments[0].click()", clone.find(".ann-sense__del"))
     assert_selector ".js-sense", count: 1
 
     # confirm が呼ばれたら記録する。同じ window のまま次の語へ進んだことを __probe で確かめる
@@ -235,5 +246,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_equal "alive", evaluate_script("window.__probe")
     assert_nil evaluate_script("window.__confirmed"), "削除した語義が未完了として数えられた"
     assert wait_until { @word.reload.annotated_at.present? }
+    assert_not WordSense.exists?(removed.id), "削除した語義が DB に残った"
+    assert_equal [ word_senses(:pending).id ], @word.word_senses.ids, "1 つ目の語義だけが残るはず"
   end
 end
