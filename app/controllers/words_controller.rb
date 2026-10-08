@@ -46,7 +46,10 @@ class WordsController < ApplicationController
     # ジャンル等のマスタは touch しないので、名称変更を拾えるよう明示的に含める。
     records = @word.cache_dependencies
     # ログイン中の HTML は共有キャッシュに載せない(ヘッダーが違い、ログアウトのフォームに CSRF トークンが入る)。
-    return unless stale?(etag: records, last_modified: records.map(&:updated_at).max, public: !authenticated?)
+    # ログイン中は Last-Modified も付けない。本番は Cloudflare 越しで ETag がブラウザに届かず、ブラウザは
+    # If-Modified-Since だけで問い合わせるので、日時で比べるとログイン前の版で 304 になってしまう。
+    last_modified = records.map(&:updated_at).max unless authenticated?
+    return unless stale?(etag: records, last_modified:, public: !authenticated?)
 
     # 単語間の内部リンク。関連語は同ジャンル/同文字数を各数件(Issue 23)、
     # しりとりは末尾文字→先頭文字で次の一手を数件。
