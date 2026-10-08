@@ -12,4 +12,5 @@
 | [`decisions.md`](decisions.md) | 失効した確定事項（覆った判断と、済んだ一度きりの判断。番号は [`issues.md`](../issues.md) と同じ） |
 | [`design.md`](design.md) | デザインの改訂履歴（2026-09-03〜09-15）と、試作・計測の記録（仕様は [`design.md`](../design.md)、退けた案の一覧は同じ文書の §12） |
 | [`stats.md`](stats.md) | 統計ページの実装後のオーナー修正（2026-07-19）と実装フェーズ（仕様は [`stats.md`](../stats.md)） |
+| [`refactoring-2026-10/`](refactoring-2026-10/LEDGER.md) | AI が誤解しないための改修（2026-10-02〜08）の台帳・進め方・計画書・監査記録。見送った項目は [`issues.md`](../issues.md) の Issue 107 |
 | [`growth-strategy-2026-09-16.md`](growth-strategy-2026-09-16.md) | グロース戦略の現状評価と優先順位のスナップショット（現行は [`growth-strategy.md`](../growth-strategy.md)） |

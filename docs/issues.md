@@ -307,7 +307,7 @@
 - 状態: 未着手(**フレームワークの読み込みを変えるので、着手前に内容を説明する**)
 - 優先度: P2 ／ Impact: Med ／ Effort: Low
 - 依存: なし
-- 背景・現状: 2026-09-17 の改善調査(C-1)より。`config/application.rb:3` が `require "rails/all"` で、Active Storage・Action Text・Action Mailbox は利用 0、Action Mailer・Action Cable は雛形のみ。そのうえで**使わない公開の POST/PUT 口が7本**(`/rails/action_mailbox/*/inbound_emails` ×5、`/rails/active_storage/disk/:encoded_token`、`/rails/active_storage/direct_uploads`)生えている。メール基盤を入れないと決めているもの(確定事項 19)の口が開いている状態。
+- 背景・現状: 2026-09-17 の改善調査(C-1)より。`config/application.rb:3` が `require "rails/all"` で、Active Storage・Action Text・Action Mailbox は利用 0、Action Mailer・Action Cable は雛形のみ。そのうえで**使わない公開の POST/PUT 口が7本**(`/rails/action_mailbox/*/inbound_emails` ×5、`/rails/active_storage/disk/:encoded_token`、`/rails/active_storage/direct_uploads`)生えている。メール基盤を入れないと決めているもの(確定事項 19)の口が開いている状態。また、本番で rake を流すと「Generating image variants require the image_processing gem…」の警告が出る(使っていない Active Storage を読み込んでいるため。2026-10-04 のリファクタリングで確認)。
 - 内容:
   - [ ] 個別 require(`active_model` / `active_record` / `action_controller` / `action_view` / `sprockets` の railtie)に置き換える。**`active_job/railtie` は残す**(Issue 89 や将来の非同期化で使う)
   - [ ] `config/environments/*.rb` の `config.active_storage.*`・`action_mailer.*` 設定、`config/storage.yml`・`config/cable.yml` を整理する
@@ -384,6 +384,29 @@
   - [ ] まず GA4 の page_view の URL パラメータ(`q` など)で0件クエリを拾えるか確かめる(カスタムイベントは入れない方針。Issue 44)
   - [ ] 拾えなければ、アプリ側で記録するかを改めて判断する(ログの設計が要る)
 - 期待効果: 収録すべき語を利用者の検索から見つけられる。
+
+## Issue 106: 注釈コンソール・デッキの「この語義を削除」が、保存済みの語義を消さない
+- 種別: bug
+- 状態: 未着手(2026-10-08 のオーナー判断で、リファクタリングの中では直さなかった)
+- 優先度: P2 ／ Impact: Med ／ Effort: Low
+- 依存: なし
+- 背景・現状: 2026-10-03 のリファクタリング(T0-20)で見つけた。`fields_for` が保存済みの語義に付ける隠しフィールド `id` が `.js-sense` の外に出るため、`sense_cloner_controller.js` の `remove` は保存済みの語義を新しい行とみなして DOM ごと外し、`_destroy` を送らない。画面からは消え、公開前の確認やデッキの件数にも入らないが、**保存しても語義は DB に残る**(system テストで確認。2 語義の語で 2 つ目を削除して保存すると、語義は 2 つのまま)。
+- 内容:
+  - [ ] `id` を `.js-sense` の中に出す(`fields_for` の `include_id: false` と、手で置く hidden)か、JS の探し方を変える
+  - [ ] 保存済みの語義を削除して保存すると DB から消えることを、system テストで固定する(いまのテストは「数えない」ことだけを固定している)
+- 期待効果: 管理画面で消した語義が、保存後に残って公開されない。
+
+## Issue 107: 2026-10 のリファクタリングで見送った項目を検討する
+- 種別: improvement
+- 状態: 未着手(項目ごとに、着手前にオーナーの判断が要る)
+- 優先度: P2 ／ Impact: Low〜Med ／ Effort: 項目による
+- 依存: なし
+- 背景・現状: 2026-10-02〜08 のリファクタリング(将来の AI が誤解しない状態にする。外から見える振る舞いは変えない)では、振る舞いが変わるもの・判断が要るもの・分量に比べて効果が小さいものを実施しなかった。一覧と理由は計画書 §7([`history/refactoring-2026-10/ai-legibility-plan.md`](history/refactoring-2026-10/ai-legibility-plan.md))。§7.1 のうち、オーナーが選んだもの(A04-1・C-01・C-03・J-17・A05-1)と A10-1 の後始末は、台帳の第7群(F-01〜F-11)で直した。
+- 内容:
+  - [ ] 計画書 §7.1(外から見える振る舞いが変わるもの)を見直し、直すものを Issue に切り出す
+  - [ ] §7.2(スキーマ・インフラ・依存。`rails/all` は Issue 95)・§7.4(見た目が変わる CSS)・§7.5(オーナー判断が要るもの)・§7.7(分量・リスクが大きいもの)・§7.8(性能)も同じく見直す
+  - [ ] system テスト `test/system/admin_words_reading_format_test.rb:13` が、main の CI で 1 回だけ Selenium のエラー(`Node with given id does not belong to the document`)で落ちた(2026-10-08。流し直すと通った)。続くようなら、待ち方を直す
+- 期待効果: 監査で見つかった改善の候補を、記録の中に埋もれさせない。
 
 ## Issue 27: config.hosts 設定と canonical ホストへの 301 統一
 - 種別: improvement
