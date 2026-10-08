@@ -301,10 +301,3 @@
  .deck-track { gap: var(--space-5); }
  .deck-nav__dots { order: 3; flex-basis: 100%; }
 }
-
-/* iOS Safari の自動ズーム対策(components.css のフォーム部品と同じ理由)。
- .ann-add__input は input[type="text"] なので、実際には components.css の @media の
- input[type="text"](特異度が高い)だけで 16px になる。ここは同じ値の重ねで、読み込み順には頼っていない */
-@media (max-width: 767px) {
- .ann-add__input { font-size: 16px; }
-}
