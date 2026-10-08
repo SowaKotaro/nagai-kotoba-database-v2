@@ -406,6 +406,22 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_modified
   end
 
+  test "If-Modified-Since だけで問い合わせると、ログイン前は 304、ログイン中はログイン前の版の日時でも 304 にしない" do
+    # 本番は Cloudflare 越しで ETag がブラウザに届かないので、ブラウザは If-Modified-Since だけで問い合わせる
+    word = words(:abc_murder)
+    get word_path(word)
+    last_modified = response.headers["Last-Modified"]
+    assert last_modified
+    get word_path(word), headers: { "If-Modified-Since" => last_modified }
+    assert_response :not_modified
+
+    sign_in_as(admins(:one))
+    get word_path(word), headers: { "If-Modified-Since" => last_modified }
+    assert_response :success
+    assert_select "form.button_to[action=?]", session_path
+    assert_nil response.headers["Last-Modified"]
+  end
+
   test "マスタ名(ジャンル・祖先のジャンル・品詞)を変えると ETag が変わり、新しい名前が返る" do
     word = words(:abc_murder)
     genre = word_senses(:murder).genre
