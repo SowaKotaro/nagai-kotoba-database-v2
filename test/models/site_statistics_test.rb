@@ -105,6 +105,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
 
   test "エンティティ型: 付与された型を件数つきで多い順に返す" do
     assert_equal [ { id: entity_types(:book_title).id, name: "書籍名", count: 1 } ], @stats.entity_types
+    assert_equal 1, @stats.entity_covered
   end
 
   test "母音スペクトル: 拍位置ごとの母音構成(auiie / aee)" do
@@ -168,6 +169,16 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal [ "カ" ], consonants["k"][:chars]
   end
 
+  test "棒の長さ: 頭の子音と特徴ランキングの行に、先頭(最多)の行を 100 とした割合を添える" do
+    # サで始まる語を足して、頭の子音を s が 2・k が 1 にする(fixtures の公開語義は「さつじんじけん」と「カレー」)
+    create_published_word(surface: "サンプルの長い言葉です", reading: "サンプルノナガイコトバデス")
+    stats = SiteStatistics.new
+
+    assert_equal({ "s" => 100.0, "k" => 50.0 }, stats.head_consonants.to_h { |group| [ group[:consonant], group[:bar_percent] ] })
+    # 特徴は 2 つとも 1 件
+    assert_equal [ 100.0, 100.0 ], stats.feature_ranking[:rows].map { |row| row[:bar_percent] }
+  end
+
   test "特徴ランキング: 件数と該当部分つきの実例を返す" do
     ranking = @stats.feature_ranking
     assert_equal 2, ranking[:total]
@@ -191,6 +202,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_empty stats.vowel_transitions[:edges]
     assert_empty stats.head_consonants
     assert_empty stats.feature_ranking[:rows]
+    assert_equal 0, stats.entity_covered
   end
 
   # かなの畳み込み(T0-18): GROUP BY の結果キーを NFKC とカタカナ化で畳んでから合算する。

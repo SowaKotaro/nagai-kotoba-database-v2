@@ -36,10 +36,9 @@
 <% if @stats.head_consonants.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
   <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
-  <%# 棒の長さは先頭行の件数を 100% とし、最多の色も CSS の .stats-bars__row:first-child が付ける。
-      どちらも SiteStatistics#head_consonants が件数の多い順に返すことが前提(並びを変えると
-      棒が 100% を超え、色も別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>
-  <% max_count = @stats.head_consonants.first[:count].to_f %>
+  <%# 棒の長さ(bar_percent)は SiteStatistics#head_consonants が先頭(最多)の行を 100 として返す。最多の色は
+      CSS の .stats-bars__row:first-child が付けるので、件数の多い順に返すことが前提(並びを変えると
+      色が別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>
   <ol class="stats-bars">
     <% @stats.head_consonants.each do |group| %>
       <li class="stats-bars__row">
@@ -49,7 +48,7 @@
         <%= link_to char_facet_words_path(first_char: group[:chars]), class: "stats-bars__bar",
               rel: ("nofollow" if group[:chars].size > 1),
               title: t("stats.index.sound.consonant_title", chars: group[:chars].join("・"), count: group[:count]) do %>
-          <span class="stats-bars__fill" style="--w: <%= (group[:count] / max_count * 100).round(1) %>%"></span>
+          <span class="stats-bars__fill" style="--w: <%= group[:bar_percent] %>%"></span>
         <% end %>
         <span class="stats-bars__count"><%= number_with_delimiter(group[:count]) %></span>
       </li>

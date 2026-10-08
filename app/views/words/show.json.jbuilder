@@ -5,7 +5,7 @@ json.surface @word.surface
 json.url SiteUrl.absolute(word_path(@word))
 json.char_type_pattern @word.char_type_pattern
 
-json.senses @word.word_senses do |sense|
+json.senses @word.ordered_senses do |sense|
   json.reading sense.reading
   json.meaning sense.meaning
   json.reading_length sense.reading_length

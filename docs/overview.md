@@ -255,8 +255,8 @@ bin/rails server
 | 管理の一覧・一括登録 | `check_all`（全選択）・`genre_picker`（一括適用）・`reading_choice`（読みの候補）・`reading_format`（読みの形式） |
 | 登録予定単語 | `decision_list`（語ごとの処理）・`row_select`（行の選択）・`submit_shortcut`（Ctrl+Enter で送る） |
 
-複数のコントローラが使う関数は `controllers/support/`（いまは `senses.js`）。stimulus-loading は `_controller` で終わるファイルしか
-登録しないので、ここに置いた関数はコントローラにならない。fetch は `inline_add_controller.js` の `post()` を使う（`genre_picker` も import している）。
+複数のコントローラが使う関数は `controllers/support/`（いまは `senses.js` と `create_master.js`）。stimulus-loading は `_controller` で終わるファイルしか
+登録しないので、ここに置いた関数はコントローラにならない。マスタのその場追加の fetch は `support/create_master.js` の `createMaster()` を使う（`inline_add` と `genre_picker`）。
 
 ### 独自のイベント
 
