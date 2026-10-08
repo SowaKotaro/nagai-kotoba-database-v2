@@ -115,10 +115,10 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
   end
 
   # 「n / m 完了」も表示中の語義だけを数える。未完了の語義を削除すると、そのカードは完了になる。
-  test "未完了の語義を削除すると、そのカードは完了として数え直される" do
+  test "未完了の語義を削除すると、そのカードは完了として数え直され、保存すると消える" do
     word_senses(:pending).update!(genre: genres(:small_novel), part_of_speech: parts_of_speech(:noun),
                                   entity_type: entity_types(:book_title), word_origins: [ word_origins(:wago) ])
-    @haruhi.word_senses.create!(reading: "ノコッタミカンリョウノゴギ")
+    removed = @haruhi.word_senses.create!(reading: "ノコッタミカンリョウノゴギ")
 
     visit admin_annotation_deck_path
     wait_for_stimulus "deck"
@@ -130,5 +130,13 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
 
     assert_selector "[data-deck-target='complete']", text: "1"
     assert_selector ".deck-dot.is-done", count: 1
+
+    # まとめて保存すると、削除した保存済みの語義は DB からも消える(Issue 106)。
+    # もう 1 語は読みだけで未完了なので、公開前の確認が挟まる
+    click_accepting_confirm(I18n.t("admin.annotation_decks.publish_incomplete_confirm")) do
+      find("input[type=submit][value='#{I18n.t("admin.annotation_decks.save_all", count: 2)}']")
+    end
+    assert_selector ".flash--notice", text: I18n.t("admin.annotation_decks.update.saved", count: 2), wait: 10
+    assert_not WordSense.exists?(removed.id), "削除した語義が DB に残った"
   end
 end

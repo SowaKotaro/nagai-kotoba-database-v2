@@ -1,6 +1,6 @@
 // 注釈フォームの語義(.js-sense)についての判定。publish-guard(1語コンソール)と deck(10件デッキ)が
-// 同じ数え方をするためにここだけで定める。
-// 「表示中」は、「この語義を削除」で隠されていない語義(nested-form が style.display を "none" にする)。
+// 同じ数え方をするためにここだけで定める(sense-cloner も、複製の元を選ぶのに使う)。
+// 「表示中」は、「この語義を削除」で隠されていない語義(sense-cloner が保存済みの語義の style.display を "none" にする)。
 
 export function visibleSenses(root) {
   return [ ...root.querySelectorAll(".js-sense") ].filter((sense) => sense.style.display !== "none")
