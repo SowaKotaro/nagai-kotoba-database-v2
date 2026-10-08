@@ -271,7 +271,7 @@ bin/rails server
 | `sense-completeness:changed` | `sense_completeness` | `deck#recount` |
 | `decision-list:applied`・`decision-list:filtered` | `decision_list` | `row_select#clear` |
 
-Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシュ前に閉じる）と `turbo:frame-render`（`decision_list` が行の手直しから戻ったときにフォーカスを戻す）を受けている。
+Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシュ前に閉じ、`clipboard` が完了の表示を元の文言に戻す）と `turbo:frame-render`（`decision_list` が行の手直しから戻ったときにフォーカスを戻す）を受けている。
 
 ### DOM の約束事
 
