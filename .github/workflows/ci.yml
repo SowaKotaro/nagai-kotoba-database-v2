@@ -88,6 +88,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install packages
+        # apt のミラーで止まることがある(2026-10-08 に 2 回。いつもは 1 分かからないのに 5〜14 分止まった)。
+        # 止まったらジョブの既定の上限(360 分)まで待たずに落とし、流し直せるようにする。
+        timeout-minutes: 5
         run: |
           sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable
           # ランナー同梱の chromedriver が Chrome の版と食い違うと Selenium のネイティブ
