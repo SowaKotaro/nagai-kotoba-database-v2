@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { post } from "controllers/inline_add_controller"
+import { createMaster } from "controllers/support/create_master"
 
 // ジャンルの段階表示ピッカー(ドロップダウンを使わない)。
 //   最初は大分類のみ。大を選ぶと中が出現、中を選ぶと小が出現(選ぶことで隠れた選択肢が登場)。
@@ -200,7 +200,7 @@ export default class extends Controller {
 
   async create(name, parentId) {
     const body = parentId ? { name, parent_id: parentId } : { name }
-    return await post(this.createUrlValue, body, this.labelsValue)
+    return await createMaster(this.createUrlValue, body, this.labelsValue)
   }
 
   activate(container, chip) {

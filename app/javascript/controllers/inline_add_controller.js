@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { createMaster } from "controllers/support/create_master"
 
 // マスタ(語種・品詞・エンティティ)のその場追加。
 // 「＋追加」で入力欄を開き、Enter で JSON POST。返ってきた {id, name} から
@@ -40,7 +41,7 @@ export default class extends Controller {
     this.busy = true
     this.hideMessage()
     try {
-      const result = await post(this.urlValue, { name }, this.labelsValue)
+      const result = await createMaster(this.urlValue, { name }, this.labelsValue)
       if (result.error) {
         this.showMessage(result.error, true)
         this.inputTarget.focus()
@@ -103,35 +104,8 @@ export default class extends Controller {
   }
 }
 
-// マスタ追加の POST。成否と理由を必ず返す({record, existing} または {error})。
-export async function post(url, body, labels) {
-  let response
-  try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrfToken() },
-      body: JSON.stringify(body)
-    })
-  } catch {
-    return { error: labels.network_error }
-  }
-
-  // セッション切れだとログイン画面の HTML が返る(200 だが JSON ではない)。
-  const data = await response.json().catch(() => null)
-  if (!data) return { error: labels.unexpected_response }
-  if (response.ok) return { record: data, existing: Boolean(data.existing) }
-
-  const errors = Array.isArray(data.errors) ? data.errors.join(" / ") : ""
-  return { error: errors || labels.failed.replace("%{status}", response.status) }
-}
-
 function escapeHtml(text) {
   const el = document.createElement("span")
   el.textContent = text
   return el.innerHTML
-}
-
-function csrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  return meta ? meta.content : ""
 }
