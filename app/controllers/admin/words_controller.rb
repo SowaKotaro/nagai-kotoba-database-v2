@@ -118,7 +118,10 @@ class Admin::WordsController < Admin::BaseController
   end
 
   # タグ条件をすべて満たす(AND)語義の Relation。
-  # ジャンルは大・中分類を選んでも配下の小分類へ展開して絞り込む(公開検索と同じ意味論)。
+  # ジャンルは、選んだジャンルと配下の全階層(Genre#self_and_descendant_ids)へ広げて絞り込む。見つからない id は
+  # そのまま渡す(0 件になる)。公開検索(WordSenseSearch#genre_filter_ids)は配下の小分類だけに広げ、見つからない id は
+  # 404 にするので定義は別だが、語義のジャンルは小分類だけ(WordSense#genre_must_be_small)なので、正しいデータでは
+  # 結果は同じ。管理一覧は、検証を通らない語義(大・中分類が付いたもの)も拾えるよう、この定義のままにする(C3-18b)。
   def tag_filtered_senses
     senses = WordSense.all
     if (genre_id = @tag_filters[:genre_id])
