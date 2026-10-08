@@ -9,7 +9,7 @@
 # 種別: クエリ・集計（読み取りとキャッシュ）。
 class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
-  CACHE_KEY = "site_statistics/v4"
+  CACHE_KEY = "site_statistics/v5"
   CACHE_TTL = 1.day
   # 集計は1万語規模で 0.8 秒かかる。期限切れの直後に複数リクエストが重なると全員が
   # 集計を始めてしまい、Puma(1プロセス・GIL)がその間ずっと塞がる。再計算は1本だけに絞る。
@@ -40,7 +40,7 @@ class SiteStatistics
               :scale, :reading_length, :letters, :growth,
               :first_char_counts, :last_char_counts,
               :sound_matrix, :reading_length_distribution, :mora_distribution,
-              :timeline, :genre_map, :origins, :entity_types,
+              :timeline, :genre_map, :origins, :entity_types, :entity_covered,
               :vowel_spectrum, :vowel_transitions, :head_consonants, :feature_ranking
 
   # キャッシュにはこのオブジェクトごと入れるため、初期化時にすべて計算し切る。
@@ -64,6 +64,8 @@ class SiteStatistics
     @genre_map = build_genre_map
     @origins = build_origins
     @entity_types = build_entity_types
+    # ツリーマップの「集計対象」(型が付いた公開語義の数)。語種の origins[:covered] にあたる。
+    @entity_covered = @entity_types.sum { |entity| entity[:count] }
     @vowel_spectrum = build_vowel_spectrum
     @vowel_transitions = build_vowel_transitions
     @head_consonants = build_head_consonants
@@ -337,7 +339,7 @@ class SiteStatistics
     end
   end
 
-  # 読み第1拍の子音ランキング [{ consonant: "k"|nil, chars: [観測された頭文字], count: }]。
+  # 読み第1拍の子音ランキング [{ consonant: "k"|nil, chars: [観測された頭文字], count:, bar_percent: }](多い順)。
   # consonant はヘボン式の頭子音(rhythm_pattern の文法)、nil は母音始まり。
   # 拗音(シャ等)は頭文字1字に畳まれる(シャ→シ)ため、子音は頭文字から導出する。
   def build_head_consonants
@@ -349,8 +351,10 @@ class SiteStatistics
       groups[consonant][:count] += count
       groups[consonant][:chars] << char
     end
-    groups.map { |consonant, group| { consonant: consonant, chars: group[:chars].sort, count: group[:count] } }
-          .sort_by { |group| -group[:count] }
+    with_bar_percent(
+      groups.map { |consonant, group| { consonant: consonant, chars: group[:chars].sort, count: group[:count] } }
+            .sort_by { |group| -group[:count] }
+    )
   end
 
   # ==== 統計ページ §8 言語学的特徴 ==========================================
@@ -365,7 +369,7 @@ class SiteStatistics
     rows = counts.map do |feature_id, count|
       { id: feature_id, name: names[feature_id], count: count, example: feature_example(feature_id) }
     end
-    { total: counts.values.sum, rows: rows.sort_by { |row| -row[:count] } }
+    { total: counts.values.sum, rows: with_bar_percent(rows.sort_by { |row| -row[:count] }) }
   end
 
   # 特徴の実例をひとつ選ぶ(読みが最長の語 = 見本として一番「らしい」語)。
@@ -393,6 +397,12 @@ class SiteStatistics
       key = KanaFold.to_katakana(char)
       folded[key] += count
     end
+  end
+
+  # 棒グラフの行(件数の多い順)に、先頭の行の件数を 100 とした棒の長さ(bar_percent)を添える。
+  def with_bar_percent(rows)
+    top = rows.first&.fetch(:count) || 0
+    rows.map { |row| row.merge(bar_percent: percent(row[:count], top)) }
   end
 
   def percent(part, total)

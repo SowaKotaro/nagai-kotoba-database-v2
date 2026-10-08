@@ -35,11 +35,10 @@
 <% if @stats.entity_types.any? %>
   <h3 class="stats-subheading"><%= t("stats.index.origins.entity_heading") %></h3>
   <p class="stats-section__lead"><%= t("stats.index.origins.entity_lead") %></p>
-  <%# 下の「集計対象」は、語種は SiteStatistics の covered を使うが、こちらはビューで件数を合計している %>
   <div class="entity-treemap">
     <% stats_entity_treemap(@stats.entity_types).each do |rect| %>
       <%= render "entity_cell", rect: rect %>
     <% end %>
   </div>
-  <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.entity_types.sum { |entity| entity[:count] })) %></p>
+  <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.entity_covered)) %></p>
 <% end %>
