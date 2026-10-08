@@ -42,7 +42,7 @@
 - 文字種: <%= word.char_type_pattern %>
 - 定義: <%= word_lead_sentence(word) %>
 <% multiple_senses = word.word_senses.size > 1 %>
-<% word.word_senses.each_with_index do |sense, index| %>
+<% word.ordered_senses.each_with_index do |sense, index| %>
 <% if multiple_senses %>
 
 #### 語義<%= index + 1 %>

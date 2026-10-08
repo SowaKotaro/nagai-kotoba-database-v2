@@ -8,7 +8,7 @@ json.words @words do |word|
   json.id word.id
   json.surface word.surface
   json.url SiteUrl.absolute(word_path(word))
-  json.readings word.word_senses.map(&:reading)
+  json.readings word.ordered_senses.map(&:reading)
 end
 
 json.partial! "words/license"
