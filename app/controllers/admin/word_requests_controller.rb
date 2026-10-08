@@ -18,7 +18,7 @@ class Admin::WordRequestsController < Admin::BaseController
     @total_count = pagination.total_count
     @total_pages = pagination.total_pages
     @items = pagination.paginate(scope.includes(:word_request).recent_first).to_a
-    @registered_surfaces = registered_surfaces_for(@items)
+    @registered_item_ids = registered_item_ids_for(@items)
   end
 
   # 選択した語への一括操作。ボタンの commit で分岐する。
@@ -42,12 +42,13 @@ class Admin::WordRequestsController < Admin::BaseController
     scope
   end
 
-  # 「投稿後に収録された語」を一覧で見分けるための集合(取りこぼし防止)。
-  # 照合順序が as_ci のため、ひらがな・カタカナ違いも同じ語として一致する。
-  def registered_surfaces_for(items)
+  # 「投稿後に収録された語」を一覧で見分けるための、収録語と表層形が一致するリクエストの id(取りこぼし防止)。
+  # 突き合わせは DB に任せる。どちらの表層形も照合順序が as_ci なので、ひらがな・カタカナ違いも同じ語として一致する
+  # (収録語の表層形を Ruby で完全一致で引き直すと、かなの種類だけが違う語に印が付かない)。
+  def registered_item_ids_for(items)
     return Set.new if items.empty?
 
-    Word.where(surface: items.map(&:surface)).pluck(:surface).to_set
+    WordRequestItem.where(id: items.map(&:id), surface: Word.select(:surface)).pluck(:id).to_set
   end
 
   # 選択した語の状態(と任意のメモ)をまとめて更新する。

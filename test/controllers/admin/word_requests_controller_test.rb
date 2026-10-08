@@ -25,6 +25,20 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-nav__badge", text: WordRequestItem.pending.count.to_s
   end
 
+  test "かなの種類だけが違うリクエストにも「収録済み」の印が付き、収録されていない語には付かない" do
+    sign_in_as(admins(:one))
+    # 収録語「カレーライス」(fixtures)のひらがな書き
+    WordRequest.create!(ip_address: "203.0.113.11", items_attributes: { "0" => { surface: "かれーらいす" } })
+    get admin_requests_path
+
+    assert_select "tbody tr", text: /かれーらいす/ do
+      assert_select ".admin-requests-table__registered"
+    end
+    assert_select "tbody tr", text: /リクエストされた言葉/ do
+      assert_select ".admin-requests-table__registered", 0
+    end
+  end
+
   test "状態や送信元 IP で絞り込める" do
     sign_in_as(admins(:one))
     @item.update!(status: :rejected)
