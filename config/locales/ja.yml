@@ -404,7 +404,8 @@ ja:
   word_requests:
     closed: "現在、収録リクエストの受付を止めています。ご意見・ご要望はサイト概要の連絡先までお願いします。"
     fields:
-      no: "番号"
+      # 引用符を付けないと、YAML は no を真偽値(false)として読み、キーが "no" にならない
+      "no": "番号"
       surface: "言葉"
       reading: "読み（任意）"
     reading_counter:
