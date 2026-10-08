@@ -12,7 +12,8 @@ if admin_username.present? && admin_password.present?
   admin = Admin.find_or_initialize_by(username: admin_username)
   admin.password = admin_password
   admin.save!
-  puts "管理者を作成/更新しました: #{admin.username}"
+  # ログイン ID は出さない(出力はデプロイのログに残り、リポジトリが公開なので誰でも読める)。
+  puts "管理者を作成/更新しました。"
 else
   puts "管理者の認証情報が未設定のためスキップしました。" \
        "ADMIN_USERNAME / ADMIN_PASSWORD か credentials の admin: を設定してください。"
