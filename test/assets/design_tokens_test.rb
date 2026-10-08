@@ -3,7 +3,7 @@ require "test_helper"
 # 配色トークンの下限(CLAUDE.md / docs/design.md §6・§9)を tokens.css の値から確かめる。
 #   - 文字は最も弱い --text-subtle でも、載りうる面の上で 4.5:1(WCAG AA)
 #   - 選択中の面(--bg-tint)は、置かれる面(--surface)と ΔRGB 19 以上離す
-# 色を変えたら実測する、という作法の取りこぼしを防ぐ(2026-09-23 まで、ダークの --bg-tint は合計の差で 11 だった)。
+# 色を変えたら実測する、という作法の取りこぼしを防ぐ(2026-09-23 まで、ダークの --bg-tint は --surface との差が 7 しかなかった)。
 class DesignTokensTest < ActiveSupport::TestCase
   TOKENS = File.read(Rails.root.join("app/assets/stylesheets/tokens.css"))
 
@@ -55,9 +55,8 @@ class DesignTokensTest < ActiveSupport::TestCase
 
   def rgb(hex) = hex.delete("#").scan(/\h\h/).map { |pair| pair.to_i(16) }
 
-  # いまは差の合計で測っている。docs/design.md §1 の定義(R・G・B の差の最大値)とは違う(既知の問題。
-  # 最大差にするとダークの --bg-tint が 16 で落ちるので、式を直すときは色の判断と一緒に行う)。
-  def delta_rgb(a, b) = rgb(a).zip(rgb(b)).sum { |x, y| (x - y).abs }
+  # docs/design.md §1 の定義(R・G・B それぞれの差の絶対値のうち最大のもの)。
+  def delta_rgb(a, b) = rgb(a).zip(rgb(b)).map { |x, y| (x - y).abs }.max
 
   def contrast(a, b)
     lighter, darker = [ luminance(a), luminance(b) ].sort.reverse
