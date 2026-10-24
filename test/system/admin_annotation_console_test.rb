@@ -249,4 +249,37 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_not WordSense.exists?(removed.id), "削除した語義が DB に残った"
     assert_equal [ word_senses(:pending).id ], @word.word_senses.ids, "1 つ目の語義だけが残るはず"
   end
+
+  # 保存済みの特徴・別表記を × で外して保存すると、DB からも消える。残した行は同じ id のまま更新され、
+  # 新しい行として二重に作られない(id が行の枠の外に出ず、外した行も残した行も新しい行とみなされていた)。
+  test "保存済みの特徴と別表記を × で外して保存すると消え、残した特徴はそのまま残る" do
+    word = words(:abc_murder)
+    sense = word_senses(:murder)
+    removed_feature = word_sense_features(:murder_rendaku)
+    kept_feature = word_sense_features(:murder_jubako)
+    removed_variant = sense.word_sense_variants.create!(surface: "ＡＢＣ殺人事件", reading: sense.reading)
+
+    visit admin_annotation_path(word)
+    wait_for_stimulus "nested-form"
+    assert_selector ".ann-feature", count: 2
+
+    # × は冪等でない操作と同じく、JS の click() で 1 回だけ押す
+    rendaku_row = find(".ann-feature input[name$='[id]'][value='#{removed_feature.id}']", visible: false)
+                  .find(:xpath, "ancestor::div[contains(@class, 'ann-feature')][1]", visible: false)
+    execute_script("arguments[0].click()", rendaku_row.find("button.ann-remove"))
+    variant_row = find(".js-variants input[name$='[id]'][value='#{removed_variant.id}']", visible: false)
+                  .find(:xpath, "ancestor::div[@data-nested-form-item][1]", visible: false)
+    execute_script("arguments[0].click()", variant_row.find("button.ann-remove"))
+    assert_selector ".ann-feature", count: 1
+
+    # 語種が無く未完了なので、保存に確認が挟まる。承認して進める
+    submit = find("input[type=submit][value='#{I18n.t("admin.annotations.save_next")}']")
+    execute_script("window.confirm = () => true; arguments[0].click()", submit)
+    assert_no_selector "h1.ann-word", text: word.surface, wait: 10
+
+    assert_not WordSenseFeature.exists?(removed_feature.id), "外した特徴が DB に残った"
+    assert_not WordSenseVariant.exists?(removed_variant.id), "外した別表記が DB に残った"
+    assert_equal [ kept_feature.id ], sense.word_sense_features.ids, "残した特徴が作り直された"
+    assert_equal 0, sense.word_sense_variants.count, "外した別表記が作り直された"
+  end
 end

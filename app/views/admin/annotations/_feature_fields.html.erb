@@ -9,6 +9,7 @@
   <div class="ann-feature__head">
     <span class="t"><%= t("admin.annotations.feature_no") %></span>
     <%= form.hidden_field :_destroy, data: { nested_form_destroy: "" } %>
+    <%= form.hidden_field :id if form.object.persisted? %>
     <button type="button" class="ann-remove" data-action="nested-form#remove" aria-label="<%= t("admin.annotations.remove") %>">×</button>
   </div>
 
