@@ -129,6 +129,26 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "涼宮", "すずみや", 0 ], [ feature.target, feature.target_reading, feature.target_start ]
   end
 
+  # 保存済みの行の id は、× で外したときに _destroy と一緒に送られるよう、行の枠の中に 1 つだけ出す。
+  # 語義の fields_for の include_id: false が入れ子に引き継がれて id が出ず、外した特徴・別表記が残っていた。
+  test "保存済みの特徴と別表記の id は、行の枠の中に 1 つずつ出る" do
+    word = words(:abc_murder)
+    sense = word_senses(:murder)
+    variant = sense.word_sense_variants.create!(surface: "ＡＢＣ殺人事件", reading: sense.reading)
+    feature_ids = sense.word_sense_features.ids
+
+    get admin_annotation_path(word)
+    assert_response :success
+    feature_ids.each do |id|
+      assert_select ".ann-feature[data-nested-form-item] input[type=hidden][name$='[id]'][value=?]", id.to_s, 1
+    end
+    assert_select ".js-variants > [data-nested-form-item] input[type=hidden][name$='[id]'][value=?]", variant.id.to_s, 1
+    # 枠の外(fields_for の既定の位置)には出さない。数えるのは語義 1 つ + 特徴 + 別表記の分だけ
+    assert_select "form input[type=hidden][name$='[id]']", 1 + feature_ids.size + 1
+    # 新しい行の雛形は id を持たない
+    assert_select "template input[name$='[id]']", 0
+  end
+
   # --- hold: 保留にしてキューから外し、次の未対応へ進む ---
   test "保留にすると状態が保留になりキューから外れ、次の未対応へ進む" do
     patch hold_admin_annotation_path(@word)

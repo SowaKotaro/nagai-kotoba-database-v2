@@ -186,8 +186,11 @@
       <% unless compact %>
         <%= render "admin/annotations/glossary" %>
       <% end %>
+      <%# 特徴・別表記の id も行の枠の中に置く(feature_fields・variant_fields)。include_id: false は親の
+          fields_for :word_senses からも引き継がれるので、明示しておく。引き継がれた結果 id が出ず、
+          × で外した行の _destroy が新しい行として捨てられ、保存しても DB に残っていた %>
       <div data-nested-form-target="container">
-        <%= form.fields_for :word_sense_features do |feature_form| %>
+        <%= form.fields_for :word_sense_features, include_id: false do |feature_form| %>
           <%= render "admin/annotations/feature_fields", form: feature_form, word: word %>
         <% end %>
       </div>
@@ -222,7 +225,7 @@
     <div class="ann-row__label"><%= t("admin.annotations.variants") %></div>
     <div data-controller="nested-form" data-nested-form-placeholder-value="NEW_VARIANT">
       <div class="js-variants" data-nested-form-target="container">
-        <%= form.fields_for :word_sense_variants do |variant_form| %>
+        <%= form.fields_for :word_sense_variants, include_id: false do |variant_form| %>
           <%= render "admin/annotations/variant_fields", form: variant_form %>
         <% end %>
       </div>
