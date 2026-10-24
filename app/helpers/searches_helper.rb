@@ -16,6 +16,13 @@ module SearchesHelper
     }
   end
 
+  # 詳細検索の条件の区画(searches/_section)を開いて描くか。その区画の条件がひとつでも入っていれば開く
+  # (単語一覧の「条件を変える」から来たときや、正規表現の誤りで差し戻したとき)。入っているかの判定は
+  # 単語一覧へ引き継ぐ条件(WordSenseSearch#to_query_params)と同じものを使う。
+  def search_section_open?(search, *keys)
+    search.to_query_params.keys.intersect?(keys)
+  end
+
   # 詳細検索のフォームに欄の無い条件(単語一覧の文字数ちょうど・モーラ数のファセットと、統計の母音のつながり)。
   # 単語一覧の「条件を変える」で来たときに落とさないよう、フォームが hidden で持ち回す。
   def search_carried_conditions(search)
@@ -26,6 +33,7 @@ module SearchesHelper
   # 適用中の検索条件を [ラベル, 値の文字列] の配列で返す(結果ヘッダのチップ表示用)。
   def applied_search_conditions(search)
     conditions = []
+    conditions << [ t("searches.match.condition_label"), t("searches.match.condition_any") ] if search.match_any?
     conditions << [ t("searches.q_label"), search.q ] if search.q.present?
     conditions << [ t("searches.regexp"), search.regexp ] if search.regexp.present?
     if search.reading_length_min || search.reading_length_max

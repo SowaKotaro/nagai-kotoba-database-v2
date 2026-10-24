@@ -17,6 +17,10 @@ class WordSenseSearch
     small_kana_min: :max_small_kana_count,
     chouon_min: :max_chouon_count
   }.freeze
+  # 区画どうしの組み合わせ(match)。既定(パラメータ無し)は「すべてを満たす」(AND)で、"any" のときだけ
+  # 「どれか1つでも満たす」(OR)にする。区画の中の組み合わせ(文字数の下限と上限・音の成分の3つは AND、
+  # 複数選択は OR)はどちらでも変わらない。
+  MATCH_ANY = "any".freeze
   # 複数選択(OR)の条件。詳細検索のフォームからは配列、ファセットのリンクからは単一値で届く。
   LIST_KEYS = %i[genre_id first_char last_char part_of_speech_id entity_type_id word_origin_id linguistic_feature_id].freeze
   # 検索の条件として受け付けるパラメータ。単語一覧(WordsController)と詳細検索(SearchesController)は、
@@ -25,7 +29,7 @@ class WordSenseSearch
   PERMITTED_PARAMS = [
     :q, :regexp, :reading_length_min, :reading_length_max, :reading_length, :mora_count, *SOUND_COUNT_FILTERS.keys,
     :char_type_pattern, :char_type_partial, :char_type_ignore_case, :rhythm_pattern, :vowel_reading, :vowel_transition,
-    *LIST_KEYS, LIST_KEYS.index_with { [] }
+    :match, *LIST_KEYS, LIST_KEYS.index_with { [] }
   ].freeze
 
   def initialize(params)
@@ -35,36 +39,20 @@ class WordSenseSearch
   # 絞り込み済みで並び順を付けた Relation を返す(空条件なら公開全件)。
   # 公開検索なので注釈済み(published)の語義のみを対象にする。
   def results
-    relation = WordSense.published
-    relation = relation.keyword(q) if q.present?
-    # 不正なパターンは条件から外す(SQL エラーにせず、他の条件だけで検索する)。
-    relation = relation.regexp_matching(search_regexp) if search_regexp.present? && regexp_error.nil?
-    relation = relation.reading_length_at_least(reading_length_min) if reading_length_min
-    relation = relation.reading_length_at_most(reading_length_max) if reading_length_max
-    relation = relation.reading_length_is(reading_length) if reading_length
-    relation = relation.mora_count_is(mora_count) if mora_count
-    SOUND_COUNT_FILTERS.each do |key, column|
-      # published が words を join 済みなので、words のカラムに範囲条件を掛けるだけで済む
-      minimum = public_send(key)
-      relation = relation.where(words: { column => minimum.. }) if minimum
-    end
-    relation = relation.first_char_is(first_char) if first_char.present?
-    relation = relation.last_char_is(last_char) if last_char.present?
-    if char_type_pattern.present?
-      relation = relation.char_type_pattern_matching(char_type_pattern,
-                                                     partial: char_type_partial?,
-                                                     case_sensitive: char_type_case_sensitive?)
-    end
-    relation = relation.rhythm_containing(rhythm_pattern) if rhythm_pattern.present?
-    relation = relation.vowel_containing(vowel_pattern_query) if vowel_pattern_query.present?
-    relation = relation.vowel_transition_at(*vowel_transition_path) if vowel_transition_path
-    relation = relation.with_part_of_speech(part_of_speech_id) if part_of_speech_id.present?
-    relation = relation.with_entity_type(entity_type_id) if entity_type_id.present?
-    relation = relation.with_word_origin(word_origin_id) if word_origin_id.present?
-    relation = relation.with_linguistic_feature(linguistic_feature_id) if linguistic_feature_id.present?
-    relation = relation.with_genre_ids(genre_filter_ids) if genre_filter_ids
+    published = WordSense.published
+    relation =
+      if match_any?
+        # OR: 区画ごとに語義の id を選び、その和集合を取る。区画ごとに join が違っても
+        # 「published.where(id: …)」の形に揃えるので、Relation#or で結べる。
+        condition_scopes.map { |scope| published.where(id: scope.call(published).select(:id)) }.reduce(:or)
+      else
+        condition_scopes.reduce(published) { |scoped, scope| scope.call(scoped) }
+      end
     relation.order(:reading, :id)
   end
+
+  # 区画どうしを OR で組むか。条件が2つ以上あるときだけ意味を持つ(1つなら AND と同じ結果)。
+  def match_any? = @params[:match] == MATCH_ANY && condition_scopes.size > 1
 
   # --- フォーム再表示用に、受け取った値をそのまま返すアクセサ ---
   def q = @params[:q].to_s.strip
@@ -146,7 +134,9 @@ class WordSenseSearch
       char_type_pattern: char_type_pattern.presence,
       # トグルは既定と異なる(=有効な)ときだけ引き継ぐ。文字種パターンがある場合に限る。
       char_type_partial: ("1" if char_type_pattern.present? && char_type_partial?),
-      char_type_ignore_case: ("1" if char_type_pattern.present? && !char_type_case_sensitive?)
+      char_type_ignore_case: ("1" if char_type_pattern.present? && !char_type_case_sensitive?),
+      # OR は条件が2つ以上のときだけ引き継ぐ(1つなら AND と同じ結果の URL が別に増えるだけ)
+      match: (MATCH_ANY if match_any?)
     }.compact
   end
 
@@ -228,6 +218,61 @@ class WordSenseSearch
   end
 
   private
+
+  # 指定された条件を、区画ごとに「Relation に条件を掛ける手続き」の配列にする。
+  # 区画の中の組み合わせ(文字数の下限と上限、音の成分の3つは AND)はここで済ませ、
+  # 区画どうしの組み合わせ(AND / OR)は results が決める。
+  def condition_scopes
+    @condition_scopes ||= [
+      (->(scoped) { scoped.keyword(q) } if q.present?),
+      # 不正なパターンは条件から外す(SQL エラーにせず、他の条件だけで検索する)。
+      (->(scoped) { scoped.regexp_matching(search_regexp) } if search_regexp.present? && regexp_error.nil?),
+      reading_length_range_scope,
+      (->(scoped) { scoped.reading_length_is(reading_length) } if reading_length),
+      (->(scoped) { scoped.mora_count_is(mora_count) } if mora_count),
+      sound_count_scope,
+      (->(scoped) { scoped.first_char_is(first_char) } if first_char.present?),
+      (->(scoped) { scoped.last_char_is(last_char) } if last_char.present?),
+      char_type_scope,
+      (->(scoped) { scoped.rhythm_containing(rhythm_pattern) } if rhythm_pattern.present?),
+      (->(scoped) { scoped.vowel_containing(vowel_pattern_query) } if vowel_pattern_query.present?),
+      (->(scoped) { scoped.vowel_transition_at(*vowel_transition_path) } if vowel_transition_path),
+      (->(scoped) { scoped.with_part_of_speech(part_of_speech_id) } if part_of_speech_id.present?),
+      (->(scoped) { scoped.with_entity_type(entity_type_id) } if entity_type_id.present?),
+      (->(scoped) { scoped.with_word_origin(word_origin_id) } if word_origin_id.present?),
+      (->(scoped) { scoped.with_linguistic_feature(linguistic_feature_id) } if linguistic_feature_id.present?),
+      (->(scoped) { scoped.with_genre_ids(genre_filter_ids) } if genre_filter_ids)
+    ].compact
+  end
+
+  # 読みの文字数の下限と上限は、1つの範囲として AND で掛ける。
+  def reading_length_range_scope
+    return unless reading_length_min || reading_length_max
+
+    lambda do |scoped|
+      scoped = scoped.reading_length_at_least(reading_length_min) if reading_length_min
+      scoped = scoped.reading_length_at_most(reading_length_max) if reading_length_max
+      scoped
+    end
+  end
+
+  # 音の成分の3つは「◯つ以上」の同じ形の1区画なので、指定されたものを AND で掛ける。
+  # published が words を join 済みなので、words のカラムに範囲条件を掛けるだけで済む。
+  def sound_count_scope
+    minimums = SOUND_COUNT_FILTERS.filter_map { |key, column| [ column, public_send(key) ] if public_send(key) }
+    return if minimums.empty?
+
+    ->(scoped) { minimums.reduce(scoped) { |narrowed, (column, minimum)| narrowed.where(words: { column => minimum.. }) } }
+  end
+
+  def char_type_scope
+    return if char_type_pattern.blank?
+
+    lambda do |scoped|
+      scoped.char_type_pattern_matching(char_type_pattern, partial: char_type_partial?,
+                                                           case_sensitive: char_type_case_sensitive?)
+    end
+  end
 
   # 正の整数のときだけ値を返す(0・空・非数値は無視)。
   def positive_integer(key)

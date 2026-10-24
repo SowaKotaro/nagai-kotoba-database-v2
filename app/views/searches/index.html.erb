@@ -6,19 +6,34 @@
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("searches.title"), nil ] ] %>
 
 <p class="label-en"><%= t("labels.en.search") %></p>
-<h1 class="page-title"><%= t("searches.title") %></h1>
+<div class="search-head">
+  <h1 class="page-title"><%= t("searches.title") %></h1>
+  <%# 区画どうしの組み合わせ(AND / OR)。見出しと同じ行に置くためフォームの外にあり、form 属性でフォームに結ぶ。
+      チェックボックスを CSS だけでスイッチに見せる(JS が無くても送れる)。オンで match=any(OR)を送り、既定は AND %>
+  <label class="match-switch">
+    <%= check_box_tag :match, WordSenseSearch::MATCH_ANY, @search.match_any?, form: "search-form", role: "switch",
+          class: "match-switch__input visually-hidden", aria: { label: t("searches.match.switch_label") } %>
+    <span class="match-switch__option match-switch__option--all" aria-hidden="true"><%= t("searches.match.all") %></span>
+    <span class="match-switch__track" aria-hidden="true"><span class="match-switch__thumb"></span></span>
+    <span class="match-switch__option match-switch__option--any" aria-hidden="true"><%= t("searches.match.any") %></span>
+  </label>
+</div>
 
-<%= form_with url: search_path, method: :get, data: { turbo_action: "advance" }, class: "search-form" do %>
+<%= form_with url: search_path, method: :get, id: "search-form", class: "search-form",
+      data: { turbo_action: "advance", controller: "fold-count", action: "change->fold-count#sync" } do %>
+  <%# キーワードだけは畳まずに常に出す(いちばん多い使い方。ここだけ入れて Enter で探せる)。
+      ほかの条件は区画ごとに見出しだけへ畳み、条件が入っている区画は開いて描く(_section) %>
   <div class="field">
     <%= label_tag :q, class: "field-legend" do %><%= icon "magnifying_glass" %><%= t("searches.q_label") %><% end %>
-    <%= text_field_tag :q, @search.q %>
+    <%# どのテキスト欄でも Enter で送信できる(フォームの暗黙の送信)。モバイルのキーボードの確定キーも「検索」にする %>
+    <%= text_field_tag :q, @search.q, enterkeyhint: "search" %>
   </div>
 
   <%# 正規表現: 表層形・読みのどちらかに一致すればヒット(MySQL の REGEXP)。
       書き方は畳んだ早見表に逃がす(ホバーでしか読めない tooltip は使わない。design.md §6) %>
-  <div class="field">
-    <%= label_tag :regexp, class: "field-legend" do %><%= icon "code" %><%= t("searches.regexp") %><% end %>
-    <%= text_field_tag :regexp, @search.regexp, placeholder: "^ア.*ン$",
+  <%= render layout: "section", locals: { title: t("searches.regexp"), open: search_section_open?(@search, :regexp) } do %>
+    <%= label_tag :regexp, t("searches.regexp"), class: "visually-hidden" %>
+    <%= text_field_tag :regexp, @search.regexp, placeholder: "^ア.*ン$", enterkeyhint: "search",
           autocomplete: "off", spellcheck: false, aria: { describedby: "regexp-help" } %>
     <details class="field-help" id="regexp-help">
       <summary class="field-help__summary">
@@ -34,143 +49,163 @@
         <p class="field-help__note"><%= t("searches.regexp_help.note") %></p>
       </div>
     </details>
-  </div>
+  <% end %>
 
-  <%# 読みの文字数: 二つまみスライダー(下端は収録基準、上端まで動かすと「以上」。値と文言は reading_length_slider_data) %>
+  <%# 読みの文字数: 二つまみスライダー(下端は収録基準、上端まで動かすと「以上」。値と文言は reading_length_slider_data)。
+      トラックの上に、目盛りごとの公開語義数を棒グラフで敷き、選んだ範囲の棒だけを濃くする(range_slider が付け直す) %>
   <% slider_min, slider_max = WordSense::MIN_READING_LENGTH, SearchesHelper::READING_LENGTH_SLIDER_MAX %>
-  <fieldset class="slider-field">
-    <legend class="field-legend"><%= icon "ruler" %><%= t("searches.reading_length") %></legend>
-    <%= tag.div class: "length-slider", data: reading_length_slider_data do %>
-      <p class="length-slider__message" data-range-slider-target="message"></p>
-      <div class="length-slider__track" data-range-slider-target="track">
-        <input type="range" min="<%= slider_min %>" max="<%= slider_max %>" value="<%= @search.reading_length_min || slider_min %>"
-               class="length-slider__thumb" data-range-slider-target="minThumb"
-               data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_min') %>">
-        <input type="range" min="<%= slider_min %>" max="<%= slider_max %>" value="<%= @search.reading_length_max || slider_max %>"
-               class="length-slider__thumb" data-range-slider-target="maxThumb"
-               data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_max') %>">
-      </div>
-      <%= hidden_field_tag :reading_length_min, @search.reading_length_min, data: { range_slider_target: "minField" } %>
-      <%= hidden_field_tag :reading_length_max, @search.reading_length_max, data: { range_slider_target: "maxField" } %>
-    <% end %>
-  </fieldset>
+  <%= render layout: "section", locals: { title: t("searches.reading_length"),
+        open: search_section_open?(@search, :reading_length_min, :reading_length_max) } do %>
+    <fieldset class="slider-field">
+      <legend class="visually-hidden"><%= t("searches.reading_length") %></legend>
+      <%= tag.div class: "length-slider", data: reading_length_slider_data do %>
+        <p class="length-slider__message" data-range-slider-target="message"></p>
+        <% range_min, range_max = @search.reading_length_min || slider_min, @search.reading_length_max || slider_max %>
+        <div class="length-slider__track" data-range-slider-target="track">
+          <div class="length-slider__histogram" aria-hidden="true" style="--steps: <%= slider_max - slider_min %>">
+            <% @reading_length_histogram.each_with_index do |(length, count), index| %>
+              <span class="length-slider__bar <%= "is-selected" if length.between?(range_min, range_max) %>"
+                    data-range-slider-target="bar" data-value="<%= length %>"
+                    style="--i: <%= index %>; --h: <%= @reading_length_histogram_max.positive? ? (count.to_f / @reading_length_histogram_max).round(3) : 0 %>"></span>
+            <% end %>
+          </div>
+          <input type="range" min="<%= slider_min %>" max="<%= slider_max %>" value="<%= @search.reading_length_min || slider_min %>"
+                 class="length-slider__thumb" data-range-slider-target="minThumb"
+                 data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_min') %>">
+          <input type="range" min="<%= slider_min %>" max="<%= slider_max %>" value="<%= @search.reading_length_max || slider_max %>"
+                 class="length-slider__thumb" data-range-slider-target="maxThumb"
+                 data-action="input->range-slider#input" aria-label="<%= t('searches.reading_length_max') %>">
+        </div>
+        <%= hidden_field_tag :reading_length_min, @search.reading_length_min, data: { range_slider_target: "minField" } %>
+        <%= hidden_field_tag :reading_length_max, @search.reading_length_max, data: { range_slider_target: "maxField" } %>
+      <% end %>
+    </fieldset>
+  <% end %>
 
   <%# 音の成分: 濁点・小書きのかな・長音符をいくつ以上含むか(Issue 92)。
       3つとも「◯つ以上」の同じ形なので1区画にまとめ、読みの長さの隣に置く %>
-  <fieldset class="sound-count-field">
-    <legend class="field-legend"><%= icon "quotes" %><%= t("searches.sound_counts.legend") %></legend>
-    <div class="sound-count-field__rows">
-      <% WordSenseSearch::SOUND_COUNT_FILTERS.each_key do |key| %>
-        <div class="sound-count-field__row">
-          <%= label_tag key, t("searches.sound_counts.#{key}") %>
-          <%= number_field_tag key, @search.public_send(key), min: 1, max: 20, inputmode: "numeric",
-                class: "sound-count-field__input", aria: { describedby: "sound-count-hint" } %>
-          <span class="sound-count-field__unit"><%= t("searches.sound_counts.unit") %></span>
-        </div>
-      <% end %>
-    </div>
-    <p class="field-hint" id="sound-count-hint"><%= t("searches.sound_counts.hint") %></p>
-  </fieldset>
+  <%= render layout: "section", locals: { title: t("searches.sound_counts.legend"),
+        open: search_section_open?(@search, *WordSenseSearch::SOUND_COUNT_FILTERS.keys) } do %>
+    <fieldset class="sound-count-field">
+      <legend class="visually-hidden"><%= t("searches.sound_counts.legend") %></legend>
+      <div class="sound-count-field__rows">
+        <% WordSenseSearch::SOUND_COUNT_FILTERS.each_key do |key| %>
+          <div class="sound-count-field__row">
+            <%= label_tag key, t("searches.sound_counts.#{key}") %>
+            <%= number_field_tag key, @search.public_send(key), min: 1, max: 20, inputmode: "numeric",
+                  class: "sound-count-field__input", aria: { describedby: "sound-count-hint" } %>
+            <span class="sound-count-field__unit"><%= t("searches.sound_counts.unit") %></span>
+          </div>
+        <% end %>
+      </div>
+      <p class="field-hint" id="sound-count-hint"><%= t("searches.sound_counts.hint") %></p>
+    </fieldset>
+  <% end %>
 
-  <%= render "kana_grid", name: "first_char", selected: @search.first_char,
-        legend: t("searches.first_char"), legend_icon: "skip_back" %>
-  <%= render "kana_grid", name: "last_char", selected: @search.last_char,
-        legend: t("searches.last_char"), legend_icon: "skip_forward" %>
+  <%= render layout: "section", locals: { title: t("searches.first_char"), count: @search.first_char.size,
+        open: search_section_open?(@search, :first_char) } do %>
+    <%= render "kana_grid", name: "first_char", selected: @search.first_char, legend: t("searches.first_char"),
+          counts: @first_char_counts, max: @first_char_max %>
+  <% end %>
+  <%= render layout: "section", locals: { title: t("searches.last_char"), count: @search.last_char.size,
+        open: search_section_open?(@search, :last_char) } do %>
+    <%= render "kana_grid", name: "last_char", selected: @search.last_char, legend: t("searches.last_char"),
+          counts: @last_char_counts, max: @last_char_max %>
+  <% end %>
 
-  <%= render "genre_filter" %>
+  <%= render layout: "section", locals: { title: WordSense.human_attribute_name(:genre), count: @search.genre_id.size,
+        open: search_section_open?(@search, :genre_id) } do %>
+    <%= render "genre_filter", selected: @search.genre_id, genres_by_parent: @genres_by_parent, counts: @genre_counts %>
+  <% end %>
 
-  <%= render "check_chips", name: "part_of_speech_id", collection: @parts_of_speech,
-        selected: @search.part_of_speech_id, legend: WordSense.human_attribute_name(:part_of_speech),
-        legend_icon: "article" %>
-  <%= render "check_chips", name: "entity_type_id", collection: @entity_types,
-        selected: @search.entity_type_id, legend: WordSense.human_attribute_name(:entity_type),
-        legend_icon: "cube" %>
-
-  <%= render "check_chips", name: "word_origin_id", collection: @word_origins,
-        selected: @search.word_origin_id, legend: t("searches.word_origin"),
-        legend_icon: "translate" %>
-
-  <%= render "check_chips", name: "linguistic_feature_id", collection: @linguistic_features,
-        selected: @search.linguistic_feature_id, legend: t("searches.linguistic_feature"),
-        legend_icon: "pen_nib" %>
+  <% [ [ "part_of_speech_id", @parts_of_speech, WordSense.human_attribute_name(:part_of_speech) ],
+       [ "entity_type_id", @entity_types, WordSense.human_attribute_name(:entity_type) ],
+       [ "word_origin_id", @word_origins, t("searches.word_origin") ],
+       [ "linguistic_feature_id", @linguistic_features, t("searches.linguistic_feature") ] ].each do |name, collection, title| %>
+    <% selected = @search.public_send(name) %>
+    <%= render layout: "section", locals: { title: title, count: selected.size, open: search_section_open?(@search, name.to_sym) } do %>
+      <%= render "check_chips", name: name, collection: collection, selected: selected, legend: title %>
+    <% end %>
+  <% end %>
 
   <%# 母音パターン検索: 読みをカナで入れると母音の並び(例 ououaa)で押韻検索する %>
-  <div class="field">
-    <%= label_tag :vowel_reading, class: "field-legend" do %><%= icon "music_notes" %><%= t("searches.vowel_pattern") %><% end %>
+  <%= render layout: "section", locals: { title: t("searches.vowel_pattern"), open: search_section_open?(@search, :vowel_reading) } do %>
+    <%= label_tag :vowel_reading, t("searches.vowel_pattern"), class: "visually-hidden" %>
     <%= text_field_tag :vowel_reading, @search.vowel_reading,
-          placeholder: "トウキョウタワー", autocomplete: "off" %>
+          placeholder: "トウキョウタワー", autocomplete: "off", enterkeyhint: "search" %>
     <p class="field-hint"><%= t("searches.vowel_pattern_hint") %></p>
-  </div>
+  <% end %>
 
-  <div class="field">
-    <%= label_tag :rhythm_pattern, class: "field-legend" do %><%= icon "text_aa" %><%= t("searches.rhythm_pattern") %><% end %>
-    <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off" %>
-  </div>
+  <%= render layout: "section", locals: { title: t("searches.rhythm_pattern"), open: search_section_open?(@search, :rhythm_pattern) } do %>
+    <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "visually-hidden" %>
+    <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off", enterkeyhint: "search" %>
+  <% end %>
 
-  <div class="field" data-controller="char-type"
-       data-char-type-lower-value="<%= CharTypePattern::LOWER %>"
-       data-char-type-upper-value="<%= CharTypePattern::UPPER %>">
-    <%= label_tag :char_type_pattern, class: "field-legend" do %><%= icon "keyboard" %><%= t("searches.char_type_pattern") %><% end %>
+  <%= render layout: "section", locals: { title: t("searches.char_type_pattern"), open: search_section_open?(@search, :char_type_pattern) } do %>
+    <div data-controller="char-type"
+         data-char-type-lower-value="<%= CharTypePattern::LOWER %>"
+         data-char-type-upper-value="<%= CharTypePattern::UPPER %>">
 
-    <%# 入力はキーボード風のキー(あ/ア/漢/1/A/a/@)と削除キー(⌫)だけ。手入力は受け付けず、
-        押したキーの文字種が下の表示欄に並ぶ(組み立て中のパターンを見せる読み取り専用の欄)。
-        「a」だけは大文字小文字トグル(Aa)が off のとき「A」に畳まれるので隠す。 %>
-    <div class="char-type-keys">
-      <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
-           CharTypePattern::DIGIT, CharTypePattern::UPPER, CharTypePattern::LOWER,
-           CharTypePattern::OTHER ].each do |char| %>
-        <% lower_key = char == CharTypePattern::LOWER %>
-        <%= tag.button char, type: "button", class: "char-type-key",
-              hidden: (lower_key && !@search.char_type_case_sensitive?),
-              data: { action: "char-type#append", char_type_char_param: char,
-                      char_type_target: ("lowerKey" if lower_key) } %>
-      <% end %>
-      <button type="button" class="char-type-key char-type-key--backspace"
-              data-action="char-type#remove"
-              aria-label="<%= t('searches.char_type_backspace') %>">
-        <%= icon "backspace" %>
-      </button>
-    </div>
-    <%# 先頭に「>」のプロンプト。上のキーを押すと文字種が左に等幅で並ぶ。右端は VSCode 風の
-        切替アイコン(text-aa=大文字小文字, 自作"ab"=完全/部分一致)。塗り(背景)= 厳密側が有効。
-        切り替えた瞬間だけ状態ラベルを 3 秒フェード表示する(ホバーには依存しない)。 %>
-    <div class="char-type-display">
-      <span class="char-type-display__prompt" aria-hidden="true">&gt;</span>
-      <span class="char-type-display__value" data-char-type-target="display"
-            data-placeholder="<%= t('searches.char_type_console_placeholder') %>"><%= @search.char_type_pattern %></span>
-      <span class="char-type-display__flags">
-        <%# 大文字小文字トグル。切り替えを親の char-type へ伝え、「a」キーの表示を連動させる %>
-        <span class="char-type-flag" data-controller="char-type-toggle"
-              data-action="char-type-toggle:changed->char-type#caseSensitivityChanged">
-          <%= hidden_field_tag :char_type_ignore_case, (@search.char_type_case_sensitive? ? "" : "1"),
-                data: { char_type_toggle_target: "input" } %>
-          <button type="button" class="char-type-flag__btn"
-                  data-char-type-toggle-target="button" data-action="char-type-toggle#toggle"
-                  data-title-strict="<%= t('searches.char_type_case_sensitive') %>"
-                  data-title-relaxed="<%= t('searches.char_type_case_insensitive') %>"
-                  aria-pressed="<%= @search.char_type_case_sensitive? %>"
-                  aria-label="<%= @search.char_type_case_sensitive? ? t('searches.char_type_case_sensitive') : t('searches.char_type_case_insensitive') %>">
-            <%= icon "text_aa" %>
-          </button>
-          <span class="char-type-flag__tip" data-char-type-toggle-target="tip" aria-hidden="true"></span>
+      <%# 入力はキーボード風のキー(あ/ア/漢/1/A/a/@)と削除キー(⌫)だけ。手入力は受け付けず、
+          押したキーの文字種が下の表示欄に並ぶ(組み立て中のパターンを見せる読み取り専用の欄)。
+          「a」だけは大文字小文字トグル(Aa)が off のとき「A」に畳まれるので隠す。 %>
+      <div class="char-type-keys">
+        <% [ CharTypePattern::HIRAGANA, CharTypePattern::KATAKANA, CharTypePattern::KANJI,
+             CharTypePattern::DIGIT, CharTypePattern::UPPER, CharTypePattern::LOWER,
+             CharTypePattern::OTHER ].each do |char| %>
+          <% lower_key = char == CharTypePattern::LOWER %>
+          <%= tag.button char, type: "button", class: "char-type-key",
+                hidden: (lower_key && !@search.char_type_case_sensitive?),
+                data: { action: "char-type#append", char_type_char_param: char,
+                        char_type_target: ("lowerKey" if lower_key) } %>
+        <% end %>
+        <button type="button" class="char-type-key char-type-key--backspace"
+                data-action="char-type#remove"
+                aria-label="<%= t('searches.char_type_backspace') %>">
+          <%= icon "backspace" %>
+        </button>
+      </div>
+      <%# 先頭に「>」のプロンプト。上のキーを押すと文字種が左に等幅で並ぶ。右端は VSCode 風の
+          切替アイコン(text-aa=大文字小文字, 自作"ab"=完全/部分一致)。塗り(背景)= 厳密側が有効。
+          切り替えた瞬間だけ状態ラベルを 3 秒フェード表示する(ホバーには依存しない)。 %>
+      <div class="char-type-display">
+        <span class="char-type-display__prompt" aria-hidden="true">&gt;</span>
+        <span class="char-type-display__value" data-char-type-target="display"
+              data-placeholder="<%= t('searches.char_type_console_placeholder') %>"><%= @search.char_type_pattern %></span>
+        <span class="char-type-display__flags">
+          <%# 大文字小文字トグル。切り替えを親の char-type へ伝え、「a」キーの表示を連動させる %>
+          <span class="char-type-flag" data-controller="char-type-toggle"
+                data-action="char-type-toggle:changed->char-type#caseSensitivityChanged">
+            <%= hidden_field_tag :char_type_ignore_case, (@search.char_type_case_sensitive? ? "" : "1"),
+                  data: { char_type_toggle_target: "input" } %>
+            <button type="button" class="char-type-flag__btn"
+                    data-char-type-toggle-target="button" data-action="char-type-toggle#toggle"
+                    data-title-strict="<%= t('searches.char_type_case_sensitive') %>"
+                    data-title-relaxed="<%= t('searches.char_type_case_insensitive') %>"
+                    aria-pressed="<%= @search.char_type_case_sensitive? %>"
+                    aria-label="<%= @search.char_type_case_sensitive? ? t('searches.char_type_case_sensitive') : t('searches.char_type_case_insensitive') %>">
+              <%= icon "text_aa" %>
+            </button>
+            <span class="char-type-flag__tip" data-char-type-toggle-target="tip" aria-hidden="true"></span>
+          </span>
+          <span class="char-type-flag" data-controller="char-type-toggle">
+            <%= hidden_field_tag :char_type_partial, (@search.char_type_partial? ? "1" : ""),
+                  data: { char_type_toggle_target: "input" } %>
+            <button type="button" class="char-type-flag__btn"
+                    data-char-type-toggle-target="button" data-action="char-type-toggle#toggle"
+                    data-title-strict="<%= t('searches.char_type_match_exact') %>"
+                    data-title-relaxed="<%= t('searches.char_type_match_partial') %>"
+                    aria-pressed="<%= !@search.char_type_partial? %>"
+                    aria-label="<%= @search.char_type_partial? ? t('searches.char_type_match_partial') : t('searches.char_type_match_exact') %>">
+              <%= icon "quote_ab" %>
+            </button>
+            <span class="char-type-flag__tip" data-char-type-toggle-target="tip" aria-hidden="true"></span>
+          </span>
         </span>
-        <span class="char-type-flag" data-controller="char-type-toggle">
-          <%= hidden_field_tag :char_type_partial, (@search.char_type_partial? ? "1" : ""),
-                data: { char_type_toggle_target: "input" } %>
-          <button type="button" class="char-type-flag__btn"
-                  data-char-type-toggle-target="button" data-action="char-type-toggle#toggle"
-                  data-title-strict="<%= t('searches.char_type_match_exact') %>"
-                  data-title-relaxed="<%= t('searches.char_type_match_partial') %>"
-                  aria-pressed="<%= !@search.char_type_partial? %>"
-                  aria-label="<%= @search.char_type_partial? ? t('searches.char_type_match_partial') : t('searches.char_type_match_exact') %>">
-            <%= icon "quote_ab" %>
-          </button>
-          <span class="char-type-flag__tip" data-char-type-toggle-target="tip" aria-hidden="true"></span>
-        </span>
-      </span>
+      </div>
+      <%= hidden_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
     </div>
-    <%= hidden_field_tag :char_type_pattern, @search.char_type_pattern, data: { char_type_target: "field" } %>
-  </div>
+  <% end %>
 
   <%# フォームに欄の無い条件は hidden で持ち回す(SearchesHelper#search_carried_conditions) %>
   <% search_carried_conditions(@search).each do |key, value| %>

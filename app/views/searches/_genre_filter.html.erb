@@ -1,64 +1,64 @@
-<%# ジャンル階層フィルタ。大分類→中分類の折り畳み(details)で辿る(開閉はブラウザ標準に任せる)。
-    ジャンルが増えても初期表示は大分類の一覧だけに収まり、目的の小分類へ最短で到達できる。
-    チップは genre_id[] のチェックボックスで、任意の階層の節点を複数選べる。
+<%# locals: (selected:, genres_by_parent:, counts:) -%>
+<%# ジャンル階層フィルタ。/genres のハブと同じ組みにする: 大分類の折り畳み(details。開閉はブラウザ標準)の見出しに
+    横棒と公開語義数、開くと中分類ごとに左罫で束ね、小分類を件数つきのチップで並べる。
+    チップは genre_id[] のチェックボックスで、任意の階層の節点(大分類は「◯◯ 全体」)を複数選べる。
     上位と下位を同時に選んだ場合はサーバ側(WordSenseSearch)が下位を優先する。
-    選択済みの節点を含む折り畳みは open で開き、summary に配下の選択数をバッジで出す。 %>
+    公開語義が無い分類は出さない(/genres と同じ GenresHelper#genres_with_published。選んでも必ず 0 件になる)。
+    選択済みの節点を含む大分類は open で開き、見出しに配下の選択数をバッジで出す(選び直すとフォームの fold-count が付け直す)。
+    見出しは区画(_section)の summary が出すので、legend は見た目から隠す。 %>
 <fieldset class="chips-field">
-  <legend class="field-legend"><%= icon "tag" %><%= WordSense.human_attribute_name(:genre) %></legend>
+  <legend class="visually-hidden"><%= WordSense.human_attribute_name(:genre) %></legend>
 
-  <% selected = @search.genre_id %>
-  <% roots = @genres_by_parent[nil] || [] %>
-  <div class="genre-filter" data-controller="genre-filter" data-action="change->genre-filter#sync">
-    <%# ジャンル1,131件のチップ描画がこのページの最大のコスト(実測 192ms)。
-        中身は「マスタの状態」と「選択中のジャンル」だけで決まるので、その2つを鍵にして
+  <div class="genre-filter">
+    <%# ジャンルのチップ描画がこのページの最大のコスト(1,131件のころの実測 192ms)。
+        中身は「マスタの状態」「公開語義数」「選択中のジャンル」だけで決まるので、その3つを鍵にして
         フラグメントキャッシュに載せる。条件なしで開く大多数の閲覧は同じ1本を引く。
-        マスタの改名・追加・削除は cache_key_with_version(件数と最終更新)が拾う。 %>
-    <% cache [ :search_genre_filter, Genre.all.cache_key_with_version, selected.sort ] do %>
-    <% roots.each do |large| %>
-      <% mediums = @genres_by_parent[large.id] || [] %>
-      <% smalls_by_medium = mediums.to_h { |medium| [ medium, @genres_by_parent[medium.id] || [] ] } %>
-      <% large_count = (([ large ] + mediums + smalls_by_medium.values.flatten).map { |genre| genre.id.to_s } & selected).size %>
-      <details class="genre-fold" data-genre-filter-target="fold" <%= "open" if large_count.positive? %>>
-        <summary class="genre-fold__summary">
-          <%= icon "caret_down", "genre-fold__caret" %>
-          <span><%= large.name %></span>
-          <span class="genre-fold__count" data-genre-filter-target="count"
-                <%= "hidden" if large_count.zero? %>><%= large_count if large_count.positive? %></span>
-        </summary>
-        <div class="genre-fold__body">
-          <div class="genre-filter__level">
+        マスタの改名・追加・削除は cache_key_with_version(件数と最終更新)が、公開語義数の変化は digest が拾う。 %>
+    <% cache [ :search_genre_filter, Genre.all.cache_key_with_version, ActiveSupport::Digest.hexdigest(counts.sort_by { |id, _| id.to_i }.to_s), selected.sort ] do %>
+      <% larges = genres_with_published(nil, genres_by_parent, counts) %>
+      <% large_counts = larges.to_h { |genre| [ genre.id, genre_published_count(genre, genres_by_parent, counts) ] } %>
+      <%# 横棒の幅は /genres と同じ写像(最小〜最大を 20〜100% に写す。RadialChart.percent) %>
+      <% count_min, count_max = large_counts.values.minmax %>
+      <% larges.each do |large| %>
+        <% mediums = genres_with_published(large.id, genres_by_parent, counts) %>
+        <% smalls_by_medium = mediums.to_h { |medium| [ medium, genres_with_published(medium.id, genres_by_parent, counts) ] } %>
+        <% selected_count = (([ large ] + mediums + smalls_by_medium.values.flatten).map { |genre| genre.id.to_s } & selected).size %>
+        <details class="genre-fold genre-filter__fold" data-fold-count-target="fold" <%= "open" if selected_count.positive? %>>
+          <summary class="genre-fold__summary genre-filter__summary">
+            <%= icon "caret_down", "genre-fold__caret" %>
+            <span class="genre-filter__large-name"><%= large.name %></span>
+            <span class="genre-fold__count" data-fold-count-target="count"
+                  <%= "hidden" if selected_count.zero? %>><%= selected_count if selected_count.positive? %></span>
+            <span class="genre-hub__bar" aria-hidden="true"
+                  style="--w: <%= RadialChart.percent(large_counts[large.id], count_min, count_max) %>%"></span>
+            <span class="genre-hub__count mono"><%= large_counts[large.id] %></span>
+          </summary>
+          <div class="genre-fold__body">
             <%# 大分類そのものを条件にするチップ(配下すべてで絞り込む) %>
-            <%= render "genre_chip", genre: large, selected: selected,
-                  label: t("searches.whole_genre", name: large.name) %>
-            <%# 小分類を持たない中分類は折り畳みにせず、ここへチップで並べる %>
-            <%= render partial: "genre_chip", as: :genre, locals: { selected: selected },
-                  collection: smalls_by_medium.select { |_, smalls| smalls.empty? }.keys %>
-          </div>
-
-          <% smalls_by_medium.each do |medium, smalls| %>
-            <% next if smalls.empty? %>
-            <% medium_count = (([ medium ] + smalls).map { |genre| genre.id.to_s } & selected).size %>
-            <details class="genre-fold genre-fold--medium" data-genre-filter-target="fold"
-                     <%= "open" if medium_count.positive? %>>
-              <summary class="genre-fold__summary">
-                <%= icon "caret_down", "genre-fold__caret" %>
-                <span><%= medium.name %></span>
-                <span class="genre-fold__count" data-genre-filter-target="count"
-                      <%= "hidden" if medium_count.zero? %>><%= medium_count if medium_count.positive? %></span>
-              </summary>
-              <div class="genre-fold__body">
+            <div class="genre-filter__level">
+              <%= render "genre_chip", genre: large, selected:, count: large_counts[large.id],
+                    label: t("searches.whole_genre", name: large.name) %>
+            </div>
+            <% smalls_by_medium.each do |medium, smalls| %>
+              <div class="genre-hub__medium">
+                <%# 中分類のチップが束の見出しを兼ねる(/genres の中分類の見出しに当たる) %>
                 <div class="genre-filter__level">
-                  <%= render "genre_chip", genre: medium, selected: selected,
-                        label: t("searches.whole_genre", name: medium.name) %>
-                  <%= render partial: "genre_chip", collection: smalls, as: :genre,
-                        locals: { selected: selected } %>
+                  <%= render "genre_chip", genre: medium, selected:, extra_class: "genre-filter__chip--medium",
+                        count: genre_published_count(medium, genres_by_parent, counts) %>
                 </div>
+                <% if smalls.any? %>
+                  <div class="genre-filter__level">
+                    <% smalls.each do |small| %>
+                      <%= render "genre_chip", genre: small, selected:,
+                            count: genre_published_count(small, genres_by_parent, counts) %>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
-            </details>
-          <% end %>
-        </div>
-      </details>
-    <% end %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
     <% end %>
   </div>
 </fieldset>

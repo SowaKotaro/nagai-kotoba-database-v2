@@ -1,6 +1,10 @@
-<%# ジャンル1件分のチップ(チェックボックス)。
-    locals: genre(対象), selected(選択中idの文字列配列), label(表示名。省略時は genre.name) %>
+<%# locals: (genre:, selected:, count:, label: nil, extra_class: nil) -%>
+<%# ジャンル1件分のチップ(チェックボックス)。/genres のタグと同じく、名前の右に公開語義数を等幅で添える。
+    selected は選択中 id の文字列配列、label は表示名(省略時は genre.name) %>
 <label class="check-chip">
   <%= check_box_tag "genre_id[]", genre.id, selected.include?(genre.id.to_s), id: nil, class: "visually-hidden" %>
-  <span class="check-chip__face"><%= local_assigns[:label] || genre.name %></span>
+  <span class="check-chip__face genre-filter__chip <%= extra_class %>">
+    <span><%= label || genre.name %></span>
+    <span class="genre-hub__count mono"><%= count %></span>
+  </span>
 </label>

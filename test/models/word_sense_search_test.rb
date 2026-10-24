@@ -245,6 +245,32 @@ class WordSenseSearchTest < ActiveSupport::TestCase
     assert_equal [ word_senses(:curry).id ], both
   end
 
+  # --- 区画どうしの組み合わせ(match) ---
+  test "match=any なら区画どうしを OR で組む(区画ごとに join が違う条件どうしでも結べる)" do
+    # キーワードは words と別表記を、言語学的特徴は word_sense_features を引く。AND では両方を満たす語義が無い
+    params = { q: "カレー", linguistic_feature_id: linguistic_features(:rendaku).id }
+    assert_equal [], ids(params)
+    assert_equal [ word_senses(:curry).id, word_senses(:murder).id ].sort, ids(params.merge(match: "any"))
+  end
+
+  test "OR でも区画の中の組み合わせは変わらない(文字数の下限と上限は AND)" do
+    # curry は3文字、murder は7文字。5〜6文字はどちらも満たさないので、先頭文字の分だけが返る
+    assert_equal [ word_senses(:curry).id ], ids(reading_length_min: 5, reading_length_max: 6, first_char: "カ", match: "any")
+  end
+
+  test "OR は条件が2つ以上のときだけ引き継ぎ用のクエリに含め、インデックス許可ファセットにはしない" do
+    # 条件が1つなら AND と同じ結果なので、別の URL を作らない
+    single = WordSenseSearch.new(first_char: "カ", match: "any")
+    assert_equal({ first_char: [ "カ" ] }, single.to_query_params)
+    assert_equal [ "first_char", "カ" ], single.indexable_facet.map(&:to_s)
+
+    search = WordSenseSearch.new(first_char: "カ", last_char: "ん", match: "any")
+    assert_equal "any", search.to_query_params[:match]
+    assert_nil search.indexable_facet
+    # 既知の値("any")以外は AND のまま
+    assert_nil WordSenseSearch.new(first_char: "カ", last_char: "ん", match: "or").to_query_params[:match]
+  end
+
   test "0 や不正な文字数は無視する" do
     assert_equal WordSense.published.pluck(:id).sort, ids(reading_length_min: "0", reading_length_max: "abc")
   end
@@ -374,7 +400,7 @@ class WordSenseSearchTest < ActiveSupport::TestCase
       dakuten_min: "1", small_kana_min: "1", chouon_min: "1", first_char: %w[ア], last_char: %w[ン], genre_id: %w[1],
       part_of_speech_id: %w[1], entity_type_id: %w[1], linguistic_feature_id: %w[1], word_origin_id: %w[1],
       rhythm_pattern: "a", vowel_reading: "ア", vowel_transition: "1-ae",
-      char_type_pattern: "漢", char_type_partial: "1", char_type_ignore_case: "1"
+      char_type_pattern: "漢", char_type_partial: "1", char_type_ignore_case: "1", match: "any"
     }
     permitted = ActionController::Parameters.new(all).permit(*WordSenseSearch::PERMITTED_PARAMS)
 

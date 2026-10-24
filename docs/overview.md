@@ -251,7 +251,7 @@ bin/rails server
 |---|---|
 | 共通（ヘッダー） | `nav_menu`（「検索」のプルダウン）・`nav_drawer`（狭幅のドロワー）・`theme`（ダークモード） |
 | 単語の一覧・詳細 | `auto_submit`（並び替えを選んだら送る。管理の一覧でも使う）・`clipboard`（URL のコピー。管理画面の書き出しでも使う） |
-| 詳細検索 | `genre_filter`（ジャンルの絞り込み）・`range_slider`（読みの文字数）・`char_type`・`char_type_toggle`（文字種） |
+| 詳細検索 | `fold_count`（畳んだ区画・ジャンルの見出しの選択数）・`range_slider`（読みの文字数）・`char_type`・`char_type_toggle`（文字種） |
 | ランキング・統計 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（Plotly）・`vowel_graph`（母音のつながり） |
 | 収録リクエスト | `nested_form`（行の追加と削除）・`reading_counter`（読みの字数） |
 | アノテーション（コンソール・デッキ） | `nested_form`・`sense_cloner`（語義の複製）・`sense_completeness`（必須項目の充足）・`genre_picker`（ジャンルの段階表示）・`inline_add`（マスタのその場追加）・`feature_range`（特徴の該当部分）・`publish_guard`（公開前の確認）・`queue_nav`（キーボード）・`deck`（カード送り） |

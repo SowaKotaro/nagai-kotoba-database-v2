@@ -1264,45 +1264,177 @@ a.tag:hover .genre-hub__count {
   border: 0;
 }
 
-.field-legend {
+/* 詳細検索のキーワードの欄の名前。畳める区画の見出し(.search-section__summary)と同じ大きさ・濃さに揃える
+   (.field label の 13px・--text-muted に負けないよう .search-form から指定する) */
+.search-form .field-legend {
   display: block;
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 16px;
+  color: var(--text);
   margin-bottom: var(--space-3);
 }
 
+/* 詳細検索の見出しの行。右端に区画どうしの組み合わせ(AND / OR)のスイッチを置く */
+.search-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* AND / OR のスイッチ。テーマの切り替え(.theme-toggle__track)と同じ寸法のトラックを、両脇の AND・OR で挟む。
+   どちらも「オン」ではないのでトラックは塗らず、つまみの位置と、効いている側の文字の濃さ(--text)で示す */
+.match-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  padding: var(--space-2) 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.match-switch__option {
+  transition: color var(--transition);
+}
+
+.match-switch__input:not(:checked) ~ .match-switch__option--all,
+.match-switch__input:checked ~ .match-switch__option--any {
+  color: var(--text);
+}
+
+.match-switch__track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  transition: border-color var(--transition);
+}
+
+.match-switch:hover .match-switch__track {
+  border-color: var(--text-subtle);
+}
+
+.match-switch__input:focus-visible ~ .match-switch__track {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.match-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform var(--transition);
+}
+
+.match-switch__input:checked ~ .match-switch__track .match-switch__thumb {
+  transform: translateX(14px);
+}
+
 /* 検索フォームは面を持たない。条件どうしを細罫で仕切るだけにする
-   (全高の7割が単色の面だと、13項目が平坦に流れて目が滑るため)。
+   (全高の7割が単色の面だと、条件が平坦に流れて目が滑るため)。
    内容の幅は50音表の最小幅(セル34px×16列 + すき間4px×15 = 604px)より余裕を持たせる。 */
 .search-form {
   margin: var(--space-5) 0 var(--space-7);
 }
 
-/* 項目(fieldset / .field)同士の間隔。
-   後続の .field / .kana-field 等の margin 指定に負けないよう詳細度を上げている */
-.search-form > fieldset,
+/* 常に出すキーワードの欄。後続の .field の margin 指定に負けないよう詳細度を上げている */
 .search-form > .field {
   margin-bottom: 0;
   padding: var(--space-5) 0;
   border-top: 1px solid var(--border);
 }
 
-/* 狭幅ではカードの余白を詰めて、50音表・チップ群の実効幅を確保する */
+/* 畳める条件の区画(searches/_section)。見出しの行全体を押せるよう、余白は区画ではなく見出しと中身が持つ。
+   既定の三角マーカーは消し、ジャンルの折り畳み(.genre-fold)と同じキャレットで示す */
+.search-form > .search-section {
+  border-top: 1px solid var(--border);
+}
+
+/* 見出しは区画の目印なので、中身の欄やチップ(13〜14px・--text-muted)より一段大きく濃く組む(太字にはしない) */
+.search-section__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
+  list-style: none;
+}
+
+.search-section__summary::-webkit-details-marker {
+  display: none;
+}
+
+.search-section__caret {
+  color: var(--text-muted);
+  transform: rotate(-90deg);
+  transition: transform 0.15s, color var(--transition);
+}
+
+.search-section__summary:hover .search-section__caret {
+  color: var(--text);
+}
+
+.search-section[open] > .search-section__summary .search-section__caret {
+  transform: rotate(0deg);
+}
+
+.search-section__body {
+  padding-bottom: var(--space-5);
+}
+
+/* 狭幅では余白を詰めて、50音表・チップ群の実効幅を確保する(見出しの行は押せる高さ 44px を割らない) */
 @media (max-width: 560px) {
-  .search-form > fieldset,
   .search-form > .field {
     padding: var(--space-4) 0;
   }
+
+  .search-section__summary {
+    padding: var(--space-3) 0;
+  }
+
+  .search-section__body {
+    padding-bottom: var(--space-4);
+  }
 }
 
-/* 送信ボタンと「条件をクリア」を同じ行に。クリアは控えめなテキストリンク */
+/* 送信ボタンと「条件をクリア」を同じ行に。クリアは控えめなテキストリンク。
+   条件の区画を開くとフォームは画面より長くなるので、送信の行だけ画面の下端に貼り付けて、
+   どこまで読み進めても押せるようにする(フォームの終わりまで来たら本来の位置に収まる)。
+   下を流れる条件は地と同じ面で隠し、縁は章の罫が兼ねる(影は付けない。design.md §5.6) */
 .search-actions {
+  position: sticky;
+  bottom: 0;
+  /* フォーム内で z-index を持つ部品(文字種トグルの状態ラベル .char-type-flag__tip の 2)より手前に出す */
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: var(--space-5);
   margin-top: var(--space-6);
-  padding-top: var(--space-5);
+  padding: var(--space-4) 0;
+  background: var(--surface);
   border-top: 1px solid var(--text-muted);
+}
+
+@media (max-width: 560px) {
+  .search-actions {
+    padding: var(--space-3) 0;
+  }
+}
+
+/* Tab で移った先の条件が、貼り付いた送信の行の下に隠れないようにする
+   (行の高さ = ボタン 40px + 上下の余白 + 罫 1px より広く取る) */
+html:has(.search-actions) {
+  scroll-padding-bottom: var(--space-8);
 }
 
 .search-clear {
@@ -1314,7 +1446,7 @@ a.tag:hover .genre-hub__count {
   color: var(--text);
 }
 
-.search-form .field input[type="text"] {
+.search-form input[type="text"] {
   width: 100%;
 }
 
@@ -1571,6 +1703,8 @@ a.tag:hover .genre-hub__count {
 .length-slider__track {
   position: relative;
   height: 36px;
+  /* 上の棒グラフ(.length-slider__histogram の 48px)を、トラックの中心線から上(18px)に収まらない分だけ空ける */
+  margin-top: calc(48px - 18px);
   background-image: linear-gradient(
     to right,
     var(--border-strong) 0, var(--border-strong) var(--from, 0%),
@@ -1580,6 +1714,33 @@ a.tag:hover .genre-hub__count {
   background-size: 100% 2px;
   background-position: 0 center;
   background-repeat: no-repeat;
+}
+
+/* 目盛りごとの公開語義数の棒グラフ。トラックの中心線の上に立て、選んだ範囲の棒だけを --chart で塗る
+   (範囲の外は淡い --border で、分布の形だけを見せる)。棒の中心をつまみの中心(値の位置)に合わせるため、
+   左右をつまみの半径(16px の半分)だけ詰めた箱の中で、i / steps の位置に置く(steps はビューが渡す目盛りの数 - 1) */
+.length-slider__histogram {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 50%;
+  height: 48px;
+  pointer-events: none;
+}
+
+.length-slider__bar {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--i) / var(--steps) * 100%);
+  width: calc(100% / var(--steps) - 2px);
+  height: calc(var(--h) * 100%);
+  transform: translateX(-50%);
+  background: var(--border);
+  transition: background var(--transition);
+}
+
+.length-slider__bar.is-selected {
+  background: var(--chart);
 }
 
 .length-slider__thumb {
@@ -1771,8 +1932,9 @@ a.tag:hover .genre-hub__count {
   transform: rotate(0deg);
 }
 
-/* 畳んだままでも配下の選択数が分かるバッジ */
-.genre-fold__count {
+/* 畳んだままでも配下の選択数が分かるバッジ(条件の区画の見出しも同じ形) */
+.genre-fold__count,
+.search-section__count {
   margin-left: auto;
   padding: 0 8px;
   border-radius: var(--radius-pill);
@@ -1789,23 +1951,49 @@ a.tag:hover .genre-hub__count {
   border-top: 1px solid var(--border);
 }
 
-/* 中分類の折り畳みは左罫のみで、ひとつ下の階層と分かるように */
-.genre-fold--medium {
-  border: none;
-  border-left: 2px solid var(--border-strong);
+/* 詳細検索のジャンル: /genres のハブと同じ組み(大分類の見出しに横棒と件数 .genre-hub__bar・.genre-hub__count、
+   中分類ごとに左罫で束ねる .genre-hub__medium)。選択数のバッジは名前の直後に置き、横棒と件数を右端へ寄せる */
+.genre-filter__summary {
+  padding: var(--space-2) var(--space-3);
 }
 
-.genre-fold--medium[open] {
-  border-left-color: var(--text);
+.genre-filter__large-name {
+  font-size: 15px;
+  color: var(--text);
 }
 
-.genre-fold--medium > .genre-fold__summary {
-  padding: 4px 10px;
+.genre-filter__summary .genre-fold__count {
+  margin-left: 0;
 }
 
-.genre-fold--medium > .genre-fold__body {
-  border-top: none;
-  padding: var(--space-1) 10px var(--space-2);
+.genre-filter__summary .genre-hub__count {
+  min-width: 3em;
+  text-align: right;
+}
+
+.genre-filter .genre-hub__medium {
+  margin-top: var(--space-2);
+}
+
+.genre-hub__medium > .genre-filter__level + .genre-filter__level {
+  margin-top: var(--space-2);
+}
+
+/* チップの名前の右に公開語義数を等幅で添える(/genres のタグ .genre-hub__small と同じ) */
+.genre-filter__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* 中分類のチップは束の見出しを兼ねるので、小分類より一段大きく濃く */
+.genre-filter__chip--medium {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.check-chip input:checked + .genre-filter__chip .genre-hub__count {
+  color: inherit;
 }
 
 /* 適用中の検索条件チップ(単語一覧の絞り込みヘッダで使う) */
