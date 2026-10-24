@@ -85,6 +85,17 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".condition-chip__value", text: I18n.t("searches.sound_counts.at_least", count: 2)
   end
 
+  test "区画どうしを OR で組むと、どれかを満たす語が並び、条件チップに組み合わせが出る" do
+    # カレーライスは「カ」で始まり、殺人事件は連濁を持つ。AND では両方を満たす語が無い
+    conditions = { first_char: "カ", linguistic_feature_id: linguistic_features(:rendaku).id }
+    get words_path(conditions)
+    assert_select "a.entry-row__surface", count: 0
+
+    get words_path(conditions.merge(match: WordSenseSearch::MATCH_ANY))
+    [ words(:curry), words(:abc_murder) ].each { |word| assert_select "a.entry-row__surface[href=?]", word_path(word) }
+    assert_select ".condition-chip__value", text: I18n.t("searches.match.condition_any")
+  end
+
   test "不正な page は1ページ目として扱う" do
     get words_path(page: "-5")
     assert_response :success

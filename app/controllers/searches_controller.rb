@@ -27,6 +27,29 @@ class SearchesController < ApplicationController
     @entity_types = EntityType.order(:id)
     @word_origins = WordOrigin.order(:id)
     @linguistic_features = LinguisticFeature.order(:id)
+    load_published_counts
+  end
+
+  # 選択肢に添える公開語義数。索引(/browse・/genres)と同じ集計(PublishedSenseCounts。1時間キャッシュ)を使う。
+  # 50音表は件数の濃淡(ヒート)で塗るので、表ごとの最大値も渡す(0除算を避けるため 0 で埋める)。
+  def load_published_counts
+    @genre_counts = PublishedSenseCounts.by_genre
+    @first_char_counts = PublishedSenseCounts.by_first_char
+    @first_char_max = @first_char_counts.values.max || 0
+    @last_char_counts = PublishedSenseCounts.by_last_char
+    @last_char_max = @last_char_counts.values.max || 0
+    @reading_length_histogram = reading_length_histogram(PublishedSenseCounts.by_reading_length)
+    @reading_length_histogram_max = @reading_length_histogram.values.max || 0
+  end
+
+  # 読みの文字数のスライダーに敷く度数分布 { 10 => 391, ..., 30 => 4 }。目盛りはスライダーと同じ
+  # (下端は収録基準、上端は SearchesHelper::READING_LENGTH_SLIDER_MAX)。上端は「以上」の意味なので、
+  # 上端の棒には上端より長い語義もまとめて数える。
+  def reading_length_histogram(counts)
+    lowest, highest = WordSense::MIN_READING_LENGTH, SearchesHelper::READING_LENGTH_SLIDER_MAX
+    (lowest..highest).index_with do |length|
+      length == highest ? counts.sum { |key, count| key.to_i >= highest ? count : 0 } : counts[length].to_i
+    end
   end
 
   # 受け付ける条件の正は WordSenseSearch::PERMITTED_PARAMS(単語一覧と同じ集合。一覧の「条件を変える」は

@@ -1,17 +1,23 @@
+<%# locals: (name:, selected:, legend:, counts:, max:) -%>
 <%# 50音表(カタカナ・濁音/半濁音含む)。伝統的な縦書きの並び:
     上から下に「アイウエオ」、右から左に「ア→カ→サ…」。複数選択可のチェックボックス。
-    locals: name(パラメータ名), selected(選択中の配列), legend(見出し), legend_icon(任意) %>
+    name はパラメータ名、selected は選択中の配列。見出しは区画(_section)の summary が出すので、legend は見た目から隠す。
+    索引(/browse)と同じく、公開語義数 counts をセルの濃淡(ヒート)で示し、0 件のセルは淡くする(max は表の最大値)。
+    実数は title で添える(主役は濃淡。行・列の整列を崩さないため数字はセルに書かない) %>
 <fieldset class="kana-field">
-  <legend class="field-legend"><%= icon(legend_icon) if local_assigns[:legend_icon] %><%= legend %></legend>
+  <legend class="visually-hidden"><%= legend %></legend>
   <div class="kana-grid">
     <% KanaRow::TABLE_COLUMNS.each do |column| %>
       <div class="kana-col">
         <% column.each do |kana| %>
           <% if kana %>
-            <label class="kana-cell">
+            <% count = counts[kana].to_i %>
+            <%= tag.label class: [ "kana-cell", count.positive? ? "kana-cell--heat" : "kana-cell--muted" ],
+                  style: ("--fill: #{(count.to_f / max).round(3)}" if count.positive?),
+                  title: t("searches.kana_count_label", char: kana, count: count) do %>
               <%= check_box_tag "#{name}[]", kana, selected.include?(kana), id: nil, class: "visually-hidden" %>
               <span class="kana-cell__face"><%= kana %></span>
-            </label>
+            <% end %>
           <% else %>
             <span class="kana-cell--blank" aria-hidden="true"></span>
           <% end %>

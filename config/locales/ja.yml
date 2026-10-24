@@ -236,6 +236,15 @@ ja:
       exact: "%{min}文字"
       between: "%{min}文字以上%{max}文字以下"
     title: "検索・絞り込み"
+    # 区画どうしの組み合わせ(WordSenseSearch::MATCH_ANY)。見出しの横のスイッチと、単語一覧の条件チップが使う
+    match:
+      all: "AND"
+      any: "OR"
+      switch_label: "条件のどれか1つでも満たせば表示する（OR）"
+      condition_label: "組み合わせ"
+      condition_any: "どれか1つでも満たす（OR）"
+    # 50音表のセルに添える公開語義数(title)
+    kana_count_label: "%{char}：%{count}件"
     vowel_transition: "母音の移り"
     # 検索の条件チップ(SearchesHelper)と、統計の母音グラフで選んだ並び(vowel_graph_controller が %{} を差し込む)の両方が使う
     vowel_transition_value: "%{from}〜%{to}拍目: %{rows}"

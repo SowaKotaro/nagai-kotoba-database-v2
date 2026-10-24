@@ -1,4 +1,5 @@
-# 公開(注釈済み)語義の件数集計。50音索引(/browse)とジャンルのハブ(/genres)が使う。
+# 公開(注釈済み)語義の件数集計。50音索引(/browse)・ジャンルのハブ(/genres)と、
+# 詳細検索(/search)の50音表のヒート・ジャンルの件数・読みの文字数のヒストグラムが使う。
 #
 # どれも「公開語義の全件を GROUP BY して数える」ので、語数に正比例して重くなる
 # (1万語規模で 30〜70ms/本)。中身は導線に添える件数でしかなく、少し古くても表示に
@@ -15,6 +16,9 @@ class PublishedSenseCounts
   class << self
     # 読みの先頭文字ごとの語義数 { "ア" => 12, ... }。
     def by_first_char = fetch(:first_char) { WordSense.published.group(:first_char).count }
+
+    # 読みの末尾文字ごとの語義数 { "ン" => 12, ... }。
+    def by_last_char = fetch(:last_char) { WordSense.published.group(:last_char).count }
 
     # 読みの文字数ごとの語義数 { 12 => 34, ... }。
     def by_reading_length = fetch(:reading_length) { WordSense.published.group(:reading_length).count }

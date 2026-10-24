@@ -16,6 +16,8 @@ class SearchCharTypeTest < ApplicationSystemTestCase
     visit search_path
     wait_for_stimulus("char-type")
     wait_for_stimulus("char-type-toggle")
+    # 文字種の区画は畳んで描かれるので、見出しを押して開く
+    find("summary", text: I18n.t("searches.char_type_pattern")).click
     assert_selector LOWER_KEY, text: "a"
 
     find(".char-type-key", text: "A").click
