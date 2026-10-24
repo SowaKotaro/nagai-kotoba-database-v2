@@ -2,7 +2,7 @@
 <%# まとめて付ける(Issue 37)。指定した項目だけを上書きし、空欄の項目は各語の現状を保つ。規則の正は BulkAnnotation。
     フォームは admin/words/_bulk_form %>
 <details class="bulk-annotation">
-  <summary class="bulk-annotation__summary"><%= t("admin.bulk_annotations.summary") %></summary>
+  <summary class="bulk-annotation__summary"><%= icon "caret_down", "bulk-annotation__caret" %><%= t("admin.bulk_annotations.summary") %></summary>
   <p class="bulk-annotation__hint"><%= t("admin.bulk_annotations.hint") %></p>
 
   <div class="ann-row">

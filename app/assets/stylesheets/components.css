@@ -2535,30 +2535,67 @@ a.tag:hover .genre-hub__count {
 }
 
 /* まとめて付ける(Issue 37)・まとめて外す(Issue 108)。2 つのパネルが同じ部品を使う。
-   パネルは細罫の角丸、中身はコンソールの ann-row/ann-chip を流用 */
-.bulk-annotation {
+   2 つは 1 つの枠に収めて 1px の隙間(罫の色が覗く)で割り、見出しの行は沈めた面の帯にする。
+   開閉はキャレットの向きで示す(ジャンルの折り畳み .genre-fold と同じ)。中身はコンソールの ann-row/ann-chip を流用 */
+.bulk-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
+  overflow: hidden;
   margin-bottom: var(--space-5);
 }
 
+.bulk-annotation {
+  background: var(--surface);
+}
+
+.bulk-annotation[open] {
+  padding-bottom: var(--space-4);
+}
+
+.bulk-annotation > :not(summary) {
+  margin-left: var(--space-5);
+  margin-right: var(--space-5);
+}
+
 .bulk-annotation__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-soft);
   cursor: pointer;
   font-size: 14px;
-  font-weight: 400;
-  color: var(--text-muted);
+  color: var(--text);
+  /* 既定の三角マーカーは消し、キャレットで示す */
+  list-style: none;
 }
 
-.bulk-annotation__summary:hover {
+.bulk-annotation__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bulk-annotation__caret {
+  color: var(--text-subtle);
+  transform: rotate(-90deg);
+  transition: transform 0.15s;
+}
+
+.bulk-annotation__summary:hover .bulk-annotation__caret,
+.bulk-annotation[open] > .bulk-annotation__summary .bulk-annotation__caret {
   color: var(--text);
 }
 
-.bulk-annotation[open] .bulk-annotation__summary {
-  color: var(--text);
+.bulk-annotation[open] > .bulk-annotation__summary {
   border-bottom: 1px solid var(--border);
-  display: block;
-  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.bulk-annotation[open] > .bulk-annotation__summary .bulk-annotation__caret {
+  transform: rotate(0deg);
 }
 
 .bulk-annotation__hint {

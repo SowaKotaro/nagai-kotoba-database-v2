@@ -3,8 +3,8 @@ require "application_system_test_case"
 # 単語の修正の一覧の、まとめて付ける(Issue 37)・まとめて外す(Issue 108)の実機挙動。
 # 全選択(check-all)・テーブル外フォームへの form 属性の紐づけ・送信ボタンの formaction はブラウザでしか検証できない。
 class AdminWordsBulkTest < ApplicationSystemTestCase
-  ANNOTATION_PANEL = "#bulk-form > details:nth-of-type(1)"
-  DETACHMENT_PANEL = "#bulk-form > details:nth-of-type(2)"
+  ANNOTATION_PANEL = "#bulk-form .bulk-panels > details:nth-of-type(1)"
+  DETACHMENT_PANEL = "#bulk-form .bulk-panels > details:nth-of-type(2)"
 
   test "全選択して共通属性をまとめて付け、同じ選択のまま外せる。外す特徴は選択した語に共通するものだけが出る" do
     system_sign_in

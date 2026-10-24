@@ -14,9 +14,12 @@
     <%= hidden_field_tag key, value, id: nil %>
   <% end %>
 
-  <%= render "admin/words/bulk_annotation", word_origins: word_origins, parts_of_speech: parts_of_speech,
-             entity_types: entity_types, linguistic_features: linguistic_features, large_genres: large_genres %>
-  <%= render "admin/words/bulk_detachment", word_origins: word_origins, parts_of_speech: parts_of_speech,
-             entity_types: entity_types, linguistic_features: linguistic_features, large_genres: large_genres,
-             feature_filter: feature_filter %>
+  <%# 2 つのパネルは 1 つの枠に収め、1px の罫で割る(一覧の上の操作パネルだと一目で分かるように) %>
+  <div class="bulk-panels">
+    <%= render "admin/words/bulk_annotation", word_origins: word_origins, parts_of_speech: parts_of_speech,
+               entity_types: entity_types, linguistic_features: linguistic_features, large_genres: large_genres %>
+    <%= render "admin/words/bulk_detachment", word_origins: word_origins, parts_of_speech: parts_of_speech,
+               entity_types: entity_types, linguistic_features: linguistic_features, large_genres: large_genres,
+               feature_filter: feature_filter %>
+  </div>
 <% end %>
