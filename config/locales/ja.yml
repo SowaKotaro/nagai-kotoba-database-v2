@@ -21,7 +21,8 @@ ja:
           no_words: "外す語が選択されていません。"
           no_values: "外すものが選択されていません。"
           target_without_feature: "該当部分で絞るときは、外す言語学的特徴も選んでください。"
-          feature_not_shared: "選択した語のうち %{count} 語には、指定した言語学的特徴が付いていません（%{words}）。特徴は、選択した語すべてに付いているものだけを外せます。"
+          feature_not_shared: "選択した語のうち %{count} 語（%{words}）には、指定した言語学的特徴が付いていません。特徴は、選択した語すべてに付いているものだけを外せます。"
+          feature_target_not_shared: "選択した語のうち %{count} 語（%{words}）には、指定した言語学的特徴が該当部分「%{target}」に付いていません。特徴は、選択した語すべてに付いているものだけを外せます。"
   errors:
     messages:
       blank: "を入力してください"
@@ -32,6 +33,8 @@ ja:
       not_an_integer: "は整数で入力してください"
       in: "は%{count}の範囲に含めてください"
       record_invalid: "バリデーションに失敗しました: %{errors}"
+      # ActiveModel の validate!(BulkDetachment#apply)が投げる ActiveModel::ValidationError の文
+      model_invalid: "バリデーションに失敗しました: %{errors}"
   activerecord:
     models:
       genre: "ジャンル"
@@ -1001,9 +1004,11 @@ ja:
       feature_target: "該当部分（表記）"
       feature_target_placeholder: "空欄なら、その特徴をすべて外す"
       features_hint: "選択した語すべてに付いている特徴だけが出ます。"
-      features_none_selected: "語を選択すると、その語すべてに付いている特徴が出ます。"
+      features_none_selected: "語を選択すると、その語すべてに付いている特徴だけに絞ります。"
       features_none_shared: "選択した語すべてに付いている特徴はありません。"
       surface_separator: "、"
+      surface_omission: "…"
+      surfaces_more: "%{surfaces} など"
       keep: "外さない"
       submit: "選択した語から外す"
       confirm: "選択した語から、指定した値を外します。よろしいですか？"

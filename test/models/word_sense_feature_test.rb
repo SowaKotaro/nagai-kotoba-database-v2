@@ -95,6 +95,16 @@ class WordSenseFeatureTest < ActiveSupport::TestCase
     assert_equal WordSenseFeature.count, WordSenseFeature.matching(linguistic_feature_id: "", target: nil).count
   end
 
+  test "feature_ids_by_word は語ごとに、どの語義に付いた特徴の id も重ねずに返し、特徴の無い語はキーを持たない" do
+    murder = words(:abc_murder)
+    murder.word_senses.create!(reading: "えーびーしーさつじんじけん")
+          .word_sense_features.create!(linguistic_feature: linguistic_features(:rendaku), target: "殺人", target_reading: "さつじん")
+
+    result = WordSenseFeature.feature_ids_by_word([ murder.id, words(:curry).id ])
+    assert_equal [ murder.id ], result.keys
+    assert_equal [ linguistic_features(:rendaku).id, linguistic_features(:jubako).id ].sort, result[murder.id].sort
+  end
+
   # --- 同一文字列が繰り返す語(target_start による出現箇所の区別) ---
 
   test "target_start 未指定なら最初の出現位置に補完される" do

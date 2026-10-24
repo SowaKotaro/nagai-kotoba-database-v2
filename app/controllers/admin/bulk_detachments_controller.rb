@@ -3,15 +3,13 @@ class Admin::BulkDetachmentsController < Admin::BaseController
   # 外したあとも一覧の検索・絞り込み・ページ位置を保つ(word_list_params)。
   include Admin::WordListParams
 
+  # 検証は apply がトランザクションの中で行う(特徴が選んだ語すべてに付いているかを、外す直前に確かめるため)。
   def create
     bulk = BulkDetachment.new(bulk_detachment_params)
-
-    if bulk.valid?
-      result = bulk.apply
-      redirect_to admin_words_path(word_list_params), notice: detached_message(result)
-    else
-      redirect_to admin_words_path(word_list_params), alert: bulk.errors.full_messages.to_sentence
-    end
+    result = bulk.apply
+    redirect_to admin_words_path(word_list_params), notice: detached_message(result)
+  rescue ActiveModel::ValidationError
+    redirect_to admin_words_path(word_list_params), alert: bulk.errors.full_messages.to_sentence
   end
 
   private

@@ -35,6 +35,14 @@ class WordSenseFeature < ApplicationRecord
     relation
   }
 
+  # 語ごとの、語義に付いた特徴の id({ word_id => [linguistic_feature_id, ...] })。特徴の無い語はキーを持たない。
+  # 単語の修正の一覧で、まとめて外す特徴の選択肢を絞る手がかりにする(行を実体化せず id だけを読む)。
+  def self.feature_ids_by_word(word_ids)
+    joins(:word_sense).where(word_senses: { word_id: word_ids })
+                      .distinct.pluck("word_senses.word_id", :linguistic_feature_id)
+                      .group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
+  end
+
   private
 
   # 代表値の焼き直し対象(RefreshesWordMetrics)。

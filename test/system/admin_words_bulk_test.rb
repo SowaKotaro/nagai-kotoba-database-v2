@@ -39,15 +39,21 @@ class AdminWordsBulkTest < ApplicationSystemTestCase
     wait_for_stimulus "check-all"
     wait_for_stimulus "bulk-detachment-features"
     open_details DETACHMENT_PANEL
-    assert_shared_feature_chips [], I18n.t("admin.bulk_detachments.features_none_selected")
+    # 語を選ぶまでは全部の特徴が出る(一覧の絞り込みで選ばれた初期値を、全選択まで残すため)
+    assert_shared_feature_chips LinguisticFeature.all, I18n.t("admin.bulk_detachments.features_none_selected")
 
-    # 特徴(連濁・重箱読み)が付いているのは ABC殺人事件だけ。その語だけを選ぶと両方が出て、
-    # 全選択すると(ほかの語に付いていないので)どちらも消える
+    # 特徴(連濁・重箱読み)が付いているのは ABC殺人事件だけ。その語だけを選ぶと両方だけが出て、選んだ連濁は選ばれたまま残る
+    feature_input = "#{DETACHMENT_PANEL} input[name='bulk_detachment[linguistic_feature_id]']"
+    choose_hidden_input "#{feature_input}[value='#{linguistic_features(:rendaku).id}']"
     murder = words(:abc_murder)
     click_expecting(expect_css: "tbody input[value='#{murder.id}']:checked") { find("tbody input[value='#{murder.id}']") }
-    assert_shared_feature_chips %i[rendaku jubako], I18n.t("admin.bulk_detachments.features_hint")
+    assert_shared_feature_chips linguistic_features(:rendaku, :jubako), I18n.t("admin.bulk_detachments.features_hint")
+    assert_selector "#{feature_input}[value='#{linguistic_features(:rendaku).id}']:checked", visible: false
+
+    # 全選択すると(ほかの語に付いていないので)どちらも消え、選んでいた連濁は「外さない」に戻る(隠れたまま送られない)
     select_all_rows
     assert_shared_feature_chips [], I18n.t("admin.bulk_detachments.features_none_shared")
+    assert_selector "#{feature_input}[value='']:checked", visible: false
 
     choose_hidden_input "#{DETACHMENT_PANEL} input[name='bulk_detachment[entity_type_id]'][value='#{book_title.id}']"
     click_accepting_confirm(I18n.t("admin.bulk_detachments.confirm")) do
@@ -59,9 +65,9 @@ class AdminWordsBulkTest < ApplicationSystemTestCase
 
   private
 
-  # まとめて外すパネルに見えている特徴のチップが、指定した特徴(フィクスチャ名)だけで、案内の文言が出ている
-  def assert_shared_feature_chips(feature_names, status)
-    names = feature_names.map { |name| linguistic_features(name).name }
+  # まとめて外すパネルに見えている特徴のチップが、指定した特徴だけで、案内の文言が出ている
+  def assert_shared_feature_chips(features, status)
+    names = features.map(&:name)
     chips = "#{DETACHMENT_PANEL} label[data-bulk-detachment-features-target=chip]"
     assert_selector chips, count: names.size
     names.each { |name| assert_selector chips, text: name }

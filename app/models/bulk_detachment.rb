@@ -23,8 +23,10 @@ class BulkDetachment
   # 結果の集計。words=何かを外した語の数, removed=外した値の延べ数(語義ごと・特徴の行ごとに数える)。
   Result = Struct.new(:words, :removed, keyword_init: true)
 
-  # 特徴が付いていない語は、この件数まで名指しして知らせる(全件は長くなる)。
+  # 特徴が付いていない語は、この件数まで、この文字数で切って名指しする。エラーはフラッシュ(クッキーのセッション。4KB まで)
+  # に入るので、表層形(255 字まで)を丸ごと並べるとあふれる。
   MISSING_FEATURE_SURFACES_SHOWN = 5
+  MISSING_FEATURE_SURFACE_LENGTH = 20
 
   def word_ids=(values)
     @word_ids = Array(values).map(&:to_i).reject(&:zero?)
@@ -39,10 +41,13 @@ class BulkDetachment
     @feature_target = value.to_s.strip.presence
   end
 
+  # 検証に通らなければ ActiveModel::ValidationError。特徴が選んだ語すべてに付いているかは、外す直前に同じトランザクションの中で確かめ直す
+  # (呼び出し側が先に valid? を見ていても、その後に別のリクエストで外れていれば、一部の語からだけ外すことになるため)。
   def apply
     detached = []
 
     Word.transaction do
+      validate!
       detached.concat(detach_features)
       detached.concat(detach_origins)
       detached.concat(clear_column(:genre_id, genre_ids)) if genre_id.present?
@@ -69,10 +74,13 @@ class BulkDetachment
   def detach_features
     return [] if linguistic_feature_id.blank?
 
+    matching_features.includes(:word_sense).map { |feature| feature.destroy!.word_sense.word_id }
+  end
+
+  # 選んだ語の、指定した特徴(該当部分を添えたらその該当部分)の行。外す行と、選んだ語すべてに付いているかの検証で共有する。
+  def matching_features
     WordSenseFeature.matching(linguistic_feature_id: linguistic_feature_id, target: feature_target)
                     .where(word_sense_id: senses.select(:id))
-                    .includes(:word_sense)
-                    .map { |feature| feature.destroy!.word_sense.word_id }
   end
 
   def detach_origins
@@ -111,15 +119,21 @@ class BulkDetachment
   def feature_shared_by_all_words
     return if linguistic_feature_id.blank? || word_ids.blank?
 
-    holders = WordSenseFeature.matching(linguistic_feature_id: linguistic_feature_id, target: feature_target)
-                              .joins(:word_sense).where(word_senses: { word_id: word_ids })
-                              .distinct.pluck("word_senses.word_id")
-    missing_ids = word_ids.uniq - holders
-    return if missing_ids.empty?
+    # 削除済みなどで無い語の id は数えない(ほかの値を外すときと同じく、無い語は無視する)
+    missing = Word.where(id: word_ids).where.not(id: matching_features.joins(:word_sense).select("word_senses.word_id"))
+    count = missing.count
+    return if count.zero?
 
-    surfaces = Word.where(id: missing_ids).order(:id).limit(MISSING_FEATURE_SURFACES_SHOWN).pluck(:surface)
-    errors.add(:base, :feature_not_shared, count: missing_ids.size,
-                                           words: surfaces.join(I18n.t("admin.bulk_detachments.surface_separator")))
+    errors.add(:base, feature_target ? :feature_target_not_shared : :feature_not_shared,
+               count: count, words: missing_surfaces(missing, count), target: feature_target)
+  end
+
+  def missing_surfaces(missing, count)
+    surfaces = missing.order(:id).limit(MISSING_FEATURE_SURFACES_SHOWN).pluck(:surface).map do |surface|
+      surface.truncate(MISSING_FEATURE_SURFACE_LENGTH, omission: I18n.t("admin.bulk_detachments.surface_omission"))
+    end
+    listed = surfaces.join(I18n.t("admin.bulk_detachments.surface_separator"))
+    count > surfaces.size ? I18n.t("admin.bulk_detachments.surfaces_more", surfaces: listed) : listed
   end
 
   # 該当部分だけを書いて特徴を選び忘れると、何も外さずに終わる(該当部分は特徴の絞り込みでしかない)。

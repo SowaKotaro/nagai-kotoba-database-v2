@@ -80,26 +80,40 @@ class BulkDetachmentTest < ActiveSupport::TestCase
     rendaku = linguistic_features(:rendaku).id
     assert BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: rendaku, feature_target: "殺人").valid?
 
+    # 削除済みなどで無い語の id は数えない
+    assert BulkDetachment.new(word_ids: [ @murder.id, Word.maximum(:id) + 1 ], linguistic_feature_id: rendaku).valid?
+
     mixed = BulkDetachment.new(word_ids: [ @murder.id, @curry.id ], linguistic_feature_id: rendaku)
     assert_not mixed.valid?
-    assert_includes mixed.errors.full_messages.join, "1 語には、指定した言語学的特徴が付いていません（#{@curry.surface}）"
+    assert_includes mixed.errors.full_messages.join, "1 語（#{@curry.surface}）には、指定した言語学的特徴が付いていません"
 
-    # 特徴は付いていても、該当部分が違えば付いていないのと同じ
+    # 特徴は付いていても、該当部分が違えば付いていないのと同じ。文言は該当部分を名指しする
     other_target = BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: rendaku, feature_target: "事件")
     assert_not other_target.valid?
-    assert_includes other_target.errors.full_messages.join, @murder.surface
+    assert_includes other_target.errors.full_messages.join, "1 語（#{@murder.surface}）には、指定した言語学的特徴が該当部分「事件」に付いていません"
   end
 
-  test "特徴が付いていない語は、MISSING_FEATURE_SURFACES_SHOWN 件までを名指しし、件数は全部を数える" do
+  test "特徴が付いていない語は、件数は全部を数え、名指しは決まった件数まで・決まった文字数で切り、省いたら「など」を付ける" do
     shown = BulkDetachment::MISSING_FEATURE_SURFACES_SHOWN
-    words = Array.new(shown + 1) { |i| Word.create!(surface: "特徴の無い語#{i}") }
+    long_surface = "長" * 255
+    words = [ Word.create!(surface: long_surface) ] + Array.new(shown) { |i| Word.create!(surface: "特徴の無い語#{i}") }
     detachment = BulkDetachment.new(word_ids: words.map(&:id), linguistic_feature_id: linguistic_features(:rendaku).id)
 
     assert_not detachment.valid?
     message = detachment.errors.full_messages.join
-    assert_includes message, "#{shown + 1} 語には"
-    assert_includes message, words[shown - 1].surface
+    assert_includes message, "#{shown + 1} 語（"
+    assert_includes message, "#{"長" * (BulkDetachment::MISSING_FEATURE_SURFACE_LENGTH - 1)}…、"
+    assert_includes message, "#{words[shown - 1].surface} など）"
     assert_not_includes message, words[shown].surface
+  end
+
+  test "apply も検証し、通らなければ何も外さずに例外にする" do
+    assert_raises(ActiveModel::ValidationError) do
+      BulkDetachment.new(word_ids: [ @murder.id, @curry.id ], linguistic_feature_id: linguistic_features(:rendaku).id,
+                         entity_type_id: entity_types(:book_title).id).apply
+    end
+    assert_equal 2, @murder_sense.word_sense_features.count
+    assert_equal entity_types(:book_title).id, @murder_sense.reload.entity_type_id
   end
 
   test "途中で失敗したら全体を巻き戻す" do

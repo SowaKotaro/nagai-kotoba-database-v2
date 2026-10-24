@@ -4,12 +4,12 @@ import { Controller } from "@hotwired/stimulus"
 // (admin/words/_bulk_detachment)。付いていない語を含めて外すと、一部の語からだけ外れて、選んだ範囲と結果が食い違うため。
 // - 行のチェックボックスはフォームの外にあり、form 属性で一括フォームに紐づくので、フォームの elements から
 //   data-feature-ids(その語の語義に付いた特徴の id。空白区切り)を持つものを読み、チェックした語の共通部分を求める
-// - 共通部分に無い特徴のチップは、隠して無効にする(無効の入力は送信されない)。選んであった値は残すので、
-//   一覧の絞り込みで選ばれた特徴は、全選択して共通になれば、選ばれたまま現れる
+// - 共通部分に無い特徴のチップは隠す。選んであったチップが隠れるときは「外さない」に戻す(隠れたまま送られないように)
+// - 1 語も選んでいないうちは全部を出す。一覧の特徴の絞り込みで選ばれた初期値を、全選択するまで残すため
 // JS が無いと全部の特徴が出たままになり、付いていない語を含む送信はサーバ(BulkDetachment)がエラーで止める。
-// 行のチェックの変更は change@document で、全選択は check-all が出す check-all:toggled@document で受ける。
+// 行のチェック・全選択の変更は change@document で受ける(全選択のヘッダも、本物の change が document まで届く)。
 export default class extends Controller {
-  static targets = ["chip", "status"]
+  static targets = ["chip", "keep", "status"]
   static values = { hint: String, noneSelected: String, noneShared: String }
 
   connect() {
@@ -21,9 +21,10 @@ export default class extends Controller {
     const shared = this.sharedFeatureIds(selected)
 
     this.chipTargets.forEach((chip) => {
-      const available = shared.has(chip.dataset.recordId)
+      const available = selected.length === 0 || shared.has(chip.dataset.recordId)
+      const input = chip.querySelector("input")
+      if (!available && input.checked) this.keepTarget.querySelector("input").checked = true
       chip.hidden = !available
-      chip.querySelector("input").disabled = !available
     })
 
     this.statusTarget.hidden = false
@@ -43,7 +44,7 @@ export default class extends Controller {
     return Array.from(form.elements).filter((input) => "featureIds" in input.dataset && input.checked)
   }
 
-  // 選択した語すべてに共通する特徴の id。1 語も選んでいなければ空。
+  // 選択した語すべてに共通する特徴の id。
   sharedFeatureIds(boxes) {
     if (boxes.length === 0) return new Set()
 

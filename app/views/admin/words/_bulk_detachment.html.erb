@@ -13,7 +13,7 @@
       <p class="bulk-annotation__hint" hidden data-bulk-detachment-features-target="status"></p>
       <%= render "admin/words/bulk_radio_chips", name: "bulk_detachment[linguistic_feature_id]", records: linguistic_features,
                  blank_label: t("admin.bulk_detachments.keep"), selected: feature_filter[:linguistic_feature_id],
-                 chip_data: { bulk_detachment_features_target: "chip" } %>
+                 chip_data: { bulk_detachment_features_target: "chip" }, blank_data: { bulk_detachment_features_target: "keep" } %>
       <div class="bulk-annotation__fields">
         <label class="bulk-annotation__field">
           <span class="bulk-annotation__field-label"><%= t("admin.bulk_detachments.feature_target") %></span>
