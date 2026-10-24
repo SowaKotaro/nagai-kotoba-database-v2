@@ -1,7 +1,7 @@
 # 管理画面の共通サブナビ(app/views/admin/_nav.html.erb)用ヘルパー(Issue 35)。
 module AdminHelper
   # admin/words のうち登録フロー(3ステップ)に属するアクション。
-  # それ以外(index/edit/update/destroy)は「単語の管理」扱いにする。
+  # それ以外(index/edit/update/destroy)は「単語の修正」扱いにする。
   ADMIN_REGISTER_ACTIONS = %w[new create readings apply_research duplicates].freeze
 
   # 管理画面(Admin::BaseController 配下)かどうか。管理画面の判定はこれ 1 つにする:
@@ -19,6 +19,8 @@ module AdminHelper
     case controller_name
     when "dashboard" then :dashboard
     when "annotations", "annotation_decks" then :annotations
+    # 調査データ(入口)と、そこから入る Claude Code 連携の各画面
+    when "research", "annotation_proposals", "bulk_proposal_approvals" then :research
     when "tags" then :tags
     when "word_requests" then :requests
     when "word_candidates" then :candidates
@@ -32,10 +34,12 @@ module AdminHelper
 
   # 共通ナビとダッシュボードのカードは、どちらもこの並びで出す(2026-09-26 オーナー指定)。
   # 片方だけ並べ替えると同じ作業が画面ごとに違う位置に出るので、並びはここだけで持つ。
+  # 調査データ(Issue 108)は、提案を作ってアノテーションで承認する流れなので、アノテーションの隣に置く。
   def admin_sections
     [
       AdminSection.new(:register, new_admin_word_path, "pencil_simple"),
       AdminSection.new(:annotations, admin_annotations_path, "pen_nib"),
+      AdminSection.new(:research, admin_research_path, "binoculars"),
       AdminSection.new(:candidates, admin_candidates_triage_path, "funnel"),
       AdminSection.new(:words, admin_words_path, "books"),
       AdminSection.new(:tags, admin_tags_path, "tag"),
@@ -67,6 +71,17 @@ module AdminHelper
   # ハードコードせず i18n から一括で渡す(genre-picker / inline-add で共通)。
   def inline_add_labels_json
     t("admin.inline_add.client").to_json
+  end
+
+  # まとめて外すパネルの特徴の行に付ける data(bulk-detachment-features の接続・受けるイベント・文言)。
+  def admin_bulk_detachment_features_data
+    {
+      controller: "bulk-detachment-features",
+      action: "change@document->bulk-detachment-features#refresh",
+      bulk_detachment_features_hint_value: t("admin.bulk_detachments.features_hint"),
+      bulk_detachment_features_none_selected_value: t("admin.bulk_detachments.features_none_selected"),
+      bulk_detachment_features_none_shared_value: t("admin.bulk_detachments.features_none_shared")
+    }
   end
 
   # 単語一覧のジャンル絞り込みセレクトの選択肢([表示名, id] の配列)。

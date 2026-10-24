@@ -1,0 +1,33 @@
+<% content_for :title, t("admin.research.title") %>
+
+<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
+<h1 class="page-title"><%= t("admin.research.title") %></h1>
+<p class="proposal-lead"><%= t("admin.research.lead") %></p>
+
+<%# Claude Code 連携の各画面への入口(Issue 108)。並びは作業の順(書き出す → スキルで調べる → 取り込む → 承認する)。
+    1語だけの再調査(/reannotation)は、コンソールの語ごとの導線から入る %>
+<ul class="admin-dash-grid">
+  <%= render "admin/shared/section_card",
+             path: export_admin_annotation_proposals_path, icon: "code",
+             title: t("admin.annotation_proposals.export.title"),
+             desc: t("admin.research.export.desc"),
+             meta: t("admin.research.export.meta", count: @awaiting_count),
+             pending: @awaiting_count.positive? %>
+  <%= render "admin/shared/section_card",
+             path: export_features_admin_annotation_proposals_path, icon: "text_aa",
+             title: t("admin.annotation_proposals.export_features.title"),
+             desc: t("admin.research.export_features.desc"),
+             meta: t("admin.research.export_features.meta", count: @features_unreviewed_count) %>
+  <%= render "admin/shared/section_card",
+             path: new_admin_annotation_proposal_path, icon: "flow_arrow",
+             title: t("admin.annotation_proposals.new.title"),
+             desc: t("admin.research.import.desc"),
+             meta: t("admin.research.import.meta") %>
+  <%= render "admin/shared/section_card",
+             path: admin_annotations_path(proposed: 1), icon: "list_checks",
+             title: t("admin.annotation_proposals.proposed_queue"),
+             desc: t("admin.research.queue.desc"),
+             meta: t("admin.research.queue.meta", count: @proposed_count),
+             pending: @proposed_count.positive?,
+             sublink: [ t("admin.research.queue.bulk_approval"), admin_bulk_proposal_approval_path ] %>
+</ul>

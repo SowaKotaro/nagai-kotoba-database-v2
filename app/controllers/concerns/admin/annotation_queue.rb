@@ -1,15 +1,16 @@
-# アノテーションのキュー(未対応の語をどの順で辿るか)と、チップ選択に使うマスタ一式。
+# アノテーションのキュー(未対応の語をどの順で辿るか)。チップ選択に使うマスタ一式は Admin::AnnotationChoices。
 # 1語ずつのコンソール(Admin::AnnotationsController)とデッキ
 # (Admin::AnnotationDecksController)で同じ規則を共有するために切り出した。
 # 片方だけ絞り込み・並べ替えの規則が変わると、同じ「提案キュー」を名乗る2画面で
 # 出てくる語が食い違うため、ここを唯一の定義とする。
 module Admin::AnnotationQueue
   extend ActiveSupport::Concern
+  include Admin::AnnotationChoices
 
   # 語1件分の許可属性(Strong Parameters)。語種は多対多(word_origin_ids)、ジャンル/品詞/
   # エンティティは belongs_to の *_id、特徴・別表記はネスト属性。表層形(surface)の訂正も
   # ここで受ける(Issue 36: 編集画面をコンソールへ統合。char_type_pattern は
-  # before_validation で再生成される)。1語コンソールとデッキで同じ集合を許可する。
+  # before_validation で再生成される)。1語コンソール・デッキ・単語の修正(Issue 108)で同じ集合を許可する。
   WORD_ATTRIBUTES = [
     :surface,
     { word_senses_attributes: [
@@ -95,14 +96,5 @@ module Admin::AnnotationQueue
   # リンク/フォームで提案フィルタ・並べ替え・要判断フィルタを保つためのパラメータ。
   def nav_params
     { proposed: proposed_param, sort: queue_sort, review: params[:review].presence }.compact
-  end
-
-  # チップ選択で使うマスタ一式。
-  def load_masters
-    @word_origins = WordOrigin.order(:name)
-    @parts_of_speech = PartOfSpeech.order(:name)
-    @entity_types = EntityType.order(:name)
-    @linguistic_features = LinguisticFeature.order(:name)
-    @large_genres = Genre.large.order(:name)
   end
 end

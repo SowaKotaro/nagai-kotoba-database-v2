@@ -2405,7 +2405,7 @@ a.tag:hover .genre-hub__count {
   z-index: 1;
 }
 
-/* --- 単語の管理一覧(Issue 36): 検索 + 注釈状態タブ + テーブル --- */
+/* --- 単語の修正の一覧(Issue 36・108): 検索 + 注釈状態タブ + テーブル --- */
 .admin-words-toolbar {
   display: flex;
   align-items: baseline;
@@ -2480,10 +2480,17 @@ a.tag:hover .genre-hub__count {
   color: var(--text-subtle);
 }
 
-.admin-words-tag-filter select {
+/* input は type まで書く。後ろのフォームの共通規則(input[type="text"])と詳細度が並ぶと、余白で負けて背が高くなる */
+.admin-words-tag-filter select,
+.admin-words-tag-filter input[type="text"] {
   font-size: 13px;
   padding: 4px 8px;
   max-width: 14em;
+}
+
+/* 特徴の該当部分(文字列)の入力欄。数文字なので、セレクトより短くする */
+.admin-words-tag-filter input[type="text"] {
+  width: 8em;
 }
 
 .admin-words-tag-filter__reset {
@@ -2527,30 +2534,68 @@ a.tag:hover .genre-hub__count {
   margin-bottom: var(--space-3);
 }
 
-/* 一括適用(Issue 37)。パネルは細罫の角丸、中身はコンソールの ann-row/ann-chip を流用 */
-.bulk-annotation {
+/* まとめて付ける(Issue 37)・まとめて外す(Issue 108)。2 つのパネルが同じ部品を使う。
+   2 つは 1 つの枠に収めて 1px の隙間(罫の色が覗く)で割り、見出しの行は沈めた面の帯にする。
+   開閉はキャレットの向きで示す(ジャンルの折り畳み .genre-fold と同じ)。中身はコンソールの ann-row/ann-chip を流用 */
+.bulk-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
+  overflow: hidden;
   margin-bottom: var(--space-5);
 }
 
+.bulk-annotation {
+  background: var(--surface);
+}
+
+.bulk-annotation[open] {
+  padding-bottom: var(--space-4);
+}
+
+.bulk-annotation > :not(summary) {
+  margin-left: var(--space-5);
+  margin-right: var(--space-5);
+}
+
 .bulk-annotation__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-soft);
   cursor: pointer;
   font-size: 14px;
-  font-weight: 400;
-  color: var(--text-muted);
+  color: var(--text);
+  /* 既定の三角マーカーは消し、キャレットで示す */
+  list-style: none;
 }
 
-.bulk-annotation__summary:hover {
+.bulk-annotation__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bulk-annotation__caret {
+  color: var(--text-subtle);
+  transform: rotate(-90deg);
+  transition: transform 0.15s;
+}
+
+.bulk-annotation__summary:hover .bulk-annotation__caret,
+.bulk-annotation[open] > .bulk-annotation__summary .bulk-annotation__caret {
   color: var(--text);
 }
 
-.bulk-annotation[open] .bulk-annotation__summary {
-  color: var(--text);
+.bulk-annotation[open] > .bulk-annotation__summary {
   border-bottom: 1px solid var(--border);
-  display: block;
-  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.bulk-annotation[open] > .bulk-annotation__summary .bulk-annotation__caret {
+  transform: rotate(0deg);
 }
 
 .bulk-annotation__hint {
@@ -2563,6 +2608,30 @@ a.tag:hover .genre-hub__count {
 .bulk-annotation__meaning {
   width: 100%;
   max-width: 34em;
+  font-size: 14px;
+}
+
+/* 特徴の該当部分(表記・読み)の入力。ラベルを上に置いて横に並べる */
+.bulk-annotation__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.bulk-annotation__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bulk-annotation__field-label {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.bulk-annotation__input {
+  width: 14em;
   font-size: 14px;
 }
 
@@ -2583,17 +2652,7 @@ a.tag:hover .genre-hub__count {
   cursor: pointer;
 }
 
-/* Claude Code 連携(Issue 38): 一覧の導線と書き出し/取り込み画面 */
-.admin-words-claude {
-  font-size: 14px;
-  margin-bottom: var(--space-2);
-}
-
-.admin-words-claude .sep {
-  color: var(--text-subtle);
-  margin: 0 var(--space-2);
-}
-
+/* Claude Code 連携(Issue 38): 書き出し/取り込み画面 */
 .proposal-lead {
   font-size: 14px;
   color: var(--text-muted);
@@ -3648,6 +3707,9 @@ textarea {
   .admin-words-search__input,
   .sort-form__select,
   .bulk-annotation__meaning,
+  .bulk-annotation__input,
+  .admin-words-tag-filter select,
+  .admin-words-tag-filter input[type="text"],
   .proposal-limit__input,
   .proposal-json__area,
   .bulk-input,

@@ -2,6 +2,7 @@ require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
 # 一覧で選択した語への共通属性の一括適用(Issue 37)。適用の中身は BulkAnnotationTest で見る。
+# 選択した語の id は、まとめて外すパネルと共有するので名前空間の外(word_ids)で送る。
 class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
   setup do
     sign_in_as(admins(:one))
@@ -13,8 +14,8 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
     filters = { q: "ハルヒ", status: "annotation_pending",
                 genre_id: genres(:large_literature).id, part_of_speech_id: parts_of_speech(:noun).id }
     post admin_bulk_annotation_path, params: filters.merge(
-      bulk_annotation: { word_ids: [ @haruhi.id ], genre_id: genres(:small_novel).id,
-                         part_of_speech_id: parts_of_speech(:noun).id }
+      word_ids: [ @haruhi.id ],
+      bulk_annotation: { genre_id: genres(:small_novel).id, part_of_speech_id: parts_of_speech(:noun).id }
     )
 
     assert_redirected_to admin_words_path(filters)
@@ -30,15 +31,25 @@ class Admin::BulkAnnotationsControllerTest < ActionDispatch::IntegrationTest
     @haruhi.word_senses.create!(reading: "すずみやはるひのゆううつべつぎ")
 
     post admin_bulk_annotation_path, params: {
-      bulk_annotation: { word_ids: [ @haruhi.id, @bermuda.id ], genre_id: genres(:small_novel).id }
+      word_ids: [ @haruhi.id, @bermuda.id ], bulk_annotation: { genre_id: genres(:small_novel).id }
     }
 
     assert_redirected_to admin_words_path
     assert_equal "1 語に適用しました（複数語義のためスキップ 1 語）。", flash[:notice]
   end
 
+  test "該当部分が無く特徴を付けなかった語の数を、適用の件数に添えて知らせる" do
+    post admin_bulk_annotation_path, params: {
+      word_ids: [ @haruhi.id, @bermuda.id ],
+      bulk_annotation: { linguistic_feature_id: linguistic_features(:rendaku).id, feature_target: "ハルヒ" }
+    }
+
+    assert_redirected_to admin_words_path
+    assert_equal "2 語に適用しました。該当部分が表層形か読みに無い 2 語には、特徴を付けていません。", flash[:notice]
+  end
+
   test "適用する属性が無いとエラーを知らせて一覧へ戻す" do
-    post admin_bulk_annotation_path, params: { bulk_annotation: { word_ids: [ @haruhi.id ] } }
+    post admin_bulk_annotation_path, params: { word_ids: [ @haruhi.id ], bulk_annotation: { meaning_template: "" } }
 
     assert_redirected_to admin_words_path
     assert_match "属性", flash[:alert]

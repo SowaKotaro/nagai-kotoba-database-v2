@@ -251,6 +251,21 @@
   background: color-mix(in srgb, var(--danger) 8%, var(--surface));
 }
 
+/* 主ボタンは地が濃いので、文字だけ赤にすると 2.7:1 で読めない。地を赤で塗り、文字は反転色にする
+   (実測: ライト 4.84:1・ダーク 5.90:1。hover は文字色を 15% 混ぜて 5.71:1・6.67:1) */
+.is-admin .btn--primary[data-turbo-confirm],
+.is-admin form[data-turbo-confirm] .btn--primary {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--bg);
+}
+
+.is-admin .btn--primary[data-turbo-confirm]:hover,
+.is-admin form[data-turbo-confirm] .btn--primary:hover {
+  background: color-mix(in srgb, var(--danger) 85%, var(--text));
+  border-color: color-mix(in srgb, var(--danger) 85%, var(--text));
+}
+
 /* ── 押せるものを青で示す ───────────────────────────────────
    管理画面のリンクは「読み物の中のリンク」ではなく操作の入口なので、下線ではなく色で示す */
 .is-admin main a:not(.btn):not(.admin-card__link):not(.tag):not(.chip):not(.genre-path a) {

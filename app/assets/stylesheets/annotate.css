@@ -148,6 +148,9 @@
  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 .ann-chip:hover { background: var(--bg-soft); border-color: var(--text-subtle); color: var(--text); }
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
+ (単語の修正の一覧の「まとめて外す」で、選択した語に共通しない特徴のチップを隠す) */
+.ann-chip[hidden] { display: none; }
 .ann-chip__input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
 .ann-chip:has(.ann-chip__input:checked) { background: var(--text); border-color: var(--text); color: var(--bg); }
 .ann-chip:has(input[type="radio"].ann-chip__input:checked)::before { content: "\25CF"; font-size: 8px; color: currentColor; }

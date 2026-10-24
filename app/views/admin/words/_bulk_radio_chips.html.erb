@@ -1,0 +1,16 @@
+<%# locals: (name:, records:, blank_label:, selected: nil, chip_data: nil, blank_data: nil) -%>
+<%# まとめて付ける・外すパネルの単一選択(エンティティ・品詞・言語学的特徴)。先頭の blank_label(「変更しない」など)が既定。
+    chip_data を渡すと値のチップに data 属性として付け、record_id も添える。blank_data は先頭のチップの data 属性
+    (どちらも JS がチップを選び分ける手がかり) %>
+<div class="ann-chips">
+  <label class="ann-chip" <%= tag.attributes(data: blank_data) if blank_data %>>
+    <%= radio_button_tag name, "", selected.blank?, id: nil, class: "ann-chip__input" %>
+    <%= blank_label %>
+  </label>
+  <% records.each do |record| %>
+    <label class="ann-chip" <%= tag.attributes(data: chip_data.merge(record_id: record.id)) if chip_data %>>
+      <%= radio_button_tag name, record.id, selected.to_i == record.id, id: nil, class: "ann-chip__input" %>
+      <%= record.name %>
+    </label>
+  <% end %>
+</div>

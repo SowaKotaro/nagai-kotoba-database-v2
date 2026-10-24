@@ -20,6 +20,9 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     # 未注釈の残数を「要対応」として表示する
     assert_select ".admin-card__meta--pending > span",
       text: I18n.t("admin.dashboard.sections.annotations.meta", count: Word.unannotated.count)
+    # 調査データのカードは、提案をまだ持たない未注釈の語を数える(Issue 108。フィクスチャでは提案があるのは haruhi だけ)
+    assert_select ".admin-card__meta--pending > span",
+      text: I18n.t("admin.dashboard.sections.research.meta", count: Word.unannotated.count - 1)
   end
 
   test "単語が 1 語も無くても表示でき、注釈の進捗は 0% になる" do

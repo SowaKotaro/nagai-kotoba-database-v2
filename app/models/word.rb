@@ -27,6 +27,9 @@ class Word < ApplicationRecord
   scope :annotated_this_month, -> { annotated.where(annotated_at: Time.current.all_month) }
   # 未承認の提案(Claude の下書き)が付いている語。コンソールの「提案あり」フィルタ用(Issue 38)。
   scope :with_pending_proposal, -> { joins(:annotation_proposal).merge(AnnotationProposal.pending) }
+  # Claude の下調べ(提案)をまだ持たない未注釈の語。調査用データの書き出しが既定で書き出す語で、
+  # 調査データの画面とダッシュボードが「下調べ待ち」として数える(Issue 108)。
+  scope :awaiting_research, -> { unannotated.where.missing(:annotation_proposal) }
 
   # 簡素検索(キーワードのみ): 表層形・読み・別表記の部分一致。ワイルドカードはエスケープする。
   # 一致条件は公開検索(WordSense.keyword)と共有する。片方だけ広げると、管理一覧で

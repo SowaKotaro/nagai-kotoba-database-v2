@@ -10,6 +10,8 @@ class Admin::DashboardController < Admin::BaseController
     # 作業のカードに添える「まだ手を付けていない件数」。キーは admin_sections の key と揃える
     @pending_counts = {
       annotations: @unannotated_count,
+      # Claude の下調べ(提案)をまだ持たない未注釈の語(調査用データの書き出しが既定で書き出す語。Issue 108)
+      research: Word.awaiting_research.count,
       # 登録予定単語のうち、前処理の4段(仕分け〜登録待ち)のどれかにいる語の数(WordCandidate.in_progress)
       candidates: WordCandidate.in_progress.count,
       # 公開側から届いた収録リクエストのうち、まだ手を付けていない件数(Issue 75)

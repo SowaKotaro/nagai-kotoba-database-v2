@@ -43,37 +43,8 @@
       <% nav_params.each do |key, value| %>
         <%= hidden_field_tag key, value %>
       <% end %>
-      <% if @word.errors.any? %>
-        <div class="error-explanation">
-          <h2><%= t("admin.annotations.error_header") %></h2>
-          <ul>
-            <% @word.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-
-      <%# 表層形の訂正(Issue 36: 編集画面をコンソールへ統合)。変更すると保存時に文字種も再生成される %>
-      <div class="ann-surface">
-        <label class="ann-surface__label" for="word_surface"><%= t("admin.annotations.surface") %></label>
-        <%= form.text_area :surface, rows: 1, class: "ann-surface__input", id: "word_surface" %>
-        <span class="ann-surface__note"><%= t("admin.annotations.surface_note") %></span>
-      </div>
-
-      <div data-controller="sense-cloner">
-        <div data-sense-cloner-target="container">
-          <%# 語義の id は sense_fields が語義の枠の中に出す %>
-          <%= form.fields_for :word_senses, include_id: false do |sense_form| %>
-            <%= render "sense_fields", form: sense_form, word: @word %>
-          <% end %>
-        </div>
-
-        <button type="button" class="ann-add-sense" data-action="sense-cloner#add">
-          <%= t("admin.annotations.add_sense") %>
-          <small><%= t("admin.annotations.add_sense_hint") %></small>
-        </button>
-      </div>
+      <%= render "word_fields", form: form, word: @word,
+                 review_features_path: review_features_admin_annotation_path(@word, nav_params) %>
 
       <div class="ann-actionbar">
         <%# スティッキー引き継ぎ(Issue 37): ON にすると直前に保存した語のジャンル・

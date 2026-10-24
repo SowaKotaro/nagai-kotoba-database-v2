@@ -1,105 +1,75 @@
-<%# 選択した語への共通属性の一括適用(Issue 37)。
-    フォームはテーブルの外に置き、行のチェックボックスは form 属性でこのフォームに紐づける。
-    ジャンルの大→中→小ピッカーとチップはコンソール(annotate.css / genre-picker)を流用。 %>
+<%# locals: (word_origins:, parts_of_speech:, entity_types:, linguistic_features:, large_genres:) -%>
+<%# まとめて付ける(Issue 37)。指定した項目だけを上書きし、空欄の項目は各語の現状を保つ。規則の正は BulkAnnotation。
+    フォームは admin/words/_bulk_form %>
 <details class="bulk-annotation">
-  <summary class="bulk-annotation__summary"><%= t("admin.bulk_annotations.summary") %></summary>
+  <summary class="bulk-annotation__summary"><%= icon "caret_down", "bulk-annotation__caret" %><%= t("admin.bulk_annotations.summary") %></summary>
   <p class="bulk-annotation__hint"><%= t("admin.bulk_annotations.hint") %></p>
 
-  <%= form_with url: admin_bulk_annotation_path, method: :post, id: "bulk-annotation-form" do %>
-    <%# 適用後も検索・絞り込み(注釈状態・タグ)・ページ位置を保つ %>
-    <% { q: @query.presence, status: @status, page: (@page if @page > 1) }.merge(@tag_filters).compact.each do |key, value| %>
-      <%= hidden_field_tag key, value %>
-    <% end %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.bulk_annotations.genre") %></div>
+    <%= render "admin/words/bulk_genre_picker", name: "bulk_annotation[genre_id]", large_genres: large_genres %>
+  </div>
 
-    <div class="ann-row">
-      <div class="ann-row__label"><%= t("admin.bulk_annotations.genre") %></div>
-      <div class="ann-genre" data-controller="genre-picker"
-           data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
-           data-genre-picker-create-url-value="<%= admin_genres_path %>"
-           data-genre-picker-labels-value="<%= inline_add_labels_json %>">
-        <%= hidden_field_tag "bulk_annotation[genre_id]", nil, id: nil,
-              class: "js-genre-value", data: { genre_picker_target: "value" } %>
-        <%# js-genre-large / -medium / -small はコンソール(admin/annotations/_sense_fields)と形を揃えた
-            だけで、ここではどこからも参照されていない(あちらではシステムテストのフック) %>
-        <div class="ann-genre__level js-genre-large" data-genre-picker-target="largeLevel">
-          <span class="ann-genre__tag"><%= t("admin.annotations.genre_large") %></span>
-          <div class="ann-chips" data-genre-picker-target="largeChips">
-            <% @large_genres.each do |genre| %>
-              <button type="button" class="ann-chip" data-id="<%= genre.id %>" data-action="genre-picker#pickLarge"><%= genre.name %></button>
-            <% end %>
-          </div>
-        </div>
-        <div class="ann-genre__level js-genre-medium" data-genre-picker-target="mediumLevel" hidden>
-          <span class="ann-genre__tag"><%= t("admin.annotations.genre_medium") %></span>
-          <div class="ann-chips" data-genre-picker-target="mediumChips"></div>
-        </div>
-        <div class="ann-genre__level js-genre-small" data-genre-picker-target="smallLevel" hidden>
-          <span class="ann-genre__tag"><%= t("admin.annotations.genre_small") %></span>
-          <div class="ann-chips" data-genre-picker-target="smallChips"></div>
-        </div>
-      </div>
-    </div>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.bulk_annotations.entity") %></div>
+    <%= render "admin/words/bulk_radio_chips", name: "bulk_annotation[entity_type_id]", records: entity_types,
+               blank_label: t("admin.bulk_annotations.keep") %>
+  </div>
 
-    <div class="ann-row">
-      <div class="ann-row__label"><%= t("admin.bulk_annotations.entity") %></div>
-      <div class="ann-chips">
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.bulk_annotations.pos") %></div>
+    <%= render "admin/words/bulk_radio_chips", name: "bulk_annotation[part_of_speech_id]", records: parts_of_speech,
+               blank_label: t("admin.bulk_annotations.keep") %>
+  </div>
+
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.bulk_annotations.origins") %></div>
+    <div class="ann-chips">
+      <% word_origins.each do |origin| %>
         <label class="ann-chip">
-          <%= radio_button_tag "bulk_annotation[entity_type_id]", "", true, id: nil, class: "ann-chip__input" %>
-          <%= t("admin.bulk_annotations.keep") %>
+          <%= check_box_tag "bulk_annotation[word_origin_ids][]", origin.id, false, id: nil, class: "ann-chip__input" %>
+          <%= origin.name %>
         </label>
-        <% @entity_types.each do |entity| %>
-          <label class="ann-chip">
-            <%= radio_button_tag "bulk_annotation[entity_type_id]", entity.id, false, id: nil, class: "ann-chip__input" %>
-            <%= entity.name %>
-          </label>
-        <% end %>
-      </div>
+      <% end %>
     </div>
+  </div>
 
-    <div class="ann-row">
-      <div class="ann-row__label"><%= t("admin.bulk_annotations.pos") %></div>
-      <div class="ann-chips">
-        <label class="ann-chip">
-          <%= radio_button_tag "bulk_annotation[part_of_speech_id]", "", true, id: nil, class: "ann-chip__input" %>
-          <%= t("admin.bulk_annotations.keep") %>
+  <%# 言語学的特徴(Issue 108)。該当部分の文字列が表層形と読みの両方にある語だけに、表層形の最初の出現で付ける %>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.bulk_annotations.feature") %></div>
+    <div>
+      <%= render "admin/words/bulk_radio_chips", name: "bulk_annotation[linguistic_feature_id]", records: linguistic_features,
+                 blank_label: t("admin.bulk_annotations.feature_keep") %>
+      <div class="bulk-annotation__fields">
+        <label class="bulk-annotation__field">
+          <span class="bulk-annotation__field-label"><%= t("admin.bulk_annotations.feature_target") %></span>
+          <%= text_field_tag "bulk_annotation[feature_target]", nil, id: nil, class: "bulk-annotation__input" %>
         </label>
-        <% @parts_of_speech.each do |pos| %>
-          <label class="ann-chip">
-            <%= radio_button_tag "bulk_annotation[part_of_speech_id]", pos.id, false, id: nil, class: "ann-chip__input" %>
-            <%= pos.name %>
-          </label>
-        <% end %>
+        <label class="bulk-annotation__field">
+          <span class="bulk-annotation__field-label"><%= t("admin.bulk_annotations.feature_target_reading") %></span>
+          <%= text_field_tag "bulk_annotation[feature_target_reading]", nil, id: nil, class: "bulk-annotation__input",
+                placeholder: t("admin.bulk_annotations.feature_target_reading_placeholder") %>
+        </label>
       </div>
+      <p class="bulk-annotation__hint"><%= t("admin.bulk_annotations.feature_hint") %></p>
     </div>
+  </div>
 
-    <div class="ann-row">
-      <div class="ann-row__label"><%= t("admin.bulk_annotations.origins") %></div>
-      <div class="ann-chips">
-        <% @word_origins.each do |origin| %>
-          <label class="ann-chip">
-            <%= check_box_tag "bulk_annotation[word_origin_ids][]", origin.id, false, id: nil, class: "ann-chip__input" %>
-            <%= origin.name %>
-          </label>
-        <% end %>
-      </div>
+  <div class="ann-row">
+    <div class="ann-row__label"><%= t("admin.bulk_annotations.meaning") %></div>
+    <div>
+      <%= text_field_tag "bulk_annotation[meaning_template]", nil, id: nil,
+            class: "bulk-annotation__meaning", placeholder: t("admin.bulk_annotations.meaning_placeholder") %>
     </div>
+  </div>
 
-    <div class="ann-row">
-      <div class="ann-row__label"><%= t("admin.bulk_annotations.meaning") %></div>
-      <div>
-        <%= text_field_tag "bulk_annotation[meaning_template]", nil, id: nil,
-              class: "bulk-annotation__meaning", placeholder: t("admin.bulk_annotations.meaning_placeholder") %>
-      </div>
-    </div>
-
-    <div class="bulk-annotation__actionbar">
-      <%# 注釈済みフラグは選択式・既定 OFF(docs/issues.md 確定事項 9) %>
-      <label class="bulk-annotation__mark">
-        <%= check_box_tag "bulk_annotation[mark_annotated]", "1", false, id: nil %>
-        <%= t("admin.bulk_annotations.mark_annotated") %>
-      </label>
-      <%= submit_tag t("admin.bulk_annotations.submit"), class: "btn btn--primary",
-            data: { turbo_confirm: t("admin.bulk_annotations.confirm") } %>
-    </div>
-  <% end %>
+  <div class="bulk-annotation__actionbar">
+    <%# 注釈済みフラグは選択式・既定 OFF(docs/issues.md 確定事項 9) %>
+    <label class="bulk-annotation__mark">
+      <%= check_box_tag "bulk_annotation[mark_annotated]", "1", false, id: nil %>
+      <%= t("admin.bulk_annotations.mark_annotated") %>
+    </label>
+    <%= submit_tag t("admin.bulk_annotations.submit"), name: nil, class: "btn btn--primary",
+          data: { turbo_confirm: t("admin.bulk_annotations.confirm") } %>
+  </div>
 </details>

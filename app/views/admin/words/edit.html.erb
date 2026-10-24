@@ -1,0 +1,32 @@
+<% content_for :title, t("admin.words.edit.title", surface: @word.surface) %>
+<%# 1語の修正(Issue 108)。注釈フォームの部品はコンソールと共有し(admin/annotations/_word_fields)、
+    コンソールの公開前の確認(publish-guard)・キュー・提案・引き継ぎは持たない。保存しても注釈状態は変わらない %>
+<div class="ann">
+  <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.words.edit.eyebrow") %></span></p>
+  <h1 class="ann-word"><%= @word.surface %></h1>
+  <p class="ann-word-meta">
+    <span><%= t("admin.annotations.char_type") %>　<%= @word.char_type_pattern %></span>
+    <% if @word.annotation_done? %>
+      <span><%= t("admin.words.edit.status_done", date: l(@word.annotated_at.to_date, format: :short)) %></span>
+      <%= link_to t("admin.words.edit.public_page"), word_path(@word) %>
+    <% else %>
+      <%# 未公開の語は、ここで直しても公開されない。公開はコンソールで注釈を終えて保存する %>
+      <span><%= t("admin.words.edit.status_unpublished", status: t("admin.words.index.status_#{@word.annotation_status}")) %></span>
+      <%= link_to t("admin.words.edit.to_console"), admin_annotation_path(@word) %>
+    <% end %>
+  </p>
+
+  <%= form_with model: @word, url: admin_word_path(@word), method: :patch do |form| %>
+    <%# 保存後に、来たときの一覧(検索・絞り込み・ページ)へ戻る %>
+    <% word_list_params.each do |key, value| %>
+      <%= hidden_field_tag key, value, id: nil %>
+    <% end %>
+    <%= render "admin/annotations/word_fields", form: form, word: @word %>
+
+    <div class="ann-actionbar">
+      <%= link_to t("admin.words.edit.back"), admin_words_path(word_list_params), class: "btn" %>
+      <span class="spacer"></span>
+      <%= form.submit t("admin.words.edit.save"), class: "btn btn--primary" %>
+    </div>
+  <% end %>
+</div>
