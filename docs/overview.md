@@ -104,10 +104,12 @@
 |---|---|
 | `/session/new` | 管理者のログイン（`username` ＋ パスワード。§3） |
 | `/admin` | ダッシュボード。収録状況と各画面への入口 |
-| `/admin/words` | 一覧（検索・注釈状態/タグの絞り込み・一括適用・削除） |
+| `/admin/words` | **単語の修正**の一覧（検索・注釈状態/タグ/言語学的特徴と該当部分の絞り込み・まとめて付ける・まとめて外す・削除）。まとめての処理は `/admin/bulk_annotation`（付ける）・`/admin/bulk_detachment`（外す） |
+| `/admin/words/:id/edit` | **1 語の修正**。注釈フォームはコンソールと同じ部品で、保存しても注釈状態（公開）・キュー・提案に触れず、来たときの一覧へ戻る（一覧から開くのは注釈済みの語。未注釈の語はコンソールへ） |
 | `/admin/words/new` | **一括登録（3ステップ）**: 入力（箇条書き）→ 読み → 重複チェック → 登録 |
 | `/admin/annotations` | **アノテーション・コンソール**（1 語集中キュー。保存して次へ）。1 語の再調査用の書き出しは `/admin/annotations/:id/reresearch` |
 | `/admin/annotation_deck` | **アノテーション・デッキ**（複数語をまとめて開き、1 回の送信で保存。既定の語数は `Admin::AnnotationDecksController::DEFAULT_SIZE`） |
+| `/admin/research` | **調査データ**。Claude Code 連携の各画面（下の 2 行と提案キュー `/admin/annotations?proposed=1`）への入口 |
 | `/admin/annotation_proposals/export`・`/export_features`・`/new` | Claude Code 連携。調査用データの書き出し（語・言語学的特徴）と、提案 JSON の取り込み |
 | `/admin/bulk_proposal_approval` | 厳格ゲートを満たす提案の一括承認（プレビュー → 承認・公開） |
 | `/admin/tags` | **タグ統括管理**。マスタ（種別は `TagKind::MODELS`）の一覧・リネーム・削除・統合 |
@@ -116,7 +118,8 @@
 
 - 管理画面は**「しずか」を引き継がない**。HTML は公開側と共有したまま、`body.is-admin` の下で
   トークンと一部のコンポーネントの見た目を上書きする（[`design.md`](design.md) §10）。
-- 単語の編集画面は無い。表層形の訂正も含めてアノテーション・コンソールに統合済み。
+- **新しい語の注釈（付けて公開する）はアノテーション・コンソール、公開済みの語を直すのは単語の修正**（Issue 108）。
+  どちらも注釈フォームの部品（`admin/annotations/_word_fields`・`_sense_fields`）を共有する。
 
 ## 6. コードの地図
 

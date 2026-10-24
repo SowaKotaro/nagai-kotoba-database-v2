@@ -1,0 +1,14 @@
+<%# locals: (name:, records:, blank_label:, selected: nil) -%>
+<%# まとめて付ける・外すパネルの単一選択(エンティティ・品詞・言語学的特徴)。先頭の blank_label(「変更しない」など)が既定 %>
+<div class="ann-chips">
+  <label class="ann-chip">
+    <%= radio_button_tag name, "", selected.blank?, id: nil, class: "ann-chip__input" %>
+    <%= blank_label %>
+  </label>
+  <% records.each do |record| %>
+    <label class="ann-chip">
+      <%= radio_button_tag name, record.id, selected.to_i == record.id, id: nil, class: "ann-chip__input" %>
+      <%= record.name %>
+    </label>
+  <% end %>
+</div>

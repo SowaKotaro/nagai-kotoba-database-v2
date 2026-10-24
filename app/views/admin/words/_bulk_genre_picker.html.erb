@@ -1,0 +1,25 @@
+<%# locals: (name:, large_genres:) -%>
+<%# まとめて付ける・外すパネルのジャンル(大→中→小の段階表示)。チップと picker はコンソール(annotate.css / genre-picker)を流用。
+    小分類まで選ぶと name の隠しフィールドに入る %>
+<div class="ann-genre" data-controller="genre-picker"
+     data-genre-picker-children-url-value="<%= children_admin_genres_path %>"
+     data-genre-picker-create-url-value="<%= admin_genres_path %>"
+     data-genre-picker-labels-value="<%= inline_add_labels_json %>">
+  <%= hidden_field_tag name, nil, id: nil, data: { genre_picker_target: "value" } %>
+  <div class="ann-genre__level" data-genre-picker-target="largeLevel">
+    <span class="ann-genre__tag"><%= t("admin.annotations.genre_large") %></span>
+    <div class="ann-chips" data-genre-picker-target="largeChips">
+      <% large_genres.each do |genre| %>
+        <button type="button" class="ann-chip" data-id="<%= genre.id %>" data-action="genre-picker#pickLarge"><%= genre.name %></button>
+      <% end %>
+    </div>
+  </div>
+  <div class="ann-genre__level" data-genre-picker-target="mediumLevel" hidden>
+    <span class="ann-genre__tag"><%= t("admin.annotations.genre_medium") %></span>
+    <div class="ann-chips" data-genre-picker-target="mediumChips"></div>
+  </div>
+  <div class="ann-genre__level" data-genre-picker-target="smallLevel" hidden>
+    <span class="ann-genre__tag"><%= t("admin.annotations.genre_small") %></span>
+    <div class="ann-chips" data-genre-picker-target="smallChips"></div>
+  </div>
+</div>

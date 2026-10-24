@@ -64,6 +64,56 @@ class BulkAnnotationTest < ActiveSupport::TestCase
     assert_equal genres(:small_novel).id, word_senses(:pending2).reload.genre_id
   end
 
+  # --- 言語学的特徴(Issue 108) ---
+  test "特徴は、該当部分が表層形と読みの両方にある語だけに、表層形の最初の出現で付ける" do
+    triangle = Word.create!(surface: "トライアングルトライアングル")
+    triangle_sense = triangle.word_senses.create!(reading: "トライアングルトライアングル")
+    rendaku = linguistic_features(:rendaku)
+
+    result = BulkAnnotation.new(
+      word_ids: [ @haruhi.id, @bermuda.id, triangle.id ],
+      linguistic_feature_id: rendaku.id, feature_target: " トライ ", feature_target_reading: ""
+    ).apply
+
+    assert_equal 3, result.applied
+    assert_equal 1, result.feature_skipped, "表層形に該当部分が無い涼宮ハルヒの憂鬱は飛ばす"
+    assert_empty word_senses(:pending).reload.word_sense_features
+    # 位置は表層形の最初の出現(バミューダトライアングル の 5 文字目)。読みの該当部分は空欄なら表記と同じ
+    feature = word_senses(:pending2).reload.word_sense_features.sole
+    assert_equal [ rendaku.id, "トライ", "トライ", 5 ],
+                 [ feature.linguistic_feature_id, feature.target, feature.target_reading, feature.target_start ]
+    assert_equal [ 0 ], triangle_sense.reload.word_sense_features.map(&:target_start)
+  end
+
+  test "読みの該当部分を別に指定でき、読みに無ければ付けない" do
+    rendaku = linguistic_features(:rendaku)
+    BulkAnnotation.new(word_ids: [ @haruhi.id ], linguistic_feature_id: rendaku.id,
+                       feature_target: "涼宮", feature_target_reading: "すずみや").apply
+    assert_equal [ [ "涼宮", "すずみや", 0 ] ],
+                 word_senses(:pending).reload.word_sense_features.map { |f| [ f.target, f.target_reading, f.target_start ] }
+
+    result = BulkAnnotation.new(word_ids: [ @bermuda.id ], linguistic_feature_id: rendaku.id,
+                                feature_target: "トライ", feature_target_reading: "とらい").apply
+    assert_equal 1, result.feature_skipped
+    assert_empty word_senses(:pending2).reload.word_sense_features
+  end
+
+  test "同じ特徴・該当部分・位置が付いていれば、何度適用しても増えない" do
+    attrs = { word_ids: [ @bermuda.id ], linguistic_feature_id: linguistic_features(:rendaku).id, feature_target: "トライ" }
+    BulkAnnotation.new(attrs).apply
+    assert_no_difference -> { WordSenseFeature.count } do
+      result = BulkAnnotation.new(attrs).apply
+      assert_equal 0, result.feature_skipped
+    end
+  end
+
+  test "特徴を選んで該当部分が空だとバリデーションエラー" do
+    bulk = BulkAnnotation.new(word_ids: [ @haruhi.id ], linguistic_feature_id: linguistic_features(:rendaku).id,
+                              feature_target: "  ")
+    assert_not bulk.valid?
+    assert_includes bulk.errors.full_messages.join, "該当部分"
+  end
+
   test "語が選択されていないとバリデーションエラー" do
     bulk = BulkAnnotation.new(word_ids: [], genre_id: genres(:small_novel).id)
     assert_not bulk.valid?

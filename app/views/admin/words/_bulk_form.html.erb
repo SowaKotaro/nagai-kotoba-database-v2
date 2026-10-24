@@ -1,0 +1,22 @@
+<%# locals: (list_params:, word_origins:, parts_of_speech:, entity_types:, linguistic_features:, large_genres:, feature_filter: {}) -%>
+<%# 選択した語への「まとめて付ける」(Issue 37)と「まとめて外す」(Issue 108)。
+    行のチェックボックス(word_ids[])は form 属性でこのフォーム 1 つに紐づくので、2 つのパネルを同じフォームに置き、
+    外す側の送信ボタンだけ formaction で送り先を変える。各パネルの値は名前空間(bulk_annotation / bulk_detachment)で分かれ、
+    受け手はそれぞれ自分の名前空間だけを読む。
+    feature_filter は一覧の特徴の絞り込み({ linguistic_feature_id:, feature_target: })で、「外す」の初期値にする
+    (絞り込み → 全選択 → 外す を、選び直さずに行えるように) %>
+<%= form_with url: admin_bulk_annotation_path, method: :post, id: "bulk-form" do %>
+  <%# Enter での送信(暗黙の送信)は、最初の送信ボタンで送る。ボタンが 2 つあると入力欄によって送り先が
+      取り違わるので、無効にした最初のボタンで暗黙の送信そのものを止め、必ずボタンを押して送らせる %>
+  <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button>
+  <%# 適用後も検索・絞り込み・ページ位置を保つ %>
+  <% list_params.each do |key, value| %>
+    <%= hidden_field_tag key, value, id: nil %>
+  <% end %>
+
+  <%= render "admin/words/bulk_annotation", word_origins: word_origins, parts_of_speech: parts_of_speech,
+             entity_types: entity_types, linguistic_features: linguistic_features, large_genres: large_genres %>
+  <%= render "admin/words/bulk_detachment", word_origins: word_origins, parts_of_speech: parts_of_speech,
+             entity_types: entity_types, linguistic_features: linguistic_features, large_genres: large_genres,
+             feature_filter: feature_filter %>
+<% end %>

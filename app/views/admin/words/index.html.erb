@@ -3,8 +3,8 @@
 <h1 class="page-title"><%= t("admin.words.title") %></h1>
 
 <%# 検索(表層形・読みの部分一致)+タグ絞り込みと、注釈状態のタブ。
-    タグのセレクトは選択で即送信(auto-submit)。同質な語群を一括適用パネルで
-    まとめて付け替えるための入口になる(例: ジャンル「ことわざ」×品詞「普通名詞」→ 連語へ)。 %>
+    タグのセレクトは選択で即送信(auto-submit)。同質な語群をまとめて付け替える・外すための入口になる
+    (例: ジャンル「ことわざ」×品詞「普通名詞」→ 連語へ。「サンショウウオ」×特徴「ゴママヨ」×該当部分「ウウ」→ 外す)。 %>
 <div class="admin-words-toolbar">
   <%= form_with url: admin_words_path, method: :get, class: "admin-words-filter",
         data: { controller: "auto-submit" } do %>
@@ -44,6 +44,20 @@
               include_blank: t("admin.words.index.filter_any"),
               data: { action: "change->auto-submit#submit" } %>
       </label>
+      <%# 言語学的特徴は、該当部分(表記の完全一致)でも絞れる。行の選び方は「まとめて外す」と同じ(WordSenseFeature.matching) %>
+      <label class="admin-words-tag-filter">
+        <span class="admin-words-tag-filter__label"><%= t("admin.words.index.filter_feature") %></span>
+        <%= select_tag :linguistic_feature_id,
+              options_from_collection_for_select(@linguistic_features, :id, :name, @tag_filters[:linguistic_feature_id]),
+              include_blank: t("admin.words.index.filter_any"),
+              data: { action: "change->auto-submit#submit" } %>
+      </label>
+      <label class="admin-words-tag-filter">
+        <span class="admin-words-tag-filter__label"><%= t("admin.words.index.filter_feature_target") %></span>
+        <%= text_field_tag :feature_target, @tag_filters[:feature_target],
+              placeholder: t("admin.words.index.filter_feature_target_placeholder"),
+              data: { action: "change->auto-submit#submit" } %>
+      </label>
       <% if @tag_filters.any? %>
         <%= link_to t("admin.words.index.filter_reset"),
               admin_words_path({ q: @query.presence, status: @status }.compact),
@@ -63,22 +77,12 @@
   </nav>
 </div>
 
-<%# Claude Code 連携(Issue 38): 調査用データの書き出し → スキルで調査 → 提案 JSON の取り込み %>
-<p class="admin-words-claude">
-  <%= link_to t("admin.annotation_proposals.export.title"), export_admin_annotation_proposals_path %>
-  <span class="sep">/</span>
-  <%# 公開済みの語に特徴だけを足す再調査(Issue 76)。取り込み以降は上と同じ流れに合流する %>
-  <%= link_to t("admin.annotation_proposals.export_features.title"), export_features_admin_annotation_proposals_path %>
-  <span class="sep">›</span>
-  <%= link_to t("admin.annotation_proposals.new.title"), new_admin_annotation_proposal_path %>
-  <span class="sep">›</span>
-  <%= link_to t("admin.annotation_proposals.proposed_queue"), admin_annotations_path(proposed: 1) %>
-</p>
-
 <p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@total_count)) %></p>
 
 <% if @words.any? %>
-  <%= render "bulk_annotation" %>
+  <%= render "bulk_form", list_params: word_list_params, word_origins: @word_origins, parts_of_speech: @parts_of_speech,
+             entity_types: @entity_types, linguistic_features: @linguistic_features, large_genres: @large_genres,
+             feature_filter: @tag_filters.slice(:linguistic_feature_id, :feature_target) %>
 
   <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
   <div class="table-scroll" data-controller="check-all">
@@ -100,12 +104,14 @@
       <% @words.each do |word| %>
         <tr>
           <td class="admin-words-table__check">
-            <%# フォームの外にあるため form 属性で一括適用フォームに紐づける %>
-            <input type="checkbox" name="bulk_annotation[word_ids][]" value="<%= word.id %>"
-                   form="bulk-annotation-form" aria-label="<%= t("admin.bulk_annotations.select_word", surface: word.surface) %>"
+            <%# フォームの外にあるため form 属性で、まとめて付ける・外すフォームに紐づける %>
+            <input type="checkbox" name="word_ids[]" value="<%= word.id %>"
+                   form="bulk-form" aria-label="<%= t("admin.bulk_annotations.select_word", surface: word.surface) %>"
                    data-check-all-target="item" data-action="check-all#sync">
           </td>
-          <td><%= link_to word.surface, admin_annotation_path(word), data: { turbo_frame: "_top" } %></td>
+          <%# 行き先は注釈状態で分ける。公開済みの語は修正画面(注釈状態を変えずに直す)、未公開の語はコンソール(注釈して公開する) %>
+          <% row_path = word.annotation_done? ? edit_admin_word_path(word, word_list_params) : admin_annotation_path(word) %>
+          <td><%= link_to word.surface, row_path, data: { turbo_frame: "_top" } %></td>
           <td class="admin-words-table__reading"><%= word.word_senses.map(&:reading).uniq.join("、") %></td>
           <td class="admin-words-table__num"><%= word.word_senses.size %></td>
           <td class="admin-words-table__status">
@@ -119,9 +125,14 @@
           </td>
           <td class="admin-words-table__actions">
             <div class="actions actions--tight">
-              <%= link_to admin_annotation_path(word), class: "btn btn--sm btn--icon",
-                    title: t("admin.words.index.annotate_title") do %>
-                <%= icon "pencil_simple" %><span><%= t("admin.words.index.annotate") %></span>
+              <% if word.annotation_done? %>
+                <%= link_to row_path, class: "btn btn--sm btn--icon", title: t("admin.words.index.edit_title") do %>
+                  <%= icon "pencil_simple" %><span><%= t("admin.words.index.edit") %></span>
+                <% end %>
+              <% else %>
+                <%= link_to row_path, class: "btn btn--sm btn--icon", title: t("admin.words.index.annotate_title") do %>
+                  <%= icon "pen_nib" %><span><%= t("admin.words.index.annotate") %></span>
+                <% end %>
               <% end %>
               <%= button_to admin_word_path(word), method: :delete,
                     class: "btn btn--sm btn--icon",

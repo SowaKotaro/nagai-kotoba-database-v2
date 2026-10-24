@@ -58,18 +58,21 @@ Rails.application.routes.draw do
   namespace :admin do
     # 管理コンソールのトップ(/admin)。登録・アノテーションへの入口。
     root "dashboard#index"
-    # 詳細(show)は公開閲覧側(Issue 8)で扱う。編集はアノテーション・コンソールに統合済み(Issue 36)。
+    # 詳細(show)は公開閲覧側(Issue 8)で扱う。
     # 一括登録は3ステップ: new(入力) → readings(step2 読み) → duplicates(step3 重複) → create(登録)。
     # step2 では任意で apply_research(貼った調査 JSON を MeCab の暫定読みと突き合わせる)も使う。
-    resources :words, only: %i[index new create destroy] do
+    # 単語の修正は一覧(index)・1語の修正(edit/update)・削除(destroy)。修正はアノテーション・コンソールから
+    # 切り離した流れで、注釈状態を変えない(Issue 108。Issue 36 でコンソールへ統合していたものを分け直した)。
+    resources :words, only: %i[index new create edit update destroy] do
       collection do
         post :readings
         post :apply_research
         post :duplicates
       end
     end
-    # 一覧で選択した語への共通属性の一括適用(Issue 37)。
+    # 一覧で選択した語への共通属性のまとめての適用(Issue 37)と、指定した値をまとめて外す(Issue 108)。
     resource :bulk_annotation, only: :create
+    resource :bulk_detachment, only: :create
     # 公開側から届いた収録リクエストの確認(Issue 75)。一覧は語単位。
     # 操作は「選択 → 一括」に寄せているため、個別の update/destroy は持たない。
     resources :requests, only: :index, controller: "word_requests" do
@@ -93,6 +96,8 @@ Rails.application.routes.draw do
     end
     # 1語の表示と、表層形・メモの手直し(確認の画面では行の中で開く)。
     resources :word_candidates, path: "candidates", only: %i[show edit update], constraints: { id: /\d+/ }
+    # 調査データ: Claude Code 連携の各画面(下の書き出し・取り込み・一括承認と、提案キュー)への入口(Issue 108)。
+    resource :research, only: :show, controller: "research"
     # Claude Code 連携(Issue 38): 調査用データの書き出しと、提案 JSON の取り込み。
     resources :annotation_proposals, only: %i[new create] do
       get :export, on: :collection

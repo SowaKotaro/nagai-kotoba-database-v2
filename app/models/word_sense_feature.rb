@@ -24,6 +24,17 @@ class WordSenseFeature < ApplicationRecord
   validate :target_within_surface
   validate :target_reading_within_reading
 
+  # 特徴の行を「どの特徴か」と「該当部分(表記)」で選ぶ。単語の修正の一覧の絞り込みと「まとめて外す」(BulkDetachment)が
+  # 同じ条件で選ぶための唯一の定義(片方だけ変わると、絞り込んで全選択して外したのに外れない行が出る)。
+  # どちらも省略できる(nil・空なら条件に入れない)。該当部分は完全一致で、target の照合順序(ai_ci)は
+  # 清濁を同一視して「ウウ」と「ヴウ」を同じとみなすため、utf8mb4_bin で文字どおりに比べる。
+  scope :matching, lambda { |linguistic_feature_id: nil, target: nil|
+    relation = all
+    relation = relation.where(linguistic_feature_id: linguistic_feature_id) if linguistic_feature_id.present?
+    relation = relation.where("word_sense_features.target COLLATE utf8mb4_bin = ?", target) if target.present?
+    relation
+  }
+
   private
 
   # 代表値の焼き直し対象(RefreshesWordMetrics)。

@@ -20,7 +20,7 @@ class Admin::AnnotationProposalsController < Admin::BaseController
       words = words.where("words.id >= ?", @from_id) if @from_id
       words = words.where("words.id <= ?", @to_id) if @to_id
     else
-      words = words.where.missing(:annotation_proposal)
+      words = words.awaiting_research
     end
 
     words = words.limit(@limit)

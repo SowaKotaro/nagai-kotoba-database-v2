@@ -8,17 +8,27 @@ class AdminNavTest < ActionDispatch::IntegrationTest
     # ダッシュボード。ダッシュボードに続けて、作業をオーナー指定の順に並べる(2026-09-26)
     get admin_root_path
     assert_select ".admin-nav a[aria-current=page][href=?]", admin_root_path
-    assert_equal [ admin_root_path, new_admin_word_path, admin_annotations_path, admin_candidates_triage_path,
-                   admin_words_path, admin_tags_path, admin_requests_path ],
+    # 調査データ(Issue 108)はアノテーションの隣
+    assert_equal [ admin_root_path, new_admin_word_path, admin_annotations_path, admin_research_path,
+                   admin_candidates_triage_path, admin_words_path, admin_tags_path, admin_requests_path ],
                  css_select(".admin-nav a").map { |link| link["href"] }
 
     # 登録フロー(admin/words だが「単語を登録」が現在地になる)
     get new_admin_word_path
     assert_select ".admin-nav a[aria-current=page][href=?]", new_admin_word_path
 
-    # 一覧(同じ admin/words でも「単語の管理」が現在地になる)
+    # 一覧と修正画面(同じ admin/words でも「単語の修正」が現在地になる)
     get admin_words_path
     assert_select ".admin-nav a[aria-current=page][href=?]", admin_words_path
+    get edit_admin_word_path(words(:abc_murder))
+    assert_select ".admin-nav a[aria-current=page][href=?]", admin_words_path
+
+    # Claude Code 連携の各画面は「調査データ」が現在地になる
+    [ admin_research_path, export_admin_annotation_proposals_path, new_admin_annotation_proposal_path,
+      admin_bulk_proposal_approval_path ].each do |path|
+      get path
+      assert_select ".admin-nav a[aria-current=page][href=?]", admin_research_path
+    end
 
     # アノテーション・コンソール(入口は提案キュー優先で多段リダイレクトになる。Issue 69)
     get admin_annotations_path

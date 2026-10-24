@@ -1,18 +1,23 @@
-# 単語の登録(表層形+読みの一括登録)と、一覧・削除。
-# 表層形の訂正やジャンル・品詞などの付与はアノテーション・コンソール(Admin::AnnotationsController)が担う。
+# 単語の登録(表層形+読みの一括登録)と、単語の修正(一覧・1語の修正・削除)。
+# 新しい語の注釈(付与して公開する)はアノテーション・コンソール(Admin::AnnotationsController)が担い、
+# 公開済みの語を直す流れはここに分けてある(Issue 108)。まとめて付ける・外すは
+# Admin::BulkAnnotationsController・Admin::BulkDetachmentsController。
 class Admin::WordsController < Admin::BaseController
+  # 修正画面のチップ選択のマスタ(load_masters)と、一覧の条件の受け渡し(word_list_params・TAG_FILTER_KEYS)。
+  include Admin::AnnotationChoices
+  include Admin::WordListParams
+
   PER_PAGE = 100
   # 注釈状態の絞り込み(enum が生やす Word の同名スコープをそのまま使う)。
   # 未対応 / 保留 / 完了 の3状態。
   STATUS_FILTERS = %w[annotation_pending annotation_on_hold annotation_done].freeze
-  # タグ絞り込み(語義に付いたジャンル・品詞・エンティティ・語種)。
-  # 一括適用パネルと組み合わせて「絞り込み → 全選択 → 付け替え」のバルク運用に使う。
-  TAG_FILTER_KEYS = %i[genre_id part_of_speech_id entity_type_id word_origin_id].freeze
 
   before_action :set_word, only: :destroy
+  before_action :set_word_with_senses, only: %i[edit update]
 
   # 一覧: 6,000語規模でも運用できるよう、検索(表層形・読み)+注釈状態+タグの絞り込み+ページネーション。
-  # 各行から /admin/annotations/:id へ直接飛べる(ピンポイント・アノテーション)。
+  # タグの絞り込みは、まとめて付ける・外すパネルと組み合わせて「絞り込み → 全選択 → 付け替え・外す」に使う。
+  # 各行から、注釈済みの語は修正画面へ、未注釈の語はアノテーション・コンソールへ飛べる。
   def index
     @query = params[:q].to_s.strip
     @status = params[:status].presence_in(STATUS_FILTERS)
@@ -88,6 +93,22 @@ class Admin::WordsController < Admin::BaseController
     end
   end
 
+  # 1語の修正(Issue 108)。注釈フォームはコンソールと同じ部品を使うが、保存しても注釈状態(公開)・
+  # キュー・Claude の提案・引き継ぎ(スティッキー)に触れず、来たときの一覧(word_list_params)へ戻る。
+  def edit
+    @word.word_senses.build if @word.word_senses.empty?
+    load_masters
+  end
+
+  def update
+    if @word.update(word_params)
+      redirect_to admin_words_path(word_list_params), notice: t("admin.words.updated", surface: @word.surface)
+    else
+      load_masters
+      render :edit, status: :unprocessable_content
+    end
+  end
+
   def destroy
     @word.destroy
     redirect_to admin_words_path, notice: t("admin.words.destroyed")
@@ -97,6 +118,17 @@ class Admin::WordsController < Admin::BaseController
 
   def set_word
     @word = Word.find(params[:id])
+  end
+
+  # 修正画面は語義の関連を辿って描く(コンソールの set_word と同じ先読み)。
+  def set_word_with_senses
+    @word = Word.includes(word_senses: %i[word_origins word_sense_features word_sense_variants])
+                .find(params[:id])
+  end
+
+  # 許可属性の集合はコンソール・デッキと共有する(Admin::AnnotationQueue::WORD_ATTRIBUTES)。
+  def word_params
+    params.require(:word).permit(*Admin::AnnotationQueue::WORD_ATTRIBUTES)
   end
 
   # 一覧の絞り込み(キーワード + 注釈状態 + タグ)。
@@ -109,12 +141,15 @@ class Admin::WordsController < Admin::BaseController
     scope
   end
 
-  # 正の整数が指定されたタグ条件だけを { キー => id } で集める。
+  # 正の整数が指定されたタグ条件だけを { キー => id } で集める。特徴の該当部分は文字列のまま加える。
   def tag_filters_from_params
-    TAG_FILTER_KEYS.each_with_object({}) do |key, filters|
+    filters = TAG_FILTER_KEYS.each_with_object({}) do |key, collected|
       id = params[key].to_i
-      filters[key] = id if id.positive?
+      collected[key] = id if id.positive?
     end
+    target = params[FEATURE_TARGET_KEY].to_s.strip
+    filters[FEATURE_TARGET_KEY] = target if target.present?
+    filters
   end
 
   # タグ条件をすべて満たす(AND)語義の Relation。
@@ -131,15 +166,18 @@ class Admin::WordsController < Admin::BaseController
     senses = senses.with_part_of_speech(@tag_filters[:part_of_speech_id]) if @tag_filters[:part_of_speech_id]
     senses = senses.with_entity_type(@tag_filters[:entity_type_id]) if @tag_filters[:entity_type_id]
     senses = senses.with_word_origin(@tag_filters[:word_origin_id]) if @tag_filters[:word_origin_id]
+    if @tag_filters[:linguistic_feature_id] || @tag_filters[FEATURE_TARGET_KEY]
+      # 特徴の行の選び方は「まとめて外す」(BulkDetachment)と共有する
+      features = WordSenseFeature.matching(linguistic_feature_id: @tag_filters[:linguistic_feature_id],
+                                           target: @tag_filters[FEATURE_TARGET_KEY])
+      senses = senses.where(id: features.select(:word_sense_id))
+    end
     senses
   end
 
-  # 一括適用パネル(Issue 37)のチップ選択と、タグ絞り込みのセレクトで使うマスタ一式。
+  # まとめて付ける・外すパネル(Issue 37・108)のチップ選択と、タグ絞り込みのセレクトで使うマスタ一式。
   def load_masters_for_bulk
-    @word_origins = WordOrigin.order(:name)
-    @parts_of_speech = PartOfSpeech.order(:name)
-    @entity_types = EntityType.order(:name)
-    @large_genres = Genre.large.order(:name)
+    load_masters
     # タグ絞り込みのジャンル・セレクトは大→中→小の全階層から選べるようにする。
     @all_genres = Genre.order(:name).to_a
   end

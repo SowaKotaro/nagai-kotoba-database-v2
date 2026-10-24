@@ -34,25 +34,16 @@
 
 <p class="section-label"><%= t("admin.dashboard.actions_label") %></p>
 
-<%# 各作業の入口。並びと見出しは共通ナビと同じ(admin_sections が正)。
-    カードの中に「まとめて注釈」の別リンクを置くため、カードそのものは <a> にせず、
-    見出しのリンクをカード一面に広げて全体を押せるようにする(components.css) %>
+<%# 各作業の入口。並びと見出しは共通ナビと同じ(admin_sections が正)。アノテーションのカードには、
+    デッキ(まとめて注釈)への近道を添える %>
 <ul class="admin-dash-grid">
   <% admin_sections.each do |section| %>
     <% pending = @pending_counts[section.key] %>
-    <li class="admin-card">
-      <%= link_to section.path, class: "admin-card__link" do %>
-        <%= icon section.icon, "admin-card__icon" %>
-        <span class="admin-card__title"><%= t("admin.nav.#{section.key}") %></span>
-      <% end %>
-      <%= icon "arrow_right", "admin-card__arrow" %>
-      <p class="admin-card__desc"><%= t("admin.dashboard.sections.#{section.key}.desc") %></p>
-      <p class="admin-card__meta <%= "admin-card__meta--pending" if pending.to_i.positive? %>">
-        <span><%= t("admin.dashboard.sections.#{section.key}.meta", count: pending) %></span>
-        <% if section.key == :annotations %>
-          <%= link_to t("admin.dashboard.deck"), admin_annotation_deck_path, class: "admin-card__sublink" %>
-        <% end %>
-      </p>
-    </li>
+    <%= render "admin/shared/section_card",
+               path: section.path, icon: section.icon, title: t("admin.nav.#{section.key}"),
+               desc: t("admin.dashboard.sections.#{section.key}.desc"),
+               meta: t("admin.dashboard.sections.#{section.key}.meta", count: pending),
+               pending: pending.to_i.positive?,
+               sublink: ([ t("admin.dashboard.deck"), admin_annotation_deck_path ] if section.key == :annotations) %>
   <% end %>
 </ul>

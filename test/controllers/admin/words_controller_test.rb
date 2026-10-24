@@ -1,7 +1,7 @@
 require "test_helper"
 
 # 名前空間 Admin は Admin モデルが保持するため、テストもコンパクト形式で定義する。
-# 単語管理一覧と、一括登録の3ステップ(入力→読み→重複→登録)。解析・重複判定・登録の中身は
+# 単語の修正(一覧・1語の修正)と、一括登録の3ステップ(入力→読み→重複→登録)。解析・重複判定・登録の中身は
 # BulkWordRegistrationTest、読み欄のフロント検証は AdminWordsReadingFormatTest で見る。
 # 読みの自動取得(ReadingExtractor)は CI に mecab が無くても安定させるためスタブする。
 class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
@@ -17,11 +17,15 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 一覧 ---
-  test "一覧に読み・注釈状態・件数とコンソールへのリンクが出る" do
-    get admin_words_path
+  test "一覧に読み・注釈状態・件数が出て、注釈済みの語は修正画面へ、未注釈の語はコンソールへリンクする" do
+    get admin_words_path(q: "")
     assert_response :success
-    # 表層形はコンソール(ピンポイント・アノテーション)へのリンク
-    assert_select "td a[href=?]", admin_annotation_path(@word), text: @word.surface
+    # 公開済みの語は修正画面(注釈状態を変えずに直す)、未公開の語はコンソール(注釈して公開する)へ
+    assert_select "td a[href=?]", edit_admin_word_path(@word), text: @word.surface
+    assert_select ".admin-words-table__actions a[href=?]", edit_admin_word_path(@word), text: "edit."
+    pending = words(:pending_haruhi)
+    assert_select "td a[href=?]", admin_annotation_path(pending), text: pending.surface
+    assert_select ".admin-words-table__actions a[href=?]", admin_annotation_path(pending), text: "annot."
     # 読み・注釈状態(注釈済みは日付、未注釈はラベル)
     assert_select "td.admin-words-table__reading", text: /さつじんじけん/
     assert_select ".admin-words-table__annotated", text: @word.annotated_at.strftime("%Y-%m-%d")
@@ -31,19 +35,59 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".pagination span", text: "1 / 1 ページ"
   end
 
-  test "一覧に一括適用パネルと選択チェックボックスが出る(Issue 37)" do
+  test "一覧に、まとめて付ける・外すパネルと選択チェックボックスが 1 つのフォームで出る(Issue 37・108)" do
     get admin_words_path
-    # パネル(ジャンルピッカー・チップ・テンプレ文・注釈済みチェック)
-    assert_select ".bulk-annotation form#bulk-annotation-form" do
-      assert_select "input.js-genre-value"
+    assert_select "form#bulk-form[action=?]", admin_bulk_annotation_path do
+      # Enter での送信は、無効にした最初のボタンで止める(送り先の取り違えを防ぐ)
+      assert_select "button[type=submit][disabled]:first-of-type"
+      # まとめて付ける(ジャンルピッカー・チップ・特徴と該当部分・テンプレ文・注釈済みチェック)
+      assert_select ".bulk-annotation", 2
+      assert_select "input[type=hidden][name=?][data-genre-picker-target=value]", "bulk_annotation[genre_id]"
       assert_select "input[name=?]", "bulk_annotation[entity_type_id]"
+      assert_select "input[name=?][value=?]", "bulk_annotation[linguistic_feature_id]", linguistic_features(:rendaku).id.to_s
+      assert_select "input[name=?]", "bulk_annotation[feature_target]"
+      assert_select "input[name=?]", "bulk_annotation[feature_target_reading]"
       assert_select "input[name=?]", "bulk_annotation[meaning_template]"
       # 注釈済みフラグは既定 OFF
       assert_select "input[name=?][checked]", "bulk_annotation[mark_annotated]", count: 0
+      # まとめて外す(送信ボタンの formaction で送り先を変える)
+      assert_select "input[type=hidden][name=?][data-genre-picker-target=value]", "bulk_detachment[genre_id]"
+      %w[linguistic_feature_id entity_type_id part_of_speech_id].each do |key|
+        assert_select "input[type=radio][name=?][value=''][checked]", "bulk_detachment[#{key}]"
+      end
+      assert_select "input[name=?]", "bulk_detachment[feature_target]"
+      assert_select "input[name=?]", "bulk_detachment[word_origin_ids][]", WordOrigin.count
+      assert_select "input[type=submit][formaction=?]", admin_bulk_detachment_path
     end
-    # 行のチェックボックスは form 属性で外のフォームに紐づく
-    assert_select "tbody input[type=checkbox][name=?][form=bulk-annotation-form][value=?]",
-                  "bulk_annotation[word_ids][]", @word.id.to_s
+    # 行のチェックボックスは form 属性で外のフォームに紐づく(2 つのパネルが共有する)
+    assert_select "tbody input[type=checkbox][name=?][form=bulk-form][value=?]", "word_ids[]", @word.id.to_s
+  end
+
+  # 特徴の絞り込みは「まとめて外す」と同じ行の選び方(WordSenseFeature.matching)。該当部分は完全一致。
+  test "言語学的特徴と該当部分で絞り込め、まとめて外すパネルの初期値になる" do
+    rendaku = linguistic_features(:rendaku)
+
+    get admin_words_path(linguistic_feature_id: rendaku.id)
+    assert_select "td a", text: @word.surface
+    assert_select "td a", text: words(:curry).surface, count: 0
+
+    # 該当部分は特徴を選ばなくても絞れる。部分一致ではない
+    get admin_words_path(feature_target: "殺")
+    assert_select "p.empty-note"
+
+    get admin_words_path(linguistic_feature_id: rendaku.id, feature_target: " 殺人 ")
+    assert_select "td a", text: @word.surface
+    assert_select "input[name=feature_target][value=?]", "殺人"
+    # 絞り込みの条件を、まとめて外すパネルが開いた状態で引き継ぐ
+    assert_select "details.bulk-annotation[open]" do
+      assert_select "input[type=radio][name=?][value=?][checked]", "bulk_detachment[linguistic_feature_id]", rendaku.id.to_s
+      assert_select "input[name=?][value=?]", "bulk_detachment[feature_target]", "殺人"
+    end
+    # 適用後に戻る一覧も、該当部分の条件を保つ
+    assert_select "#bulk-form input[type=hidden][name=feature_target][value=?]", "殺人"
+
+    get admin_words_path(linguistic_feature_id: linguistic_features(:jubako).id, feature_target: "殺人")
+    assert_select "p.empty-note"
   end
 
   test "一覧を表層形・読み・別表記で検索できる" do
@@ -158,7 +202,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # 状態タブのリンクが条件を保持する
     assert_select ".admin-status-tabs__tab[href*=?]", "part_of_speech_id=#{pos_id}", count: 4
     # 一括適用フォームの hidden で適用後も条件を保つ
-    assert_select "#bulk-annotation-form input[type=hidden][name=part_of_speech_id][value=?]", pos_id.to_s
+    assert_select "#bulk-form input[type=hidden][name=part_of_speech_id][value=?]", pos_id.to_s
     # セレクトは選択状態を復元し、解除リンクが出る
     assert_select "select[name=part_of_speech_id] option[selected][value=?]", pos_id.to_s
     assert_select ".admin-words-tag-filter__reset"
@@ -332,7 +376,79 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_admin_word_path
   end
 
-  # --- 削除(編集はコンソールへ統合済み。Issue 36) ---
+  # --- 1語の修正(Issue 108) ---
+  # 注釈フォームの部品はコンソールと共有する(フォームの中身は Admin::AnnotationsControllerTest で見る)。
+  # ここで見るのは、コンソールと違って注釈状態・提案に触れず、来たときの一覧へ戻ること。
+  test "修正画面は注釈フォームと公開ページへの導線を出し、戻り先の一覧の条件を保つ" do
+    list = { q: "殺人", status: "annotation_done", page: "2" }
+    get edit_admin_word_path(@word, list)
+    assert_response :success
+    assert_select "h1.ann-word", text: @word.surface
+    assert_select "a[href=?]", word_path(@word)
+    assert_select "form[action=?]", admin_word_path(@word) do
+      assert_select "textarea[name=?]", "word[surface]", text: @word.surface
+      assert_select "[data-nested-form-target=container] > .ann-feature", @word.primary_sense.word_sense_features.size
+      list.each { |key, value| assert_select "input[type=hidden][name=?][value=?]", key.to_s, value }
+      # 公開前の確認・「特徴なしで確定」はコンソールだけのもの
+      assert_select "[data-controller~=publish-guard]", 0
+      assert_select "input[formaction]", 0
+    end
+    assert_select ".ann-actionbar a[href=?]", admin_words_path(list)
+  end
+
+  test "未公開の語の修正画面は、公開はコンソールで行うと示す" do
+    pending = words(:pending_haruhi)
+    get edit_admin_word_path(pending)
+    assert_response :success
+    assert_select ".ann-word-meta", text: /未公開（未対応）/
+    assert_select ".ann-word-meta a[href=?]", admin_annotation_path(pending)
+  end
+
+  test "修正を保存しても注釈状態・収録日・提案は変わらず、来たときの一覧へ戻る" do
+    pending = words(:pending_haruhi)
+    sense = word_senses(:pending)
+    list = { q: "ハルヒ", status: "annotation_pending" }
+
+    patch admin_word_path(pending), params: list.merge(word: { word_senses_attributes: { "0" => {
+      id: sense.id, reading: sense.reading, meaning: "直した意味"
+    } } })
+
+    assert_redirected_to admin_words_path(list)
+    assert_equal "「#{pending.surface}」を保存しました。", flash[:notice]
+    assert_equal "直した意味", sense.reload.meaning
+    assert pending.reload.annotation_pending?, "修正で公開された"
+    assert_nil pending.annotated_at
+    assert annotation_proposals(:haruhi_proposal).reload.pending?, "修正で提案が反映済みになった"
+
+    annotated_at = @word.annotated_at
+    patch admin_word_path(@word), params: { word: { surface: "ABC殺人事件改" } }
+    assert_equal [ "ABC殺人事件改", annotated_at ], [ @word.reload.surface, @word.annotated_at ]
+  end
+
+  test "保存済みの特徴を外して保存すると消え、残した特徴はそのまま残る" do
+    removed, kept = word_senses(:murder).word_sense_features.order(:id).to_a
+    patch admin_word_path(@word), params: { word: { word_senses_attributes: { "0" => {
+      id: word_senses(:murder).id, reading: word_senses(:murder).reading,
+      word_sense_features_attributes: {
+        "0" => { id: removed.id, _destroy: "1" },
+        "1" => { id: kept.id, linguistic_feature_id: kept.linguistic_feature_id, target: kept.target,
+                 target_reading: kept.target_reading, target_start: kept.target_start }
+      }
+    } } } }
+
+    assert_redirected_to admin_words_path
+    assert_equal [ kept.id ], word_senses(:murder).word_sense_features.ids
+  end
+
+  test "検証に通らない修正は、入力を保ったまま修正画面に戻す" do
+    patch admin_word_path(@word), params: { q: "殺人", word: { surface: "" } }
+    assert_response :unprocessable_content
+    assert_select ".error-explanation"
+    assert_select "input[type=hidden][name=q][value=?]", "殺人"
+    assert_equal "ABC殺人事件", @word.reload.surface
+  end
+
+  # --- 削除 ---
   test "単語を削除すると語義も消える" do
     word = word_senses(:murder).word
 
