@@ -25,7 +25,7 @@ class Admin::BulkDetachmentsControllerTest < ActionDispatch::IntegrationTest
 
   test "外すものが無ければ、そう知らせる" do
     post admin_bulk_detachment_path, params: {
-      word_ids: [ words(:curry).id ], bulk_detachment: { linguistic_feature_id: linguistic_features(:rendaku).id }
+      word_ids: [ words(:curry).id ], bulk_detachment: { entity_type_id: entity_types(:person_name).id }
     }
 
     assert_redirected_to admin_words_path

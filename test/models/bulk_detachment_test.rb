@@ -10,7 +10,7 @@ class BulkDetachmentTest < ActiveSupport::TestCase
   end
 
   test "特徴は、該当部分を添えるとその該当部分のものだけを外し、特徴の数を焼き直す" do
-    result = BulkDetachment.new(word_ids: [ @murder.id, @curry.id ],
+    result = BulkDetachment.new(word_ids: [ @murder.id ],
                                 linguistic_feature_id: linguistic_features(:rendaku).id, feature_target: " 殺人 ").apply
 
     assert_equal [ 1, 1 ], [ result.words, result.removed ]
@@ -72,8 +72,34 @@ class BulkDetachmentTest < ActiveSupport::TestCase
   end
 
   test "外すものが無ければ何も変えずに 0 件を返す" do
-    result = BulkDetachment.new(word_ids: [ @curry.id ], linguistic_feature_id: linguistic_features(:rendaku).id).apply
+    result = BulkDetachment.new(word_ids: [ @curry.id ], entity_type_id: entity_types(:person_name).id).apply
     assert_equal [ 0, 0 ], [ result.words, result.removed ]
+  end
+
+  test "特徴は、選んだ語すべてに付いていなければ(該当部分を添えたらその該当部分で)バリデーションエラー" do
+    rendaku = linguistic_features(:rendaku).id
+    assert BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: rendaku, feature_target: "殺人").valid?
+
+    mixed = BulkDetachment.new(word_ids: [ @murder.id, @curry.id ], linguistic_feature_id: rendaku)
+    assert_not mixed.valid?
+    assert_includes mixed.errors.full_messages.join, "1 語には、指定した言語学的特徴が付いていません（#{@curry.surface}）"
+
+    # 特徴は付いていても、該当部分が違えば付いていないのと同じ
+    other_target = BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: rendaku, feature_target: "事件")
+    assert_not other_target.valid?
+    assert_includes other_target.errors.full_messages.join, @murder.surface
+  end
+
+  test "特徴が付いていない語は、MISSING_FEATURE_SURFACES_SHOWN 件までを名指しし、件数は全部を数える" do
+    shown = BulkDetachment::MISSING_FEATURE_SURFACES_SHOWN
+    words = Array.new(shown + 1) { |i| Word.create!(surface: "特徴の無い語#{i}") }
+    detachment = BulkDetachment.new(word_ids: words.map(&:id), linguistic_feature_id: linguistic_features(:rendaku).id)
+
+    assert_not detachment.valid?
+    message = detachment.errors.full_messages.join
+    assert_includes message, "#{shown + 1} 語には"
+    assert_includes message, words[shown - 1].surface
+    assert_not_includes message, words[shown].surface
   end
 
   test "途中で失敗したら全体を巻き戻す" do

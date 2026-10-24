@@ -28,7 +28,8 @@ class Admin::WordsController < Admin::BaseController
     pagination = Pagination.new(page: @page, per_page: PER_PAGE, total_count: scope.count)
     @total_count = pagination.total_count
     @total_pages = pagination.total_pages
-    @words = pagination.paginate(scope.includes(:word_senses).order(:id))
+    # 特徴は、まとめて外す特徴の選択肢を絞る手がかりとして行に載せる(admin_word_feature_ids)
+    @words = pagination.paginate(scope.includes(word_senses: :word_sense_features).order(:id))
     load_masters_for_bulk
   end
 

@@ -1,16 +1,19 @@
 <%# locals: (word_origins:, parts_of_speech:, entity_types:, linguistic_features:, large_genres:, feature_filter: {}) -%>
 <%# まとめて外す(Issue 108)。指定した値が付いている語義から、その値だけを外す(複数語義の語にも効く)。規則の正は BulkDetachment。
     フォームは admin/words/_bulk_form で、送信ボタンの formaction で送り先を変える。
-    特徴と該当部分は、一覧の特徴の絞り込み(feature_filter)を初期値にする %>
+    特徴と該当部分は、一覧の特徴の絞り込み(feature_filter)を初期値にする。
+    特徴のチップは、選択した語すべてに付いている特徴だけを残す(bulk-detachment-features。サーバは全部を描く) %>
 <details class="bulk-annotation" <%= "open" if feature_filter.any? %>>
   <summary class="bulk-annotation__summary"><%= t("admin.bulk_detachments.summary") %></summary>
   <p class="bulk-annotation__hint"><%= t("admin.bulk_detachments.hint") %></p>
 
-  <div class="ann-row">
+  <%= tag.div class: "ann-row", data: admin_bulk_detachment_features_data do %>
     <div class="ann-row__label"><%= t("admin.bulk_detachments.feature") %></div>
     <div>
+      <p class="bulk-annotation__hint" hidden data-bulk-detachment-features-target="status"></p>
       <%= render "admin/words/bulk_radio_chips", name: "bulk_detachment[linguistic_feature_id]", records: linguistic_features,
-                 blank_label: t("admin.bulk_detachments.keep"), selected: feature_filter[:linguistic_feature_id] %>
+                 blank_label: t("admin.bulk_detachments.keep"), selected: feature_filter[:linguistic_feature_id],
+                 chip_data: { bulk_detachment_features_target: "chip" } %>
       <div class="bulk-annotation__fields">
         <label class="bulk-annotation__field">
           <span class="bulk-annotation__field-label"><%= t("admin.bulk_detachments.feature_target") %></span>
@@ -19,7 +22,7 @@
         </label>
       </div>
     </div>
-  </div>
+  <% end %>
 
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.bulk_annotations.genre") %></div>

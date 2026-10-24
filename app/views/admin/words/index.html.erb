@@ -104,9 +104,11 @@
       <% @words.each do |word| %>
         <tr>
           <td class="admin-words-table__check">
-            <%# フォームの外にあるため form 属性で、まとめて付ける・外すフォームに紐づける %>
+            <%# フォームの外にあるため form 属性で、まとめて付ける・外すフォームに紐づける。
+                data-feature-ids は、まとめて外す特徴の選択肢を、選択した語に共通するものへ絞る手がかり %>
             <input type="checkbox" name="word_ids[]" value="<%= word.id %>"
                    form="bulk-form" aria-label="<%= t("admin.bulk_annotations.select_word", surface: word.surface) %>"
+                   data-feature-ids="<%= admin_word_feature_ids(word) %>"
                    data-check-all-target="item" data-action="check-all#sync">
           </td>
           <%# 行き先は注釈状態で分ける。公開済みの語は修正画面(注釈状態を変えずに直す)、未公開の語はコンソール(注釈して公開する) %>

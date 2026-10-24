@@ -56,11 +56,20 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
         assert_select "input[type=radio][name=?][value=''][checked]", "bulk_detachment[#{key}]"
       end
       assert_select "input[name=?]", "bulk_detachment[feature_target]"
+      # 特徴のチップはサーバが全部を描き、選択した語に共通しないものを JS が隠す(手がかりは data-record-id)
+      assert_select "[data-controller=bulk-detachment-features]" do
+        assert_select "label[data-bulk-detachment-features-target=chip][data-record-id]", LinguisticFeature.count
+        assert_select "p[hidden][data-bulk-detachment-features-target=status]"
+      end
       assert_select "input[name=?]", "bulk_detachment[word_origin_ids][]", WordOrigin.count
       assert_select "input[type=submit][formaction=?]", admin_bulk_detachment_path
     end
-    # 行のチェックボックスは form 属性で外のフォームに紐づく(2 つのパネルが共有する)
-    assert_select "tbody input[type=checkbox][name=?][form=bulk-form][value=?]", "word_ids[]", @word.id.to_s
+    # 行のチェックボックスは form 属性で外のフォームに紐づく(2 つのパネルが共有する)。
+    # data-feature-ids はその語の語義に付いた特徴の id で、特徴の無い語は空
+    murder_box = css_select("tbody input[type=checkbox][name='word_ids[]'][form=bulk-form][value='#{@word.id}']").sole
+    assert_equal [ linguistic_features(:rendaku).id, linguistic_features(:jubako).id ].sort,
+                 murder_box["data-feature-ids"].split.map(&:to_i).sort
+    assert_select "tbody input[type=checkbox][value=?][data-feature-ids='']", words(:curry).id.to_s
   end
 
   # 特徴の絞り込みは「まとめて外す」と同じ行の選び方(WordSenseFeature.matching)。該当部分は完全一致。

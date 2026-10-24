@@ -73,6 +73,23 @@ module AdminHelper
     t("admin.inline_add.client").to_json
   end
 
+  # 単語の修正の一覧で、行の語の語義に付いた言語学的特徴の id(空白区切り)。まとめて外す特徴の選択肢を、
+  # 選択した語に共通するものへ絞る手がかり(bulk-detachment-features)。語義と特徴は一覧で preload してある。
+  def admin_word_feature_ids(word)
+    word.word_senses.flat_map(&:word_sense_features).map(&:linguistic_feature_id).uniq.join(" ")
+  end
+
+  # まとめて外すパネルの特徴の行に付ける data(bulk-detachment-features の接続・受けるイベント・文言)。
+  def admin_bulk_detachment_features_data
+    {
+      controller: "bulk-detachment-features",
+      action: "change@document->bulk-detachment-features#refresh check-all:toggled@document->bulk-detachment-features#refresh",
+      bulk_detachment_features_hint_value: t("admin.bulk_detachments.features_hint"),
+      bulk_detachment_features_none_selected_value: t("admin.bulk_detachments.features_none_selected"),
+      bulk_detachment_features_none_shared_value: t("admin.bulk_detachments.features_none_shared")
+    }
+  end
+
   # 単語一覧のジャンル絞り込みセレクトの選択肢([表示名, id] の配列)。
   # 大→中→小の階層順に、全角空白の字下げで階層が分かるように並べる。
   def admin_genre_filter_options(genres)

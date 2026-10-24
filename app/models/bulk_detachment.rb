@@ -4,6 +4,8 @@
 #     複数語義の語も対象にする(BulkAnnotation が複数語義の語を飛ばすのは、値を上書きして同音異義語へ誤爆するため)。
 #   - 特徴は該当部分(表記)を添えると、その該当部分に付いたものだけを外す。空欄なら、その特徴をすべて外す。
 #     行の選び方は WordSenseFeature.matching(一覧の絞り込みと同じ定義)。
+#     特徴は、選んだ語のすべてに付いているときだけ外せる(付いていない語が混ざっていたら、何も外さずにエラーにする)。
+#     画面も、選んだ語すべてに共通する特徴だけを選ばせる(bulk_detachment_features_controller.js)。
 #   - ジャンルは、指定したジャンルとその配下が付いた語義から外す。
 #   - 注釈状態(公開・未公開)は変えない。全体を1トランザクションで行い、途中で失敗したら全体を巻き戻す。
 # 種別: 書き込み処理。
@@ -16,9 +18,13 @@ class BulkDetachment
   validate :words_selected
   validate :value_given
   validate :feature_given_with_target
+  validate :feature_shared_by_all_words
 
   # 結果の集計。words=何かを外した語の数, removed=外した値の延べ数(語義ごと・特徴の行ごとに数える)。
   Result = Struct.new(:words, :removed, keyword_init: true)
+
+  # 特徴が付いていない語は、この件数まで名指しして知らせる(全件は長くなる)。
+  MISSING_FEATURE_SURFACES_SHOWN = 5
 
   def word_ids=(values)
     @word_ids = Array(values).map(&:to_i).reject(&:zero?)
@@ -99,6 +105,21 @@ class BulkDetachment
               word_origin_ids.present?
 
     errors.add(:base, :no_values)
+  end
+
+  # 特徴が付いていない語を選んだまま外すと、一部の語からだけ外れて、選んだ範囲と結果が食い違う。
+  def feature_shared_by_all_words
+    return if linguistic_feature_id.blank? || word_ids.blank?
+
+    holders = WordSenseFeature.matching(linguistic_feature_id: linguistic_feature_id, target: feature_target)
+                              .joins(:word_sense).where(word_senses: { word_id: word_ids })
+                              .distinct.pluck("word_senses.word_id")
+    missing_ids = word_ids.uniq - holders
+    return if missing_ids.empty?
+
+    surfaces = Word.where(id: missing_ids).order(:id).limit(MISSING_FEATURE_SURFACES_SHOWN).pluck(:surface)
+    errors.add(:base, :feature_not_shared, count: missing_ids.size,
+                                           words: surfaces.join(I18n.t("admin.bulk_detachments.surface_separator")))
   end
 
   # 該当部分だけを書いて特徴を選び忘れると、何も外さずに終わる(該当部分は特徴の絞り込みでしかない)。
