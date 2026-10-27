@@ -31,7 +31,7 @@
 
   <%# 正規表現: 表層形・読みのどちらかに一致すればヒット(MySQL の REGEXP)。
       書き方は畳んだ早見表に逃がす(ホバーでしか読めない tooltip は使わない。design.md §6) %>
-  <%= render layout: "section", locals: { title: t("searches.regexp"), open: search_section_open?(@search, :regexp) } do %>
+  <%= render layout: "section", locals: { title: t("searches.regexp"), icon: "regex", open: search_section_open?(@search, :regexp) } do %>
     <%= label_tag :regexp, t("searches.regexp"), class: "visually-hidden" %>
     <%= text_field_tag :regexp, @search.regexp, placeholder: "^ア.*ン$", enterkeyhint: "search",
           autocomplete: "off", spellcheck: false, aria: { describedby: "regexp-help" } %>
@@ -54,7 +54,7 @@
   <%# 読みの文字数: 二つまみスライダー(下端は収録基準、上端まで動かすと「以上」。値と文言は reading_length_slider_data)。
       トラックの上に、目盛りごとの公開語義数を棒グラフで敷き、選んだ範囲の棒だけを濃くする(range_slider が付け直す) %>
   <% slider_min, slider_max = WordSense::MIN_READING_LENGTH, SearchesHelper::READING_LENGTH_SLIDER_MAX %>
-  <%= render layout: "section", locals: { title: t("searches.reading_length"),
+  <%= render layout: "section", locals: { title: t("searches.reading_length"), icon: "ruler",
         open: search_section_open?(@search, :reading_length_min, :reading_length_max) } do %>
     <fieldset class="slider-field">
       <legend class="visually-hidden"><%= t("searches.reading_length") %></legend>
@@ -84,7 +84,7 @@
 
   <%# 音の成分: 濁点・小書きのかな・長音符をいくつ以上含むか(Issue 92)。
       3つとも「◯つ以上」の同じ形なので1区画にまとめ、読みの長さの隣に置く %>
-  <%= render layout: "section", locals: { title: t("searches.sound_counts.legend"),
+  <%= render layout: "section", locals: { title: t("searches.sound_counts.legend"), icon: "waveform",
         open: search_section_open?(@search, *WordSenseSearch::SOUND_COUNT_FILTERS.keys) } do %>
     <fieldset class="sound-count-field">
       <legend class="visually-hidden"><%= t("searches.sound_counts.legend") %></legend>
@@ -102,28 +102,29 @@
     </fieldset>
   <% end %>
 
-  <%= render layout: "section", locals: { title: t("searches.first_char"), count: @search.first_char.size,
+  <%= render layout: "section", locals: { title: t("searches.first_char"), icon: "skip_back", count: @search.first_char.size,
         open: search_section_open?(@search, :first_char) } do %>
     <%= render "kana_grid", name: "first_char", selected: @search.first_char, legend: t("searches.first_char"),
           counts: @first_char_counts, max: @first_char_max %>
   <% end %>
-  <%= render layout: "section", locals: { title: t("searches.last_char"), count: @search.last_char.size,
+  <%= render layout: "section", locals: { title: t("searches.last_char"), icon: "skip_forward", count: @search.last_char.size,
         open: search_section_open?(@search, :last_char) } do %>
     <%= render "kana_grid", name: "last_char", selected: @search.last_char, legend: t("searches.last_char"),
           counts: @last_char_counts, max: @last_char_max %>
   <% end %>
 
-  <%= render layout: "section", locals: { title: WordSense.human_attribute_name(:genre), count: @search.genre_id.size,
+  <%= render layout: "section", locals: { title: WordSense.human_attribute_name(:genre), icon: "tag", count: @search.genre_id.size,
         open: search_section_open?(@search, :genre_id) } do %>
     <%= render "genre_filter", selected: @search.genre_id, genres_by_parent: @genres_by_parent, counts: @genre_counts %>
   <% end %>
 
-  <% [ [ "part_of_speech_id", @parts_of_speech, WordSense.human_attribute_name(:part_of_speech) ],
-       [ "entity_type_id", @entity_types, WordSense.human_attribute_name(:entity_type) ],
-       [ "word_origin_id", @word_origins, t("searches.word_origin") ],
-       [ "linguistic_feature_id", @linguistic_features, t("searches.linguistic_feature") ] ].each do |name, collection, title| %>
+  <% [ [ "part_of_speech_id", @parts_of_speech, WordSense.human_attribute_name(:part_of_speech), "part_of_speech" ],
+       [ "entity_type_id", @entity_types, WordSense.human_attribute_name(:entity_type), "cube" ],
+       [ "word_origin_id", @word_origins, t("searches.word_origin"), "globe_hemisphere_east" ],
+       [ "linguistic_feature_id", @linguistic_features, t("searches.linguistic_feature"), "pen_nib" ] ].each do |name, collection, title, icon_name| %>
     <% selected = @search.public_send(name) %>
-    <%= render layout: "section", locals: { title: title, count: selected.size, open: search_section_open?(@search, name.to_sym) } do %>
+    <%= render layout: "section", locals: { title: title, icon: icon_name, count: selected.size,
+          open: search_section_open?(@search, name.to_sym) } do %>
       <%= render "check_chips", name: name, collection: collection, selected: selected, legend: title %>
       <%# 言語学的特徴は名前だけでは意味が伝わりにくいので、正規表現の書き方と同じく畳んだヘルプに用語解説を置く
           (中身は管理画面の注釈フォームと同じ。特徴が多いので一覧は高さを決めてスクロールさせる) %>
@@ -141,19 +142,22 @@
   <% end %>
 
   <%# 母音パターン検索: 読みをカナで入れると母音の並び(例 ououaa)で押韻検索する %>
-  <%= render layout: "section", locals: { title: t("searches.vowel_pattern"), open: search_section_open?(@search, :vowel_reading) } do %>
+  <%= render layout: "section", locals: { title: t("searches.vowel_pattern"), icon: "music_notes",
+        open: search_section_open?(@search, :vowel_reading) } do %>
     <%= label_tag :vowel_reading, t("searches.vowel_pattern"), class: "visually-hidden" %>
     <%= text_field_tag :vowel_reading, @search.vowel_reading,
           placeholder: "トウキョウタワー", autocomplete: "off", enterkeyhint: "search" %>
     <p class="field-hint"><%= t("searches.vowel_pattern_hint") %></p>
   <% end %>
 
-  <%= render layout: "section", locals: { title: t("searches.rhythm_pattern"), open: search_section_open?(@search, :rhythm_pattern) } do %>
+  <%= render layout: "section", locals: { title: t("searches.rhythm_pattern"), icon: "romaji",
+        open: search_section_open?(@search, :rhythm_pattern) } do %>
     <%= label_tag :rhythm_pattern, t("searches.rhythm_pattern"), class: "visually-hidden" %>
     <%= text_field_tag :rhythm_pattern, @search.rhythm_pattern, autocomplete: "off", enterkeyhint: "search" %>
   <% end %>
 
-  <%= render layout: "section", locals: { title: t("searches.char_type_pattern"), open: search_section_open?(@search, :char_type_pattern) } do %>
+  <%= render layout: "section", locals: { title: t("searches.char_type_pattern"), icon: "translate",
+        open: search_section_open?(@search, :char_type_pattern) } do %>
     <div data-controller="char-type"
          data-char-type-lower-value="<%= CharTypePattern::LOWER %>"
          data-char-type-upper-value="<%= CharTypePattern::UPPER %>">

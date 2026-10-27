@@ -1,5 +1,6 @@
-<%# locals: (title:, open: false, count: nil) -%>
+<%# locals: (title:, icon:, open: false, count: nil) -%>
 <%# 詳細検索の条件の 1 区画。見出し(summary)だけを残して畳める(開閉はブラウザ標準に任せる)。
+    icon は見出しの名前の頭に添えるアイコン。同じ概念には単語詳細の関連データ・統計と同じものを渡す(design.md §5.6)。
     条件が入っている区画は open で開いて描く(一覧の「条件を変える」から来たときなど。SearchesHelper#search_section_open?)。
     count を渡した区画(チェックボックスで選ぶもの)は、畳んだままでも選択が分かるよう見出しに選択数を出す
     (選び直すと fold-count が付け直す)。中身の欄の名前(legend / label)は見出しと同じ文言なので、見た目からは隠す。
@@ -7,7 +8,7 @@
 <details class="search-section" data-fold-count-target="fold" <%= "open" if open %>>
   <summary class="search-section__summary">
     <%= icon "caret_down", "search-section__caret" %>
-    <span><%= title %></span>
+    <span class="search-section__title"><%= icon(icon) %><%= title %></span>
     <% if count %>
       <span class="search-section__count" data-fold-count-target="count"
             <%= "hidden" if count.zero? %>><%= count if count.positive? %></span>
