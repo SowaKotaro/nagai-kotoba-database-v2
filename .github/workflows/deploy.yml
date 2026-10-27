@@ -2,6 +2,7 @@
 # CI(ci.yml)の完了は待たない。CI が落ちてもデプロイは止まらないので、merge の前に PR 上の CI を確かめる。
 # NAGAI_KOTOBA_DATABASE_V2_PASSWORD は渡しているが、本番では使われていない
 # (サーバ上の config/database.yml がパスワードを持つ。docs/issues.md 確定事項 28)。
+# runner を ubuntu-24.04 に固定する理由は ci.yml の jobs の直前を参照。
 name: Deploy to Production
 
 on:
@@ -11,7 +12,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
