@@ -1,0 +1,14 @@
+<%# locals: (extra_class: nil) -%>
+<%# 言語学的特徴の用語解説の一覧。定義は config/linguistic_features_glossary.yml が単一ソース。
+    公開側の詳細検索(畳んだヘルプ)と管理画面の注釈フォーム(admin/annotations/_glossary)が同じものを出す -%>
+<dl class="<%= class_names("feature-glossary", extra_class) %>">
+  <% LinguisticFeatureGlossary.all.each do |entry| %>
+    <div class="feature-glossary__item">
+      <dt><%= entry.name %></dt>
+      <dd>
+        <%= entry.description %>
+        <span class="feature-glossary__examples"><%= entry.examples.join(t(".examples_separator")) %></span>
+      </dd>
+    </div>
+  <% end %>
+</dl>

@@ -125,6 +125,18 @@
     <% selected = @search.public_send(name) %>
     <%= render layout: "section", locals: { title: title, count: selected.size, open: search_section_open?(@search, name.to_sym) } do %>
       <%= render "check_chips", name: name, collection: collection, selected: selected, legend: title %>
+      <%# 言語学的特徴は名前だけでは意味が伝わりにくいので、正規表現の書き方と同じく畳んだヘルプに用語解説を置く
+          (中身は管理画面の注釈フォームと同じ。特徴が多いので一覧は高さを決めてスクロールさせる) %>
+      <% if name == "linguistic_feature_id" %>
+        <details class="field-help">
+          <summary class="field-help__summary">
+            <%= icon "caret_down", "field-help__caret" %><%= t("searches.feature_glossary_summary") %>
+          </summary>
+          <div class="field-help__body">
+            <%= render "shared/feature_glossary" %>
+          </div>
+        </details>
+      <% end %>
     <% end %>
   <% end %>
 

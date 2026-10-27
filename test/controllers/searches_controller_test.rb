@@ -143,11 +143,15 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.char-type-key[data-char-type-target=lowerKey][hidden]"
   end
 
-  test "語種・母音パターン・正規表現(畳んだ早見表つき)の入力欄がある" do
+  test "語種・言語学的特徴(用語解説の順・畳んだ用語解説つき)・母音パターン・正規表現(畳んだ早見表つき)の入力欄がある" do
+    %w[ゴママヨ ハ行転呼].each { |name| LinguisticFeature.create!(name:) }
     get search_path
     word_origins(:kango, :eigo).each do |origin|
       assert_select "input[type=checkbox][name=?][value=?]", "word_origin_id[]", origin.id.to_s
     end
+    # 言語学的特徴のチップは id 順ではなく、管理画面と同じく用語解説の順(LinguisticFeature.in_glossary_order)
+    assert_equal %w[連濁 ハ行転呼 重箱読み ゴママヨ],
+                 css_select("input[name='linguistic_feature_id[]'] + .check-chip__face").map(&:text)
     assert_select "input#vowel_reading"
     # 音の成分は3つとも「◯つ以上」の数値欄で、条件を引き継いで開くと値が入っている
     get search_path, params: { dakuten_min: "4" }
@@ -165,6 +169,13 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".regexp-help__table dt", text: "^ア"
     assert_select ".regexp-help__table dd", text: "アで始まる"
     assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
+    # 言語学的特徴の区画にも、管理画面と同じ用語解説を畳んで添える(上の [open] count: 0 で既定は閉じている)
+    assert_select "details.search-section fieldset:has(input[name='linguistic_feature_id[]']) + details.field-help" do
+      assert_select "summary.field-help__summary", text: /#{I18n.t('searches.feature_glossary_summary')}/
+      assert_select ".feature-glossary__item", count: LinguisticFeatureGlossary.all.size
+      assert_select ".feature-glossary__item dt", text: "音韻添加"
+      assert_select ".feature-glossary__item dd", text: /まんなか/
+    end
   end
 
   # --- ジャンルの折り畳み(1,131件のチップをフラグメントキャッシュに載せている) ---

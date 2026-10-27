@@ -73,12 +73,15 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # 特徴の絞り込みは「まとめて外す」と同じ行の選び方(WordSenseFeature.matching)。該当部分は完全一致。
-  test "言語学的特徴と該当部分で絞り込め、まとめて外すパネルの初期値になる" do
+  test "言語学的特徴(用語解説の順)と該当部分で絞り込め、まとめて外すパネルの初期値になる" do
     rendaku = linguistic_features(:rendaku)
+    %w[ゴママヨ ハ行転呼].each { |name| LinguisticFeature.create!(name:) }
 
     get admin_words_path(linguistic_feature_id: rendaku.id)
     assert_select "td a", text: @word.surface
     assert_select "td a", text: words(:curry).surface, count: 0
+    # 特徴の選択肢は公開側の検索と同じく用語解説の順(コンソール・デッキ・まとめて付ける/外すも Admin::AnnotationChoices で共通)
+    assert_equal %w[連濁 ハ行転呼 重箱読み ゴママヨ], css_select("select#linguistic_feature_id option").drop(1).map(&:text)
 
     # 該当部分は特徴を選ばなくても絞れる。部分一致ではない
     get admin_words_path(feature_target: "殺")

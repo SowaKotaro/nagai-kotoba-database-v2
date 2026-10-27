@@ -20,13 +20,13 @@ class SearchesController < ApplicationController
   private
 
   # フォームの選択肢(ドロップダウンをやめて一覧/階層で選ばせるため一括読み込み)。
-  # 並びは seeds の投入順(= id 順)に揃える。
+  # 並びは seeds の投入順(= id 順)に揃える。言語学的特徴だけは、管理画面と同じく用語解説の順にする。
   def load_filter_masters
     @genres_by_parent = Genre.order(:id).group_by(&:parent_id)
     @parts_of_speech = PartOfSpeech.order(:id)
     @entity_types = EntityType.order(:id)
     @word_origins = WordOrigin.order(:id)
-    @linguistic_features = LinguisticFeature.order(:id)
+    @linguistic_features = LinguisticFeature.in_glossary_order
     load_published_counts
   end
 

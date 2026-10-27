@@ -18,10 +18,19 @@ class LinguisticFeatureGlossary
       index[name]
     end
 
+    # YAML での並び(0 始まり)。用語解説に無い名前は nil。
+    def position(name)
+      positions[name]
+    end
+
     private
 
     def index
       @index ||= all.index_by(&:name)
+    end
+
+    def positions
+      @positions ||= all.each_with_index.to_h { |entry, i| [ entry.name, i ] }
     end
 
     def load_entries

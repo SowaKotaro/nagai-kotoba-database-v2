@@ -10,7 +10,7 @@ module Admin::AnnotationChoices
     @word_origins = WordOrigin.order(:name)
     @parts_of_speech = PartOfSpeech.order(:name)
     @entity_types = EntityType.order(:name)
-    @linguistic_features = LinguisticFeature.order(:name)
+    @linguistic_features = LinguisticFeature.in_glossary_order
     @large_genres = Genre.large.order(:name)
   end
 end

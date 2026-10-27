@@ -155,6 +155,8 @@ ja:
   shared:
     radial_art:
       aria: "%{labels} を円の上に並べ、多いものほど外へ伸ばして結んだ図"
+    feature_glossary:
+      examples_separator: "　／　"
 
   layouts:
     brand: "長い言葉のデータベース"
@@ -292,6 +294,7 @@ ja:
     char_type_case_insensitive: "大文字小文字を区別しない"
     word_origin: "語種"
     linguistic_feature: "言語学的特徴"
+    feature_glossary_summary: "用語解説"
     reading_length: "読みの文字数"
     first_char: "先頭文字"
     last_char: "末尾文字"
