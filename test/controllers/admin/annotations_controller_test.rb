@@ -73,8 +73,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     # 用語解説パネル(Issue 39。「音韻添加ってなに?」への答え)
     assert_select ".ann-features details.ann-glossary" do
       assert_select "summary.ann-glossary__summary", text: /用語解説/
-      assert_select ".ann-glossary__item dt", text: "音韻添加"
-      assert_select ".ann-glossary__item dd", text: /まんなか/
+      assert_select ".ann-glossary__list .feature-glossary__item dt", text: "音韻添加"
+      assert_select ".ann-glossary__list .feature-glossary__item dd", text: /まんなか/
     end
     assert_select "a[href=?]", reresearch_admin_annotation_path(@word)
   end

@@ -8,6 +8,14 @@ class LinguisticFeature < ApplicationRecord
 
   validates :name, presence: true, uniqueness: true
 
+  # 選択肢の並び(公開側の詳細検索と、管理画面の付与・絞り込み)。用語解説(config/linguistic_features_glossary.yml)の
+  # 順に揃え、似た特徴が隣り合うようにする。用語解説に無い特徴(管理画面で足したもの)は末尾に名前順で置く。
+  # 並びの正は YAML なので、DB では並べずに Ruby で並べる(件数はマスタの数だけ)。
+  def self.in_glossary_order
+    unlisted = LinguisticFeatureGlossary.all.size
+    all.sort_by { |feature| [ LinguisticFeatureGlossary.position(feature.name) || unlisted, feature.name ] }
+  end
+
   private
 
   # 統合: この特徴を付けている中間表(word_sense_features)を other に付け替える。

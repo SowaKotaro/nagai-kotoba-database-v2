@@ -3251,6 +3251,48 @@ textarea {
   color: var(--text-muted);
 }
 
+/* 言語学的特徴の用語解説(shared/_feature_glossary)。詳細検索の畳んだヘルプと、管理画面の注釈フォーム
+   (annotate.css の .ann-glossary__list が枠を足す)で共有する。特徴が多いので高さを決めてスクロールさせ、
+   項目どうしは罫を引かずに余白だけで分ける */
+.feature-glossary {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  font-size: 13px;
+}
+
+.feature-glossary__item {
+  display: grid;
+  /* 名前の列は最長の名前(「オノマトペ(擬態語)」の 10 字)が 1 行に収まる幅 */
+  grid-template-columns: 10em 1fr;
+  gap: 2px var(--space-3);
+}
+
+.feature-glossary__item dt {
+  color: var(--text);
+}
+
+.feature-glossary__item dd {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.feature-glossary__examples {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+@media (max-width: 560px) {
+  .feature-glossary__item {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 入力欄の補足説明 */
 .field-hint {
   font-size: 14px;
