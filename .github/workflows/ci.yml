@@ -6,10 +6,12 @@ on:
     branches:
       - main
 
+# runner は ubuntu-24.04 に固定する。ubuntu-latest(26.04)には、setup-ruby が .ruby-version の Ruby 3.4.2 の
+# ビルド済みバイナリを用意していない(新しいイメージには各系列の最新パッチだけを置く)。本番の Ruby を上げるまで外さない。
 jobs:
   scan_ruby:
     name: Brakeman (Rubyセキュリティ静的解析)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -24,7 +26,7 @@ jobs:
 
   scan_js:
     name: importmap audit (JS依存の脆弱性)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +41,7 @@ jobs:
 
   audit_gems:
     name: bundler-audit (gem依存の脆弱性)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -54,7 +56,7 @@ jobs:
 
   lint:
     name: RuboCop (Rubyスタイル/lint)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -69,7 +71,7 @@ jobs:
 
   test:
     name: Test (rails test / system)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       mysql:
