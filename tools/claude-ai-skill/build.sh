@@ -17,7 +17,9 @@ mkdir -p "$REF"
 # リポジトリ内のパス参照を、バンドル内の references/ に振り替える。
 # 長いパスから先に置換する(短い方が先に当たると取りこぼす)。
 rewrite_paths() {
-  sed -e 's#\.\./word-annotation-research/SKILL\.md#references/annotation-procedure.md#g' \
+  sed -e 's#\.\./word-annotation-research/linguistic-features\.md#references/linguistic-features.md#g' \
+      -e 's#\.claude/skills/word-annotation-research/linguistic-features\.md#references/linguistic-features.md#g' \
+      -e 's#\.\./word-annotation-research/SKILL\.md#references/annotation-procedure.md#g' \
       -e 's#\.claude/skills/word-annotation-research/SKILL\.md#references/annotation-procedure.md#g' \
       -e 's#\.\./\.\./\.\./docs/annotation-guidelines\.md#references/annotation-guidelines.md#g' \
       -e 's#docs/annotation-guidelines\.md#references/annotation-guidelines.md#g' \
@@ -53,6 +55,8 @@ description: 「長い言葉のデータベース」(nagai-kotoba-database-v2)�
   - 調査手順・判定基準の正 → `references/annotation-procedure.md`
   - 収録基準・立項スコア・表記/読みの基準の正 → `references/annotation-guidelines.md`
   - 言語学的特徴の定義と例の正 → `references/linguistic-features-glossary.yml`
+  - 言語学的特徴の判定の細則（付ける条件・付けない条件・`target` の切り方・ゴママヨ系の逆引き）の正 →
+    `references/linguistic-features.md`（文中の「SKILL.md」「手順8」は `references/annotation-procedure.md` を指す）
   - 提案 JSON のスキーマと実例 → `references/schema.json` / `references/example.json`
 - **まとめての調査（`words` 配列 + `masters` の書き出し形式）が貼られたときも受け付ける。**
   語ごとに同じ手順を回し、提案を `proposals` 配列に並べて返す。
@@ -69,6 +73,9 @@ strip_frontmatter < "$ROOT/.claude/skills/word-reannotation-research/SKILL.md" |
   strip_frontmatter < "$ROOT/.claude/skills/word-annotation-research/SKILL.md" | rewrite_paths
 } > "$REF/annotation-procedure.md"
 
+# 細則は references/ の中で手順書を指すので、SKILL.md へのリンクを手順書の名前に振り替える。
+rewrite_paths < "$ROOT/.claude/skills/word-annotation-research/linguistic-features.md" \
+  | sed -e 's#](SKILL\.md)#](annotation-procedure.md)#g' > "$REF/linguistic-features.md"
 rewrite_paths < "$ROOT/docs/annotation-guidelines.md" > "$REF/annotation-guidelines.md"
 rewrite_paths < "$ROOT/config/linguistic_features_glossary.yml" > "$REF/linguistic-features-glossary.yml"
 rewrite_paths < "$ROOT/.claude/skills/word-annotation-research/schema.json" > "$REF/schema.json"

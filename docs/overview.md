@@ -321,7 +321,7 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
 | 言語学的特徴の定義 | `config/linguistic_features_glossary.yml`（注釈スキルの対応表はその写し） |
 | 収録基準 | [`annotation-guidelines.md`](annotation-guidelines.md) §0 と `WordSense::MIN_READING_LENGTH` |
 | 立項スコア・表記の決め方・読みの表記・確信度 | [`annotation-guidelines.md`](annotation-guidelines.md) §2・§3・§4・§8 |
-| 語種・ジャンル・エンティティ・特徴の付け方、意味の文体 | 注釈スキル（`.claude/skills/word-annotation-research/SKILL.md`） |
+| 語種・ジャンル・エンティティ・特徴の付け方、意味の文体 | 注釈スキル（`.claude/skills/word-annotation-research/SKILL.md`。言語学的特徴の判定の細則は同じ場所の `linguistic-features.md`） |
 | 登録予定単語の段 | `WordCandidate::STAGES` |
 | オーナーの判断 | [`issues.md`](issues.md) の確定事項（失効したものは [`history/decisions.md`](history/decisions.md)） |
 | 済んだことの記録 | [`history/`](history/README.md)（[`history/changelog.md`](history/changelog.md) ほか） |

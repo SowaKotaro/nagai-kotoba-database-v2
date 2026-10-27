@@ -25,6 +25,8 @@ description: nagai-kotoba-database-v2 の「1語だけ」のアノテーショ�
 別表記の類型は、すべてあちらが正（立項スコアの定義は guidelines §2、確信度の定義は guidelines §8 が正）。ここではその手順番号（手順3=意味、手順4=ジャンル、
 手順5=エンティティ、手順6=品詞、手順7=語種、手順8=言語学的特徴、手順9=別表記）を参照するだけにする。
 収録基準の正が [`docs/annotation-guidelines.md`](../../../docs/annotation-guidelines.md) であることも同じ。
+**言語学的特徴を調べ直すときは、判定の細則 [`linguistic-features.md`](../word-annotation-research/linguistic-features.md)
+も Read する**（特徴ごとの付ける条件・付けない条件・`target` の切り方・ゴママヨ系の逆引き）。
 
 **「2周で調べる」も同じく適用する。** 1語だけなので、まとめての調査より丁寧にできるはず。むしろ
 ここに来た語は「1周目の結果が怪しい」と人が判断した語なので、**裏取りの手を抜かない**。
