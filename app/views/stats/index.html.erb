@@ -97,7 +97,7 @@
 
   <% if @stats.origins[:categories].any? || @stats.entity_types.any? %>
     <section class="stats-section">
-      <h2 class="stats-section__title"><%= icon "translate" %><%= t("stats.index.origins.title") %></h2>
+      <h2 class="stats-section__title"><%= icon "globe_hemisphere_east" %><%= t("stats.index.origins.title") %></h2>
       <%= render "origins" %>
     </section>
   <% end %>

@@ -2,7 +2,7 @@ require "test_helper"
 
 # 詳細検索フォーム(/search)。結果は出さず、送信すると空条件を除いて単語一覧へリダイレクトする。
 class SearchesControllerTest < ActionDispatch::IntegrationTest
-  test "検索ページは誰でも開け、結果は出さずにフォームだけを描く(キーワード以外の区画は畳み、テキスト欄の確定キーは「検索」)" do
+  test "検索ページは誰でも開け、結果は出さずにフォームだけを描く(キーワード以外の区画は畳んで見出しにアイコンを添え、テキスト欄の確定キーは「検索」)" do
     get search_path
     assert_response :success
     assert_select "form.search-form"
@@ -15,6 +15,8 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form.search-form > .field input#q"
     assert_select "details.search-section", minimum: 1
     assert_select "details.search-section[open]", count: 0
+    # どの区画の見出しにも、名前の頭にアイコンを置く。装飾なので読み上げには出さない(見出しの文言は名前だけのまま)
+    assert_select ".search-section__title > svg.icon:first-child[aria-hidden=true]", count: css_select(".search-section__title").size
     # テキスト欄はどれも Enter で送信できるので、モバイルのキーボードの確定キーも揃えて「検索」にする
     assert_select "form.search-form input[type=text]", minimum: 1
     assert_select "form.search-form input[type=text]:not([enterkeyhint=search])", count: 0

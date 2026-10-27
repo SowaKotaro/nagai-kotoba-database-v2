@@ -15,6 +15,7 @@
 /* ラベル・小見出しの先頭に添える装飾アイコン。色はラベルの文字色をそのまま継承する
    (等幅の極小ラベルに、同じ細さの線画をひとつだけ置く「欄外の印」の文法) */
 .field-legend .icon,
+.search-section__title .icon,
 .section-label .icon,
 .section-heading .icon,
 .sense-attrs dt .icon,

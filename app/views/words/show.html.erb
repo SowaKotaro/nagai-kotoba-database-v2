@@ -146,7 +146,7 @@
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= icon "article" %><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
+            <dt><%= icon "part_of_speech" %><%= WordSense.human_attribute_name(:part_of_speech) %></dt>
             <dd>
               <% if sense.part_of_speech %>
                 <%= link_to sense.part_of_speech.name,
@@ -158,7 +158,7 @@
           </div>
 
           <div class="sense-attrs__item">
-            <dt><%= icon "translate" %><%= t("words.show.origins") %></dt>
+            <dt><%= icon "globe_hemisphere_east" %><%= t("words.show.origins") %></dt>
             <dd>
               <% if sense.word_origins.any? %>
                 <span class="tag-row">
