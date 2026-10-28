@@ -1,0 +1,40 @@
+<% content_for :title, t("linguistic_features.index.title") %>
+<% content_for :description, t("linguistic_features.index.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("linguistic_features.index.title"), nil ] ] %>
+
+<header class="page-header">
+  <p class="label-en"><%= t("labels.en.linguistic_features") %></p>
+  <p class="label-en"><%= t("labels.en.feature_count", count: @linguistic_features.size) %></p>
+  <h1 class="page-title"><%= t("linguistic_features.index.title") %></h1>
+  <p class="page-lead"><%= t("linguistic_features.index.lead") %></p>
+</header>
+
+<% if @linguistic_features.empty? %>
+  <p class="empty-note"><%= icon "binoculars" %><%= t("linguistic_features.index.empty") %></p>
+<% else %>
+  <%# 1 つの特徴 = 名前(一覧へのリンク)と件数 → 定義の 1 文 → 例。行は単語一覧と同じく gap: 1px の隙間で仕切る。
+      定義と例は用語解説(LinguisticFeatureGlossary)の 1 か所から引く。管理画面で足した特徴のように解説が無いものは名前と件数だけ %>
+  <ul class="feature-hub">
+    <% @linguistic_features.each do |feature| %>
+      <% entry = LinguisticFeatureGlossary.find(feature.name) %>
+      <li class="feature-hub__item">
+        <h2 class="feature-hub__head">
+          <%= link_to feature.name, words_path(linguistic_feature_id: feature.id), class: "feature-hub__name" %>
+          <span class="feature-hub__count mono"><%= t("linguistic_features.index.count", count: number_with_delimiter(@counts[feature.id])) %></span>
+        </h2>
+        <% if entry %>
+          <p class="feature-hub__description"><%= entry.definition %></p>
+          <% if entry.examples.any? %>
+            <p class="feature-hub__examples">
+              <%= t("linguistic_features.index.examples",
+                    examples: entry.examples.first(LinguisticFeaturesController::EXAMPLE_LIMIT)
+                                            .join(t("shared.feature_glossary.examples_separator"))) %>
+            </p>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

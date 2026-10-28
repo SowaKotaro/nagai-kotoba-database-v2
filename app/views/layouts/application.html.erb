@@ -131,6 +131,8 @@
           <nav class="site-footer__nav" aria-label="<%= t("layouts.footer.nav_label") %>">
             <%= link_to t("layouts.nav.words"), words_path %>
             <%= link_to t("layouts.nav.genres"), genres_path %>
+            <%= link_to t("layouts.nav.entity_types"), entity_types_path %>
+            <%= link_to t("layouts.nav.linguistic_features"), linguistic_features_path %>
             <%= link_to t("layouts.nav.browse"), browse_path %>
             <%= link_to t("layouts.nav.advanced_search"), search_path %>
             <%# 毎回別の語へ 302 する導線。クロールしても意味がないので nofollow %>

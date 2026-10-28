@@ -4,7 +4,11 @@
 # パネルと docs/annotation-guidelines.md §7 が参照する。
 # 種別: 値オブジェクト（DB に触れない）。
 class LinguisticFeatureGlossary
-  Entry = Struct.new(:name, :description, :examples, keyword_init: true)
+  Entry = Struct.new(:name, :description, :examples, keyword_init: true) do
+    # 説明の最初の 1 文(句点まで)。説明は「定義 → 起こらない場合・このデータベースで付ける範囲」の順に書くので、
+    # 探す画面(/linguistic_features)で定義だけを短く見せるのに使う。句点が無ければ説明の全文。
+    def definition = description[/\A[^。]*。/] || description
+  end
 
   GLOSSARY_PATH = "config/linguistic_features_glossary.yml".freeze
 

@@ -19,6 +19,11 @@ Rails.application.routes.draw do
 
   # ジャンル階層のハブページ(全ジャンル面へのクロール導線)。Issue 21。
   resources :genres, only: :index
+  # エンティティ(作品名・駅名 など、何の名前か)と言語学的特徴(連濁 など)から探すページ。
+  # 詳細検索の区画を、よく使われる探し方だけ 1 ページに切り出したもの(ジャンル・索引と同じ位置づけ)。
+  # 特徴ごとのページ(/linguistic_features/:id)は作らない(URL 空間を増やさない。絞り込みは /words のファセット。Issue 102)。
+  resources :entity_types, only: :index
+  resources :linguistic_features, only: :index
 
   # 公開側からの収録リクエスト(Issue 75)。閲覧専用だった公開面に開ける唯一の書き込み経路。
   # duplicates は送信前の任意チェック(レコードを作らない)。

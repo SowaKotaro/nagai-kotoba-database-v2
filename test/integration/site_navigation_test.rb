@@ -7,13 +7,15 @@ class SiteNavigationTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
 
-    # ヘッダーは統計と、「検索」プルダウンの中のジャンル・索引
+    # ヘッダーは統計と、「検索」プルダウンの中の、詳細検索から切り出した探し方(ジャンル・エンティティ・言語学的特徴・索引)。
+    # フッターの「さがす」にも同じものを並べる
     assert_select "header a[href=?]", stats_path
-    assert_select "header a[href=?]", genres_path, text: I18n.t("layouts.nav.genres")
-    assert_select "header a[href=?]", browse_path, text: I18n.t("layouts.nav.browse")
-
-    assert_select "footer a[href=?]", genres_path, text: I18n.t("layouts.nav.genres")
-    assert_select "footer a[href=?]", browse_path, text: I18n.t("layouts.nav.browse")
+    search_pages = { genres_path => "genres", entity_types_path => "entity_types",
+                     linguistic_features_path => "linguistic_features", browse_path => "browse" }
+    search_pages.each do |path, key|
+      assert_select "header a[href=?]", path, text: I18n.t("layouts.nav.#{key}")
+      assert_select "footer a[href=?]", path, text: I18n.t("layouts.nav.#{key}")
+    end
     assert_select "footer a[href=?]", stats_path
     assert_select "footer a[href=?]", about_path, text: I18n.t("layouts.nav.about")
     assert_select "footer a[href=?]", privacy_path, text: I18n.t("layouts.nav.privacy")

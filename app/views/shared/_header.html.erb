@@ -36,8 +36,9 @@
         <%# 収録統計(Issue 34) %>
         <%= link_to t("layouts.nav.stats"), stats_path, class: ("is-current" if request.path == stats_path) %>
 
-        <%# 「検索」はプルダウン。配下にジャンル・索引・詳細検索を束ねる %>
-        <% search_menu_paths = [ genres_path, browse_path, search_path ] %>
+        <%# 「検索」はプルダウン。配下に、詳細検索から切り出した探し方(ジャンル・エンティティ・言語学的特徴・索引)と
+            詳細検索を束ねる。並びは、何についての言葉か(ジャンル → 何の名前か → 言葉のしくみ)→ 読みの形 → 全条件 %>
+        <% search_menu_paths = [ genres_path, entity_types_path, linguistic_features_path, browse_path, search_path ] %>
         <div class="nav-menu" data-controller="nav-menu"
              data-action="click@window->nav-menu#closeOnOutside keydown.esc@window->nav-menu#close">
           <button type="button" id="nav-menu-search-trigger"
@@ -48,9 +49,16 @@
           </button>
           <div class="nav-menu__panel" id="nav-menu-search" hidden
                data-nav-menu-target="panel" aria-labelledby="nav-menu-search-trigger">
-            <%# 各項目に小さなアイコンを添える(ジャンル=タグ / 索引=50音表 / 詳細検索=絞り込み) %>
+            <%# 各項目に小さなアイコンを添える(単語詳細の関連データ・詳細検索の区画と同じもの。
+                ジャンル=タグ / エンティティ=立方体 / 言語学的特徴=ペン先 / 索引=50音表 / 詳細検索=絞り込み) %>
             <%= link_to genres_path, class: ("is-current" if request.path == genres_path) do %>
               <%= icon "tag" %><span><%= t("layouts.nav.genres") %></span>
+            <% end %>
+            <%= link_to entity_types_path, class: ("is-current" if request.path == entity_types_path) do %>
+              <%= icon "cube" %><span><%= t("layouts.nav.entity_types") %></span>
+            <% end %>
+            <%= link_to linguistic_features_path, class: ("is-current" if request.path == linguistic_features_path) do %>
+              <%= icon "pen_nib" %><span><%= t("layouts.nav.linguistic_features") %></span>
             <% end %>
             <%= link_to browse_path, class: ("is-current" if request.path == browse_path) do %>
               <%= icon "grid_nine" %><span><%= t("layouts.nav.browse") %></span>

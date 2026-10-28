@@ -121,6 +121,8 @@ ja:
       search: "SEARCH"
       browse: "KANA INDEX"
       genres: "GENRES"
+      entity_types: "ENTITY TYPES"
+      linguistic_features: "LINGUISTIC FEATURES"
       rankings: "RANKINGS"
       stats: "STATISTICS"
       about: "ABOUT"
@@ -145,6 +147,8 @@ ja:
       longest_here: "LONGEST ON THIS PAGE"
       boards: "%{count} BOARDS / TOP %{limit}"
       genre_nodes: "3 LEVELS / %{count} CATEGORIES"
+      entity_type_count: "%{count} TYPES"
+      feature_count: "%{count} FEATURES"
       updated: "UPDATED %{date}"
       kana_lengths: "%{kana} KANA / %{lengths} LENGTHS"
       # レールの figure-number に添える単位ラベル
@@ -157,6 +161,8 @@ ja:
       aria: "%{labels} を円の上に並べ、多いものほど外へ伸ばして結んだ図"
     feature_glossary:
       examples_separator: "　／　"
+    kana_heat_grid:
+      count_label: "%{char}：%{count}語義"
 
   layouts:
     brand: "長い言葉のデータベース"
@@ -170,6 +176,8 @@ ja:
       words: "一覧"
       ranking: "ランキング"
       genres: "ジャンル"
+      entity_types: "エンティティ"
+      linguistic_features: "言語学的特徴"
       browse: "索引"
       stats: "統計"
       search: "検索"
@@ -1180,13 +1188,22 @@ ja:
   browse:
     index:
       title: "索引"
-      eyebrow: "50音・文字数"
-      description: "収録している長い言葉を、読みの先頭文字(50音)や読みの文字数から辿れる索引です。件数つき。"
-      lead: "読みの先頭文字(50音)や、読みの文字数から言葉を探せます。数字はその条件に当てはまる公開語義の数です。"
-      by_first_char: "先頭文字（50音）から"
-      by_reading_length: "読みの文字数から"
+      description: "収録している長い言葉を、読みの先頭・末尾の文字(50音)や、読みの文字数・モーラ数から辿れる索引です。件数つき。"
+      lead: "読みの先頭・末尾の文字(50音)や、読みの文字数・モーラ数から言葉を探せます。数字はその条件に当てはまる公開語義の数です。"
+      by_kana: "50音から"
+      by_length: "読みの長さから"
+      kana_toggle_label: "先頭の文字と末尾の文字の切り替え"
+      length_toggle_label: "文字数とモーラ数の切り替え"
+      toggle:
+        first_char: "先頭の文字"
+        last_char: "末尾の文字"
+        reading_length: "文字数"
+        mora_count: "モーラ数"
+      length_unit:
+        reading_length: "%{count}文字"
+        mora_count: "%{count}モーラ"
       count_unit: "%{count}件"
-      count_label: "%{char}：%{count}件"
+      mora_hint: "モーラ=拍。拗音は直前の音と合わせて1拍(「シャ」=1拍)、促音「ッ」・撥音「ン」・長音「ー」もそれぞれ1拍と数えます。"
       empty: "まだ公開されている語がありません。"
 
   rankings:
@@ -1289,7 +1306,6 @@ ja:
         title: "頭文字と末尾文字"
         first_heading: "先頭文字(50音)"
         last_heading: "末尾文字(50音)"
-        count_label: "%{char}: %{count}語義"
         matrix_heading: "頭文字の行 × 末尾文字の行"
         matrix_lead: "濁音・半濁音・小書きは清音の行に数えています。セルを押すとその組み合わせの語の一覧を表示します。件数はホバーで表示します。"
         corner: "頭文字＼末尾"
@@ -1368,11 +1384,32 @@ ja:
     path_separator: " › "
     index:
       title: "ジャンルから探す"
-      eyebrow: "ジャンル一覧"
       description: "収録している日本語の長い言葉を、大・中・小のジャンル階層から辿れます。各分類の公開件数つき。"
       lead: "%{count} の分類を、大・中・小の階層をたどって辿れます。数字はそのジャンルに含まれる公開語義の数です。"
       whole: "%{name} 全体を見る"
       empty: "まだ公開されているジャンルがありません。"
+      filter_label: "ジャンルを名前で絞り込む"
+      filter_placeholder: "ジャンルを名前で絞り込む（例: アニメ、鉄道）"
+      filter_empty: "その名前を含むジャンルはありません。"
+
+  entity_types:
+    index:
+      title: "エンティティから探す"
+      description: "収録している日本語の長い言葉を、作品名・キャラクター名・楽曲名・駅名など、何の名前なのか(エンティティ)から辿れます。各エンティティの公開件数つき。"
+      lead: "作品名・キャラクター名・楽曲名・駅名など、その言葉が何の名前なのか(エンティティ)から探せます。語の多い順に並べています。数字はそのエンティティの公開語義の数です。"
+      filter_label: "エンティティを名前で絞り込む"
+      filter_placeholder: "エンティティを名前で絞り込む（例: 駅名、曲名）"
+      filter_empty: "その名前を含むエンティティはありません。"
+      empty: "まだ公開されている語がありません。"
+
+  linguistic_features:
+    index:
+      title: "言語学的特徴から探す"
+      description: "収録している日本語の長い言葉を、連濁・熟字訓・重箱読み・ゴママヨなど、読みや表記に表れる言語学的特徴から辿れます。各特徴の解説と例・公開件数つき。"
+      lead: "連濁・熟字訓・重箱読みなど、読みや表記に表れる言語学的特徴から探せます。名前を押すと、その特徴を持つ言葉の一覧へ進みます。特徴は語の該当部分ごとに付けていて、まだ一部の語にしか付いていません。数字はその特徴を持つ公開語義の数です。"
+      count: "%{count}語義"
+      examples: "例: %{examples}"
+      empty: "まだ言語学的特徴の付いた語が公開されていません。"
 
   pages:
     about:

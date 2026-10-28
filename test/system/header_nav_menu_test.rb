@@ -1,6 +1,6 @@
 require "application_system_test_case"
 
-# ヘッダーナビの「検索」プルダウン(ジャンル/索引/詳細検索)の開閉と遷移。
+# ヘッダーナビの「検索」プルダウン(ジャンル/エンティティ/言語学的特徴/索引/詳細検索)の開閉と遷移。
 class HeaderNavMenuTest < ApplicationSystemTestCase
   # プルダウンの開閉はトグル(冪等でない)なので click_expecting は使わず素のクリックで検証する。
   test "「検索」のプルダウンは Escape やメニューの外側のクリックで閉じ、選んだ先へ遷移する" do
@@ -17,11 +17,11 @@ class HeaderNavMenuTest < ApplicationSystemTestCase
     find("h1").click
     assert_nav_menu_closed
 
-    # ジャンル・索引・詳細検索が並び、選んだ先へ遷移する。遷移先ではトリガーが現在地表示になる
+    # ジャンル・エンティティ・言語学的特徴・索引・詳細検索がこの順に並び、選んだ先へ遷移する。遷移先ではトリガーが現在地表示になる
     open_nav_menu
     within ".nav-menu__panel" do
-      assert_selector "a", text: I18n.t("layouts.nav.genres")
-      assert_selector "a", text: I18n.t("layouts.nav.browse")
+      assert_equal %w[genres entity_types linguistic_features browse advanced_search].map { |key| I18n.t("layouts.nav.#{key}") },
+                   all("a").map(&:text)
       click_on I18n.t("layouts.nav.advanced_search")
     end
     assert_current_path search_path

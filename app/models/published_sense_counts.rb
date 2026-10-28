@@ -1,4 +1,4 @@
-# 公開(注釈済み)語義の件数集計。50音索引(/browse)・ジャンルのハブ(/genres)と、
+# 公開(注釈済み)語義の件数集計。探すための索引のページ(/browse・/genres・/entity_types・/linguistic_features)と、
 # 詳細検索(/search)の50音表のヒート・ジャンルの件数・読みの文字数のヒストグラムが使う。
 #
 # どれも「公開語義の全件を GROUP BY して数える」ので、語数に正比例して重くなる
@@ -23,8 +23,23 @@ class PublishedSenseCounts
     # 読みの文字数ごとの語義数 { 12 => 34, ... }。
     def by_reading_length = fetch(:reading_length) { WordSense.published.group(:reading_length).count }
 
+    # モーラ数ごとの語義数 { 11 => 34, ... }。
+    def by_mora_count = fetch(:mora_count) { WordSense.published.group(:mora_count).count }
+
     # 小分類ジャンルごとの語義数 { genre_id => 5, ... }。上位は子の合計で導出する。
     def by_genre = fetch(:genre) { WordSense.published.group(:genre_id).count }
+
+    # エンティティごとの語義数 { entity_type_id => 5, ... }。未設定の語義は nil キーにまとまる。
+    def by_entity_type = fetch(:entity_type) { WordSense.published.group(:entity_type_id).count }
+
+    # 言語学的特徴ごとの語義数 { linguistic_feature_id => 5, ... }。特徴は該当部分ごとに付くので、
+    # 同じ語義に 2 か所あっても 1 と数える(絞り込み先の一覧と同じ単位。統計 §8 は該当部分ごとに数える)。
+    def by_linguistic_feature
+      fetch(:linguistic_feature) do
+        WordSense.published.joins(:word_sense_features)
+                 .group("word_sense_features.linguistic_feature_id").distinct.count(:id)
+      end
+    end
 
     private
 

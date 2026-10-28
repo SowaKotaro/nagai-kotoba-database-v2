@@ -1,8 +1,9 @@
 xml.instruct! :xml, version: "1.0", encoding: "UTF-8"
 xml.urlset(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do
-  # 静的ページ(トップ・単語一覧・ジャンル・索引・ランキング・統計・About・プライバシーポリシー)。
+  # 静的ページ(トップ・単語一覧・ジャンル・エンティティ・言語学的特徴・索引・ランキング・統計・About・プライバシーポリシー)。
   # lastmod は付けない。
-  [ "/", words_path, genres_path, browse_path, rankings_path, stats_path, about_path, privacy_path ].each do |path|
+  [ "/", words_path, genres_path, entity_types_path, linguistic_features_path, browse_path,
+    rankings_path, stats_path, about_path, privacy_path ].each do |path|
     xml.url do
       xml.loc SiteUrl.absolute(path)
     end
