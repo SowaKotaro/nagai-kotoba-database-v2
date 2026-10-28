@@ -60,7 +60,7 @@ class BulkDetachmentTest < ActiveSupport::TestCase
     assert_nil @murder_sense.reload.genre_id
   end
 
-  test "外しても注釈状態と収録日は変えず、語の更新日時を動かす" do
+  test "外しても注釈状態と収録日は変えず、外すものが無ければ 0 件" do
     annotated_at = @murder.annotated_at
     travel_to 1.day.from_now do
       BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: linguistic_features(:rendaku).id).apply
@@ -69,14 +69,40 @@ class BulkDetachmentTest < ActiveSupport::TestCase
       assert_equal annotated_at, @murder.annotated_at
       assert_in_delta Time.current, @murder.updated_at, 1.second
     end
-  end
 
-  test "外すものが無ければ何も変えずに 0 件を返す" do
+    # 外すものが無ければ何も変えずに 0 件を返す
     result = BulkDetachment.new(word_ids: [ @curry.id ], entity_type_id: entity_types(:person_name).id).apply
     assert_equal [ 0, 0 ], [ result.words, result.removed ]
   end
 
-  test "特徴は、選んだ語すべてに付いていなければ(該当部分を添えたらその該当部分で)バリデーションエラー" do
+  test "apply は検証を通らなければ何も外さず、途中で失敗したら全体を巻き戻す" do
+    assert_raises(ActiveModel::ValidationError) do
+      BulkDetachment.new(word_ids: [ @murder.id, @curry.id ], linguistic_feature_id: linguistic_features(:rendaku).id,
+                         entity_type_id: entity_types(:book_title).id).apply
+    end
+    assert_equal 2, @murder_sense.word_sense_features.count
+    assert_equal entity_types(:book_title).id, @murder_sense.reload.entity_type_id
+
+    # 途中で失敗したら全体を巻き戻す
+    failing = ->(*) { raise ActiveRecord::RecordInvalid, WordSense.new }
+    assert_raises(ActiveRecord::RecordInvalid) do
+      stub_method(WordSenseOrigin, :where, failing) do
+        BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: linguistic_features(:rendaku).id,
+                           word_origin_ids: [ word_origins(:kango).id ]).apply
+      end
+    end
+    assert_equal 2, @murder_sense.word_sense_features.count, "特徴を外したまま残った"
+  end
+
+  test "検証: 語・外すものが要り、特徴は選んだ語すべてに付いていなければエラー(名指しは件数と文字数で切る)" do
+    assert_includes BulkDetachment.new(word_ids: [], genre_id: genres(:small_novel).id).tap(&:valid?)
+                                  .errors.full_messages.join, "外す語"
+    assert_includes BulkDetachment.new(word_ids: [ @murder.id ], word_origin_ids: [ "" ]).tap(&:valid?)
+                                  .errors.full_messages.join, "外すもの"
+    assert_includes BulkDetachment.new(word_ids: [ @murder.id ], feature_target: "殺人").tap(&:valid?)
+                                  .errors.full_messages.join, "特徴も選んで"
+
+    # 特徴は、選んだ語すべてに付いていなければ(該当部分を添えたらその該当部分で)バリデーションエラー
     rendaku = linguistic_features(:rendaku).id
     assert BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: rendaku, feature_target: "殺人").valid?
 
@@ -91,9 +117,8 @@ class BulkDetachmentTest < ActiveSupport::TestCase
     other_target = BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: rendaku, feature_target: "事件")
     assert_not other_target.valid?
     assert_includes other_target.errors.full_messages.join, "1 語（#{@murder.surface}）には、指定した言語学的特徴が該当部分「事件」に付いていません"
-  end
 
-  test "特徴が付いていない語は、件数は全部を数え、名指しは決まった件数まで・決まった文字数で切り、省いたら「など」を付ける" do
+    # 特徴が付いていない語は、件数は全部を数え、名指しは決まった件数まで・決まった文字数で切り、省いたら「など」を付ける
     shown = BulkDetachment::MISSING_FEATURE_SURFACES_SHOWN
     long_surface = "長" * 255
     words = [ Word.create!(surface: long_surface) ] + Array.new(shown) { |i| Word.create!(surface: "特徴の無い語#{i}") }
@@ -105,34 +130,5 @@ class BulkDetachmentTest < ActiveSupport::TestCase
     assert_includes message, "#{"長" * (BulkDetachment::MISSING_FEATURE_SURFACE_LENGTH - 1)}…、"
     assert_includes message, "#{words[shown - 1].surface} など）"
     assert_not_includes message, words[shown].surface
-  end
-
-  test "apply も検証し、通らなければ何も外さずに例外にする" do
-    assert_raises(ActiveModel::ValidationError) do
-      BulkDetachment.new(word_ids: [ @murder.id, @curry.id ], linguistic_feature_id: linguistic_features(:rendaku).id,
-                         entity_type_id: entity_types(:book_title).id).apply
-    end
-    assert_equal 2, @murder_sense.word_sense_features.count
-    assert_equal entity_types(:book_title).id, @murder_sense.reload.entity_type_id
-  end
-
-  test "途中で失敗したら全体を巻き戻す" do
-    failing = ->(*) { raise ActiveRecord::RecordInvalid, WordSense.new }
-    assert_raises(ActiveRecord::RecordInvalid) do
-      stub_method(WordSenseOrigin, :where, failing) do
-        BulkDetachment.new(word_ids: [ @murder.id ], linguistic_feature_id: linguistic_features(:rendaku).id,
-                           word_origin_ids: [ word_origins(:kango).id ]).apply
-      end
-    end
-    assert_equal 2, @murder_sense.word_sense_features.count, "特徴を外したまま残った"
-  end
-
-  test "語・外すものが無いか、該当部分だけで特徴を選んでいないとバリデーションエラー" do
-    assert_includes BulkDetachment.new(word_ids: [], genre_id: genres(:small_novel).id).tap(&:valid?)
-                                  .errors.full_messages.join, "外す語"
-    assert_includes BulkDetachment.new(word_ids: [ @murder.id ], word_origin_ids: [ "" ]).tap(&:valid?)
-                                  .errors.full_messages.join, "外すもの"
-    assert_includes BulkDetachment.new(word_ids: [ @murder.id ], feature_target: "殺人").tap(&:valid?)
-                                  .errors.full_messages.join, "特徴も選んで"
   end
 end

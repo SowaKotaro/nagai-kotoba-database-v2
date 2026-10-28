@@ -3,7 +3,7 @@ require "test_helper"
 class HomeControllerTest < ActionDispatch::IntegrationTest
   # 一括登録で下書きを作った日(created_at)と、注釈を終えて公開した日(annotated_at)は何日もずれる。
   # トップの「今月の新収録」と新着欄は「サイトに出てきた日」で数え、並べる。
-  test "今月の新収録は公開日(annotated_at)で数え、下書きを作った月(created_at)では数えない" do
+  test "今月の新収録と最近追加された単語は公開日(annotated_at)で数えて並べる" do
     Word.annotated.update_all(annotated_at: Time.current)
     get root_path
     assert_response :success
@@ -13,9 +13,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     Word.annotated.update_all(created_at: Time.current, annotated_at: 2.months.ago)
     get root_path
     assert_select ".stats-grid__item dd", text: /\A0/
-  end
 
-  test "最近追加された単語は公開日(annotated_at)で並び、その日付を表示する" do
+    # 最近追加された単語は公開日(annotated_at)で並び、その日付を表示する
     words(:abc_murder).update_columns(created_at: "2026-07-29 10:00:00", annotated_at: "2026-08-04 10:00:00")
     words(:curry).update_columns(created_at: "2026-08-03 10:00:00", annotated_at: "2026-08-03 10:00:00")
 
@@ -29,7 +28,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   # 看板の「最長の読み」は、下の「読みが長い言葉」の1位と同じ値でなければならない
   # (別々に数えると、片方だけ古い値が出て食い違う)。
-  test "トップの最長ランキングは看板の最長の読みと一致し、ランキングページへの導線がある" do
+  test "最長ランキングは看板と一致し(多語義語は先頭の語義)、検索欄は単語一覧へ送る" do
     get root_path
     assert_response :success
 
@@ -43,11 +42,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
              .find { |item| item.css("dt").text == I18n.t("home.index.stats.longest") }
     assert_not_nil figure, "看板に「最長の読み」の行がある"
     assert_equal longest.gsub(/[^0-9]/, ""), figure.css("dd").text.gsub(/[^0-9]/, "")
-  end
 
-  # いまは「読みが長い言葉」の並びは words.max_reading_length で決まるが、看板と行に出す数は
-  # 先頭(id が最小)の語義の文字数。先頭の語義が最長でない語では、並びの指標と出る数がずれる(いまの振る舞い)。
-  test "多語義語が最長のとき、看板と「読みが長い言葉」の数は先頭の語義の文字数" do
+    # 多語義語が最長のとき、看板と「読みが長い言葉」の数は先頭の語義の文字数
+    # いまは「読みが長い言葉」の並びは words.max_reading_length で決まるが、看板と行に出す数は
+    # 先頭(id が最小)の語義の文字数。先頭の語義が最長でない語では、並びの指標と出る数がずれる(いまの振る舞い)。
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい
     word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ") # 15 字
@@ -61,15 +59,14 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     figure = css_select(".stats-grid--rows .stats-grid__item")
              .find { |item| item.css("dt").text == I18n.t("home.index.stats.longest") }
     assert_equal "6", figure.css("dd").text.gsub(/[^0-9]/, "")
-  end
 
-  # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。
-  test "ホームの検索欄は単語一覧へ q を GET で送る" do
+    # ホームの検索欄は単語一覧へ q を GET で送る
+    # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。
     get root_path
     assert_select "form.hero-search[action=?][method=get] input[name=q]", words_path
   end
 
-  test "今日の一語は日付で決まり、翌日は別の語になる" do
+  test "今日の一語は日付とキャッシュした語数で決まる" do
     ordered = Word.annotated.order(:id).to_a
     assert_equal 2, ordered.size, "フィクスチャの公開語は2語の前提"
     date = Date.new(2026, 10, 1)
@@ -80,11 +77,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     travel_to((date + 1).in_time_zone.change(hour: 12)) { get root_path }
     assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[1])
-  end
 
-  # 語数はホームの統計と一緒にキャッシュしている。公開・保留の直後でキャッシュの語数と実際の語数が
-  # ずれていても、今日の一語はキャッシュの語数で選ぶ(数え直すと COUNT が毎リクエストに戻る)。
-  test "今日の一語は、キャッシュした語数で選ぶ(実際の語数とずれていても)" do
+    # 今日の一語は、キャッシュした語数で選ぶ(実際の語数とずれていても)
+    # 語数はホームの統計と一緒にキャッシュしている。公開・保留の直後でキャッシュの語数と実際の語数が
+    # ずれていても、今日の一語はキャッシュの語数で選ぶ(数え直すと COUNT が毎リクエストに戻る)。
     ordered = Word.annotated.order(:id).to_a
     # 2 語なら先頭、3 語なら 2 番目を選ぶ日(jd % 2 == 0 かつ jd % 3 == 1)
     date = Date.new(2026, 10, 1)

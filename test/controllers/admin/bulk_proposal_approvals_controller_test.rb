@@ -4,14 +4,13 @@ require "test_helper"
 class Admin::BulkProposalApprovalsControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in_as(admins(:one)) }
 
-  test "プレビューに一括対象の語と承認ボタンが出る" do
+  test "プレビューは対象語と承認ボタンを出し、対象が無ければ空表示" do
     get admin_bulk_proposal_approval_path
     assert_response :success
     assert_select ".bulk-approval__word", text: /涼宮ハルヒの憂鬱/
     assert_select "input[type=submit]"
-  end
 
-  test "対象が無ければ空表示で承認ボタンを出さない" do
+    # 対象が無ければ空表示で承認ボタンを出さない
     annotation_proposals(:haruhi_proposal).applied!
     get admin_bulk_proposal_approval_path
     assert_response :success

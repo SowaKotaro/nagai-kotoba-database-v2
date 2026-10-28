@@ -1,44 +1,39 @@
 require "test_helper"
 
 class WordsHelperTest < ActionView::TestCase
-  test "リード文: 読み・文字数・モーラ・ジャンル・意味を散文化する" do
+  test "リード文: 単一語義は読み・文字数・モーラ・ジャンル・意味を散文化し、無いものは省く" do
     word = words(:abc_murder)
     expected = "「ABC殺人事件」は、読み「さつじんじけん」（7文字・7モーラ）の日本語の長い言葉。" \
                "ジャンルは 文学 › 日本文学 › 小説。人を殺す事件"
     assert_equal expected, word_lead_sentence(word)
-  end
 
-  test "リード文: ジャンル・意味が無ければ省く" do
+    # リード文: ジャンル・意味が無ければ省く
     word = words(:curry)
     expected = "「カレーライス」は、読み「カレー」（3文字・3モーラ）の日本語の長い言葉。"
     assert_equal expected, word_lead_sentence(word)
-  end
 
-  test "リード文: モーラ数が無ければ文字数のみを添える" do
+    # リード文: モーラ数が無ければ文字数のみを添える
     word = words(:curry)
     word.word_senses.min_by(&:id).mora_count = nil
     expected = "「カレーライス」は、読み「カレー」（3文字）の日本語の長い言葉。"
     assert_equal expected, word_lead_sentence(word)
-  end
 
-  test "リード文: 語義が無ければ空文字を返す" do
+    # リード文: 語義が無ければ空文字を返す
     assert_equal "", word_lead_sentence(Word.new(surface: "無語義"))
   end
 
   # --- X 共有の本文(投稿上限 280 単位 = 全角 128 文字に収める) ---
-  test "X共有本文: 短いリード文はそのまま使う" do
+  test "X共有本文はリード文を上限で切り詰め、無ければ見出し語を使う" do
     word = words(:curry)
     lead = word_lead_sentence(word)
     assert_equal lead, x_share_text(word, lead)
-  end
 
-  test "X共有本文: 長いリード文は上限で切り詰めて省略記号を付ける" do
+    # X共有本文: 長いリード文は上限で切り詰めて省略記号を付ける
     text = x_share_text(words(:abc_murder), "あ" * 200)
     assert_equal WordsHelper::X_SHARE_TEXT_LIMIT, text.length
     assert text.end_with?("…")
-  end
 
-  test "X共有本文: リード文が無ければ見出し語を使う" do
+    # X共有本文: リード文が無ければ見出し語を使う
     word = words(:abc_murder)
     assert_equal word.surface, x_share_text(word, "")
   end

@@ -14,7 +14,7 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
     readings.drop(1).each { |reading| word.word_senses.create!(reading: reading) }
   end
 
-  test "「多い遷移だけ表示」で少ない遷移だけが伏せられる" do
+  test "「多い遷移だけ表示」で少ない遷移を伏せ、ノードを押し継いで選んだ並びの検索へ進める" do
     visit stats_path
 
     assert_selector ".vowel-graph__edge.is-faint", visible: true, minimum: 1
@@ -27,11 +27,10 @@ class StatsVowelGraphTest < ApplicationSystemTestCase
 
     # 多い遷移はそのまま残る(全部消えてしまっては図にならない)
     assert_selector ".vowel-graph__edge:not(.is-faint)", visible: true, count: strong
-  end
 
-  # 選び方の決まり(vowel_graph_controller.js): 鎖の端の隣を押せば伸び、離れた拍は鎖を残したまま
-  # 「控え」として選ぶ。あいだが埋まれば控えまで繋ぎ、控えの隣が決まったときに初めて鎖を引き直す。
-  test "ノードを押し継いで母音の並びを選び、その並びの検索へ進める" do
+    # ノードを押し継いで母音の並びを選び、その並びの検索へ進める
+    # 選び方の決まり(vowel_graph_controller.js): 鎖の端の隣を押せば伸び、離れた拍は鎖を残したまま
+    # 「控え」として選ぶ。あいだが埋まれば控えまで繋ぎ、控えの隣が決まったときに初めて鎖を引き直す。
     visit stats_path
     wait_for_stimulus("vowel-graph")
     assert_no_selector ".vowel-graph-panel__readout", visible: true

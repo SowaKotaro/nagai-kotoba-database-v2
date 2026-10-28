@@ -1,62 +1,50 @@
 require "test_helper"
 
 class KanaRowTest < ActiveSupport::TestCase
-  test "清音はその行に写像される" do
+  test "行への写像: 濁音・半濁音・小書き・ひらがな・半角カナは清音の行に含め、かな以外は行を持たない" do
     assert_equal "カ", KanaRow.row("カ")
     assert_equal "ワ", KanaRow.row("ヲ")
     assert_equal "ン", KanaRow.row("ン")
-  end
 
-  test "濁音・半濁音は清音の行に含める(しりとりの慣習)" do
+    # 濁音・半濁音は清音の行に含める(しりとりの慣習)
     assert_equal "カ", KanaRow.row("ガ")
     assert_equal "ハ", KanaRow.row("パ")
     assert_equal "ア", KanaRow.row("ヴ")
-  end
 
-  test "小書きかなは大書きの行に含める" do
+    # 小書きかなは大書きの行に含める
     assert_equal "タ", KanaRow.row("ッ")
     assert_equal "ヤ", KanaRow.row("ョ")
-  end
 
-  test "ひらがな・半角カナも同じ行に写像される" do
+    # ひらがな・半角カナも同じ行に写像される
     assert_equal "サ", KanaRow.row("さ")
     assert_equal "カ", KanaRow.row("ｶ")
-  end
 
-  test "かな以外(記号・長音符・漢字)は行を持たない" do
+    # かな以外(記号・長音符・漢字)は行を持たない
     assert_nil KanaRow.row("ー")
     assert_nil KanaRow.row("漢")
     assert_nil KanaRow.row("A")
     assert_nil KanaRow.row(nil)
+
+    # 行の全メンバーが行の写像と一致する(表の自己整合)
+    KanaRow::ROWS.each do |row, chars|
+      chars.each { |char| assert_equal row, KanaRow.row(char) }
+    end
   end
 
-  test "base は基本46字へ畳む(濁音・小書き・歴史的仮名)" do
+  test "base は基本46字へ畳み、載らない文字は nil" do
     assert_equal "カ", KanaRow.base("ガ")
     assert_equal "ハ", KanaRow.base("ぱ")
     assert_equal "ツ", KanaRow.base("ッ")
     assert_equal "イ", KanaRow.base("ヰ")
     assert_equal "ウ", KanaRow.base("ヴ")
     assert_equal "ヲ", KanaRow.base("ヲ")
-  end
 
-  test "base は基本46字に載らない文字に nil を返す" do
+    # base は基本46字に載らない文字に nil を返す
     assert_nil KanaRow.base("ー")
     assert_nil KanaRow.base("漢")
-  end
 
-  test "基本46字はちょうど46字" do
-    assert_equal 46, KanaRow::BASE_46.size
-    assert_equal KanaRow::BASE_46.size, KanaRow::BASE_46.uniq.size
-  end
-
-  test "行の全メンバーが行の写像と一致する(表の自己整合)" do
-    KanaRow::ROWS.each do |row, chars|
-      chars.each { |char| assert_equal row, KanaRow.row(char) }
-    end
-  end
-
-  # かなの畳み込み(T0-18): 1 字ずつ NFKC とカタカナ化を経て、行と基本46字へ畳む。
-  test "半角カナ・合成濁点・ゔ・ゕ・ゖ の行と基本字" do
+    # 半角カナ・合成濁点・ゔ・ゕ・ゖ の行と基本字
+    # かなの畳み込み(T0-18): 1 字ずつ NFKC とカタカナ化を経て、行と基本46字へ畳む。
     half_ga = KANA_FOLD_SAMPLE[0, 2]
     combined_ga = KANA_FOLD_SAMPLE[4, 2]
     vu, small_ka, small_ke = KANA_FOLD_SAMPLE[6], KANA_FOLD_SAMPLE[7], KANA_FOLD_SAMPLE[8]

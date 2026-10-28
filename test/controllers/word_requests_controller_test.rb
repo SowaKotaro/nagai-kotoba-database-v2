@@ -25,16 +25,15 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     { word_request: { items_attributes: { "0" => { surface: surface, reading: reading }.compact } } }
   end
 
-  test "誰でもフォームを開け、検索結果0件からの導線ではキーワードが埋まり、インデックスはさせない" do
+  test "誰でもフォームを開け(noindex)、検索0件からはキーワードが埋まり、項目名が揃う" do
     get new_request_path(surface: "検索して見つからなかった言葉")
     assert_response :success
     assert_select "form[action=?]", requests_path
     assert_select "input[value=?]", "検索して見つからなかった言葉"
     assert_select "meta[name=robots][content=?]", "noindex,follow"
-  end
 
-  # 送信を受ける側(コントローラ・モデル)が読む名前なので、変わったら気づけるよう固定する。
-  test "フォームの項目名" do
+    # フォームの項目名
+    # 送信を受ける側(コントローラ・モデル)が読む名前なので、変わったら気づけるよう固定する。
     get new_request_path
     assert_select "input[name=?]", "word_request[items_attributes][0][surface]"
     assert_select "input[name=?]", "word_request[items_attributes][0][reading]"
@@ -75,7 +74,7 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, WordRequest.last.items.size
   end
 
-  test "上限を超える語数や空の送信は受け付けず、入力欄を残す" do
+  test "弾く送信: 上限超え・空・ハニーポット・速すぎ" do
     too_many = (0..WordRequest::MAX_ITEMS).index_with { |i| { surface: "言葉#{i}" } }.transform_keys(&:to_s)
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: too_many)
@@ -87,10 +86,9 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_content
     assert_select ".form-errors"
-  end
 
-  # 自動投稿には、手口を知らせないよう成功時と同じ応答を返して黙って捨てる。
-  test "ハニーポットが埋まった送信やフォーム表示から速すぎる送信は黙って捨てる" do
+    # ハニーポットが埋まった送信やフォーム表示から速すぎる送信は黙って捨てる
+    # 自動投稿には、手口を知らせないよう成功時と同じ応答を返して黙って捨てる。
     {
       "ハニーポット" => submission(items: one_item, extra: { website: "http://spam.example.com" }),
       "速すぎる送信" => submission(items: one_item, token: WordRequestFormToken.issue)
@@ -103,15 +101,14 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "署名が不正なトークンは再送を促す" do
+  test "トークンが不正・期限切れなら再送を促す" do
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: one_item, token: "tampered")
     end
     assert_response :unprocessable_content
     assert_equal I18n.t("word_requests.create.expired"), flash[:alert]
-  end
 
-  test "期限切れのトークン(フォームを開いたまま放置)は捨てずに再送を促す" do
+    # 期限切れのトークン(フォームを開いたまま放置)は捨てずに再送を促す
     expired = travel_to((WordRequestFormToken::EXPIRES_IN + 1.hour).ago) { WordRequestFormToken.issue }
     assert_no_difference "WordRequest.count" do
       post requests_path, params: submission(items: one_item, token: expired)
@@ -120,7 +117,7 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("word_requests.create.expired"), flash[:alert]
   end
 
-  test "同一 IP から短時間に送りすぎると受け付けない" do
+  test "同一 IP の送りすぎと重複チェックの押しすぎは断る" do
     WordRequest::RATE_LIMITS.min_by(&:last).last.times do
       WordRequest.create!(ip_address: "127.0.0.1", items_attributes: one_item)
     end
@@ -129,9 +126,17 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
       post requests_path, params: submission(items: one_item)
     end
     assert_response :too_many_requests
+
+    # 重複チェックの押しすぎは断る
+    WordRequestsController::DUPLICATE_CHECK_LIMIT.times { post duplicates_requests_path, params: check_params(surface: "調べたい言葉") }
+    assert_response :success
+
+    post duplicates_requests_path, params: check_params(surface: "調べたい言葉")
+    assert_response :too_many_requests
+    assert_select ".request-table__notice"
   end
 
-  test "重複チェックは収録済み・似ている語・未収録を知らせ、レコードは作らない" do
+  test "重複チェックは知らせるだけでレコードを作らず、送信も妨げない" do
     assert_no_difference [ "WordRequest.count", "WordRequestItem.count" ] do
       post duplicates_requests_path, params: check_params(surface: words(:abc_murder).surface)
       assert_response :success
@@ -149,24 +154,14 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".dup-note--none"
       assert_select ".dup-note__verdict", text: I18n.t("word_requests.duplicates.none_title")
     end
-  end
 
-  test "重複していても送信は妨げない" do
+    # 重複していても送信は妨げない
     assert_difference "WordRequestItem.count", 1 do
       post requests_path, params: submission(items: one_item(surface: words(:abc_murder).surface))
     end
   end
 
-  test "重複チェックの押しすぎは断る" do
-    WordRequestsController::DUPLICATE_CHECK_LIMIT.times { post duplicates_requests_path, params: check_params(surface: "調べたい言葉") }
-    assert_response :success
-
-    post duplicates_requests_path, params: check_params(surface: "調べたい言葉")
-    assert_response :too_many_requests
-    assert_select ".request-table__notice"
-  end
-
-  test "受付を止めているときはフォームを出さず、送信も受け付けない" do
+  test "受付を止めているときはフォームも導線も出さず、送信も受け付けない" do
     with_config(requests_enabled: false) do
       get new_request_path
       assert_redirected_to about_path
@@ -175,9 +170,8 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
         post requests_path, params: submission(items: one_item)
       end
     end
-  end
 
-  test "受付中はホーム・検索0件の一覧・About に導線が出て、止めているときはどこにも出さない" do
+    # 受付中はホーム・検索0件の一覧・About に導線が出て、止めているときはどこにも出さない
     no_hit = words_path(q: "収録されていない言葉の見本")
     request_link = "a[href^='#{new_request_path}']"
 

@@ -20,13 +20,12 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
     file&.unlink
   end
 
-  test "頻度の多い順に並ぶ" do
+  test "頻度の多い順に、対数の位置で weight を振り、1回だけの語は落として上限で打ち切る" do
     with_counts({ "少ない" => 3, "多い" => 10, "中くらい" => 5 }) do
       assert_equal %w[多い 中くらい 少ない], MorphemeFrequencies.entries.map(&:text)
     end
-  end
 
-  test "最頻が weight 1.0・最少が 0.0 になる" do
+    # 最頻が weight 1.0・最少が 0.0 になる
     with_counts({ "多い" => 10, "中くらい" => 5, "少ない" => 2 }) do
       entries = MorphemeFrequencies.entries
       assert_in_delta 1.0, entries.first.weight, 0.001
@@ -34,29 +33,25 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
       assert entries.first.top?
       assert_not entries.last.top?
     end
-  end
 
-  test "頻度の位置は対数で採る(大多数が下限に貼り付かない)" do
+    # 頻度の位置は対数で採る(大多数が下限に貼り付かない)
     with_counts({ "多い" => 100, "中くらい" => 10, "少ない" => 2 }) do
       middle = MorphemeFrequencies.entries[1]
       # 線形なら (10-2)/98 = 0.08 で下限に貼り付くが、対数なら真ん中あたりに来る
       assert_in_delta 0.411, middle.weight, 0.01
     end
-  end
 
-  test "全部同じ頻度なら一律で最大の級数にする" do
+    # 全部同じ頻度なら一律で最大の級数にする
     with_counts({ "あああ" => 4, "いいい" => 4 }) do
       assert MorphemeFrequencies.entries.all? { |entry| entry.weight == 1.0 }
     end
-  end
 
-  test "出現が1回だけの形態素は載せない" do
+    # 出現が1回だけの形態素は載せない
     with_counts({ "二回以上" => 2, "一回だけ" => 1 }) do
       assert_equal [ "二回以上" ], MorphemeFrequencies.entries.map(&:text)
     end
-  end
 
-  test "表示件数の上限で打ち切る" do
+    # 表示件数の上限で打ち切る
     counts = (1..(MorphemeFrequencies::DISPLAY_LIMIT + 20)).to_h { |i| [ "語#{i}", i + 1 ] }
     with_counts(counts) do
       assert_equal MorphemeFrequencies::DISPLAY_LIMIT, MorphemeFrequencies.entries.size
@@ -71,7 +66,13 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
     MorphemeFrequencies.path = nil
   end
 
-  test "壊れた JSON でも例外にせず空として扱う" do
+  test "リポジトリの集計ファイルは読め、壊れていれば空として扱う" do
+    assert MorphemeFrequencies.available?, "db/morpheme_frequencies.json が読めていない"
+    assert MorphemeFrequencies.entries.all? { |entry| entry.count >= MorphemeFrequencies::MIN_COUNT }
+    assert MorphemeFrequencies.entries.all? { |entry| entry.text.length >= MorphemeFrequencies::MIN_LENGTH }
+    assert_equal 1, MorphemeFrequencies.entries.count(&:top?), "最頻(top?)は1件だけ"
+
+    # 壊れた JSON でも例外にせず空として扱う
     file = Tempfile.new([ "broken", ".json" ])
     file.write("{ これは JSON ではない")
     file.close
@@ -80,12 +81,5 @@ class MorphemeFrequenciesTest < ActiveSupport::TestCase
   ensure
     MorphemeFrequencies.path = nil
     file&.unlink
-  end
-
-  test "リポジトリに入っている集計ファイルが読める" do
-    assert MorphemeFrequencies.available?, "db/morpheme_frequencies.json が読めていない"
-    assert MorphemeFrequencies.entries.all? { |entry| entry.count >= MorphemeFrequencies::MIN_COUNT }
-    assert MorphemeFrequencies.entries.all? { |entry| entry.text.length >= MorphemeFrequencies::MIN_LENGTH }
-    assert_equal 1, MorphemeFrequencies.entries.count(&:top?), "最頻(top?)は1件だけ"
   end
 end

@@ -10,7 +10,7 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "ランキングは誰でも見られ、順位表として成立する枠だけをタブと同じ数だけ並べる" do
+  test "ランキングは誰でも見られ、成立する枠だけを並べ、行は順位・見出し語・指標値・単位を持つ" do
     get rankings_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("rankings.index.title")
@@ -31,9 +31,8 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
     # 各枠の「もっと見る」は同じ並びの単語一覧へ。遷移先は必ず noindex(同じ集合の順列違い)なので nofollow
     assert_select ".rank-board__more[href=?]", words_path(sort: "length_desc")
     assert_select ".rank-board__more[rel=nofollow]", count: expected
-  end
 
-  test "行は順位・見出し語・指標値・単位を持ち、上位3位には印が付く" do
+    # 行は順位・見出し語・指標値・単位を持ち、上位3位には印が付く
     get rankings_path
     assert_select "#rank-length-desc .rank-row", count: WordRanking::TOP_LIMIT
     assert_select "#rank-length-desc .rank-row:first-child" do

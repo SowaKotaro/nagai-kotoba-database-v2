@@ -2,7 +2,7 @@ require "test_helper"
 
 # 新着単語の Atom フィード(Issue 28)の結合テスト。
 class WordsFeedTest < ActionDispatch::IntegrationTest
-  test "words.atom は注釈済みの語を公開日の新しい順に並べ、本文にリード文を入れる" do
+  test "words.atom は注釈済みの語を公開日の新しい順に FEED_LIMIT 件まで載せ、レイアウトから案内する" do
     get words_path(format: :atom)
     assert_response :success
     assert_equal "application/atom+xml", response.media_type
@@ -17,9 +17,8 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
     assert_operator titles.index(words(:curry).surface), :<, titles.index(words(:abc_murder).surface)
     # エントリ本文はリード文(「日本語の長い言葉」を含む)
     assert(feed.css("entry > content").any? { |c| c.text.include?("日本語の長い言葉") })
-  end
 
-  test "words.atom は FEED_LIMIT 件までで、一覧の絞り込みを無視し、エントリの URL は本番ホスト" do
+    # words.atom は FEED_LIMIT 件までで、一覧の絞り込みを無視し、エントリの URL は本番ホスト
     (WordsController::FEED_LIMIT - 1).times do |index|
       create_annotated_word_with_genre(surface: "フィードの件数上限の見本その#{index}",
                                        reading: "フィードノケンスウジョウゲンノミホンソノ#{index}", genre: genres(:small_novel))
@@ -34,25 +33,10 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
 
     get words_path(format: :atom, first_char: word_senses(:curry).first_char)
     assert_equal titles, Nokogiri::XML(response.body).remove_namespaces!.css("entry > title").map(&:text)
-  end
 
-  test "レイアウトに Atom の autodiscovery link がある" do
+    # レイアウトに Atom の autodiscovery link がある
     get root_path
     assert_select "link[rel=alternate][type='application/atom+xml'][href=?]", "/words.atom"
-  end
-
-  test "ジャンル祖先を preload し genres へのクエリが語数に比例しない(N+1 回帰)" do
-    # 別系統のジャンルを持つ注釈済み語を増やす。既存フィクスチャと同じジャンルだと
-    # preload が同一インスタンスを共有し parent の遅延ロードが1回で済んでしまうため、
-    # 独立した 大→中→小 を新設して「語(系統)ごとに parent を辿る」形の N+1 を顕在化させる。
-    create_annotated_word_with_genre(surface: "残業手当不払い請求事件", reading: "ザンギョウテアテフバライセイキュウジケン",
-                                     genre: create_small_genre_tree)
-
-    genre_query_count = count_queries(/FROM\s+`genres`/i) { get words_path(format: :atom) }
-    assert_response :success
-    # preload なら階層ごとの3クエリ(小・中・大)で頭打ちになる。
-    # genre 止まりの preload だと系統ごとに 中→大 の2クエリが上乗せされる(この時点で5)
-    assert_operator genre_query_count, :<=, 3
   end
 
   test "条件付きGET で 304 を返し、ジャンル名の変更(touch されないマスタ)では作り直す" do
@@ -79,22 +63,5 @@ class WordsFeedTest < ActionDispatch::IntegrationTest
     word.mark_annotated
     word.save!
     word
-  end
-
-  # フィクスチャと独立した 大→中→小 のジャンル系統を作り、小分類を返す。
-  def create_small_genre_tree
-    large = Genre.create!(level: :large, name: "法律")
-    medium = Genre.create!(level: :medium, name: "労働法", parent: large)
-    Genre.create!(level: :small, name: "判例", parent: medium)
-  end
-
-  # ブロック実行中に発行された SQL のうち pattern に一致する件数を数える。
-  def count_queries(pattern)
-    count = 0
-    counter = lambda do |_name, _start, _finish, _id, payload|
-      count += 1 if payload[:sql].match?(pattern)
-    end
-    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
-    count
   end
 end

@@ -48,7 +48,7 @@ class SeedCatalogTest < ActiveSupport::TestCase
 
   # ---- apply_genres!(階層マスタ) ----
 
-  test "apply_genres! は大・中の木を作成し、冪等" do
+  test "apply_genres! は大・中の木を冪等に作り、パスで改名する(移行先があれば警告してスキップ)" do
     tree = { "試験大分類" => [ "試験中分類A", "試験中分類B" ] }
 
     capture_io { SeedCatalog.apply_genres!(tree: tree) }
@@ -59,9 +59,8 @@ class SeedCatalogTest < ActiveSupport::TestCase
     count = Genre.count
     capture_io { SeedCatalog.apply_genres!(tree: tree) }
     assert_equal count, Genre.count
-  end
 
-  test "apply_genres! は大分類をパスで改名でき、子は付いたまま" do
+    # apply_genres! は大分類をパスで改名でき、子は付いたまま
     capture_io { SeedCatalog.apply_genres!(tree: { "旧大分類" => [ "中X" ] }) }
 
     capture_io do
@@ -71,9 +70,8 @@ class SeedCatalogTest < ActiveSupport::TestCase
     assert_not Genre.exists?(name: "旧大分類")
     large = Genre.large.find_by!(name: "新大分類")
     assert_equal [ "中X" ], large.children.pluck(:name)
-  end
 
-  test "apply_genres! は中分類を 大/中 のパスで改名できる" do
+    # apply_genres! は中分類を 大/中 のパスで改名できる
     capture_io { SeedCatalog.apply_genres!(tree: { "大Y" => [ "旧中" ] }) }
 
     capture_io do
@@ -81,9 +79,8 @@ class SeedCatalogTest < ActiveSupport::TestCase
     end
 
     assert_equal [ "新中" ], Genre.large.find_by!(name: "大Y").children.pluck(:name)
-  end
 
-  test "apply_genres! は移行先が同じ親の下に存在するときは改名せず警告してスキップする" do
+    # apply_genres! は移行先が同じ親の下に存在するときは改名せず警告してスキップする
     capture_io { SeedCatalog.apply_genres!(tree: { "大Z" => [ "中1", "中2" ] }) }
 
     out, _err = capture_io do
@@ -96,13 +93,12 @@ class SeedCatalogTest < ActiveSupport::TestCase
 
   # ---- seeded?(管理画面の seed 印・警告用) ----
 
-  test "seeded? はカタログ収載の名前だけ true" do
+  test "seeded? はカタログ収載の名前だけ真で、ジャンルは階層と親を見る" do
     assert SeedCatalog.seeded?("word_origins", word_origins(:eigo)) # 英語: カタログ収載
     assert_not SeedCatalog.seeded?("word_origins", word_origins(:wago)) # 和語: カタログ外(UI 追加扱い)
     assert_not SeedCatalog.seeded?("entity_types", entity_types(:person_name)) # 種別ごと seed 管理外
-  end
 
-  test "seeded? のジャンル判定は階層と親を見る" do
+    # seeded? のジャンル判定は階層と親を見る
     capture_io { SeedCatalog.apply_genres!(tree: { "言語" => [ "音韻論" ] }) }
     large = Genre.large.find_by!(name: "言語")
     medium = large.children.find_by!(name: "音韻論")
@@ -121,18 +117,17 @@ class SeedCatalogTest < ActiveSupport::TestCase
 
   # ---- seed_all!(実カタログ) ----
 
-  test "seed_all! は実カタログでも冪等(2回実行して件数が増えない)" do
+  test "seed_all! は実カタログでも冪等で、日本語の語種名はカタログに載って改名の対象にならない" do
     capture_io { SeedCatalog.seed_all! }
     counts = [ Genre.count, WordOrigin.count, PartOfSpeech.count, LinguisticFeature.count ]
 
     capture_io { SeedCatalog.seed_all! }
 
     assert_equal counts, [ Genre.count, WordOrigin.count, PartOfSpeech.count, LinguisticFeature.count ]
-  end
 
-  # WordSense.with_japanese_origin は語種を名前(JAPANESE_ORIGIN_NAME)で引く。カタログの語種名を改名すると、
-  # 黙って 0 件を返すようになるので、カタログに載っていることを確かめておく。
-  test "JAPANESE_ORIGIN_NAME はカタログの語種名に含まれ、改名の対象になっていない" do
+    # JAPANESE_ORIGIN_NAME はカタログの語種名に含まれ、改名の対象になっていない
+    # WordSense.with_japanese_origin は語種を名前(JAPANESE_ORIGIN_NAME)で引く。カタログの語種名を改名すると、
+    # 黙って 0 件を返すようになるので、カタログに載っていることを確かめておく。
     assert_includes SeedCatalog::WORD_ORIGINS, SeedCatalog::JAPANESE_ORIGIN_NAME
     assert_not_includes SeedCatalog::WORD_ORIGIN_RENAMES.keys, SeedCatalog::JAPANESE_ORIGIN_NAME
   end

@@ -11,14 +11,6 @@ class Admin::InlineMasterCreationTest < ActionDispatch::IntegrationTest
     EntityType => [ :admin_entity_types_path, "地名" ]
   }.freeze
 
-  test "未認証だと作成できない" do
-    ENDPOINTS.each do |model, (path, name)|
-      assert_no_difference -> { model.count }, model.name do
-        post public_send(path), params: { name: name }, as: :json
-      end
-    end
-  end
-
   test "名前だけで作成でき、同名が既にあれば二重に作らず既存を返す" do
     sign_in_as(admins(:one))
 

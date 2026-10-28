@@ -18,7 +18,7 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "max-age=86400, public", response.headers["Cache-Control"]
   end
 
-  test "llms-full.txt は誰でも取得でき、公開語だけを属性つきで載せ、ライセンスと案内を添える" do
+  test "llms-full.txt は公開語だけを属性つきで載せ、語義が複数ある語だけ語義見出しで区切る" do
     get "/llms-full.txt"
     assert_response :success
     assert_equal "text/plain", response.media_type
@@ -44,9 +44,8 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     assert_includes body, "CC BY 4.0"
     assert_includes body, "#{CANONICAL_HOST}/llms.txt"
     assert_includes body, "#{CANONICAL_HOST}/words.json"
-  end
 
-  test "llms-full.txt は語義が複数ある語だけ語義見出しで区切る" do
+    # llms-full.txt は語義が複数ある語だけ語義見出しで区切る
     words(:curry).word_senses.create!(reading: "カレーライス", meaning: "米飯に掛ける料理")
 
     get "/llms-full.txt"

@@ -22,7 +22,7 @@ class DesignTokensTest < ActiveSupport::TestCase
 
   # ダークの適用は「OS 設定に追従する @media」と「トグルで付く [data-theme="dark"]」の 2 ブロックに
   # 同じ中身を書いている。片方だけに足すと、その経路でだけダークの色が抜ける。
-  test "ダークの 2 ブロックは同じ宣言を持ち、--dark-* のトークンをすべて参照する" do
+  test "ダークの 2 ブロックは同じ宣言で --dark-* をすべて参照し、application.css は決まった順に読む" do
     media = declarations(TOKENS[/@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{(.*?)\}/m, 1])
     toggle = declarations(TOKENS[/:root\[data-theme="dark"\] \{(.*?)\}/m, 1])
 
@@ -31,10 +31,9 @@ class DesignTokensTest < ActiveSupport::TestCase
     assert_equal dark_tokens.to_h { |name| [ "--#{name}", "var(--dark-#{name})" ] },
                  media.reject { |name, _| name == "color-scheme" }
     assert_equal "dark", media["color-scheme"]
-  end
 
-  # 同じ特異度の規則は後に書いた方が勝つので、読み込み順そのものが見た目を決めている(application.css の冒頭)。
-  test "application.css は tokens → base → layout → components → annotate → candidates → admin の順に読む" do
+    # application.css は tokens → base → layout → components → annotate → candidates → admin の順に読む
+    # 同じ特異度の規則は後に書いた方が勝つので、読み込み順そのものが見た目を決めている(application.css の冒頭)。
     manifest = File.read(Rails.root.join("app/assets/stylesheets/application.css"))
     assert_equal %w[tokens base layout components annotate candidates admin], manifest.scan(/^\s*\*= require (\w+)$/).flatten
     assert_match(/^\s*\*= require_self$/, manifest)

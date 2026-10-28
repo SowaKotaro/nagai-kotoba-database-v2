@@ -2,7 +2,7 @@ require "test_helper"
 
 # 公開 JSON API(Issue 25)の結合テスト。読み取り専用・注釈済みのみ。
 class WordsApiTest < ActionDispatch::IntegrationTest
-  test "単語詳細 .json が語義の全属性とライセンスを返す" do
+  test "単語詳細 .json は語義の全属性とライセンスを決まったキーの集合で返し、未注釈の語は 404" do
     word = words(:abc_murder)
     get word_path(word, format: :json)
     assert_response :success
@@ -24,10 +24,9 @@ class WordsApiTest < ActionDispatch::IntegrationTest
 
     assert_equal "CC BY 4.0", body["license"]["name"]
     assert_includes body["license"]["credit"], CANONICAL_HOST
-  end
 
-  # 外部に出す形式なので、キーの集合と入れ子ごと固定する(キーの欠落・改名・並びの変化を検出する)。
-  test "単語詳細 .json のキーの集合と入れ子" do
+    # 単語詳細 .json のキーの集合と入れ子
+    # 外部に出す形式なので、キーの集合と入れ子ごと固定する(キーの欠落・改名・並びの変化を検出する)。
     get word_path(words(:abc_murder), format: :json)
     body = JSON.parse(response.body)
 
@@ -49,9 +48,8 @@ class WordsApiTest < ActionDispatch::IntegrationTest
 
     assert_equal({ "name" => "CC BY 4.0", "url" => "https://creativecommons.org/licenses/by/4.0/deed.ja",
                    "credit" => "長い言葉のデータベース (#{CANONICAL_HOST})" }, body["license"])
-  end
 
-  test "ジャンルの無い語義の genre は null、別表記は surface と reading の配列" do
+    # ジャンルの無い語義の genre は null、別表記は surface と reading の配列
     get word_path(words(:curry), format: :json)
     sense = JSON.parse(response.body)["senses"].first
 
@@ -59,9 +57,8 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_nil sense["genre"]
     assert_nil sense["entity_type"]
     assert_equal [ { "surface" => "カリー", "reading" => "カリー" } ], sense["variants"]
-  end
 
-  test "多語義語の senses は id の順(先頭が最長でなくても)" do
+    # 多語義語の senses は id の順(先頭が最長でなくても)
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")
     word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ")
@@ -70,14 +67,13 @@ class WordsApiTest < ActionDispatch::IntegrationTest
 
     get word_path(word, format: :json)
     assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ], JSON.parse(response.body)["senses"].map { |s| s["reading"] }
-  end
 
-  test "未注釈の語の .json は 404" do
+    # 未注釈の語の .json は 404
     get word_path(words(:pending_haruhi), format: :json)
     assert_response :not_found
   end
 
-  test "単語一覧 .json がページ情報つきで返る" do
+  test "単語一覧 .json はページ情報つきで、ファセット絞り込みを反映する" do
     get words_path(format: :json)
     assert_response :success
     body = JSON.parse(response.body)
@@ -94,9 +90,8 @@ class WordsApiTest < ActionDispatch::IntegrationTest
     assert_equal %w[id surface url readings], word.keys
     assert_equal "#{CANONICAL_HOST}/words/#{words(:abc_murder).id}", word["url"]
     assert_equal [ word_senses(:murder).reading ], word["readings"]
-  end
 
-  test "一覧 .json はファセット絞り込みを反映する" do
+    # 一覧 .json はファセット絞り込みを反映する
     get words_path(format: :json, first_char: word_senses(:curry).first_char)
     body = JSON.parse(response.body)
     surfaces = body["words"].map { |w| w["surface"] }

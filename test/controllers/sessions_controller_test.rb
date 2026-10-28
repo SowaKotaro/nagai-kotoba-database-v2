@@ -32,16 +32,15 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "ログアウトするとセッションを消してログイン画面へ戻す" do
+  test "ログアウトと期限切れのセッションはログイン画面へ誘導し、レコードを消す" do
     sign_in_as(@admin)
 
     delete session_path
 
     assert_redirected_to new_session_path
     assert_empty cookies[:session_id]
-  end
 
-  test "期限切れのセッションはログイン画面へ誘導し、セッションレコードも破棄する" do
+    # 期限切れのセッションはログイン画面へ誘導し、セッションレコードも破棄する
     sign_in_as(@admin)
     session = Current.session
 

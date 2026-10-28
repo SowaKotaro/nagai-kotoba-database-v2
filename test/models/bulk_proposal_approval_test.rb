@@ -5,56 +5,30 @@ require "test_helper"
 class BulkProposalApprovalTest < ActiveSupport::TestCase
   setup { @proposal = annotation_proposals(:haruhi_proposal) }
 
-  # --- ゲート判定 ---
-  test "ゲートを満たす提案は対象になる" do
+  test "厳格ゲート: 確信 high・立項4以上・単一語義・マスタがすべて既存の未適用の提案だけが対象" do
     assert BulkProposalApproval.eligible?(@proposal)
     assert_includes BulkProposalApproval.eligible, @proposal
-  end
 
-  test "確信度が high でなければ対象外" do
-    @proposal.update!(payload: @proposal.payload.merge("confidence" => "medium"))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
+    base = @proposal.payload
+    {
+      "確信度が high でない" => base.merge("confidence" => "medium"),
+      "立項スコアが4未満" => base.merge("entry_score" => 3),
+      "複数語義(取り違え防止)" => { "confidence" => "high", "entry_score" => 5,
+                                    "senses" => [ { "meaning" => "A。" }, { "meaning" => "B。" } ] },
+      "ジャンル小分類が既存の木に無い" => base.merge("genre_path" => %w[文学 日本文学 私小説]),
+      "エンティティが未解決" => base.merge("entity_type" => "存在しない種別"),
+      "語種が無い" => base.merge("word_origins" => []),
+      "語種に未解決(新設)を含む" => base.merge("word_origins" => %w[和語 タミル語]),
+      "特徴に未解決(新設)の名前を含む" => eligible_senses_payload(
+        "linguistic_features" => [ { "name" => "存在しない特徴", "target" => "涼宮", "target_reading" => "すずみや" } ]
+      )
+    }.each do |reason, payload|
+      @proposal.update!(payload: payload)
+      assert_not BulkProposalApproval.eligible?(@proposal), reason
+    end
 
-  test "立項スコアが4未満なら対象外" do
-    @proposal.update!(payload: @proposal.payload.merge("entry_score" => 3))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
-
-  test "複数語義なら対象外(取り違え防止)" do
-    @proposal.update!(payload: {
-      "confidence" => "high", "entry_score" => 5,
-      "senses" => [ { "meaning" => "A。" }, { "meaning" => "B。" } ]
-    })
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
-
-  test "ジャンル小分類が既存の木に無ければ対象外" do
-    @proposal.update!(payload: @proposal.payload.merge("genre_path" => %w[文学 日本文学 私小説]))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
-
-  test "エンティティが未解決なら対象外" do
-    @proposal.update!(payload: @proposal.payload.merge("entity_type" => "存在しない種別"))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
-
-  test "語種が無い、または未解決(新設)を含むなら対象外" do
-    @proposal.update!(payload: @proposal.payload.merge("word_origins" => []))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-
-    @proposal.update!(payload: @proposal.payload.merge("word_origins" => %w[和語 タミル語]))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
-
-  test "特徴に未解決(新設)の名前を含むなら対象外" do
-    @proposal.update!(payload: eligible_senses_payload(
-      "linguistic_features" => [ { "name" => "存在しない特徴", "target" => "涼宮", "target_reading" => "すずみや" } ]
-    ))
-    assert_not BulkProposalApproval.eligible?(@proposal)
-  end
-
-  test "applied の提案は対象外(冪等)" do
+    # applied の提案は対象外(冪等)
+    @proposal.update!(payload: base)
     @proposal.applied!
     assert_not BulkProposalApproval.eligible?(@proposal)
     assert_empty BulkProposalApproval.eligible

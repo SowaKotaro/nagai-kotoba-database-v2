@@ -7,57 +7,67 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     @stats = SiteStatistics.new
   end
 
-  test "規模: 公開中の語・語義・別表記・のべ読み文字を数える(未注釈は含めない)" do
+  test "規模・読みの長さ・文字と音(フィクスチャの2語義)" do
     assert_equal 2, @stats.scale[:words]
     assert_equal 2, @stats.scale[:senses]
     assert_equal 1, @stats.scale[:variants]
     assert_equal 0, @stats.scale[:homophone_groups]
     assert_equal 10, @stats.scale[:total_reading_chars] # 7 + 3
-  end
 
-  test "読みの長さ: 平均・中央値・最頻(同数なら短い方)・最長・平均モーラ" do
+    # 読みの長さ: 平均・中央値・最頻(同数なら短い方)・最長・平均モーラ
     assert_in_delta 5.0, @stats.reading_length[:average]
     assert_in_delta 5.0, @stats.reading_length[:median]
     assert_equal 3, @stats.reading_length[:mode]
     assert_equal 7, @stats.reading_length[:max]
     assert_in_delta 5.0, @stats.reading_length[:average_mora]
-  end
 
-  test "同音異義の組: 同じ読みの語義が2つ以上ある読みを数える" do
-    create_published_word(surface: "撮つ人事件", reading: "さつじんじけん")
-
-    assert_equal 1, SiteStatistics.new.scale[:homophone_groups]
-  end
-
-  test "文字と音: 頭文字・末尾文字のカバレッジと文字種の割合" do
+    # 文字と音: 頭文字・末尾文字のカバレッジと文字種の割合
     assert_equal 2, @stats.letters[:first_char_kinds] # さ→サ, カ
     assert_equal 2, @stats.letters[:last_char_kinds]  # ん→ン, レ
     assert_equal 46, @stats.letters[:kana_total]
     assert_in_delta 50.0, @stats.letters[:katakana_only_pct] # カレーライス
     assert_in_delta 50.0, @stats.letters[:with_kanji_pct]    # ABC殺人事件
     assert_in_delta 50.0, @stats.letters[:with_chouon_pct]   # カレー
-  end
 
-  test "50音ヒートマップ用の頭文字・末尾文字はカタカナへ正規化して数える" do
+    # 50音ヒートマップ用の頭文字・末尾文字はカタカナへ正規化して数える
     assert_equal({ "サ" => 1, "カ" => 1 }, @stats.first_char_counts) # さ→サ
     assert_equal({ "ン" => 1, "レ" => 1 }, @stats.last_char_counts)  # ん→ン
-  end
 
-  test "行×行マトリクス: 頭文字と末尾文字を行に畳んで数える" do
+    # 行×行マトリクス: 頭文字と末尾文字を行に畳んで数える
     matrix = @stats.sound_matrix
     assert_equal 1, matrix[:cells][[ "サ", "ン" ]] # さつじんじけん
     assert_equal 1, matrix[:cells][[ "カ", "ラ" ]] # カレー
     assert_equal 1, matrix[:max_count]
-  end
 
-  test "長さの分布は最小〜最大を0件も含めて埋める" do
+    # 長さの分布は最小〜最大を0件も含めて埋める
     values = @stats.reading_length_distribution.map { |bin| bin[:value] }
     counts = @stats.reading_length_distribution.map { |bin| bin[:count] }
     assert_equal (3..7).to_a, values
     assert_equal [ 1, 0, 0, 0, 1 ], counts
+
+    # 推移: 週ごとの新収録と累計を開帳の週から並べる
+    timeline = @stats.timeline
+    assert_equal 2, timeline.last[:cumulative]
+    assert_equal @stats.word_count, timeline.sum { |week| week[:count] }
+    # 週の並びは古い順で欠番なし(7日刻み)
+    timeline.each_cons(2) do |previous, following|
+      assert_equal previous[:start_on] + 7, following[:start_on]
+    end
+
+    # 頭の子音: 第1拍の子音ごとに頭文字を束ねる
+    consonants = @stats.head_consonants.index_by { |group| group[:consonant] }
+    assert_equal 1, consonants["s"][:count]
+    assert_equal [ "サ" ], consonants["s"][:chars] # 頭文字はカタカナへ正規化済み
+    assert_equal 1, consonants["k"][:count]
+    assert_equal [ "カ" ], consonants["k"][:chars]
   end
 
-  test "長さの分布は30以上をまとめ棒(overflow)1本に畳む" do
+  test "語が増えたときの境界(同音異義の組・30以上のまとめ棒・遷移の層の打ち切り)" do
+    create_published_word(surface: "撮つ人事件", reading: "さつじんじけん")
+
+    assert_equal 1, SiteStatistics.new.scale[:homophone_groups]
+
+    # 長さの分布は30以上をまとめ棒(overflow)1本に畳む
     [ 32, 40 ].each_with_index do |length, index|
       create_published_word(surface: "長い開発語#{index}", reading: "ナ" * length)
     end
@@ -69,19 +79,17 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal 2, overflow[:count]   # 32文字 + 40文字
     # まとめ棒より手前(30未満)には overflow を立てない
     assert distribution[0..-2].none? { |bin| bin[:overflow] }
+
+    # 母音の遷移: 層は読みが長くても 15(TRANSITION_MAX_POSITIONS)で打ち切る
+    create_published_word(surface: "母音の遷移の上限の見本", reading: "アイウエオアイウエオアイウエオアイウエオ") # 20 拍
+
+    transitions = SiteStatistics.new.vowel_transitions
+    assert_equal 15, transitions[:layers].size
+    assert_equal 15, transitions[:layers].last[:position]
+    assert_equal 14, transitions[:edges].map { |edge| edge[:position] }.uniq.size
   end
 
-  test "推移: 週ごとの新収録と累計を開帳の週から並べる" do
-    timeline = @stats.timeline
-    assert_equal 2, timeline.last[:cumulative]
-    assert_equal @stats.word_count, timeline.sum { |week| week[:count] }
-    # 週の並びは古い順で欠番なし(7日刻み)
-    timeline.each_cons(2) do |previous, following|
-      assert_equal previous[:start_on] + 7, following[:start_on]
-    end
-  end
-
-  test "ジャンル別の語義数: 大→中→小の3階層に語義数を集約する(サンバースト用)" do
+  test "分類の集計(ジャンル・エンティティ・特徴・語種)" do
     map = @stats.genre_map
     assert_equal 1, map[:covered]
     large = map[:groups].sole
@@ -90,9 +98,19 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal [ "日本文学", 1 ], [ medium[:name], medium[:count] ]
     small = medium[:children].sole
     assert_equal [ "小説", 1 ], [ small[:name], small[:count] ]
-  end
 
-  test "語種: 単一語種はその名前、複数語種は混種語として数え、ワッフルは100マスに配分する" do
+    # エンティティ型: 付与された型を件数つきで多い順に返す
+    assert_equal [ { id: entity_types(:book_title).id, name: "書籍名", count: 1 } ], @stats.entity_types
+    assert_equal 1, @stats.entity_covered
+
+    # 特徴ランキング: 件数と該当部分つきの実例を返す
+    ranking = @stats.feature_ranking
+    assert_equal 2, ranking[:total]
+    rendaku = ranking[:rows].find { |row| row[:name] == "連濁" }
+    assert_equal 1, rendaku[:count]
+    assert_equal({ surface: "ABC殺人事件", target: "殺人", target_start: 3 }, rendaku[:example])
+
+    # 語種: 単一語種はその名前、複数語種は混種語として数え、ワッフルは100マスに配分する
     word_senses(:curry).word_sense_origins.create!(word_origin: word_origins(:wago))
 
     origins = SiteStatistics.new.origins
@@ -103,12 +121,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal 100, origins[:categories].sum { |category| category[:cells] }
   end
 
-  test "エンティティ型: 付与された型を件数つきで多い順に返す" do
-    assert_equal [ { id: entity_types(:book_title).id, name: "書籍名", count: 1 } ], @stats.entity_types
-    assert_equal 1, @stats.entity_covered
-  end
-
-  test "母音スペクトル: 拍位置ごとの母音構成(auiie / aee)" do
+  test "母音の集計(スペクトル・遷移)" do
     spectrum = @stats.vowel_spectrum
     assert_equal 2, spectrum[:total]
     first = spectrum[:positions].first
@@ -116,9 +129,8 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal({ "a" => 2 }, first[:counts])
     # 2語義とも母音は5拍未満で尽きる(最長 auiie の5拍まで)
     assert_equal 5, spectrum[:positions].last[:position]
-  end
 
-  test "母音の遷移: 層ごとに5母音のノード、層間は 5×5 の全結合" do
+    # 母音の遷移: 層ごとに5母音のノード、層間は 5×5 の全結合
     transitions = @stats.vowel_transitions
     assert_equal 2, transitions[:total]
     # 最長の auiie に合わせて5層。0 件の母音も枠として残す
@@ -142,33 +154,6 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal 0, gap[%w[a a]][:count]
   end
 
-  test "母音の遷移: 層は読みが長くても 15(TRANSITION_MAX_POSITIONS)で打ち切る" do
-    create_published_word(surface: "母音の遷移の上限の見本", reading: "アイウエオアイウエオアイウエオアイウエオ") # 20 拍
-
-    transitions = SiteStatistics.new.vowel_transitions
-    assert_equal 15, transitions[:layers].size
-    assert_equal 15, transitions[:layers].last[:position]
-    assert_equal 14, transitions[:edges].map { |edge| edge[:position] }.uniq.size
-  end
-
-  test "母音の遷移: 読みが1拍しか無ければ層が作れないので空にする" do
-    Word.annotated.destroy_all
-    create_published_word(surface: "亜", reading: "ア")
-
-    transitions = SiteStatistics.new.vowel_transitions
-    assert_equal 1, transitions[:total]
-    assert_empty transitions[:layers]
-    assert_empty transitions[:edges]
-  end
-
-  test "頭の子音: 第1拍の子音ごとに頭文字を束ねる" do
-    consonants = @stats.head_consonants.index_by { |group| group[:consonant] }
-    assert_equal 1, consonants["s"][:count]
-    assert_equal [ "サ" ], consonants["s"][:chars] # 頭文字はカタカナへ正規化済み
-    assert_equal 1, consonants["k"][:count]
-    assert_equal [ "カ" ], consonants["k"][:chars]
-  end
-
   test "棒の長さ: 頭の子音と特徴ランキングの行に、先頭(最多)の行を 100 とした割合を添える" do
     # サで始まる語を足して、頭の子音を s が 2・k が 1 にする(fixtures の公開語義は「さつじんじけん」と「カレー」)
     create_published_word(surface: "サンプルの長い言葉です", reading: "サンプルノナガイコトバデス")
@@ -179,15 +164,7 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal [ 100.0, 100.0 ], stats.feature_ranking[:rows].map { |row| row[:bar_percent] }
   end
 
-  test "特徴ランキング: 件数と該当部分つきの実例を返す" do
-    ranking = @stats.feature_ranking
-    assert_equal 2, ranking[:total]
-    rendaku = ranking[:rows].find { |row| row[:name] == "連濁" }
-    assert_equal 1, rendaku[:count]
-    assert_equal({ surface: "ABC殺人事件", target: "殺人", target_start: 3 }, rendaku[:example])
-  end
-
-  test "未注釈の語だけなら数字はゼロで空の構造を返す(例外を出さない)" do
+  test "公開語が無ければ空の構造を返し、1拍だけなら遷移の層を作らない" do
     Word.annotated.destroy_all
 
     stats = SiteStatistics.new
@@ -203,6 +180,15 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_empty stats.head_consonants
     assert_empty stats.feature_ranking[:rows]
     assert_equal 0, stats.entity_covered
+
+    # 母音の遷移: 読みが1拍しか無ければ層が作れないので空にする
+    Word.annotated.destroy_all
+    create_published_word(surface: "亜", reading: "ア")
+
+    transitions = SiteStatistics.new.vowel_transitions
+    assert_equal 1, transitions[:total]
+    assert_empty transitions[:layers]
+    assert_empty transitions[:edges]
   end
 
   # かなの畳み込み(T0-18): GROUP BY の結果キーを NFKC とカタカナ化で畳んでから合算する。

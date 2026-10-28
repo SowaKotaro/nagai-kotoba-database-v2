@@ -4,7 +4,7 @@ require "test_helper"
 # インデックス方針(robots / canonical)は FacetIndexingTest で押さえ、ここでは画面・リンク・キャッシュを見る。
 class WordsControllerTest < ActionDispatch::IntegrationTest
   # --- 一覧 ---
-  test "一覧は誰でも見られ、行は見出し語・文字数・エンティティ・ジャンルのパンくずを持つ" do
+  test "一覧は誰でも見られ、行は見出し語・文字数・エンティティ・ジャンルのパンくずを持ち、条件で絞り込める" do
     get words_path
     assert_response :success
 
@@ -25,9 +25,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     end
     # 未注釈の語は出ない
     assert_select "a.entry-row__surface[href=?]", word_path(words(:pending_haruhi)), count: 0
-  end
 
-  test "ファセット条件(単一値・配列)で一覧を絞り込める" do
+    # ファセット条件(単一値・配列)で一覧を絞り込める
     murder = words(:abc_murder)
     curry = words(:curry)
     {
@@ -46,9 +45,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
                       "#{params} での #{word.surface} の有無が違う"
       end
     end
-  end
 
-  test "キーワードが別表記で当たった行にだけ、一致した別表記を注記する" do
+    # キーワードが別表記で当たった行にだけ、一致した別表記を注記する
     variant = word_sense_variants(:curry_variant)
     get words_path(q: variant.surface)
     assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
@@ -96,22 +94,19 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".condition-chip__value", text: I18n.t("searches.match.condition_any")
   end
 
-  test "不正な page は1ページ目として扱う" do
+  test "不正な page・正規表現は条件から外し、照合が打ち切られる正規表現は空の結果と警告を返す" do
     get words_path(page: "-5")
     assert_response :success
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
-  end
 
-  # --- 正規表現(URL 直打ちでも 500 にしない) ---
-  test "不正な正規表現は条件から外し、警告を出す" do
+    # 不正な正規表現は条件から外し、警告を出す
     get words_path(regexp: "(ア")
     assert_response :success
     assert_select ".flash--alert", text: /#{I18n.t('searches.regexp_error.syntax')}/
     # 壊れた式は無視されるので、公開語は変わらず並ぶ
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder))
-  end
 
-  test "照合が打ち切られる正規表現は空の結果と警告を返す" do
+    # 照合が打ち切られる正規表現は空の結果と警告を返す
     # MySQL が regexp_time_limit を超えて照合を打ち切ったときの動き。この上限は GLOBAL 変数で
     # テストからは絞れず、フィクスチャの短い読みでは実際に踏ませられないため、DB が返すエラーを差し込む。
     timeout = ->(*) { raise ActiveRecord::StatementInvalid, "Mysql2::Error: Timeout exceeded in regular expression match." }
@@ -125,7 +120,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   # --- 並び替え(sort) ---
   # 並び順は一覧本文での見出し語の位置で見る。フィクスチャの読みは カレー(3字) と さつじんじけん(7字)。
-  test "既定は収録(公開)が新しい順で、下書きを作った順(created_at)ではない" do
+  test "並び替え: 既定は収録が新しい順で、キーごとに順序が変わる" do
     # 一括登録で先に下書きを作り、あとから注釈を終えた語は created_at が古いまま公開される
     words(:abc_murder).update_columns(created_at: 10.days.ago, annotated_at: 1.hour.ago)
     words(:curry).update_columns(created_at: 1.day.ago, annotated_at: 2.days.ago)
@@ -137,9 +132,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get words_path(sort: "evil'); DROP TABLE words; --")
     assert_response :success
     assert_operator body_position(words(:abc_murder)), :<, body_position(words(:curry))
-  end
 
-  test "並び替えのキーごとに順序が変わる" do
+    # 並び替えのキーごとに順序が変わる
     murder = words(:abc_murder)
     curry = words(:curry)
     murder.update_column(:annotated_at, 2.days.ago)
@@ -158,9 +152,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
       get words_path(sort: key)
       assert_operator body_position(first), :<, body_position(second), "sort=#{key} の順序が違う"
     end
-  end
 
-  test "sort=reverse_kana は読みを末尾から見た辞書順になる" do
+    # sort=reverse_kana は読みを末尾から見た辞書順になる
     # 反転読みは チカ→カチ、アシ→シア。カ < シ なので チカ の語が先に来る。
     early = create_published_word(surface: "逆引きで先", reading: "チカ")
     late = create_published_word(surface: "逆引きで後", reading: "アシ")
@@ -169,7 +162,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_operator body_position(early), :<, body_position(late)
   end
 
-  test "並び順のセレクタは選べるキーをひとまとめに並べ、ランキング用の並びも一覧で使える" do
+  test "並び順・シャッフル・ページ送りのフォームとリンクは絞り込み条件を引き継ぐ" do
     get words_path
     assert_select "select#sort optgroup", count: 0
     assert_select "select#sort option[value=shuffle]", count: 0
@@ -183,9 +176,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success, "sort=#{key} が失敗した"
       assert_select "select#sort option[selected][value=?]", key
     end
-  end
 
-  test "並び順フォームは絞り込み条件(配列を含む)を hidden で引き継ぎ、現在の並びを選択済みにする" do
+    # 並び順フォームは絞り込み条件(配列を含む)を hidden で引き継ぎ、現在の並びを選択済みにする
     get words_path(part_of_speech_id: parts_of_speech(:noun).id, sort: "length_desc")
     assert_select ".sort-form input[type=hidden][name=?][value=?]", "part_of_speech_id", parts_of_speech(:noun).id.to_s
     assert_select ".sort-form select#sort option[selected][value=?]", "length_desc"
@@ -194,12 +186,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     [ word_senses(:curry), word_senses(:murder) ].each do |sense|
       assert_select ".sort-form input[type=hidden][name=?][value=?]", "first_char[]", sense.first_char
     end
-  end
 
-  # --- シャッフル ---
-  # シードは URL に載せない。載せると描画のたびに未知の URL が生まれ、クローラが無限に辿れてしまう
-  # (Issue 80。シードはサーバ側で振る。WordSort)。noindex・nofollow・canonical は FacetIndexingTest で見る。
-  test "シャッフルボタンは絞り込み条件を保ち、シード無しの同じ URL を何度でも出す" do
+    # シャッフルボタンは絞り込み条件を保ち、シード無しの同じ URL を何度でも出す
+    # シードは URL に載せない。載せると描画のたびに未知の URL が生まれ、クローラが無限に辿れてしまう
+    # (Issue 80。シードはサーバ側で振る。WordSort)。noindex・nofollow・canonical は FacetIndexingTest で見る。
     get words_path
     assert_select ".entry-toolbar__shuffle", text: /#{Regexp.escape(I18n.t("words.index.shuffle"))}/
     href = css_select(".entry-toolbar__shuffle").first["href"]
@@ -213,11 +203,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     filtered_href = css_select(".entry-toolbar__shuffle").first["href"]
     assert_match(/part_of_speech_id=#{parts_of_speech(:noun).id}/, filtered_href)
     assert_no_match(/seed=/, filtered_href)
-  end
 
-  # Turbo はキャッシュ済みのスナップショットをまず preview として描いてから、サーバの応答で描き直す。
-  # シャッフルは同じ URL でも並びが毎回変わるので、preview を許すと1クリックで2回シャッフルして見える。
-  test "シャッフル中の一覧だけ Turbo の preview を止める" do
+    # シャッフル中の一覧だけ Turbo の preview を止める
+    # Turbo はキャッシュ済みのスナップショットをまず preview として描いてから、サーバの応答で描き直す。
+    # シャッフルは同じ URL でも並びが毎回変わるので、preview を許すと1クリックで2回シャッフルして見える。
     get words_path(sort: "shuffle")
     assert_select "meta[name=turbo-cache-control][content=no-preview]", count: 1
 
@@ -225,23 +214,38 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
       get path
       assert_select "meta[name=turbo-cache-control]", count: 0
     end
+
+    # ページ送りは条件を引き継ぎ、シャッフル中だけシードを渡して nofollow にする
+    (WordsController::PER_PAGE + 1).times do |index|
+      Word.create!(surface: "ページ送りの見本その#{index}", annotated_at: Time.current, annotation_status: :done)
+    end
+
+    get words_path
+    assert_select ".pagination a[href=?]", words_path(page: 2)
+    assert_select ".pagination a[rel=nofollow]", 0
+
+    # 最後のページ(公開語 103 件 = 2 ページ)は「前へ」だけ
+    get words_path(page: 2)
+    assert_select ".pagination a", 1
+    assert_select ".pagination a[href=?]", words_path(page: 1)
+
+    get words_path(sort: "shuffle", seed: "abc123")
+    assert_select ".pagination a[rel=nofollow][href=?]", words_path(sort: "shuffle", seed: "abc123", page: 2)
   end
 
   # --- 詳細 ---
-  test "詳細は誰でも見られ、Accept: */*(curl・クローラ)でも HTML を返す" do
+  test "詳細は誰でも見られ(未注釈は 404)、読み・意味・導線を出す" do
     # request.format.html? が */* で false になり、関連語が nil のままテンプレートが描画されて
     # 500 になる退行を防ぐ(LLM クローラ対策)
     get word_path(words(:abc_murder)), headers: { "Accept" => "*/*" }
     assert_response :success
     assert_select "article.sense-card"
-  end
 
-  test "未注釈の語の詳細は 404" do
+    # 未注釈の語の詳細は 404
     get word_path(words(:pending_haruhi))
     assert_response :not_found
-  end
 
-  test "詳細に読み(ルビ)・韻・母音パターン・意味・リード文が出る" do
+    # 詳細に読み(ルビ)・韻・母音パターン・意味・リード文が出る
     sense = word_senses(:murder)
     get word_path(sense.word)
 
@@ -254,9 +258,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".word-flavor .word-flavor__text", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
     # 円環交差数(さつじんじけん は 3 回)
     assert_select ".kana-ring__count", text: I18n.t("words.show.crossings_count", count: 3)
-  end
 
-  test "詳細に Web 検索(別タブ)・シェア(X・URL コピー)・ランダムの導線がある" do
+    # 詳細に Web 検索(別タブ)・シェア(X・URL コピー)・ランダムの導線がある
     word = words(:abc_murder)
     get word_path(word)
 
@@ -276,7 +279,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".page-eyebrow a.eyebrow-random[href=?]", random_words_path
   end
 
-  test "詳細の属性は単語一覧の絞り込みリンクになり、特徴は該当部分のルビつきで出る" do
+  test "詳細の属性は絞り込みリンクになり、未登録は「—」で示す" do
     sense = word_senses(:murder)
     get word_path(sense.word)
 
@@ -295,11 +298,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.chip[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id), text: "連濁"
     assert_select "ruby.annotation-target", text: /殺人/
     assert_select "ruby.annotation-target rt", text: "さつじん"
-  end
 
-  # 円環交差数は保存列(word_senses.ring_crossing_count)を出し、読みから計算し直さない。
-  # 保存列は NULL を許すので、NULL の語義は「—」にする(値の直し方は docs/data-model.md §3.4)。
-  test "詳細の円環交差数は保存列の値を出し、NULL なら「—」にする" do
+    # 詳細の円環交差数は保存列の値を出し、NULL なら「—」にする
+    # 円環交差数は保存列(word_senses.ring_crossing_count)を出し、読みから計算し直さない。
+    # 保存列は NULL を許すので、NULL の語義は「—」にする(値の直し方は docs/data-model.md §3.4)。
     sense = word_senses(:murder) # 読みから求めると 3 回
     crossings = ".sense-attrs__item[title='#{I18n.t('words.show.crossings_hint')}']"
 
@@ -311,9 +313,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get word_path(sense.word)
     assert_select "#{crossings} .kana-ring__count", count: 0
     assert_select "#{crossings} .sense-undefined", text: I18n.t("words.show.undefined")
-  end
 
-  test "詳細は未登録の属性を「—」で示す" do
+    # 詳細は未登録の属性を「—」で示す
     # curry は ジャンル・エンティティ・言語学的特徴が未登録(語種 英語 はあり)
     get word_path(words(:curry))
 
@@ -321,58 +322,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".sense-undefined", text: I18n.t("words.show.undefined"), minimum: 1
     # 登録済みの語種(英語)は「—」にならず、値が出る
     assert_select ".sense-attrs__item", text: /語種.*英語/m
-  end
 
-  test "詳細に同じジャンルの関連語が並び、「ん」で終わる語のしりとりは行き止まりになる" do
-    # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
-    sibling = create_published_word(surface: "同ジャンルの別語", reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
-
-    get word_path(words(:abc_murder)) # 読み さつじんじけん
-    assert_response :success
-    assert_select "section.related .related__title", text: I18n.t("words.show.related.title")
-    # 同ジャンルの別語への実リンク(単語→単語の内部リンク)と、ファセット一覧への「もっと見る」
-    assert_select "section.related a.entry-row__surface[href=?]", word_path(sibling)
-    assert_select "section.related a.related__more[href=?]", words_path(genre_id: genres(:small_novel).id)
-
-    assert_select "section.related--shiritori .empty-note", text: /しりとりはここで終わり/
-    assert_select "section.related--shiritori .entry-list", false
-  end
-
-  test "しりとりの次の一手は末尾文字から始まる公開語へ繋がる" do
-    # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
-    next_word = create_published_word(surface: "レンタルビデオ店の閉店", reading: "レンタルビデオテンノヘイテン")
-
-    get word_path(words(:curry))
-    assert_response :success
-    assert_select "section.related--shiritori .related__title", text: I18n.t("words.show.shiritori.title")
-    assert_select "section.related--shiritori .shiritori__char", text: "レ"
-    assert_select "section.related--shiritori a.entry-row__surface[href=?]", word_path(next_word)
-    assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
-  end
-
-  # --- ページ送り ---
-  test "ページ送りは条件を引き継ぎ、シャッフル中だけシードを渡して nofollow にする" do
-    (WordsController::PER_PAGE + 1).times do |index|
-      Word.create!(surface: "ページ送りの見本その#{index}", annotated_at: Time.current, annotation_status: :done)
-    end
-
-    get words_path
-    assert_select ".pagination a[href=?]", words_path(page: 2)
-    assert_select ".pagination a[rel=nofollow]", 0
-
-    # 最後のページ(公開語 103 件 = 2 ページ)は「前へ」だけ
-    get words_path(page: 2)
-    assert_select ".pagination a", 1
-    assert_select ".pagination a[href=?]", words_path(page: 1)
-
-    get words_path(sort: "shuffle", seed: "abc123")
-    assert_select ".pagination a[rel=nofollow][href=?]", words_path(sort: "shuffle", seed: "abc123", page: 2)
-  end
-
-  # --- 多語義語の代表語義と語義の順序 ---
-  # 代表は Word#primary_sense(id が最小の語義)、語義の並びは Word#ordered_senses(id 順)。
-  # 先頭の語義が最長でない語で、この振る舞いを固定する。
-  test "多語義語の一覧の行は先頭の語義の文字数を出し、読みは語義の順に並べる。詳細の語義も同じ順" do
+    # 多語義語の一覧の行は先頭の語義の文字数を出し、読みは語義の順に並べる。詳細の語義も同じ順
+    # 代表は Word#primary_sense(id が最小の語義)、語義の並びは Word#ordered_senses(id 順)。
+    # 先頭の語義が最長でない語で、この振る舞いを固定する。
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい
     word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ") # 15 字
@@ -388,8 +341,34 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ], css_select(".sense-card .sense-heading rt").map(&:text)
   end
 
+  test "詳細の関連語としりとり(「ん」で終わる語は行き止まり)" do
+    # abc_murder(ジャンル 小説)と同じ小分類の別語を用意する
+    sibling = create_published_word(surface: "同ジャンルの別語", reading: "ドウジャンルノベツゴ", genre: genres(:small_novel))
+
+    get word_path(words(:abc_murder)) # 読み さつじんじけん
+    assert_response :success
+    assert_select "section.related .related__title", text: I18n.t("words.show.related.title")
+    # 同ジャンルの別語への実リンク(単語→単語の内部リンク)と、ファセット一覧への「もっと見る」
+    assert_select "section.related a.entry-row__surface[href=?]", word_path(sibling)
+    assert_select "section.related a.related__more[href=?]", words_path(genre_id: genres(:small_novel).id)
+
+    assert_select "section.related--shiritori .empty-note", text: /しりとりはここで終わり/
+    assert_select "section.related--shiritori .entry-list", false
+
+    # しりとりの次の一手は末尾文字から始まる公開語へ繋がる
+    # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
+    next_word = create_published_word(surface: "レンタルビデオ店の閉店", reading: "レンタルビデオテンノヘイテン")
+
+    get word_path(words(:curry))
+    assert_response :success
+    assert_select "section.related--shiritori .related__title", text: I18n.t("words.show.shiritori.title")
+    assert_select "section.related--shiritori .shiritori__char", text: "レ"
+    assert_select "section.related--shiritori a.entry-row__surface[href=?]", word_path(next_word)
+    assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
+  end
+
   # --- HTTP キャッシュ(Issue 26) ---
-  test "詳細は ETag を返し、変わっていなければ 304 になる" do
+  test "詳細は ETag で 304 を返し、マスタ名を変えると ETag が変わる" do
     get word_path(words(:abc_murder))
     assert_response :success
     etag = response.headers["ETag"]
@@ -397,6 +376,24 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
     get word_path(words(:abc_murder)), headers: { "If-None-Match" => etag }
     assert_response :not_modified
+
+    # マスタ名(ジャンル・祖先のジャンル・品詞)を変えると ETag が変わり、新しい名前が返る
+    word = words(:abc_murder)
+    genre = word_senses(:murder).genre
+    {
+      genre => "原始仏教",
+      genre.parent => "近現代文学",
+      parts_of_speech(:noun) => "名詞(改)"
+    }.each do |master, new_name|
+      get word_path(word)
+      etag = response.headers["ETag"]
+
+      master.update!(name: new_name)
+
+      get word_path(word), headers: { "If-None-Match" => etag }
+      assert_response :success, "#{master.class} の改名で ETag が変わっていない"
+      assert_includes response.body, new_name
+    end
   end
 
   test "ログイン中の詳細は、ログイン前の版で 304 にせず、共有キャッシュにも載せない" do
@@ -433,27 +430,16 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_nil response.headers["Last-Modified"]
   end
 
-  test "マスタ名(ジャンル・祖先のジャンル・品詞)を変えると ETag が変わり、新しい名前が返る" do
-    word = words(:abc_murder)
-    genre = word_senses(:murder).genre
-    {
-      genre => "原始仏教",
-      genre.parent => "近現代文学",
-      parts_of_speech(:noun) => "名詞(改)"
-    }.each do |master, new_name|
-      get word_path(word)
-      etag = response.headers["ETag"]
+  test "公開は index/show/random のみで、random は公開語の詳細へ飛ばす" do
+    assert_routing "/words", controller: "words", action: "index"
+    assert_routing "/words/1", controller: "words", action: "show", id: "1"
+    assert_routing "/words/random", controller: "words", action: "random"
 
-      master.update!(name: new_name)
-
-      get word_path(word), headers: { "If-None-Match" => etag }
-      assert_response :success, "#{master.class} の改名で ETag が変わっていない"
-      assert_includes response.body, new_name
+    assert_raises(ActionController::RoutingError) do
+      Rails.application.routes.recognize_path("/words", method: :post)
     end
-  end
 
-  # --- ランダムに1語・ルーティング ---
-  test "random は公開(注釈済み)の語の詳細へ飛ばし、公開語が無ければ一覧へ戻す" do
+    # random は公開(注釈済み)の語の詳細へ飛ばし、公開語が無ければ一覧へ戻す
     get random_words_path
     assert_response :redirect
     id = response.location[%r{/words/(\d+)\z}, 1]
@@ -463,16 +449,6 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     Word.update_all(annotated_at: nil)
     get random_words_path
     assert_redirected_to words_path
-  end
-
-  test "公開は index/show/random のみで登録経路は無い" do
-    assert_routing "/words", controller: "words", action: "index"
-    assert_routing "/words/1", controller: "words", action: "show", id: "1"
-    assert_routing "/words/random", controller: "words", action: "random"
-
-    assert_raises(ActionController::RoutingError) do
-      Rails.application.routes.recognize_path("/words", method: :post)
-    end
   end
 
   private

@@ -9,16 +9,15 @@ class ShareCardRendererTest < ActiveSupport::TestCase
   setup { @directory = Dir.mktmpdir("share_cards") }
   teardown { FileUtils.rm_rf(@directory) }
 
-  test "焼いた PNG を「名前-版.png」に置き、置いてある版は焼き直さずに返す" do
+  test "焼いた PNG を版つきの名前で置いて使い回し、新しい版を焼いたら古い版を消す" do
     png = renderer.fetch(name: "word-1", version: "v1", svg: "<svg/>")
     assert png.start_with?(ShareCardRenderer::PNG_SIGNATURE)
     assert_equal [ "word-1-v1.png" ], Dir.children(@directory)
 
     failing = renderer(command: [ RbConfig.ruby, "-e", "exit 1" ])
     assert_equal png, failing.fetch(name: "word-1", version: "v1", svg: "<svg/>")
-  end
 
-  test "新しい版を焼いたら同じ名前の古い版を消し、ほかの名前には触らない" do
+    # 新しい版を焼いたら同じ名前の古い版を消し、ほかの名前には触らない
     renderer.fetch(name: "word-1", version: "old", svg: "<svg/>")
     renderer.fetch(name: "word-12", version: "old", svg: "<svg/>")
     renderer.fetch(name: "word-1", version: "new", svg: "<svg/>")
@@ -26,7 +25,7 @@ class ShareCardRendererTest < ActiveSupport::TestCase
     assert_equal %w[word-1-new.png word-12-old.png], Dir.children(@directory).sort
   end
 
-  test "コマンドの失敗・PNG でない出力・時間切れでは nil を返し、書きかけを残さない" do
+  test "失敗・時間切れ・ほかのリクエストが焼いている最中は nil を返す" do
     {
       "失敗" => [ RbConfig.ruby, "-e", "exit 1" ],
       "PNG でない出力" => [ RbConfig.ruby, "-e", "print 'not png'" ],
@@ -35,9 +34,8 @@ class ShareCardRendererTest < ActiveSupport::TestCase
       assert_nil renderer(command:, timeout: 1).fetch(name: "word-1", version: "v1", svg: "<svg/>"), label
       assert_empty Dir.children(@directory), "#{label}: 一時ファイルを残さない"
     end
-  end
 
-  test "ほかのリクエストが焼いている最中は待たずに nil を返す(置いてある版はそのまま返す)" do
+    # ほかのリクエストが焼いている最中は待たずに nil を返す(置いてある版はそのまま返す)
     cached = renderer.fetch(name: "word-1", version: "v1", svg: "<svg/>")
 
     ShareCardRenderer::RENDER_LOCK.synchronize do

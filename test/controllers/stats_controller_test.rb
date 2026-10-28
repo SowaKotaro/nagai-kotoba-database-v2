@@ -67,7 +67,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "棒・セル・チップは検索の絞り込みへの導線になり、index されない面へは nofollow を付ける" do
+  test "統計ページの図は検索の絞り込みへの導線になり、30以上はまとめ棒にする" do
     get stats_path
     # 50音表ヒートマップ → 先頭文字 / 末尾文字(読みはカタカナへ正規化される)
     assert_select "a.kana-cell--heat[href=?]", words_path(first_char: "サ")
@@ -87,9 +87,8 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     # ワードクラウドの各項目は、その部品を含む語のキーワード検索へ。キーワード検索は必ず noindex
     assert_select "a.word-cloud__link[href=?]", words_path(q: MorphemeFrequencies.entries.first.text)
     assert_select "a.word-cloud__link:not([rel=nofollow])", count: 0
-  end
 
-  test "読みの長さの30以上はまとめ棒になり、文字数側だけ nofollow の範囲検索へリンクする" do
+    # 読みの長さの30以上はまとめ棒になり、文字数側だけ nofollow の範囲検索へリンクする
     create_published_word(surface: "とても長い開発語", reading: "ナ" * 35)
 
     get stats_path

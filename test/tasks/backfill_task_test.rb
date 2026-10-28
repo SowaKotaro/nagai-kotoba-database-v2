@@ -9,7 +9,7 @@ class BackfillTaskTest < ActiveSupport::TestCase
     Rake::Task["backfill:verify"].reenable
   end
 
-  test "reading_metrics は古くなった値も未設定(NULL)の値も、last_char を含めて埋め直す" do
+  test "reading_metrics と sense_metrics が崩れた値を埋め直す" do
     # コールバックを通さない直接更新で、派生値を古い状態・未設定の状態にする
     stale = word_senses(:curry) # 読み「カレー」: 末尾の長音を飛ばして last_char = レ
     stale.update_columns(rhythm_pattern: "stale", vowel_pattern: "stale", mora_count: 0, last_char: "陳")
@@ -22,13 +22,8 @@ class BackfillTaskTest < ActiveSupport::TestCase
     assert_equal [ "karee", "aee", 3, "レ" ], [ stale.rhythm_pattern, stale.vowel_pattern, stale.mora_count, stale.last_char ]
     blank.reload
     assert_equal [ "uuiaauiouuuu", 12, "つ" ], [ blank.vowel_pattern, blank.mora_count, blank.last_char ]
-  end
 
-  METRIC_COLUMNS = %w[sense_count variant_count feature_count min_reading_length max_reading_length max_mora_count
-                      max_small_kana_count max_chouon_count max_dakuten_count min_ring_crossing_count
-                      max_ring_crossing_count min_reading max_reading min_reversed_reading].freeze
-
-  test "sense_metrics は、直接更新で崩した words の代表値を元に戻す" do
+    # sense_metrics は、直接更新で崩した words の代表値を元に戻す
     WordSenseMetrics.refresh!
     expected = Word.order(:id).pluck(*METRIC_COLUMNS)
 
@@ -45,6 +40,10 @@ class BackfillTaskTest < ActiveSupport::TestCase
     curry = words(:curry).reload
     assert_equal [ 1, 1, 3, "カレー" ], [ curry.sense_count, curry.variant_count, curry.max_reading_length, curry.max_reading ]
   end
+
+  METRIC_COLUMNS = %w[sense_count variant_count feature_count min_reading_length max_reading_length max_mora_count
+                      max_small_kana_count max_chouon_count max_dakuten_count min_ring_crossing_count
+                      max_ring_crossing_count min_reading max_reading min_reversed_reading].freeze
 
   test "verify は last_char・char_type_pattern の不整合を報告する" do
     sense = word_senses(:curry)

@@ -4,7 +4,7 @@ require "test_helper"
 class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in_as(admins(:one)) }
 
-  test "認証済みなら収録状況と各作業への導線を表示する" do
+  test "収録状況と各作業への導線を表示し、単語が無くても 0% で表示できる" do
     get admin_root_path
     assert_response :success
 
@@ -23,9 +23,8 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     # 調査データのカードは、提案をまだ持たない未注釈の語を数える(Issue 108。フィクスチャでは提案があるのは haruhi だけ)
     assert_select ".admin-card__meta--pending > span",
       text: I18n.t("admin.dashboard.sections.research.meta", count: Word.unannotated.count - 1)
-  end
 
-  test "単語が 1 語も無くても表示でき、注釈の進捗は 0% になる" do
+    # 単語が 1 語も無くても表示でき、注釈の進捗は 0% になる
     Word.destroy_all
     get admin_root_path
     assert_response :success

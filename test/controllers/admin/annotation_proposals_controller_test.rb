@@ -5,7 +5,7 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in_as(admins(:one)) }
 
   # --- 書き出し ---
-  test "未注釈で提案が無い語とマスタ一覧を JSON で書き出す" do
+  test "書き出しは未注釈で提案の無い語とマスタを JSON にし、件数と語ID範囲で絞れる" do
     get export_admin_annotation_proposals_path
     assert_response :success
 
@@ -17,9 +17,8 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes ids, words(:pending_haruhi).id
     assert_not_includes ids, words(:abc_murder).id
     assert_includes data["masters"]["genres"].fetch("文学").fetch("日本文学"), "小説"
-  end
 
-  test "書き出し件数を指定でき、上限を超える指定は丸める" do
+    # 書き出し件数を指定でき、上限を超える指定は丸める
     get export_admin_annotation_proposals_path(limit: 1)
     assert_response :success
     assert_equal 1, JSON.parse(css_select("textarea#export_json").first.text)["words"].size
@@ -29,9 +28,8 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#export_limit[value=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
     # 入力欄の上限もサーバの上限と同じ値(ずれると、ブラウザが上限までの値を拒む)
     assert_select "input#export_limit[max=?]", Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT.to_s
-  end
 
-  test "語ID範囲を指定すると、下書き提案がある語も再調査用に書き出す" do
+    # 語ID範囲を指定すると、下書き提案がある語も再調査用に書き出す
     haruhi = words(:pending_haruhi) # 提案済み(既定の書き出しには入らない)
 
     get export_admin_annotation_proposals_path(from_id: haruhi.id, to_id: haruhi.id)
@@ -39,9 +37,8 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
 
     ids = JSON.parse(css_select("textarea#export_json").first.text)["words"].map { |w| w["word_id"] }
     assert_includes ids, haruhi.id
-  end
 
-  test "語ID範囲を指定しても注釈済みの語は書き出さない" do
+    # 語ID範囲を指定しても注釈済みの語は書き出さない
     annotated = words(:abc_murder) # 注釈済み
 
     get export_admin_annotation_proposals_path(from_id: annotated.id, to_id: annotated.id)
@@ -52,7 +49,7 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 取り込み ---
-  test "提案 JSON を下書きとして保存できる" do
+  test "提案 JSON を下書きとして保存し、存在しない word_id や壊れた JSON は知らせる" do
     json = { version: "1", proposals: [
       { word_id: words(:pending_bermuda).id, meaning: "大西洋の海域。", confidence: "high" }
     ] }.to_json
@@ -62,16 +59,14 @@ class Admin::AnnotationProposalsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to new_admin_annotation_proposal_path
     assert_match "1 件の提案を取り込みました", flash[:notice]
-  end
 
-  test "存在しない word_id が混ざるとフラッシュで知らせる" do
+    # 存在しない word_id が混ざるとフラッシュで知らせる
     json = { version: "1", proposals: [ { word_id: 999_999, meaning: "無い語。" } ] }.to_json
 
     post admin_annotation_proposals_path, params: { proposals_json: json }
     assert_match "999999", flash[:notice]
-  end
 
-  test "壊れた JSON は 422 で貼り付け画面に戻す" do
+    # 壊れた JSON は 422 で貼り付け画面に戻す
     assert_no_difference -> { AnnotationProposal.count } do
       post admin_annotation_proposals_path, params: { proposals_json: "{ 壊れた" }
     end

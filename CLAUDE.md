@@ -159,6 +159,8 @@
 - system テストの操作ヘルパ（`wait_for_stimulus`・`click_expecting`・`click_via_js`・`click_accepting_confirm` など）の使い分けは、
   `test/application_system_test_case.rb` の注記が正。
 - 役目を終えたテスト（もう無いマークアップの不在の確認、ルートヘルパや関連の宣言そのものの確認）は残さない。
+- テストは振る舞いのまとまりごとに 1 本にし、入力や条件ごとに分けない（条件は 1 本の中に並べるか表駆動にする）。不具合を直したときは
+  新しいテストを足さず、その振る舞いを持つ既存のテストに確かめる行を足す。未ログインの拒否・`belongs_to` の必須など、ほかが担保するものは書かない。
 
 ### 文書とコメント
 - 事実ごとに正を 1 か所に置き、ほかからはリンクする（全体の表は overview §13。カラムは `db/schema.rb`、派生値は data-model §3、照合順序は data-model §6、

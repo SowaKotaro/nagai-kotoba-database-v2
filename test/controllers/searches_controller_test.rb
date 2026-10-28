@@ -22,7 +22,7 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form.search-form input[type=text]:not([enterkeyhint=search])", count: 0
   end
 
-  test "検索を実行すると空条件を除いた条件で単語一覧へリダイレクトする" do
+  test "検索を実行すると空条件を除いて単語一覧へ送り、commit なしはフォームに条件を反映する" do
     genre_id = genres(:large_literature).id
     kango_id = word_origins(:kango).id
     {
@@ -38,15 +38,14 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
       get search_path, params: { commit: I18n.t("searches.submit") }.merge(params)
       assert_redirected_to words_path(expected)
     end
-  end
 
-  test "commit なし(リンクからの遷移)はリダイレクトせずフォームに条件を反映する" do
+    # commit なし(リンクからの遷移)はリダイレクトせずフォームに条件を反映する
     get search_path, params: { q: "カレー" }
     assert_response :success
     assert_select "input#q[value=?]", "カレー"
   end
 
-  test "単語一覧の「条件を変える」から来た条件を、単一値もフォームに欄の無い条件も落とさずに引き継ぐ" do
+  test "単語一覧から来た条件と OR を落とさずに引き継ぐ" do
     noun = parts_of_speech(:noun)
     carried = { reading_length: "12", mora_count: "11", vowel_transition: "1-ae" }
 
@@ -64,9 +63,8 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     # 検索を実行しても、それらの条件は単語一覧へ引き継がれる
     get search_path, params: { commit: "1", first_char: "ア", **carried }
     assert_redirected_to words_path(first_char: [ "ア" ], reading_length: 12, mora_count: 11, vowel_transition: "1-ae")
-  end
 
-  test "OR(match=any)は、条件が2つ以上あるときだけスイッチに引き継ぎ、単語一覧へも渡す" do
+    # OR(match=any)は、条件が2つ以上あるときだけスイッチに引き継ぎ、単語一覧へも渡す
     get search_path, params: { match: WordSenseSearch::MATCH_ANY, first_char: "ア", last_char: "ン" }
     assert_select "input#match[checked]"
     get search_path, params: { commit: "1", match: WordSenseSearch::MATCH_ANY, first_char: "ア", last_char: "ン" }
@@ -77,7 +75,7 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#match[checked]", count: 0
   end
 
-  test "50音表は /browse と同じく公開語義数の濃淡で塗り、0 件のセルは淡くする" do
+  test "50音表と文字数のスライダーに公開語義数を敷く" do
     # 公開語は カレーライス(読み カレー)と 殺人事件(読み さつじんじけん)
     get search_path
     [ [ "first_char", "カ" ], [ "last_char", "レ" ] ].each do |name, kana|
@@ -85,9 +83,8 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
       assert_select "label.kana-cell--muted:has(input[name='#{name}[]'][value=?])", "ヲ"
     end
     assert_select "label.kana-cell[title=?]", I18n.t("searches.kana_count_label", char: "カ", count: 1)
-  end
 
-  test "読みの文字数のスライダーに目盛りごとの公開語義数を棒で敷き、上端の棒には上端より長い語義もまとめる" do
+    # 読みの文字数のスライダーに目盛りごとの公開語義数を棒で敷き、上端の棒には上端より長い語義もまとめる
     lowest, highest = WordSense::MIN_READING_LENGTH, SearchesHelper::READING_LENGTH_SLIDER_MAX
     create_published_word(surface: "十二文字の語その一", reading: "ア" * 12)
     create_published_word(surface: "十二文字の語その二", reading: "イ" * 12)
@@ -119,7 +116,7 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 文字種(キーボード風の入力。キーを押す挙動は SearchCharTypeTest で見る) ---
-  test "文字種はキー・削除キー・コンソール表示で組み、既定は厳密(完全一致・大文字小文字を区別)" do
+  test "文字種の入力は既定で厳密、緩い側で開くと切替が消灯する" do
     get search_path
     %w[あ ア 漢 1 A a @].each do |char|
       assert_select "button.char-type-key[data-char-type-char-param=?]", char, text: char
@@ -134,9 +131,8 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.char-type-flag__btn[aria-pressed=true]", count: 2
     assert_select "input[type=hidden][name=char_type_partial][value=?]", ""
     assert_select "input[type=hidden][name=char_type_ignore_case][value=?]", ""
-  end
 
-  test "緩い側の指定で開くと切替アイコンが消灯し、「a」キーは最初から隠れている" do
+    # 緩い側の指定で開くと切替アイコンが消灯し、「a」キーは最初から隠れている
     get search_path, params: { char_type_pattern: "漢", char_type_partial: "1", char_type_ignore_case: "1" }
     assert_select "button.char-type-flag__btn[aria-pressed=false]", count: 2
     assert_select "input[type=hidden][name=char_type_partial][value=?]", "1"

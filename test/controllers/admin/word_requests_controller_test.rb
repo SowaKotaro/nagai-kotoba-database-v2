@@ -15,7 +15,7 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     @item = @request_record.items.first
   end
 
-  test "一覧に語が並び、投稿後に収録された語には印、管理ナビには未着手の件数が出る" do
+  test "一覧に語と収録済みの印・未着手の件数が出て、状態や IP で絞り込める" do
     sign_in_as(admins(:one))
     get admin_requests_path
     assert_response :success
@@ -23,9 +23,8 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     # fixtures の公開語と同じ表層形のリクエストには「収録済み」を出す
     assert_select ".admin-requests-table__registered"
     assert_select ".admin-nav__badge", text: WordRequestItem.pending.count.to_s
-  end
 
-  test "かなの種類だけが違うリクエストにも「収録済み」の印が付き、収録されていない語には付かない" do
+    # かなの種類だけが違うリクエストにも「収録済み」の印が付き、収録されていない語には付かない
     sign_in_as(admins(:one))
     # 収録語「カレーライス」(fixtures)のひらがな書き
     WordRequest.create!(ip_address: "203.0.113.11", items_attributes: { "0" => { surface: "かれーらいす" } })
@@ -37,9 +36,8 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody tr", text: /リクエストされた言葉/ do
       assert_select ".admin-requests-table__registered", 0
     end
-  end
 
-  test "状態や送信元 IP で絞り込める" do
+    # 状態や送信元 IP で絞り込める
     sign_in_as(admins(:one))
     @item.update!(status: :rejected)
     get admin_requests_path(status: "rejected")
@@ -78,7 +76,7 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("admin.word_requests.bulk.no_selection"), flash[:alert]
   end
 
-  test "選択した語を一括登録の step1 へ渡す" do
+  test "選択した語を一括登録へ渡し、削除できる" do
     sign_in_as(admins(:one))
     post bulk_admin_requests_path, params: { item_ids: @request_record.items.map(&:id), commit: "to_bulk" }
 
@@ -86,9 +84,8 @@ class Admin::WordRequestsControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     # 箇条書き欄に流し込まれている
     assert_select "textarea", text: /リクエストされた言葉/
-  end
 
-  test "選択した語を削除できる" do
+    # 選択した語を削除できる
     sign_in_as(admins(:one))
     assert_difference "WordRequestItem.count", -1 do
       post bulk_admin_requests_path, params: { item_ids: [ @item.id ], commit: "destroy" }

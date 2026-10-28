@@ -6,7 +6,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in_as(admins(:one)) }
 
   # --- 表示 ---
-  test "ハブと編集画面(現在の名前つき)を表示でき、未知の種別は 404" do
+  test "ハブ・種別一覧・編集画面を表示し、seed 管理タグにだけ印と警告を出す" do
     get admin_tags_path
     assert_response :success
 
@@ -16,9 +16,8 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
 
     get admin_tag_kind_path("admins")
     assert_response :not_found
-  end
 
-  test "種別一覧は使用中のタグに削除ボタンを出さず、ジャンルは木の順に階層ぶんインデントして並べる" do
+    # 種別一覧は使用中のタグに削除ボタンを出さず、ジャンルは木の順に階層ぶんインデントして並べる
     get admin_tag_kind_path("entity_types")
     assert_response :success
     # 人名(未使用)の行には削除ボタン、書籍名(語義に付与済み)の行は「使用中」
@@ -38,6 +37,26 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td.tag-table__name--large a", text: "文学"
     assert_select "td.tag-table__name--medium a", text: "日本文学"
     assert_select "td.tag-table__name--small a", text: "小説"
+
+    # seed 管理タグには一覧で seed 印、編集画面で警告が出る
+    get admin_tag_kind_path("word_origins")
+    assert_response :success
+    assert_select "span.tag-table__seed", minimum: 1 # 英語(カタログ収載)に印が付く
+
+    get admin_edit_tag_path("word_origins", word_origins(:eigo))
+    assert_response :success
+    assert_select ".seed-warning", 1
+
+    # カタログ外のタグには seed 印・警告が出ない
+    # 和語はカタログ外(UI 追加扱い)なので警告なし
+    get admin_edit_tag_path("word_origins", word_origins(:wago))
+    assert_response :success
+    assert_select ".seed-warning", count: 0
+
+    # エンティティタイプは種別ごと seed 管理外。印も注記も出ない
+    get admin_tag_kind_path("entity_types")
+    assert_response :success
+    assert_select "span.tag-table__seed", count: 0
   end
 
   # --- 更新・削除・統合 ---
@@ -86,7 +105,7 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 新規追加(言語学的特徴のみ) ---
-  test "言語学的特徴を追加でき、追加パネルは特徴の一覧にだけ出る" do
+  test "言語学的特徴を追加でき、空・既存名は 422、許可していない種別は 404" do
     get admin_tag_kind_path("linguistic_features")
     assert_select "details.tag-add", 1
     get admin_tag_kind_path("parts_of_speech")
@@ -97,9 +116,8 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to admin_tag_kind_path("linguistic_features")
     assert_equal I18n.t("admin.tags.flash.created", name: "音便"), flash[:notice]
-  end
 
-  test "空や既存と同じ名前は 422 で再描画し、追加を許可していない種別は 404" do
+    # 空や既存と同じ名前は 422 で再描画し、追加を許可していない種別は 404
     assert_no_difference -> { LinguisticFeature.count } do
       post admin_create_tag_path("linguistic_features"), params: { tag: { name: "" } }
       assert_response :unprocessable_content
@@ -113,28 +131,5 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
       post admin_create_tag_path("parts_of_speech"), params: { tag: { name: "形容詞" } }
     end
     assert_response :not_found
-  end
-
-  # --- seed 管理タグの印と警告(Issue 49) ---
-  test "seed 管理タグには一覧で seed 印、編集画面で警告が出る" do
-    get admin_tag_kind_path("word_origins")
-    assert_response :success
-    assert_select "span.tag-table__seed", minimum: 1 # 英語(カタログ収載)に印が付く
-
-    get admin_edit_tag_path("word_origins", word_origins(:eigo))
-    assert_response :success
-    assert_select ".seed-warning", 1
-  end
-
-  test "カタログ外のタグには seed 印・警告が出ない" do
-    # 和語はカタログ外(UI 追加扱い)なので警告なし
-    get admin_edit_tag_path("word_origins", word_origins(:wago))
-    assert_response :success
-    assert_select ".seed-warning", count: 0
-
-    # エンティティタイプは種別ごと seed 管理外。印も注記も出ない
-    get admin_tag_kind_path("entity_types")
-    assert_response :success
-    assert_select "span.tag-table__seed", count: 0
   end
 end
