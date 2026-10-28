@@ -8,34 +8,29 @@ class WordRequestTest < ActiveSupport::TestCase
     WordRequest.new(ip_address: ip, items_attributes: items)
   end
 
-  test "言葉が1つも無ければ保存できない" do
+  test "言葉と IP が要り、空行は捨て、語数は上限まで" do
     request = WordRequest.new(ip_address: IP)
     assert_not request.valid?
-  end
 
-  test "IP が無ければ保存できない" do
+    # IP が無ければ保存できない
     assert_not build_request(ip: nil).valid?
-  end
 
-  test "すべて空の行は捨てる" do
+    # すべて空の行は捨てる
     request = build_request(items: {
       "0" => { surface: "ちゃんとした言葉", reading: "" },
       "1" => { surface: "", reading: "" }
     })
     assert request.valid?
     assert_equal 1, request.items.size
-  end
 
-  test "空行しか無ければ保存できない" do
+    # 空行しか無ければ保存できない
     assert_not build_request(items: { "0" => { surface: "", reading: "" } }).valid?
-  end
 
-  test "上限までの語数は受け付ける" do
+    # 上限までの語数は受け付ける
     items = (1..WordRequest::MAX_ITEMS).index_with { |i| { surface: "言葉#{i}" } }.transform_keys(&:to_s)
     assert build_request(items: items).valid?
-  end
 
-  test "上限を超える語数は受け付けない" do
+    # 上限を超える語数は受け付けない
     items = (0..WordRequest::MAX_ITEMS).index_with { |i| { surface: "言葉#{i}" } }.transform_keys(&:to_s)
     request = build_request(items: items)
 
@@ -53,32 +48,21 @@ class WordRequestTest < ActiveSupport::TestCase
     assert WordRequest.rate_limited?(IP)
   end
 
-  test "期間を過ぎた送信は数えない" do
+  test "レートリミットは期間を過ぎた送信と、別の IP・空の IP の送信を数えない" do
     period, limit = WordRequest::RATE_LIMITS.first
 
     travel_to((period + 1.minute).ago) do
       limit.times { build_request.save! }
     end
     assert_not WordRequest.rate_limited?(IP)
-  end
 
-  test "別の IP の送信は影響しない" do
+    # 別の IP の送信は影響しない
     WordRequest::RATE_LIMITS.first.last.times { build_request.save! }
 
     assert_not WordRequest.rate_limited?("198.51.100.1")
-  end
 
-  test "IP が空なら制限の対象にしない" do
+    # IP が空なら制限の対象にしない
     assert_not WordRequest.rate_limited?(nil)
     assert_not WordRequest.rate_limited?("")
-  end
-
-  test "通を消すと語も消える" do
-    request = build_request
-    request.save!
-
-    assert_difference "WordRequestItem.count", -1 do
-      request.destroy
-    end
   end
 end

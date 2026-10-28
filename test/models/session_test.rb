@@ -5,23 +5,21 @@ class SessionTest < ActiveSupport::TestCase
     @admin = admins(:one)
   end
 
-  test "作成直後のセッションは失効していない" do
+  test "無操作が LIFETIME を超えたら失効する(ちょうど手前は失効しない)" do
     session = @admin.sessions.create!
 
     assert_not session.expired?
     assert_not_includes Session.expired, session
-  end
 
-  test "無操作が LIFETIME を超えたセッションは失効する" do
+    # 無操作が LIFETIME を超えたセッションは失効する
     session = @admin.sessions.create!
 
     travel Session::LIFETIME + 1.minute do
       assert_predicate session, :expired?
       assert_includes Session.expired, session
     end
-  end
 
-  test "LIFETIME ちょうど手前では失効しない(境界値)" do
+    # LIFETIME ちょうど手前では失効しない(境界値)
     session = @admin.sessions.create!
 
     travel Session::LIFETIME - 1.minute do
@@ -29,7 +27,7 @@ class SessionTest < ActiveSupport::TestCase
     end
   end
 
-  test "refresh_activity は間引き間隔内なら更新しない" do
+  test "refresh_activity は間引き間隔を超えたときだけ updated_at を更新する" do
     session = @admin.sessions.create!
     original_updated_at = session.updated_at
 
@@ -37,9 +35,8 @@ class SessionTest < ActiveSupport::TestCase
       assert_nil session.refresh_activity
       assert_equal original_updated_at, session.reload.updated_at
     end
-  end
 
-  test "refresh_activity は間引き間隔を超えていれば updated_at を更新する" do
+    # refresh_activity は間引き間隔を超えていれば updated_at を更新する
     session = @admin.sessions.create!
     original_updated_at = session.updated_at
 

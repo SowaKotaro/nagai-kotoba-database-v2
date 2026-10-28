@@ -19,7 +19,7 @@ class WordCandidateIntakeTest < ActiveSupport::TestCase
     assert_equal({ "rejected" => 1, "expanding" => 1 }, result.existing)
   end
 
-  test "入れられなかった行(検証エラー・先頭 191 字だけが既存の語と同じ長い語)は理由を添えてエラーにし、他の行は入れる" do
+  test "入れられない行は理由を添えてエラーにし、行数の上限を判定する" do
     WordCandidate.create!(surface: "#{'長' * 191}い")
 
     result = WordCandidateIntake.new(text: "#{'長' * 256}\n#{'長' * 191}う\n正常な言葉").call
@@ -28,9 +28,8 @@ class WordCandidateIntakeTest < ActiveSupport::TestCase
     assert_equal 2, result.errors.size
     assert result.errors.first.start_with?("#{'長' * 256}: ")
     assert_equal "#{'長' * 191}う: #{I18n.t('admin.word_candidates.not_unique')}", result.errors.last
-  end
 
-  test "行数の上限を超えたかを判定する" do
+    # 行数の上限を超えたかを判定する
     text = (1..(WordCandidateIntake::MAX_LINES + 1)).map { |i| "語#{i}" }.join("\n")
     assert WordCandidateIntake.new(text: text).too_many?
   end

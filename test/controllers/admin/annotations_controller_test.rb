@@ -12,7 +12,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- index: 入口は提案付きの語を優先(Issue 69) ---
-  test "入口は未承認の提案がある語へ寄せ、提案キューを辿り切ると提案キューの完了画面へ戻る" do
+  test "入口は提案のある語を優先し、無ければ最初の未対応へ進む" do
     # フィクスチャでは haruhi に未承認の提案が付いている
     get admin_annotations_path
     assert_redirected_to admin_annotations_path(proposed: 1)
@@ -25,9 +25,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
       word: { word_senses_attributes: { "0" => { id: @sense.id, reading: @sense.reading } } }
     }
     assert_redirected_to admin_annotations_path(proposed: 1)
-  end
 
-  test "提案が無ければ入口は最初の未対応へ進む" do
+    # 提案が無ければ入口は最初の未対応へ進む
     annotation_proposals(:haruhi_proposal).applied!
     get admin_annotations_path
     assert_redirected_to admin_annotation_path(Word.annotation_pending.order(:id).first)
@@ -62,7 +61,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- show ---
-  test "コンソールに表層形の編集欄・チップ・特徴ストリップ・用語解説・再調査への導線が出る" do
+  test "コンソールの部品と、保存済みの特徴・別表記の id の出し方" do
     get admin_annotation_path(@word)
     assert_response :success
     assert_select "h1.ann-word", text: @word.surface
@@ -77,6 +76,25 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".ann-glossary__list .feature-glossary__item dd", text: /まんなか/
     end
     assert_select "a[href=?]", reresearch_admin_annotation_path(@word)
+
+    # 保存済みの特徴と別表記の id は、行の枠の中に 1 つずつ出る
+    # 保存済みの行の id は、× で外したときに _destroy と一緒に送られるよう、行の枠の中に 1 つだけ出す。
+    # 語義の fields_for の include_id: false が入れ子に引き継がれて id が出ず、外した特徴・別表記が残っていた。
+    word = words(:abc_murder)
+    sense = word_senses(:murder)
+    variant = sense.word_sense_variants.create!(surface: "ＡＢＣ殺人事件", reading: sense.reading)
+    feature_ids = sense.word_sense_features.ids
+
+    get admin_annotation_path(word)
+    assert_response :success
+    feature_ids.each do |id|
+      assert_select ".ann-feature[data-nested-form-item] input[type=hidden][name$='[id]'][value=?]", id.to_s, 1
+    end
+    assert_select ".js-variants > [data-nested-form-item] input[type=hidden][name$='[id]'][value=?]", variant.id.to_s, 1
+    # 枠の外(fields_for の既定の位置)には出さない。数えるのは語義 1 つ + 特徴 + 別表記の分だけ
+    assert_select "form input[type=hidden][name$='[id]']", 1 + feature_ids.size + 1
+    # 新しい行の雛形は id を持たない
+    assert_select "template input[name$='[id]']", 0
   end
 
   # --- update ---
@@ -129,26 +147,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "涼宮", "すずみや", 0 ], [ feature.target, feature.target_reading, feature.target_start ]
   end
 
-  # 保存済みの行の id は、× で外したときに _destroy と一緒に送られるよう、行の枠の中に 1 つだけ出す。
-  # 語義の fields_for の include_id: false が入れ子に引き継がれて id が出ず、外した特徴・別表記が残っていた。
-  test "保存済みの特徴と別表記の id は、行の枠の中に 1 つずつ出る" do
-    word = words(:abc_murder)
-    sense = word_senses(:murder)
-    variant = sense.word_sense_variants.create!(surface: "ＡＢＣ殺人事件", reading: sense.reading)
-    feature_ids = sense.word_sense_features.ids
-
-    get admin_annotation_path(word)
-    assert_response :success
-    feature_ids.each do |id|
-      assert_select ".ann-feature[data-nested-form-item] input[type=hidden][name$='[id]'][value=?]", id.to_s, 1
-    end
-    assert_select ".js-variants > [data-nested-form-item] input[type=hidden][name$='[id]'][value=?]", variant.id.to_s, 1
-    # 枠の外(fields_for の既定の位置)には出さない。数えるのは語義 1 つ + 特徴 + 別表記の分だけ
-    assert_select "form input[type=hidden][name$='[id]']", 1 + feature_ids.size + 1
-    # 新しい行の雛形は id を持たない
-    assert_select "template input[name$='[id]']", 0
-  end
-
   # --- hold: 保留にしてキューから外し、次の未対応へ進む ---
   test "保留にすると状態が保留になりキューから外れ、次の未対応へ進む" do
     patch hold_admin_annotation_path(@word)
@@ -162,7 +160,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- Claude の提案(Issue 38・39) ---
-  test "提案のある語にだけ提案パネルが出て、立項スコアが3以下なら懸念の印と理由が出る" do
+  test "提案パネル: 提案のある語にだけ出し、懸念・状態・新設候補の印と作成ボタンを出し分ける" do
     # フィクスチャは entry_score 5(懸念なし)
     get admin_annotation_path(@word)
     assert_select ".ann-proposal" do
@@ -183,9 +181,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     # 提案の無い語には出ない
     get admin_annotation_path(words(:pending_bermuda))
     assert_select ".ann-proposal", count: 0
-  end
 
-  test "注釈済みの語でも提案を状態バッジ付きで見直せる" do
+    # 注釈済みの語でも提案を状態バッジ付きで見直せる
     @word.mark_annotated
     @word.save!
     annotation_proposals(:haruhi_proposal).applied!
@@ -193,9 +190,38 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".ann-proposal"
     assert_select ".ann-proposal__status--applied", text: "反映済み"
+
+    # 単一語義の提案では未解決マスタに作成ボタンを出し、複数語義では印だけにする
+    proposal = annotation_proposals(:haruhi_proposal)
+    proposal.update!(payload: { "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ] })
+    get admin_annotation_path(@word)
+    assert_select "form.ann-proposal__new-form", minimum: 1
+
+    proposal.update!(payload: { "senses" => [ { "entity_type" => "架空種別A" }, { "entity_type" => "架空種別B" } ] })
+    get admin_annotation_path(@word)
+    assert_select "form.ann-proposal__new-form", count: 0
+    assert_select ".ann-proposal__new", minimum: 1
+
+    # 未知の特徴名は新設候補の印を付け、反映でもフォームに組まない
+    propose_feature("存在しない特徴")
+
+    get admin_annotation_path(@word)
+    assert_select ".ann-proposal__feature .ann-proposal__new"
+
+    get admin_annotation_path(@word, apply_proposal: 1)
+    assert_response :success
+    assert_select "input[name$='[target]'][value=?]", "涼宮", count: 0
+
+    # 提案キューにだけ絞り込み・並べ替えの導線が出る
+    get admin_annotation_path(@word, proposed: 1)
+    assert_select ".ann-queue-filter"
+    assert_select ".ann-queue-filter__link", text: "要判断だけ"
+
+    get admin_annotation_path(@word)
+    assert_select ".ann-queue-filter", count: 0
   end
 
-  test "「提案を反映」でフォームに提案値がプレフィルされる(保存はしない)" do
+  test "「提案を反映」はフォームに提案値を組む(保存はしない。小分類が未登録なら辿れるところまで、複数語義・特徴も)" do
     get admin_annotation_path(@word, apply_proposal: 1)
     assert_response :success
 
@@ -212,9 +238,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @sense.meaning
     assert_nil @sense.genre_id
     assert_empty @sense.word_origin_ids
-  end
 
-  test "反映時に小分類が未登録でも大・中まで一致すればピッカーをそこまで開く" do
+    # 反映時に小分類が未登録でも大・中まで一致すればピッカーをそこまで開く
     # 小分類だけ既存の木に無い提案(大「文学」・中「日本文学」は在る)
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "genre_path" => %w[文学 日本文学 私小説]
@@ -227,10 +252,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     # 大・中の id を preselect としてピッカーへ渡す(JS が connect でそこまで潜る)
     expected = [ genres(:large_literature).id, genres(:medium_japanese).id ].to_json
     assert_select ".ann-genre[data-genre-picker-preselect-value=?]", expected
-  end
 
-  # --- 複数語義の提案(同音異義語・Issue 41) ---
-  test "複数語義の提案はパネルで語義ごとに区切り、反映するとフォームに語義が並ぶ" do
+    # 複数語義の提案はパネルで語義ごとに区切り、反映するとフォームに語義が並ぶ
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [
         { "meaning" => "谷川流のライトノベル。" },
@@ -245,10 +268,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".ann-sense", count: 2
     assert_select "textarea.js-meaning", text: /谷川流/
     assert_select "textarea.js-meaning", text: /アニメ作品/
-  end
 
-  # --- 提案の言語学的特徴の表示・反映(Issue 63) ---
-  test "既存マスタに解決できる特徴は該当部分つきでパネルに出て、反映でフォームに組まれる(保存はしない)" do
+    # 既存マスタに解決できる特徴は該当部分つきでパネルに出て、反映でフォームに組まれる(保存はしない)
     propose_feature("連濁")
 
     get admin_annotation_path(@word)
@@ -265,31 +286,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, @sense.reload.word_sense_features.count
   end
 
-  test "未知の特徴名は新設候補の印を付け、反映でもフォームに組まない" do
-    propose_feature("存在しない特徴")
-
-    get admin_annotation_path(@word)
-    assert_select ".ann-proposal__feature .ann-proposal__new"
-
-    get admin_annotation_path(@word, apply_proposal: 1)
-    assert_response :success
-    assert_select "input[name$='[target]'][value=?]", "涼宮", count: 0
-  end
-
-  # --- 新設候補マスタのワンタップ作成(Issue 66) ---
-  test "単一語義の提案では未解決マスタに作成ボタンを出し、複数語義では印だけにする" do
-    proposal = annotation_proposals(:haruhi_proposal)
-    proposal.update!(payload: { "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ] })
-    get admin_annotation_path(@word)
-    assert_select "form.ann-proposal__new-form", minimum: 1
-
-    proposal.update!(payload: { "senses" => [ { "entity_type" => "架空種別A" }, { "entity_type" => "架空種別B" } ] })
-    get admin_annotation_path(@word)
-    assert_select "form.ann-proposal__new-form", count: 0
-    assert_select ".ann-proposal__new", minimum: 1
-  end
-
-  test "create_master でエンティティを作成し、再反映で解決してフォームに入る" do
+  test "create_master は提案名でマスタを作り、作れない指定は alert で戻す" do
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
     })
@@ -299,9 +296,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_annotation_path(@word, apply_proposal: 1)
     follow_redirect!
     assert_select "input[type=radio][value=?][checked]", EntityType.find_by(name: "架空種別").id.to_s
-  end
 
-  test "create_master は候補が複数ある種別(語種)を指定した名前で作る" do
+    # create_master は候補が複数ある種別(語種)を指定した名前で作る
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "word_origins" => %w[和語 タミル語] } ]
     })
@@ -309,9 +305,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
       post create_master_admin_annotation_path(@word), params: { field: "word_origin", name: "タミル語" }
     end
     assert_not_nil WordOrigin.find_by(name: "タミル語")
-  end
 
-  test "create_master は作れない指定で alert を出して戻る" do
+    # create_master は作れない指定で alert を出して戻る
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "genre_path" => %w[無い 無い 無い] } ]
     })
@@ -320,16 +315,6 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to admin_annotation_path(@word, apply_proposal: 1)
     assert_equal I18n.t("admin.annotations.create_master_failed"), flash[:alert]
-  end
-
-  # --- キューの絞り込み・並べ替え(Issue 67) ---
-  test "提案キューにだけ絞り込み・並べ替えの導線が出る" do
-    get admin_annotation_path(@word, proposed: 1)
-    assert_select ".ann-queue-filter"
-    assert_select ".ann-queue-filter__link", text: "要判断だけ"
-
-    get admin_annotation_path(@word)
-    assert_select ".ann-queue-filter", count: 0
   end
 
   test "review=1 は要判断の語だけに絞り、sort は要判断(review)・確実(easy)な語を先頭にする" do
@@ -358,7 +343,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 提案あり語のロード時自動反映(Issue 64) ---
-  test "?proposed=1 では明示操作なしで提案が自動反映される(保存はしない)" do
+  test "?proposed=1 のときだけ未反映の提案を自動で反映する" do
     # show は annotation_proposals を joins したキューを辿る。素の id だと words.id と
     # annotation_proposals.id で曖昧になり StatementInvalid になっていた(その回帰防止を兼ねる)
     get admin_annotation_path(@word, proposed: 1)
@@ -367,9 +352,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s
     assert_nil @sense.reload.meaning
     assert_nil @sense.genre_id
-  end
 
-  test "通常表示や反映済みの提案では自動反映しない" do
+    # 通常表示や反映済みの提案では自動反映しない
     # 通常表示(proposed なし)はスティッキー既定のまま。パネルには出るがフォームへは入れない
     get admin_annotation_path(@word)
     assert_select "textarea.js-meaning", text: /谷川流/, count: 0
@@ -384,7 +368,7 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- スティッキー引き継ぎ(Issue 37) ---
-  test "トグルONで保存すると、次の語にジャンル・品詞・語種が初期値として入る" do
+  test "トグルを入れたときだけ次の語へ属性を引き継ぎ、付いている属性は上書きしない" do
     patch admin_annotation_path(@word), params: {
       sticky: "1",
       word: { word_senses_attributes: { "0" => {
@@ -402,9 +386,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     # 引き継ぎはフォームの初期値のみで、DB には書き込まない
     assert_nil word_senses(:pending2).reload.genre_id
     assert_empty word_senses(:pending2).word_origin_ids
-  end
 
-  test "トグルOFF(既定)なら引き継がない" do
+    # トグルOFF(既定)なら引き継がない
     patch admin_annotation_path(@word), params: {
       word: { word_senses_attributes: { "0" => {
         id: @sense.id, reading: @sense.reading, genre_id: genres(:small_novel).id
@@ -413,9 +396,8 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
 
     get admin_annotation_path(words(:pending_bermuda))
     assert_select "input.js-genre-value[value=?]", genres(:small_novel).id.to_s, count: 0
-  end
 
-  test "属性が既に付いている語義には引き継ぎで上書きしない" do
+    # 属性が既に付いている語義には引き継ぎで上書きしない
     patch admin_annotation_path(@word), params: {
       sticky: "1",
       word: { word_senses_attributes: { "0" => {

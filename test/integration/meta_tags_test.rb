@@ -2,7 +2,7 @@ require "test_helper"
 
 # レイアウトが出力する SEO / OGP メタ情報(Issue 14)の結合テスト。
 class MetaTagsTest < ActionDispatch::IntegrationTest
-  test "トップページにタグライン付き title と専用の description・canonical・OGP が出力される" do
+  test "トップ・一覧・検索フォームはそれぞれ固有の title・description・canonical・OGP を持つ" do
     get root_path
     assert_response :success
 
@@ -21,17 +21,22 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[name='twitter:card'][content=?]", "summary_large_image"
     assert_select "meta[name='twitter:title'][content=?]", title
     assert_select "meta[name='twitter:description'][content=?]", I18n.t("home.index.meta_description")
-  end
 
-  test "素の単語一覧と検索フォームはトップと異なる固有の description を持つ" do
+    # 素の単語一覧と検索フォームはトップと異なる固有の description を持つ
     get words_path
     assert_select "meta[name=description][content=?]", I18n.t("words.index.description")
 
     get search_path
     assert_select "meta[name=description][content=?]", I18n.t("searches.description")
+
+    # canonical はクエリパラメータを含めず現在のパスのみを使う(既定の挙動)
+    # /words は Issue 17 で canonical を正規化上書きするため、上書きしない /search で既定挙動を確認する。
+    get search_path(q: "テスト", genre_id: 1)
+    assert_response :success
+    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/search"
   end
 
-  test "単語詳細の description はリード文、og:type は article、canonical は本番ホスト" do
+  test "単語詳細の description・og:type・canonical・og:image" do
     word = words(:abc_murder)
     get word_path(word)
     assert_response :success
@@ -43,9 +48,8 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='og:type'][content=?]", "article"
     assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/words/#{word.id}"
     assert_select "meta[property='og:url'][content=?]", "#{CANONICAL_HOST}/words/#{word.id}"
-  end
 
-  test "単語詳細の og:image は語ごとの共有カード(版つき)で、焼けない環境では既定のカードのまま" do
+    # 単語詳細の og:image は語ごとの共有カード(版つき)で、焼けない環境では既定のカードのまま
     word = words(:abc_murder)
     stub_method(ShareCardRenderer, :available?, -> { true }) { get word_path(word) }
     assert_select "meta[property='og:image'][content=?]",
@@ -56,12 +60,5 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     stub_method(ShareCardRenderer, :available?, -> { false }) { get word_path(word) }
     assert_select "meta[property='og:image'][content=?]", "#{CANONICAL_HOST}/og-default.png"
     assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
-  end
-
-  test "canonical はクエリパラメータを含めず現在のパスのみを使う(既定の挙動)" do
-    # /words は Issue 17 で canonical を正規化上書きするため、上書きしない /search で既定挙動を確認する。
-    get search_path(q: "テスト", genre_id: 1)
-    assert_response :success
-    assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}/search"
   end
 end

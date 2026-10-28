@@ -6,7 +6,7 @@ require "application_system_test_case"
 class WordRequestFormTest < ApplicationSystemTestCase
   MISSING_WORD = "検索しても見つからない長い言葉".freeze
 
-  test "検索で見つからなかった語をその場でリクエストでき、重複チェックは送信を妨げない" do
+  test "検索で見つからなかった語をその場でリクエストでき、読みの字数と行の上限を表示に反映する" do
     visit words_path(q: MISSING_WORD)
     assert_text I18n.t("words.index.empty_filtered")
     click_on I18n.t("words.index.request_link")
@@ -28,9 +28,8 @@ class WordRequestFormTest < ApplicationSystemTestCase
     fill_in "word_request_items_attributes_0_reading", with: "ケンサクシテモミツカラナイナガイコトバ"
     submit_after_thinking
     assert_equal MISSING_WORD, WordRequestItem.last.surface
-  end
 
-  test "読みの字数が収録基準に届くと表示が変わり、行の追加は上限で止まる" do
+    # 読みの字数が収録基準に届くと表示が変わり、行の追加は上限で止まる
     visit new_request_path
     wait_for_stimulus "reading-counter"
     wait_for_stimulus "nested-form"

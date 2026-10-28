@@ -2,7 +2,7 @@ require "test_helper"
 
 # 1語の再調査用データの書き出し。アノテーション・コンソールから /reannotation へ渡す JSON。
 class ReannotationExportTest < ActiveSupport::TestCase
-  test "注釈済みの語は保存済みの内容を提案 JSON と同じキーで書き出す" do
+  test "注釈済みの語は保存済みの内容を提案 JSON と同じキーで書き出し、空の項目は落とす" do
     word = words(:abc_murder)
     data = ReannotationExport.new(word).as_json
 
@@ -21,9 +21,8 @@ class ReannotationExportTest < ActiveSupport::TestCase
     assert_equal [ "漢語" ], sense["word_origins"]
     assert_equal({ "name" => "連濁", "target" => "殺人", "target_reading" => "さつじん", "target_start" => 3 },
                  sense["linguistic_features"].first)
-  end
 
-  test "別表記は surface と reading で書き出し、空の項目はキーごと落とす" do
+    # 別表記は surface と reading で書き出し、空の項目はキーごと落とす
     sense = ReannotationExport.new(words(:curry)).as_json["current"]["senses"].first
 
     assert_equal [ { "surface" => "カリー", "reading" => "カリー" } ], sense["variants"]
@@ -32,9 +31,21 @@ class ReannotationExportTest < ActiveSupport::TestCase
     assert_not sense.key?("genre_path")
     assert_not sense.key?("entity_type")
     assert_not sense.key?("linguistic_features")
+
+    # to_json は整形済みの JSON 文字列を返す
+    json = ReannotationExport.new(words(:abc_murder)).to_json
+
+    assert_equal "reannotation", JSON.parse(json)["format"]
+    assert_includes json, "\n"
+
+    # マスタ一覧は書き出し(AnnotationResearchExport)と同じ形で同梱する
+    masters = ReannotationExport.new(words(:abc_murder)).as_json["masters"]
+
+    assert_equal AnnotationMasters.as_json, masters
+    assert_includes masters["genres"].fetch("文学").fetch("日本文学"), "小説"
   end
 
-  test "まだ何も注釈が付いていない語は、取り込み済みの提案を現在値として渡す" do
+  test "注釈が無ければ取り込み済みの提案を現在値にし、提案のメタは常に手がかりとして渡す" do
     word = words(:pending_haruhi)
     data = ReannotationExport.new(word, annotation_proposals(:haruhi_proposal)).as_json
 
@@ -46,18 +57,16 @@ class ReannotationExportTest < ActiveSupport::TestCase
     assert_equal "書籍名", sense["entity_type"]
     assert_equal %w[文学 日本文学 小説], sense["genre_path"]
     assert_equal [ { "surface" => "ハルヒ" } ], sense["variants"]
-  end
 
-  test "注釈も提案も無い語は source=none で現在値が空になる" do
+    # 注釈も提案も無い語は source=none で現在値が空になる
     data = ReannotationExport.new(words(:pending_bermuda)).as_json
 
     assert_equal "none", data["current"]["source"]
     assert_equal [ { "reading" => "バミューダトライアングル" } ], data["current"]["senses"]
-  end
 
-  # ここでいう「注釈の内容が保存された」は ReannotationExport の annotated?(意味などが 1 つでも付いている)で、
-  # Word.annotated(annotated_at がある = 公開)とは別の意味。この語は未公開。
-  test "注釈の内容が保存された語でも、残っている提案のメタ(立項スコア・確信度)は手がかりとして渡す" do
+    # 注釈の内容が保存された語でも、残っている提案のメタ(立項スコア・確信度)は手がかりとして渡す
+    # ここでいう「注釈の内容が保存された」は ReannotationExport の annotated?(意味などが 1 つでも付いている)で、
+    # Word.annotated(annotated_at がある = 公開)とは別の意味。この語は未公開。
     word = words(:pending_haruhi)
     word.word_senses.first.update!(meaning: "谷川流のライトノベル。")
     data = ReannotationExport.new(word.reload, annotation_proposals(:haruhi_proposal)).as_json
@@ -65,19 +74,5 @@ class ReannotationExportTest < ActiveSupport::TestCase
     assert_equal "saved", data["current"]["source"]
     assert_equal 5, data["current"]["entry_score"]
     assert_equal "谷川流のライトノベル。", data["current"]["senses"].first["meaning"]
-  end
-
-  test "マスタ一覧は書き出し(AnnotationResearchExport)と同じ形で同梱する" do
-    masters = ReannotationExport.new(words(:abc_murder)).as_json["masters"]
-
-    assert_equal AnnotationMasters.as_json, masters
-    assert_includes masters["genres"].fetch("文学").fetch("日本文学"), "小説"
-  end
-
-  test "to_json は整形済みの JSON 文字列を返す" do
-    json = ReannotationExport.new(words(:abc_murder)).to_json
-
-    assert_equal "reannotation", JSON.parse(json)["format"]
-    assert_includes json, "\n"
   end
 end

@@ -12,12 +12,11 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 表示 ---
-  test "入口は1語コンソールと同じく提案付きのキューへ寄せる" do
+  test "入口は提案付きのキューへ寄せ、未対応の語をまとめて載せる" do
     get admin_annotation_deck_path
     assert_redirected_to admin_annotation_deck_path(proposed: 1)
-  end
 
-  test "未対応の語をまとめて1画面に載せ、枚数は size で絞れる" do
+    # 未対応の語をまとめて1画面に載せ、枚数は size で絞れる
     annotation_proposals(:haruhi_proposal).applied! # 提案キューへの誘導を外す
     get admin_annotation_deck_path
     assert_response :success
@@ -31,14 +30,13 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_select ".deck-card", 1
   end
 
-  test "未承認の提案はカードに反映済みで開く" do
+  test "提案はカードに反映済みで開き、未対応の語が無ければ空の案内を出す" do
     get admin_annotation_deck_path(proposed: 1)
     assert_response :success
     assert_select "textarea[name=?]", "deck[#{@haruhi.id}][word_senses_attributes][0][meaning]",
                   text: /谷川流のライトノベル/
-  end
 
-  test "未対応の語が無ければ空の案内を出す" do
+    # 未対応の語が無ければ空の案内を出す
     Word.annotation_pending.find_each { |word| word.update!(annotation_status: :on_hold) }
     get admin_annotation_deck_path
     assert_response :success
@@ -47,7 +45,7 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- まとめ保存 ---
-  test "まとめて保存すると全件が注釈済みになり提案は反映済みになる" do
+  test "まとめて保存は全件を注釈済みにし、絞り込み・並べ替えを引き継ぐ" do
     params = deck_params_for(@haruhi, @haruhi_sense).merge(deck_params_for(@bermuda, @bermuda_sense))
 
     patch admin_annotation_deck_path, params: { deck: params }
@@ -58,15 +56,14 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @haruhi.annotated_at
     assert @bermuda.reload.annotation_done?
     assert annotation_proposals(:haruhi_proposal).reload.applied?
-  end
 
-  test "絞り込み・並べ替えは保存後のデッキにも引き継ぐ" do
+    # 絞り込み・並べ替えは保存後のデッキにも引き継ぐ
     patch admin_annotation_deck_path,
           params: { deck: deck_params_for(@haruhi, @haruhi_sense), proposed: "1", sort: "easy" }
     assert_redirected_to admin_annotation_deck_path(proposed: "1", sort: "easy")
   end
 
-  test "エラーのある語だけデッキに残し、通った語は保存する" do
+  test "エラーのある語だけデッキに残し、存在しない語 id は無視する" do
     valid = deck_params_for(@haruhi, @haruhi_sense)
     invalid = deck_params_for(@bermuda, @bermuda_sense)
     invalid[@bermuda.id.to_s][:word_senses_attributes]["0"][:reading] = "" # 読みは必須
@@ -81,9 +78,8 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_select ".deck-card", 1
     assert_select ".error-explanation"
     assert_select "textarea[name=?]", "deck[#{@bermuda.id}][word_senses_attributes][0][reading]"
-  end
 
-  test "存在しない語 id は無視する" do
+    # 存在しない語 id は無視する
     params = deck_params_for(@haruhi, @haruhi_sense).merge(
       "0" => { word_senses_attributes: { "0" => { reading: "ゆうれい" } } }
     )
@@ -95,16 +91,15 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 提案の新設候補マスタのその場作成(Issue 66 のデッキ版) ---
-  test "デッキの提案欄には新設候補の作成ボタンが出る" do
+  test "create_master はマスタを作ってカードへ入れる(新設候補の作成ボタンから)" do
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
     })
     get admin_annotation_deck_path(proposed: 1)
     assert_response :success
     assert_select "input[type=submit][formaction*=?]", "create_master"
-  end
 
-  test "create_master はマスタを作り、入力を保ったままカードへ入れる" do
+    # create_master はマスタを作り、入力を保ったままカードへ入れる
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "meaning" => "x。", "entity_type" => "架空種別" } ]
     })
@@ -125,7 +120,7 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_not @haruhi.reload.annotation_done?, "その場作成では語を保存しない"
   end
 
-  test "create_master でジャンル小分類を中分類の下に作り、カードのジャンルに入れる" do
+  test "create_master は小分類・語種も作り、作れない指定でも入力を残す" do
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "genre_path" => %w[文学 日本文学 私小説] } ]
     })
@@ -137,9 +132,8 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     assert_equal genres(:medium_japanese), created.parent
     assert_select "input[name=?][value=?]",
                   "deck[#{@haruhi.id}][word_senses_attributes][0][genre_id]", created.id.to_s
-  end
 
-  test "create_master で語種を指定名で作り、カードで選択済みにする" do
+    # create_master で語種を指定名で作り、カードで選択済みにする
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "word_origins" => %w[和語 タミル語] } ]
     })
@@ -150,9 +144,8 @@ class Admin::AnnotationDecksControllerTest < ActionDispatch::IntegrationTest
     end
     created = WordOrigin.find_by(name: "タミル語")
     assert_select "input[type=checkbox][value=?][checked]", created.id.to_s
-  end
 
-  test "create_master は作れない指定でも入力を残したまま知らせる" do
+    # create_master は作れない指定でも入力を残したまま知らせる
     annotation_proposals(:haruhi_proposal).update!(payload: {
       "senses" => [ { "genre_path" => %w[無い 無い 無い] } ]
     })

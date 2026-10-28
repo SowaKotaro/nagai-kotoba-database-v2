@@ -2,16 +2,15 @@ require "test_helper"
 
 # GA4 / サーチコンソール確認タグ(Issue 19)。いずれも環境変数で駆動し、未設定なら一切出力しない。
 class AnalyticsTest < ActionDispatch::IntegrationTest
-  test "環境変数が無ければ GA4 タグも所有権確認メタも出力しない" do
+  test "GA4 タグと所有権確認メタは環境変数があるときだけ出す" do
     get root_path
     assert_response :success
     assert_select "script[src*='googletagmanager.com']", count: 0
     assert_no_match "send_page_view", response.body
     assert_select "meta[name='google-site-verification']", count: 0
     assert_select "meta[name='msvalidate.01']", count: 0
-  end
 
-  test "環境変数があれば gtag を Turbo 対応で読み込み、所有権確認メタを出力する" do
+    # 環境変数があれば gtag を Turbo 対応で読み込み、所有権確認メタを出力する
     with_env("GA4_MEASUREMENT_ID" => "G-TEST12345",
              "GOOGLE_SITE_VERIFICATION" => "goog-abc", "BING_SITE_VERIFICATION" => "bing-xyz") do
       get root_path

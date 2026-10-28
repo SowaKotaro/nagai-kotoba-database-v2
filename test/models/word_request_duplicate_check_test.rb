@@ -11,70 +11,62 @@ class WordRequestDuplicateCheckTest < ActiveSupport::TestCase
     check([ { surface: surface, reading: reading } ]).first
   end
 
-  test "収録済みの表層形は完全一致になる" do
+  test "表層形か読みが一致すれば完全一致、似ていれば候補、掠りもしなければ該当なし" do
     result = first_result(surface: words(:abc_murder).surface)
 
     assert_predicate result, :exact?
     assert_equal words(:abc_murder).id, result.matches.first.word_id
-  end
 
-  test "読みが一致すれば表層形が違っても完全一致になる" do
+    # 読みが一致すれば表層形が違っても完全一致になる
     # 格納はひらがな、入力はカタカナでも畳んで同一視する(DB の as_ci と同じ扱い)。
     result = first_result(surface: "まったく別の表記", reading: "サツジンジケン")
 
     assert_predicate result, :exact?
-  end
 
-  test "似ている表層形は候補として返る" do
+    # 似ている表層形は候補として返る
     result = first_result(surface: "ABC殺人事故")
 
     assert_predicate result, :similar?
     assert_equal words(:abc_murder).surface, result.matches.first.surface
     assert_operator result.matches.first.similarity, :>=, Levenshtein::SIMILARITY_THRESHOLD
-  end
 
-  test "読みが入力されていれば読み同士で似ているかを見る" do
+    # 読みが入力されていれば読み同士で似ているかを見る
     result = first_result(surface: "似ていない表記", reading: "サツジンジケソ")
 
     assert_predicate result, :similar?
-  end
 
-  test "掠りもしない語は該当なしになる" do
+    # 掠りもしない語は該当なしになる
     result = first_result(surface: "まったく関係のない長い言葉")
 
     assert_predicate result, :none?
     assert_empty result.matches
   end
 
-  test "未公開(未注釈)の語は照合の対象にしない" do
+  test "照合の対象と単位: 公開語だけ・空行は無視・語数に上限・語単位で1件・複数語をまとめて" do
     # fixtures の pending_haruhi は annotated_at が無く、公開面には出ていない。
     result = first_result(surface: words(:pending_haruhi).surface)
 
     assert_predicate result, :none?
-  end
 
-  test "表層形が空の行は無視する" do
+    # 表層形が空の行は無視する
     results = check([ { surface: "", reading: "ヨミダケアル" }, { surface: "ある言葉" } ])
 
     assert_equal 1, results.size
     assert_equal "ある言葉", results.first.surface
-  end
 
-  test "一度に照合する語数には上限がある" do
+    # 一度に照合する語数には上限がある
     queries = Array.new(WordRequestDuplicateCheck::MAX_QUERIES + 5) { |i| { surface: "言葉#{i}" } }
 
     assert_equal WordRequestDuplicateCheck::MAX_QUERIES, check(queries).size
-  end
 
-  test "同じ語に複数の語義があっても候補は語単位で1件にまとまる" do
+    # 同じ語に複数の語義があっても候補は語単位で1件にまとまる
     word = words(:abc_murder)
     word.word_senses.create!(reading: "べつのよみ")
 
     result = first_result(surface: word.surface)
     assert_equal 1, result.matches.count { |match| match.word_id == word.id }
-  end
 
-  test "複数語をまとめて判定できる" do
+    # 複数語をまとめて判定できる
     results = check([ { surface: words(:abc_murder).surface }, { surface: "存在しない言葉" } ])
 
     assert_predicate results.first, :exact?

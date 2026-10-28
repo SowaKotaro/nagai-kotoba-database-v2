@@ -11,7 +11,7 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     system_sign_in
   end
 
-  test "横スクロール・ドット・矢印でカードを送れて、現在地の表示が追従する" do
+  test "カードを送れて現在地が追従し、最低限の項目が揃うと完了数とドットに反映される" do
     visit admin_annotation_deck_path
     wait_for_stimulus "deck"
 
@@ -39,9 +39,8 @@ class AdminAnnotationDeckTest < ApplicationSystemTestCase
     end
     assert_selector ".deck-dot.is-on[data-index='1']"
     assert find("[data-deck-target='next']").disabled?
-  end
 
-  test "最低限の項目が揃うと完了数とドットに反映される" do
+    # 最低限の項目が揃うと完了数とドットに反映される
     visit admin_annotation_deck_path
     wait_for_stimulus "deck"
 

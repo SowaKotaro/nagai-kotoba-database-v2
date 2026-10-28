@@ -23,16 +23,15 @@ class Admin::BulkDetachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal "使わない", word_senses(:murder).reload.meaning
   end
 
-  test "外すものが無ければ、そう知らせる" do
+  test "外すものが無い・選んでいなければ知らせる" do
     post admin_bulk_detachment_path, params: {
       word_ids: [ words(:curry).id ], bulk_detachment: { entity_type_id: entity_types(:person_name).id }
     }
 
     assert_redirected_to admin_words_path
     assert_equal I18n.t("admin.bulk_detachments.nothing"), flash[:notice]
-  end
 
-  test "外すものを選んでいなければエラーを知らせて一覧へ戻す" do
+    # 外すものを選んでいなければエラーを知らせて一覧へ戻す
     post admin_bulk_detachment_path, params: { word_ids: [ @murder.id ], bulk_detachment: { feature_target: "" } }
 
     assert_redirected_to admin_words_path

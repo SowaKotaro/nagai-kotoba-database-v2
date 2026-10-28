@@ -5,7 +5,7 @@ require "test_helper"
 class ErrorPagesTest < ActiveSupport::TestCase
   def page(name) = File.read(Rails.root.join("public", name))
 
-  test "404・422・500 は日本語で、Rails 既定のページのままではない" do
+  test "404・422・500 は日本語の独自ページで、404 はダークにも追従して主要ページへの導線がある" do
     {
       "404.html" => "ページが見つかりません",
       "422.html" => "リクエストを処理できませんでした",
@@ -16,9 +16,8 @@ class ErrorPagesTest < ActiveSupport::TestCase
       assert_includes html, 'lang="ja"', name
       assert_not_includes html, "rails-default-error-page", name
     end
-  end
 
-  test "404 はトークンと同じ文字色でダークにも追従し、主要ページへの導線がある" do
+    # 404 はトークンと同じ文字色でダークにも追従し、主要ページへの導線がある
     html = page("404.html")
     text_color = File.read(Rails.root.join("app/assets/stylesheets/tokens.css"))[/--text:\s*(#\h{6})/, 1]
     assert_includes html.downcase, text_color.downcase, "404.html の文字色が tokens.css の --text とずれている"

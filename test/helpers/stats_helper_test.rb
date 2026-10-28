@@ -9,13 +9,12 @@ class StatsHelperTest < ActionView::TestCase
     counts.each_with_index.map { |count, index| { id: index + 1, name: "型#{index + 1}", count: count } }
   end
 
-  test "下限を超える型はそのまま並べ、その他は作らない" do
+  test "ツリーマップ: 下限に満たない型を末尾からその他へ畳み、面積は件数に比例して埋め尽くす" do
     rects = stats_entity_treemap(entities(50, 30, 20))
     assert_equal [ "型1", "型2", "型3" ], rects.map { |rect| rect[:name] }
     assert_empty rects.select { |rect| rect[:id].nil? }
-  end
 
-  test "下限に満たない型は末尾からその他へ畳む" do
+    # 下限に満たない型は末尾からその他へ畳む
     # 全 985 のうち下限は 4.9。2 を畳んでも届かないので 3 も巻き込む。
     rects = stats_entity_treemap(entities(900, 50, 30, 3, 2))
     other = rects.find { |rect| rect[:id].nil? }
@@ -23,32 +22,28 @@ class StatsHelperTest < ActionView::TestCase
     assert_equal 5, other[:count]
     assert_equal 2, other[:folded]
     assert_equal [ "型1", "型2", "型3" ], rects.reject { |rect| rect[:id].nil? }.map { |rect| rect[:name] }
-  end
 
-  test "畳む相手が1つだけなら面積が変わらないのでそのまま残す" do
+    # 畳む相手が1つだけなら面積が変わらないのでそのまま残す
     rects = stats_entity_treemap(entities(1000, 2))
     assert_equal [ "型1", "型2" ], rects.map { |rect| rect[:name] }
     assert_empty rects.select { |rect| rect[:id].nil? }
-  end
 
-  test "面が小さいマスほど級数を落とす" do
+    # 面が小さいマスほど級数を落とす
     rects = stats_entity_treemap(entities(900, 15, 6, 3, 2))
     scales = rects.to_h { |rect| [ rect[:name], rect[:scale] ] }
 
     assert_equal :normal, scales["型1"]
     assert_equal :small, scales["型2"]
     assert_equal :tiny, scales["型3"]
-  end
 
-  test "塗りの濃さは先頭の型(最多)に対する比で、畳んだその他も同じ基準で塗る" do
+    # 塗りの濃さは先頭の型(最多)に対する比で、畳んだその他も同じ基準で塗る
     assert_equal [ 1.0, 0.6, 0.4 ], stats_entity_treemap(entities(50, 30, 20)).map { |rect| rect[:fill] }
 
     # 3 と 2 を畳んだその他(5 件)も、先頭の 900 件に対する比
     other = stats_entity_treemap(entities(900, 50, 30, 3, 2)).find { |rect| rect[:id].nil? }
     assert_equal (5 / 900.0).round(3), other[:fill]
-  end
 
-  test "矩形はコンテナを埋め尽くし、面積は件数に比例する" do
+    # 矩形はコンテナを埋め尽くし、面積は件数に比例する
     areas = stats_entity_treemap(entities(60, 40)).map { |rect| rect[:width] * rect[:height] / 100.0 }
     assert_in_delta 100.0, areas.sum, 0.01
     assert_in_delta 1.5, areas.first / areas.last, 0.01
@@ -88,12 +83,11 @@ class StatsHelperTest < ActionView::TestCase
     ))
   end
 
-  test "層が1つしか無ければ遷移が描けないので nil を返す" do
+  test "母音の遷移の図: 層ごとに5ノード、最多のエッジだけ強調し、キャンバスからはみ出さない" do
     assert_nil stats_vowel_graph(transitions([ { "a" => 3 } ], {}))
     assert_nil stats_vowel_graph({ total: 0, layers: [], edges: [] })
-  end
 
-  test "ノードは層ごとに5つ、件数によらず同じ大きさで置く" do
+    # ノードは層ごとに5つ、件数によらず同じ大きさで置く
     graph = two_layer_graph
     first = graph[:layers].first[:nodes]
 
@@ -103,18 +97,16 @@ class StatsHelperTest < ActionView::TestCase
     # 同じ層のノードは同じ x、母音ごとに y が決まる
     assert_equal 1, first.map { |node| node[:cx] }.uniq.size
     assert_equal first.map { |node| node[:cy] }, graph[:rows].map { |row| row[:y] }
-  end
 
-  test "キャンバスの幅は層の数ぶんだけ伸びる" do
+    # キャンバスの幅は層の数ぶんだけ伸びる
     narrow = stats_vowel_graph(transitions([ { "a" => 2 }, { "a" => 2 } ], { [ 1, "a", "a" ] => 2 }))
     wide = stats_vowel_graph(transitions([ { "a" => 2 }, { "a" => 2 }, { "a" => 2 } ],
                                          { [ 1, "a", "a" ] => 2, [ 2, "a", "a" ] => 2 }))
 
     assert_equal narrow[:width] + StatsHelper::GRAPH_COLUMN_PITCH, wide[:width]
     assert_equal narrow[:height], wide[:height]
-  end
 
-  test "エッジは0件の組を落とし、最多の1本だけを強調する" do
+    # エッジは0件の組を落とし、最多の1本だけを強調する
     graph = two_layer_graph
 
     assert_equal 2, graph[:edges].size
@@ -122,9 +114,8 @@ class StatsHelperTest < ActionView::TestCase
     assert_equal 1, top.size
     assert_equal %w[a a], [ top.first[:from], top.first[:to] ]
     assert_operator top.first[:stroke], :>, graph[:edges].reject { |edge| edge[:top] }.first[:stroke]
-  end
 
-  test "ノードもエッジもキャンバスからはみ出さない" do
+    # ノードもエッジもキャンバスからはみ出さない
     graph = two_layer_graph
 
     graph[:layers].flat_map { |layer| layer[:nodes] }.each do |node|
@@ -133,9 +124,8 @@ class StatsHelperTest < ActionView::TestCase
       assert_operator node[:cy] - node[:r], :>=, 0
       assert_operator node[:cy] + node[:r], :<=, graph[:height]
     end
-  end
 
-  test "対象が無ければ空を返す" do
+    # 対象が無ければ空を返す
     assert_empty stats_entity_treemap([])
     assert_empty stats_entity_treemap(entities(0))
   end

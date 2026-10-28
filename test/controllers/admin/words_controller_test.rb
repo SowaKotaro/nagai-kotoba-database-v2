@@ -17,7 +17,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- 一覧 ---
-  test "一覧に読み・注釈状態・件数が出て、注釈済みの語は修正画面へ、未注釈の語はコンソールへリンクする" do
+  test "一覧: 読み・状態・件数と、修正画面/コンソールへのリンク、まとめて付ける・外すパネル" do
     get admin_words_path(q: "")
     assert_response :success
     # 公開済みの語は修正画面(注釈状態を変えずに直す)、未公開の語はコンソール(注釈して公開する)へ
@@ -33,9 +33,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # 件数表示とページネーション
     assert_select ".admin-words-count", text: /#{Word.count}\s*語/
     assert_select ".pagination span", text: "1 / 1 ページ"
-  end
 
-  test "一覧に、まとめて付ける・外すパネルと選択チェックボックスが 1 つのフォームで出る(Issue 37・108)" do
+    # 一覧に、まとめて付ける・外すパネルと選択チェックボックスが 1 つのフォームで出る(Issue 37・108)
     get admin_words_path
     assert_select "form#bulk-form[action=?]", admin_bulk_annotation_path do
       # Enter での送信は、無効にした最初のボタンで止める(送り先の取り違えを防ぐ)
@@ -70,6 +69,18 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ linguistic_features(:rendaku).id, linguistic_features(:jubako).id ].sort,
                  murder_box["data-feature-ids"].split.map(&:to_i).sort
     assert_select "tbody input[type=checkbox][value=?][data-feature-ids='']", words(:curry).id.to_s
+
+    # 一覧は100語ごとにページ送りする
+    # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)
+    Word.insert_all((1..110).map { |i| { surface: "ページ送り検証語#{format('%03d', i)}", char_type_pattern: "漢" } })
+
+    get admin_words_path
+    assert_select "tbody tr", count: 100
+    assert_select ".pagination a", text: "次へ"
+
+    get admin_words_path(page: 2)
+    assert_select ".pagination a", text: "前へ"
+    assert_select ".pagination span", text: "2 / 2 ページ"
   end
 
   # 特徴の絞り込みは「まとめて外す」と同じ行の選び方(WordSenseFeature.matching)。該当部分は完全一致。
@@ -102,7 +113,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p.empty-note"
   end
 
-  test "一覧を表層形・読み・別表記で検索できる" do
+  test "一覧の検索と絞り込み(表層形・読み・別表記・状態・タグ・ジャンル)は組み合わせられ、引き継がれる" do
     # 表層形の部分一致
     get admin_words_path(q: "ハルヒ")
     assert_select "td a", text: words(:pending_haruhi).surface
@@ -114,9 +125,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     get admin_words_path(q: word_sense_variants(:curry_variant).surface)
     assert_select "td a", text: words(:curry).surface
     assert_select "td a", text: @word.surface, count: 0
-  end
 
-  test "一覧を注釈状態(未対応/保留/完了)で絞り込める" do
+    # 一覧を注釈状態(未対応/保留/完了)で絞り込める
     # 未対応: 保留・完了の語は出さない
     get admin_words_path(status: "annotation_pending")
     assert_select "td a", text: words(:pending_haruhi).surface
@@ -134,9 +144,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     get admin_words_path(status: "annotation_done")
     assert_select "td a", text: @word.surface
     assert_select "td a", text: words(:pending_haruhi).surface, count: 0
-  end
 
-  test "一覧をタグ(品詞・エンティティ・語種・ジャンル)で絞り込め、ジャンルは大分類でも配下ごと絞る" do
+    # 一覧をタグ(品詞・エンティティ・語種・ジャンル)で絞り込め、ジャンルは大分類でも配下ごと絞る
     # 品詞「名詞」: murder と curry の語義に付いている
     get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id)
     assert_select "td a", text: @word.surface
@@ -163,11 +172,10 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # 存在しないジャンル id は0件(絞り込みは黙って外さない)
     get admin_words_path(genre_id: 999_999)
     assert_select "p.empty-note"
-  end
 
-  # ジャンルを配下へ広げる処理は、管理一覧が WordSenseSearch とは別に持っている(Genre#self_and_descendant_ids)。
-  # 独立した 大 → 中 2 つ → 小 3 つ の木で、いまの結果を集合ごと固定する。未公開の語も出る。
-  test "ジャンル絞り込みは大・中・小のどれを選んでも配下だけに広げる(兄弟の分類は混ぜない)" do
+    # ジャンル絞り込みは大・中・小のどれを選んでも配下だけに広げる(兄弟の分類は混ぜない)
+    # ジャンルを配下へ広げる処理は、管理一覧が WordSenseSearch とは別に持っている(Genre#self_and_descendant_ids)。
+    # 独立した 大 → 中 2 つ → 小 3 つ の木で、いまの結果を集合ごと固定する。未公開の語も出る。
     large = Genre.create!(level: :large, name: "法律")
     medium_labor = Genre.create!(level: :medium, name: "労働法", parent: large)
     medium_civil = Genre.create!(level: :medium, name: "民法", parent: large)
@@ -194,9 +202,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_equal surfaces.values_at(:cases, :rules, :draft).sort, listed.(medium_labor).sort
     assert_equal surfaces.values_at(:family).sort, listed.(medium_civil).sort
     assert_equal surfaces.values_at(:cases, :draft).sort, listed.(small_cases).sort
-  end
 
-  test "タグ絞り込みは検索・注釈状態と組み合わせられる(AND)" do
+    # タグ絞り込みは検索・注釈状態と組み合わせられる(AND)
     # 品詞「名詞」× 表層形「カレー」→ curry のみ
     get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id, q: "カレー")
     assert_select "td a", text: words(:curry).surface
@@ -205,9 +212,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # 品詞「名詞」× 未対応 → 0件(名詞が付く語はどちらも注釈済み)
     get admin_words_path(part_of_speech_id: parts_of_speech(:noun).id, status: "annotation_pending")
     assert_select "p.empty-note"
-  end
 
-  test "タグ絞り込みは状態タブ・一括適用フォーム・セレクトに引き継がれる" do
+    # タグ絞り込みは状態タブ・一括適用フォーム・セレクトに引き継がれる
     pos_id = parts_of_speech(:noun).id
     get admin_words_path(part_of_speech_id: pos_id)
 
@@ -220,21 +226,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-words-tag-filter__reset"
   end
 
-  test "一覧は100語ごとにページ送りする" do
-    # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)
-    Word.insert_all((1..110).map { |i| { surface: "ページ送り検証語#{format('%03d', i)}", char_type_pattern: "漢" } })
-
-    get admin_words_path
-    assert_select "tbody tr", count: 100
-    assert_select ".pagination a", text: "次へ"
-
-    get admin_words_path(page: 2)
-    assert_select ".pagination a", text: "前へ"
-    assert_select ".pagination span", text: "2 / 2 ページ"
-  end
-
   # --- step2: 読みの取得 ---
-  test "箇条書きから読みを取得すると編集可能な読み欄が出る(重複判定はしない)" do
+  test "一括登録 step2: 読みを取得し、調査 JSON を突き合わせる(空・壊れた入力も扱う)" do
     readings = { "天上天下唯我独尊" => "テンジョウテンゲユイガドクソン" }
 
     stub_readings(readings) do
@@ -250,16 +243,13 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "bulk_word_registration[entries][][surface]", "天上天下唯我独尊"
     # step2 では重複警告は出さない
     assert_select "tr.bulk-review__row--warn", false
-  end
 
-  test "テキストが空だと読み取得は 422 を返す" do
+    # テキストが空だと読み取得は 422 を返す
     post readings_admin_words_path, params: { bulk_word_registration: { text: "" } }
     assert_response :unprocessable_content
     assert_select "p.form-alert"
-  end
 
-  # --- step2: 調査 JSON の反映 ---
-  test "調査 JSON を反映すると不一致行に候補チップと不一致バッジが出る" do
+    # 調査 JSON を反映すると不一致行に候補チップと不一致バッジが出る
     json = {
       version: "1",
       words: [ { input: "花は桜木人は武士", surface: "花は桜木人は武士",
@@ -278,9 +268,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".reading-choice[data-reading=?]", "ハナハサクラギヒトハブシ"
     # 不一致は既定で調査側(ヒト)を採用する
     assert_select "input.bulk-review__reading-input[value=?]", "ハナハサクラギヒトハブシ"
-  end
 
-  test "壊れた調査 JSON は警告を出し MeCab の読みを保つ" do
+    # 壊れた調査 JSON は警告を出し MeCab の読みを保つ
     post apply_research_admin_words_path, params: {
       bulk_word_registration: {
         entries: [ { surface: "猫", reading: "ネコ" } ],
@@ -324,7 +313,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- step3: 重複チェック(確定した読みに対して) ---
-  test "確定した読みで DB の既存読みに似た語に警告を出す" do
+  test "一括登録 step3: 似た読みに警告し、収録基準未満はエラー表示で除外を既定にする" do
     # murder フィクスチャの読み「さつじんじけん」に一致する読みを渡す
     post duplicates_admin_words_path, params: {
       bulk_word_registration: { entries: [ { surface: "殺人事件", reading: "さつじんじけん" } ] }
@@ -334,9 +323,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "ol.steps li.is-current .steps__label", text: "重複"
     assert_select "tr.bulk-review__row--warn"
     assert_select ".bulk-review__match-reading", text: "さつじんじけん"
-  end
 
-  test "読みが収録基準(10文字)未満の語はエラー表示し、除外に既定でチェックを入れる" do
+    # 読みが収録基準(10文字)未満の語はエラー表示し、除外に既定でチェックを入れる
     post duplicates_admin_words_path, params: {
       bulk_word_registration: { entries: [
         { surface: "資本主義", reading: "シホンシュギ" },            # 6文字: 収録基準未満
@@ -371,7 +359,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_not Word.exists?(surface: "除外語")
   end
 
-  test "読み欠落のエントリはエラーにして 422 を返す" do
+  test "一括登録 step4: 読み欠落は 422、エントリが無ければ貼り付け画面へ戻す" do
     assert_no_difference -> { Word.count } do
       post admin_words_path, params: {
         bulk_word_registration: { entries: [ { surface: "読みなし語", reading: "" } ] }
@@ -379,9 +367,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_content
     assert_select ".bulk-result__errors li"
-  end
 
-  test "エントリが無いと貼り付け画面へ戻す" do
+    # エントリが無いと貼り付け画面へ戻す
     assert_no_difference -> { Word.count } do
       post admin_words_path, params: { bulk_word_registration: { entries: [] } }
     end
@@ -391,7 +378,7 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
   # --- 1語の修正(Issue 108) ---
   # 注釈フォームの部品はコンソールと共有する(フォームの中身は Admin::AnnotationsControllerTest で見る)。
   # ここで見るのは、コンソールと違って注釈状態・提案に触れず、来たときの一覧へ戻ること。
-  test "修正画面は注釈フォームと公開ページへの導線を出し、戻り先の一覧の条件を保つ" do
+  test "修正画面は注釈フォームと導線を出し、未公開の語には公開はコンソールでと示す" do
     list = { q: "殺人", status: "annotation_done", page: "2" }
     get edit_admin_word_path(@word, list)
     assert_response :success
@@ -406,9 +393,8 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[formaction]", 0
     end
     assert_select ".ann-actionbar a[href=?]", admin_words_path(list)
-  end
 
-  test "未公開の語の修正画面は、公開はコンソールで行うと示す" do
+    # 未公開の語の修正画面は、公開はコンソールで行うと示す
     pending = words(:pending_haruhi)
     get edit_admin_word_path(pending)
     assert_response :success

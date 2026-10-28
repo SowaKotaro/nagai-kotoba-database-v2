@@ -48,7 +48,7 @@ class WordCandidateExpansionImportTest < ActiveSupport::TestCase
     assert_match(/\A長+: 表層形 は255文字以内/, result.messages.first)
   end
 
-  test "拡張待ちにいない語と存在しない ID は見送り、同じ JSON を2回貼っても増えない" do
+  test "見送り: 拡張待ちにいない語・存在しない ID・形の違う JSON(同じ JSON の2回目も増えない)" do
     json = [ { id: @seed.id, words: [ "神龍寺ナーガ" ] }, { id: 0, input: "無い語", words: [ "何か" ] } ]
     import(json)
     result = import(json)
@@ -56,9 +56,8 @@ class WordCandidateExpansionImportTest < ActiveSupport::TestCase
     assert_equal 1, result.counts[:stale]
     assert_equal 1, result.counts[:unknown]
     assert_equal 2, WordCandidate.count
-  end
 
-  test "形の違う JSON は nil(コードフェンスは剥がして読む)" do
+    # 形の違う JSON は nil(コードフェンスは剥がして読む)
     assert_nil WordCandidateExpansionImport.new("not json").call
     assert_nil WordCandidateExpansionImport.new({ words: [] }.to_json).call
     fenced = "```json\n#{({ seeds: [] }.to_json)}\n```"

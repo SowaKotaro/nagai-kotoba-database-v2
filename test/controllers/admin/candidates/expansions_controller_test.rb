@@ -7,16 +7,15 @@ class Admin::Candidates::ExpansionsControllerTest < ActionDispatch::IntegrationT
     @seed = WordCandidate.create!(surface: "泥門デビルバッツ", status: :expanding)
   end
 
-  test "拡張待ちの語を「#ID 表層形」で書き出し、状態の名前からその語の一覧へ行ける" do
+  test "拡張待ちの語を指定の語数だけ書き出す" do
     get admin_candidates_expansion_path
     assert_response :success
     assert_select ".cand-export[data-clipboard-text-value=?]", "##{@seed.id} 泥門デビルバッツ"
     assert_select "textarea[name=expand_export]", text: "##{@seed.id} 泥門デビルバッツ"
     assert_select ".cand-export__count a[href=?]", admin_candidates_list_path(status: "expanding"),
                   text: I18n.t("admin.word_candidates.statuses.expanding")
-  end
 
-  test "一度に渡す語数を指定して、拡張待ちの先頭からその語数だけを書き出す(既定は 30 語)" do
+    # 一度に渡す語数を指定して、拡張待ちの先頭からその語数だけを書き出す(既定は 30 語)
     waiting = (1..30).map { |i| WordCandidate.create!(surface: "拡張を待つ言葉#{i}", status: :expanding) }
 
     get admin_candidates_expansion_path

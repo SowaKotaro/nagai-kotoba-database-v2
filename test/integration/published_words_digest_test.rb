@@ -6,7 +6,7 @@ require "test_helper"
 class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
   PATHS = %w[/sitemap.xml /llms-full.txt].freeze
 
-  test "版が変わっていなければ 304 を返す" do
+  test "版が変わらなければ 304 で、同じ日の語義の保存では版が変わらず、1日の猶予を宣言する" do
     PATHS.each do |path|
       get path
       assert_response :success
@@ -17,9 +17,8 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
       assert_response :not_modified, "#{path} が 304 にならない"
       assert_empty response.body
     end
-  end
 
-  test "同じ日の語義の保存では版が変わらない(アノテーション中に作り直しを誘発しない)" do
+    # 同じ日の語義の保存では版が変わらない(アノテーション中に作り直しを誘発しない)
     # 語義の保存は touch: true で words.updated_at を動かすが、版の指紋は日単位に畳んである
     etags = etags_on(Time.zone.local(2026, 8, 6, 10, 5))
 
@@ -31,9 +30,15 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
         assert_response :not_modified, "#{path} が同じ日の保存で作り直された"
       end
     end
+
+    # 全件出力は Cache-Control で 1 日の猶予を宣言する
+    PATHS.each do |path|
+      get path
+      assert_equal "max-age=86400, public", response.headers["Cache-Control"], path
+    end
   end
 
-  test "日をまたいで公開されれば版が変わり、新しい語が載る" do
+  test "日をまたいで公開されれば版が変わり、取り消した語は本文のキャッシュが切れるまで残る" do
     # 版は「今日が何日か」ではなくデータの最終更新日で決まる。翌日に保存があって初めて作り直す
     etags = etags_on(Time.zone.local(2026, 8, 6, 10, 5))
 
@@ -46,18 +51,10 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
         assert_includes response.body, "/words/#{word.id}"
       end
     end
-  end
 
-  test "全件出力は Cache-Control で 1 日の猶予を宣言する" do
-    PATHS.each do |path|
-      get path
-      assert_equal "max-age=86400, public", response.headers["Cache-Control"], path
-    end
-  end
-
-  # 公開を取り消しても版(公開語の最終更新日)は変わらないので、作った本文は有効期限の 1 日のあいだ残る
-  # (性能のための割り切り。docs/data-model.md §8.2)。
-  test "公開を取り消した語も、本文のキャッシュが切れるまでの 1 日は残る" do
+    # 公開を取り消した語も、本文のキャッシュが切れるまでの 1 日は残る
+    # 公開を取り消しても版(公開語の最終更新日)は変わらないので、作った本文は有効期限の 1 日のあいだ残る
+    # (性能のための割り切り。docs/data-model.md §8.2)。
     etags_on(Time.zone.local(2026, 8, 6, 10, 5)) # 版を 8/6 に揃える(このときはまだキャッシュしない)
     withdrawn = words(:curry)
 

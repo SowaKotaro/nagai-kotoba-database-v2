@@ -3,7 +3,7 @@ require "test_helper"
 # 公開ページ共通のヘッダー・フッター。主要ページへの恒久リンクを外さない
 # (クロール導線でもあるので、sitemap に載せるだけでなく全ページから辿れるようにしている)。
 class SiteNavigationTest < ActionDispatch::IntegrationTest
-  test "ヘッダーとフッターから主要ページへ恒久リンクされている" do
+  test "ヘッダーとフッターから主要ページへリンクし、本文へのスキップリンクがある" do
     get root_path
     assert_response :success
 
@@ -17,9 +17,8 @@ class SiteNavigationTest < ActionDispatch::IntegrationTest
     assert_select "footer a[href=?]", stats_path
     assert_select "footer a[href=?]", about_path, text: I18n.t("layouts.nav.about")
     assert_select "footer a[href=?]", privacy_path, text: I18n.t("layouts.nav.privacy")
-  end
 
-  test "ヘッダーより前に本文へのスキップリンクがあり、飛び先の main がフォーカスを受けられる" do
+    # ヘッダーより前に本文へのスキップリンクがあり、飛び先の main がフォーカスを受けられる
     get words_path
 
     assert_select "body > a.skip-link:first-child[href='#main']", text: I18n.t("layouts.skip_to_main")

@@ -3,7 +3,7 @@ require "test_helper"
 # 構造化データ(JSON-LD。Issue 16)の結合テスト。どのテストも JSON-LD を JSON.parse してから見るので、
 # エスケープが壊れて妥当な JSON でなくなればここで落ちる。
 class StructuredDataTest < ActionDispatch::IntegrationTest
-  test "全ページに SearchAction つきの WebSite と、その publisher として運営者の Organization が出る" do
+  test "全ページの WebSite・Organization と、About の FAQPage・パンくずの BreadcrumbList" do
     get root_path
     site = find_type("WebSite")
     assert_equal I18n.t("layouts.brand"), site["name"]
@@ -19,9 +19,8 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     assert_equal "#{CANONICAL_HOST}/about", org["url"]
     assert_equal "#{CANONICAL_HOST}/icon.svg", org["logo"]
     assert_equal I18n.t("pages.about.contact_email"), org["email"]
-  end
 
-  test "About に FAQPage が出力され文言は画面の FAQ と一致する" do
+    # About に FAQPage が出力され文言は画面の FAQ と一致する
     get about_path
     faq = find_type("FAQPage")
     items = I18n.t("pages.about.faq_items")
@@ -30,9 +29,8 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     first = faq["mainEntity"].first
     assert_equal "Question", first["@type"]
     assert_equal items.first[:answer], first.dig("acceptedAnswer", "text")
-  end
 
-  test "パンくずのあるページに BreadcrumbList が出力される" do
+    # パンくずのあるページに BreadcrumbList が出力される
     # パンくずを描画する主要な公開ページを一巡する(単語詳細は DefinedTerm のテストで別途確認)
     [ words_path, genres_path, browse_path, about_path ].each do |path|
       get path
@@ -45,7 +43,7 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "単語詳細に語義ごとの DefinedTerm(属性つき)と DefinedTermSet が出力される" do
+  test "単語詳細の DefinedTerm は登録済みの属性だけを持ち、別表記は alternateName に入る" do
     word = words(:abc_murder)
     get word_path(word)
 
@@ -73,9 +71,8 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     assert_equal "名詞", properties[WordSense.human_attribute_name(:part_of_speech)]
     assert_equal "書籍名", properties[WordSense.human_attribute_name(:entity_type)]
     assert_equal "漢語", properties[I18n.t("words.show.origins")]
-  end
 
-  test "未登録の属性は additionalProperty に出力されず別表記は alternateName に入る" do
+    # 未登録の属性は additionalProperty に出力されず別表記は alternateName に入る
     get word_path(words(:curry)) # ジャンル・エンティティ未登録、別表記あり
     properties = defined_term_properties
 

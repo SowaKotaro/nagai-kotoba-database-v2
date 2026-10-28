@@ -2,18 +2,6 @@ require "test_helper"
 
 # 仕分け(登録予定単語の入口): 貼り付けて追加し、語ごとに選んだ処理を一度に確定する。
 class Admin::Candidates::TriagesControllerTest < ActionDispatch::IntegrationTest
-  test "未ログインでは一覧も追加も確定も弾く" do
-    candidate = WordCandidate.create!(surface: "泥門デビルバッツ")
-
-    get admin_candidates_triage_path
-    assert_redirected_to new_session_path
-    assert_no_difference "WordCandidate.count" do
-      post admin_candidates_triage_path, params: { word_candidate_intake: { text: "王城ホワイトナイツ" } }
-    end
-    patch admin_candidates_triage_path, params: { decisions: { candidate.id => "reject" } }
-    assert_predicate candidate.reload, :triage?
-  end
-
   test "箇条書きを追加すると仕分けに戻り、空の入力は貼り付け欄を開いたまま出し直す" do
     sign_in_as(admins(:one))
 

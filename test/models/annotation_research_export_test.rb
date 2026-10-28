@@ -20,7 +20,7 @@ class AnnotationResearchExportTest < ActiveSupport::TestCase
     assert data["masters"].key?("linguistic_features")
   end
 
-  test "木は3階層で、大分類の値は中分類のハッシュ・中分類の値は小分類名の配列になる" do
+  test "ジャンルの木は3階層で、小分類の無い中分類も空配列で含める" do
     data = AnnotationResearchExport.new(Word.unannotated.includes(:word_senses)).as_json
 
     data["masters"]["genres"].each do |large_name, mediums|
@@ -31,9 +31,8 @@ class AnnotationResearchExportTest < ActiveSupport::TestCase
         smalls.each { |name| assert_kind_of String, name }
       end
     end
-  end
 
-  test "小分類がまだ1件も無い中分類も空配列で含める(寄せ先として渡す)" do
+    # 小分類がまだ1件も無い中分類も空配列で含める(寄せ先として渡す)
     WordSense.update_all(genre_id: nil) # 参照されていると小分類を消せない(restrict_with_error)
     Genre.small.destroy_all
     data = AnnotationResearchExport.new(Word.unannotated.includes(:word_senses)).as_json

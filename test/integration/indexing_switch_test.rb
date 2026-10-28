@@ -4,7 +4,7 @@ require "test_helper"
 # テスト環境の既定は「解禁後」(config/environments/test.rb)。
 # 解禁前(未設定 = 全ページ noindex)の挙動はこのテストが明示的に切り替えて検証する。
 class IndexingSwitchTest < ActionDispatch::IntegrationTest
-  test "解禁前は全ページに noindex が出る(個別指定より優先)" do
+  test "解禁前は全ページに noindex を出し、解禁後はページ個別の指定に従う" do
     with_config(indexing_enabled: false) do
       # 通常は robots メタを出さないページ
       [ root_path, words_path, word_path(words(:abc_murder)), about_path ].each do |path|
@@ -18,9 +18,8 @@ class IndexingSwitchTest < ActionDispatch::IntegrationTest
       assert_select "meta[name=robots][content=?]", "noindex"
       assert_select "meta[name=robots]", count: 1
     end
-  end
 
-  test "解禁後は通常ページに robots メタを出さずページ個別の指定に従う" do
+    # 解禁後は通常ページに robots メタを出さずページ個別の指定に従う
     get root_path
     assert_select "meta[name=robots]", count: 0
 

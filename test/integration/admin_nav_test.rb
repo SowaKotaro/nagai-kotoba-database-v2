@@ -2,7 +2,7 @@ require "test_helper"
 
 # 管理画面の共通サブナビ(Issue 35)。全管理ページに常設し、現在地を aria-current で示す。
 class AdminNavTest < ActionDispatch::IntegrationTest
-  test "管理各画面に共通ナビが出て、現在地に aria-current が付く" do
+  test "管理各画面にだけ共通ナビが出て、現在地に aria-current が付く" do
     sign_in_as(admins(:one))
 
     # ダッシュボード。ダッシュボードに続けて、作業をオーナー指定の順に並べる(2026-09-26)
@@ -34,9 +34,8 @@ class AdminNavTest < ActionDispatch::IntegrationTest
     get admin_annotations_path
     follow_redirect! while response.redirect?
     assert_select ".admin-nav a[aria-current=page][href=?]", admin_annotations_path
-  end
 
-  test "公開ページには共通ナビを出さない" do
+    # 公開ページには共通ナビを出さない
     get root_path
     assert_select ".admin-nav", count: 0
 

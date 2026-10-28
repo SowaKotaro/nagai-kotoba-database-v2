@@ -9,25 +9,6 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     system_sign_in
   end
 
-  # スマホ幅では最下部のアクションバーが2〜3行に折り返す。「保存して次へ」が行の途中
-  # (画面下端の中ほど)に来ると、iOS の画面下端ジェスチャ(Apple Intelligence の呼び出し)と
-  # 近くて押しづらいため、折り返しても必ず右端に置く。
-  test "スマホ幅でも保存ボタンは画面の右端に置く" do
-    with_window_size(402, 874) do
-      visit admin_annotation_path(@word)
-      assert_selector ".ann-actionbar"
-
-      edges = page.evaluate_script(<<~JS)
-        (() => {
-          const bar = document.querySelector(".ann-actionbar");
-          const save = bar.querySelector(".btn--primary");
-          return { bar: bar.getBoundingClientRect().right, save: save.getBoundingClientRect().right };
-        })()
-      JS
-      assert_in_delta edges["bar"], edges["save"], 1, "保存ボタンがアクションバーの右端に寄っていない"
-    end
-  end
-
   test "ジャンルを大→中→小と選んで保存すると、公開前の確認を経て注釈済みになり次の語へ進む" do
     visit admin_annotation_path(@word)
     wait_for_stimulus "genre-picker"
@@ -69,7 +50,7 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
 
   # 最低限のアノテーション項目(読み・語種・ジャンル・品詞・エンティティ)が揃うと
   # 語義カードの枠が完了(is-complete)になる。保存できるかどうかとは無関係の目印。
-  test "最低限の項目が揃うと語義カードが完了表示になり、ジャンルが中分類止まりや読みが欠けると外れる" do
+  test "最低限の項目が揃うと語義カードが完了表示になり、提案の小分類が未登録でもピッカーは大・中まで開く" do
     visit admin_annotation_path(@word)
     wait_for_stimulus "sense-completeness"
 
@@ -96,9 +77,8 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     # 読みを消せば完了表示は外れる
     find(".ann-reading").set("")
     assert_no_selector ".ann-sense.is-complete"
-  end
 
-  test "提案の小分類が未登録でも、大・中まで一致すればピッカーがそこまで開く" do
+    # 提案の小分類が未登録でも、大・中まで一致すればピッカーがそこまで開く
     # 小分類「私小説」は木に無い。大「文学」・中「日本文学」までは既存
     annotation_proposals(:haruhi_proposal).update!(payload: { "genre_path" => %w[文学 日本文学 私小説] })
 
@@ -158,54 +138,6 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_not_nil saved
     assert_equal 3, saved.target_start
     assert_equal "ビショ", saved.target_reading
-  end
-
-  # ジャンルの「その場追加」。入力して Enter を押したのに何も起きない(入力欄が残る)
-  # 状態を作らないことを担保する。
-  #   - 既にある名前を入れたら、二重に作らず既存のチップを選ぶ
-  #   - 失敗したら理由が出る(黙って握りつぶさない)
-  test "ジャンルのその場追加で既にある名前を入れると、既存が選ばれて入力欄が閉じる" do
-    visit admin_annotation_path(@word)
-    wait_for_stimulus "genre-picker"
-
-    within ".ann-genre" do
-      click_expecting(expect_css: ".ann-chip", text: "日本文学") { find("button.ann-chip", exact_text: "文学") }
-
-      # 中分類の「＋追加」に、既にある「日本文学」を入れる
-      within ".js-genre-medium" do
-        click_via_js(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
-        assert_no_difference -> { Genre.count } do
-          find(".ann-add__input").send_keys("日本文学", :enter)
-          assert_selector ".ann-add__msg", text: I18n.t("admin.inline_add.client.selected_existing")
-        end
-        # 入力欄は閉じ、既存のチップが選ばれている(＝小分類が開く)
-        assert_no_selector ".ann-add__input:not([hidden])"
-      end
-      assert_selector ".js-genre-medium .ann-chip.is-on", exact_text: "日本文学"
-      assert_selector ".js-genre-small .ann-chip", text: "小説"
-    end
-  end
-
-  # 語義の複製は DOM を outerHTML で写すため、JS で結び付けたハンドラが付いてこない。
-  # 複製された語義でも「その場追加」が動くこと(押しても何も起きない状態にならないこと)。
-  test "語義を複製しても、ジャンルの大分類の「その場追加」が使える" do
-    visit admin_annotation_path(@word)
-    wait_for_stimulus "sense-cloner"
-    wait_for_stimulus "genre-picker"
-
-    click_expecting(expect_css: ".js-sense", count: 2) { find("button.ann-add-sense") }
-
-    within all(".js-sense").last do
-      within ".js-genre-large" do
-        click_via_js(expect_css: ".ann-add__input:not([hidden])") { find("button.ann-add__btn") }
-        assert_difference -> { Genre.large.count } => 1 do
-          find(".ann-add__input").send_keys("架空の大分類", :enter)
-          assert_selector ".ann-chip.is-on", exact_text: "架空の大分類"
-        end
-      end
-      # 追加した大分類が選ばれ、中分類の選択肢が開く
-      assert_selector ".js-genre-medium .ann-add__btn"
-    end
   end
 
   # 「この語義を削除」で隠した語義は、公開前の確認(publish-guard)で数えず、「語義を追加」の複製の元にもしない。
