@@ -11,55 +11,48 @@
   <p class="page-lead"><%= t("browse.index.lead") %></p>
 </header>
 
+<%# 区画は 2 つ(50音・読みの長さ)。それぞれ統計 §3 と同じセグメントボタンで表を切り替え、ページを長くしない。
+    切り替えた先の表もサーバが描いておき(hidden)、JS が無いときは既定の表(先頭の文字・文字数)だけが出る %>
 <section class="browse-section">
-  <h2 class="section-heading"><%= icon "grid_nine" %><%= t("browse.index.by_first_char") %></h2>
-  <div class="kana-grid">
-    <% KanaRow::TABLE_COLUMNS.each do |column| %>
-      <div class="kana-col">
-        <% column.each do |kana| %>
-          <% if kana.nil? %>
-            <span class="kana-cell--blank" aria-hidden="true"></span>
-          <% elsif (count = @first_char_counts[kana].to_i).positive? %>
-            <%# 件数はセルの濃淡(ヒート)で示し、実数はホバー(title)で見せる。
-                こうすると 50音表の行・列の整列が崩れず、分布が一目で分かる %>
-            <% fill = @first_char_max.positive? ? (count.to_f / @first_char_max).round(3) : 0 %>
-            <%= link_to words_path(first_char: kana),
-                  class: "kana-cell kana-cell--link kana-cell--heat",
-                  style: "--fill: #{fill}",
-                  title: t("browse.index.count_label", char: kana, count: count) do %>
-              <span class="kana-cell__face"><%= kana %></span>
-            <% end %>
-          <% else %>
-            <span class="kana-cell kana-cell--muted"
-                  title="<%= t('browse.index.count_label', char: kana, count: 0) %>">
-              <span class="kana-cell__face"><%= kana %></span>
-            </span>
-          <% end %>
-        <% end %>
+  <h2 class="section-heading"><%= icon "grid_nine" %><%= t("browse.index.by_kana") %></h2>
+  <div data-controller="panel-switch">
+    <div class="segmented" role="group" aria-label="<%= t("browse.index.kana_toggle_label") %>">
+      <% %i[first_char last_char].each_with_index do |param, index| %>
+        <button type="button" class="segmented__button" aria-pressed="<%= index.zero? %>"
+                data-panel-switch-target="button" data-panel-key="<%= param %>"
+                data-action="panel-switch#show"><%= t("browse.index.toggle.#{param}") %></button>
+      <% end %>
+    </div>
+    <% { first_char: @first_char_counts, last_char: @last_char_counts }.each_with_index do |(param, counts), index| %>
+      <div data-panel-switch-target="panel" data-panel-key="<%= param %>" <%= "hidden" unless index.zero? %>>
+        <%= render "shared/kana_heat_grid", counts: counts, param: param, max: @max_counts[param] %>
       </div>
     <% end %>
   </div>
 </section>
 
 <section class="browse-section">
-  <h2 class="section-heading"><%= icon "ruler" %><%= t("browse.index.by_reading_length") %></h2>
-  <% lengths = @reading_length_counts.keys.compact.sort %>
-  <% if lengths.empty? %>
+  <h2 class="section-heading"><%= icon "ruler" %><%= t("browse.index.by_length") %></h2>
+  <% if @reading_length_counts.empty? %>
     <p class="empty-note"><%= icon "binoculars" %><%= t("browse.index.empty") %></p>
   <% else %>
-    <%# 50音表と同じヒート(単色の濃淡)で件数の分布を塗る。索引全体で文法を揃える %>
-    <% length_max = @reading_length_counts.values.max %>
-    <ul class="browse-lengths">
-      <% lengths.each do |length| %>
-        <% fill = length_max.positive? ? (@reading_length_counts[length].to_f / length_max).round(3) : 0 %>
-        <li>
-          <%= link_to words_path(reading_length: length), class: "tag browse-length browse-length--heat",
-                style: "--fill: #{fill}" do %>
-            <span><%= t("words.show.chars", count: length) %></span>
-            <span class="browse-length__count mono"><%= t("browse.index.count_unit", count: @reading_length_counts[length]) %></span>
+    <div data-controller="panel-switch">
+      <div class="segmented" role="group" aria-label="<%= t("browse.index.length_toggle_label") %>">
+        <% %i[reading_length mora_count].each_with_index do |param, index| %>
+          <button type="button" class="segmented__button" aria-pressed="<%= index.zero? %>"
+                  data-panel-switch-target="button" data-panel-key="<%= param %>"
+                  data-action="panel-switch#show"><%= t("browse.index.toggle.#{param}") %></button>
+        <% end %>
+      </div>
+      <% { reading_length: @reading_length_counts, mora_count: @mora_counts }.each_with_index do |(param, counts), index| %>
+        <div data-panel-switch-target="panel" data-panel-key="<%= param %>" <%= "hidden" unless index.zero? %>>
+          <%= render "length_tags", counts: counts, param: param, max: @max_counts[param] %>
+          <%# モーラは馴染みの薄い数え方なので、統計 §3 と同じく数え方を添える %>
+          <% if param == :mora_count %>
+            <p class="browse-hint"><%= t("browse.index.mora_hint") %></p>
           <% end %>
-        </li>
+        </div>
       <% end %>
-    </ul>
+    </div>
   <% end %>
 </section>

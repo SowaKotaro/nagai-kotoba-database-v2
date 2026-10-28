@@ -1,0 +1,14 @@
+<%# locals: (counts:, param:, max:) -%>
+<%# 読みの長さ(文字数かモーラ数)ごとの件数つきタグ。50音表と同じヒート(単色の濃淡)で件数の分布を塗り、索引全体で文法を揃える。
+    counts は { 長さ => 公開語義数 }、param は絞り込みのパラメータ(:reading_length か :mora_count)、max はその最大値 %>
+<ul class="browse-lengths">
+  <% counts.keys.compact.sort.each do |length| %>
+    <li>
+      <%= link_to words_path(param => length), class: "tag browse-length browse-length--heat",
+            style: "--fill: #{max.positive? ? (counts[length].to_f / max).round(3) : 0}" do %>
+        <span><%= t("browse.index.length_unit.#{param}", count: length) %></span>
+        <span class="browse-length__count mono"><%= t("browse.index.count_unit", count: counts[length]) %></span>
+      <% end %>
+    </li>
+  <% end %>
+</ul>

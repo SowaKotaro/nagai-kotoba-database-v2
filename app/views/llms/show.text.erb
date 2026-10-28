@@ -11,7 +11,9 @@
 
 - [単語一覧](<%= SiteUrl.absolute(words_path) %>): 収録している言葉の一覧。ジャンル・品詞・エンティティ・語種・先頭文字・読みの文字数などで絞り込める。
 - [ジャンルから探す](<%= SiteUrl.absolute(genres_path) %>): 大・中・小のジャンル階層から辿れるハブ。
-- [索引](<%= SiteUrl.absolute(browse_path) %>): 読みの先頭文字(50音)・読みの文字数から辿れる索引。
+- [エンティティから探す](<%= SiteUrl.absolute(entity_types_path) %>): 作品名・キャラクター名・楽曲名・駅名など、何の名前なのかから辿れるハブ。
+- [言語学的特徴から探す](<%= SiteUrl.absolute(linguistic_features_path) %>): 連濁・熟字訓・重箱読みなどの特徴を、解説と例つきで並べたハブ。
+- [索引](<%= SiteUrl.absolute(browse_path) %>): 読みの先頭文字・末尾文字(50音)と、読みの文字数・モーラ数から辿れる索引。
 - [ランキング](<%= SiteUrl.absolute(rankings_path) %>): 読みの長さ・拍数・表記の長さ・一字あたりの読み・拗音や促音・長音符・濁点・語義や別表記の多さなど、観点別の上位。
 - [収録統計](<%= SiteUrl.absolute(stats_path) %>): 収録語数・読みの長さの分布・頭文字と末尾文字の組み合わせ・収録の推移・ジャンルや語種の構成などの統計。
 - [詳細検索](<%= SiteUrl.absolute(search_path) %>): 複数条件を組み合わせた検索フォーム。

@@ -1,0 +1,33 @@
+<% content_for :title, t("entity_types.index.title") %>
+<% content_for :description, t("entity_types.index.description") %>
+
+<%= render "shared/breadcrumbs",
+      items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("entity_types.index.title"), nil ] ] %>
+
+<header class="page-header">
+  <p class="label-en"><%= t("labels.en.entity_types") %></p>
+  <p class="label-en"><%= t("labels.en.entity_type_count", count: @entity_types.size) %></p>
+  <h1 class="page-title"><%= t("entity_types.index.title") %></h1>
+  <p class="page-lead"><%= t("entity_types.index.lead") %></p>
+</header>
+
+<% if @entity_types.empty? %>
+  <p class="empty-note"><%= icon "binoculars" %><%= t("entity_types.index.empty") %></p>
+<% else %>
+  <%# 語の多い順に並ぶので、探している名前(駅名 など)が後ろに埋もれる。名前で絞り込む欄を添える(list-filter)。
+      タグの組み(名前の右に件数を等幅で添える)はジャンルの小分類と同じ %>
+  <div data-controller="list-filter">
+    <%= render "shared/list_filter_field", label: t("entity_types.index.filter_label"),
+          placeholder: t("entity_types.index.filter_placeholder"), empty: t("entity_types.index.filter_empty") %>
+    <ul class="entity-hub">
+      <% @entity_types.each do |entity_type| %>
+        <li data-list-filter-target="item" data-filter-terms="<%= entity_type.name %>">
+          <%= link_to words_path(entity_type_id: entity_type.id), class: "tag entity-hub__tag" do %>
+            <span><%= entity_type.name %></span>
+            <span class="genre-hub__count mono"><%= number_with_delimiter(@counts[entity_type.id]) %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

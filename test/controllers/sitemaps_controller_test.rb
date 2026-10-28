@@ -8,7 +8,7 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{application/xml|text/xml}, response.media_type
     assert_match "http://www.sitemaps.org/schemas/sitemap/0.9", response.body
 
-    %w[/ /words /genres /browse /stats /about /privacy].each do |path|
+    %w[/ /words /genres /entity_types /linguistic_features /browse /stats /about /privacy].each do |path|
       assert_includes response.body, "<loc>#{CANONICAL_HOST}#{path}</loc>"
     end
     assert_includes response.body, "<loc>#{CANONICAL_HOST}/words/#{words(:abc_murder).id}</loc>"
@@ -16,11 +16,12 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     # 未注釈の語は含めない
     assert_not_includes response.body, "/words/#{words(:pending_haruhi).id}<"
 
-    # sitemap.xml の <loc> は、静的ページ 8 件と公開語の詳細だけ(この順)
+    # sitemap.xml の <loc> は、静的ページ 10 件と公開語の詳細だけ(この順)
     get "/sitemap.xml"
     locs = Nokogiri::XML(response.body).remove_namespaces!.css("url > loc").map(&:text)
 
-    static = %w[/ /words /genres /browse /rankings /stats /about /privacy].map { |path| "#{CANONICAL_HOST}#{path}" }
+    static = %w[/ /words /genres /entity_types /linguistic_features /browse /rankings /stats /about /privacy]
+             .map { |path| "#{CANONICAL_HOST}#{path}" }
     published = Word.annotated.order(:id).map { |word| "#{CANONICAL_HOST}/words/#{word.id}" }
     assert_equal static + published, locs
   end

@@ -1,0 +1,28 @@
+<%# locals: (counts:, param:, max:) -%>
+<%# 50音表のヒート(索引 /browse と統計 §2)。伝統的な縦書きの並び(上から「アイウエオ」、右から「ア→カ→サ…」)。
+    counts は { カナ => 公開語義数 }、param は絞り込みのパラメータ(:first_char か :last_char)、max は表の最大値。
+    件数はセルの濃淡(ヒート)で示し、実数は title で添える(数字をセルに書くと 50音表の行・列の整列が崩れる)。
+    公開語義の無い文字はリンクにせず沈めて描く。詳細検索の 50音表はチェックボックスなので別の部品(searches/_kana_grid) %>
+<div class="kana-grid">
+  <% KanaRow::TABLE_COLUMNS.each do |column| %>
+    <div class="kana-col">
+      <% column.each do |kana| %>
+        <% if kana.nil? %>
+          <span class="kana-cell--blank" aria-hidden="true"></span>
+        <% elsif (count = counts[kana].to_i).positive? %>
+          <%= link_to words_path(param => kana),
+                class: "kana-cell kana-cell--link kana-cell--heat",
+                style: "--fill: #{max.positive? ? (count.to_f / max).round(3) : 0}",
+                title: t("shared.kana_heat_grid.count_label", char: kana, count: count) do %>
+            <span class="kana-cell__face"><%= kana %></span>
+          <% end %>
+        <% else %>
+          <span class="kana-cell kana-cell--muted"
+                title="<%= t('shared.kana_heat_grid.count_label', char: kana, count: 0) %>">
+            <span class="kana-cell__face"><%= kana %></span>
+          </span>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

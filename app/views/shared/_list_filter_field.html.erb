@@ -1,0 +1,11 @@
+<%# locals: (label:, placeholder:, empty:) -%>
+<%# 探すための一覧(/genres・/entity_types)を名前で絞り込む欄と、何も残らなかったときの一言(list_filter_controller.js)。
+    呼び出し側が data-controller="list-filter" の要素の中で描き、絞り込む項目に item・束に group の target を付ける。
+    欄は JS がつながってから出す(hidden で描く)。どこにも送らない欄なので name を持たせない。
+    label は読み上げ用の欄の名前、placeholder は打つ例、empty は 0 件のときの文 %>
+<div class="list-filter" hidden data-list-filter-target="field">
+  <%= icon "funnel" %>
+  <%= tag.input type: "search", class: "list-filter__input", placeholder: placeholder, autocomplete: "off",
+        aria: { label: label }, data: { list_filter_target: "input", action: "input->list-filter#filter" } %>
+</div>
+<p class="empty-note list-filter__empty" hidden role="status" data-list-filter-target="empty"><%= icon "binoculars" %><%= empty %></p>

@@ -82,9 +82,11 @@
 | `/words/:id` | 単語詳細。語義・関連データ・五十音円環・関連語・しりとりの次の一手 |
 | `/words/random` | ランダムに 1 語へ 302 |
 | `/words/:id/share_card.png` | 単語ごとの共有カード（og:image） |
-| `/search` | 詳細検索フォーム（条件の並びは `searches/index.html.erb`、受け付けるパラメータは `WordSenseSearch#to_query_params`）。実行すると条件付きの `/words` へ |
-| `/browse` | 50 音・読みの文字数の索引 |
-| `/genres` | ジャンル階層のハブ |
+| `/search` | 詳細検索フォーム（条件の並びは `searches/index.html.erb`、受け付けるパラメータは `WordSenseSearch#to_query_params`）。実行すると条件付きの `/words` へ。よく使う探し方は、ジャンル・エンティティ・言語学的特徴・索引のページに切り出してある（ヘッダーの「検索」プルダウンに並ぶ） |
+| `/browse` | 索引。50 音（先頭の文字・末尾の文字）と読みの長さ（文字数・モーラ数）を、それぞれ切り替えて件数つきで出す |
+| `/genres` | ジャンル階層のハブ。名前で絞り込める |
+| `/entity_types` | エンティティ（作品名・キャラクター名・駅名など、何の名前か）から探すページ。語の多い順・件数つきで、名前で絞り込める |
+| `/linguistic_features` | 言語学的特徴から探すページ。公開語のある特徴を、定義の 1 文・例・件数つきで用語解説の順に並べる。特徴ごとの URL は作らない（Issue 102） |
 | `/rankings` | 各種ランキング（読みの長さ・モーラ数・円環交差数など。種類は `WordRanking::DEFINITIONS`） |
 | `/stats` | 収録統計。数字の壁と各章（紙面の正は [`stats.md`](stats.md)） |
 | `/requests/new` | 収録リクエスト（公開側で唯一の書き込み経路。`REQUESTS_ENABLED` で停止できる） |
@@ -252,7 +254,8 @@ bin/rails server
 | 共通（ヘッダー） | `nav_menu`（「検索」のプルダウン）・`nav_drawer`（狭幅のドロワー）・`theme`（ダークモード） |
 | 単語の一覧・詳細 | `auto_submit`（並び替えを選んだら送る。管理の一覧でも使う）・`clipboard`（URL のコピー。管理画面の書き出しでも使う） |
 | 詳細検索 | `fold_count`（畳んだ区画・ジャンルの見出しの選択数）・`range_slider`（読みの文字数）・`char_type`・`char_type_toggle`（文字種） |
-| ランキング・統計 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（Plotly）・`vowel_graph`（母音のつながり） |
+| ランキング・統計・索引 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（Plotly）・`vowel_graph`（母音のつながり） |
+| ジャンル・エンティティ | `list_filter`（名前で絞り込む欄） |
 | 収録リクエスト | `nested_form`（行の追加と削除）・`reading_counter`（読みの字数） |
 | アノテーション（コンソール・デッキ） | `nested_form`・`sense_cloner`（語義の複製）・`sense_completeness`（必須項目の充足）・`genre_picker`（ジャンルの段階表示）・`inline_add`（マスタのその場追加）・`feature_range`（特徴の該当部分）・`publish_guard`（公開前の確認）・`queue_nav`（キーボード）・`deck`（カード送り） |
 | 管理の一覧・一括登録 | `check_all`（全選択）・`genre_picker`（一括適用）・`reading_choice`（読みの候補）・`reading_format`（読みの形式） |
@@ -280,6 +283,7 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
 
 - **段階的な強化**: サーバが全部を描き、JS がつながってから畳む・見せる。`data-js-only` は JS が無いと働かない部品で、
   `row_select` が接続するまで CSS が隠す（`candidates.css`）。`panel_switch` の `hideOnConnect` は、全パネルを描いておき、つながってから畳む。
+  `list_filter` の欄は `hidden` で描き、つながってから出す（JS が無いときは欄が無いだけで、一覧はそのまま辿れる）。
 - `data-row-group` は「この系統を選ぶ」でまとめて選ぶ行の範囲（`row_select`）。
 - 行の `data-decision`・`data-flags`、処理のラジオの `data-key`、絞り込みのボタンの `data-flag` は `decision_list` が読み書きする。
 - `data-nested-form-item`・`data-nested-form-destroy`・`data-sense-destroy` は、`nested_form`・`sense_cloner` が行と削除の印を探す手がかり。

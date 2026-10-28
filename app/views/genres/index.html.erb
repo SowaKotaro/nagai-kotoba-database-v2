@@ -41,43 +41,50 @@
 <% else %>
   <%# 大分類ごとの折り畳み(details)。初期表示は大分類の一覧だけに畳み、ジャンルが
       増えても目的の中・小分類へ迷わず到達できる(検索のジャンル絞り込みと同じ文法)。
-      大分類名のクリックは開閉に充てるため、一覧への絞り込みは「全体を見る」リンクに分ける %>
-  <div class="genre-hub">
-    <% larges.each do |large| %>
-      <details class="genre-fold genre-hub__fold">
-        <summary class="genre-fold__summary genre-hub__summary">
-          <%= icon "caret_down", "genre-fold__caret" %>
-          <span class="genre-hub__large-name"><%= large.name %></span>
-          <span class="genre-hub__bar" aria-hidden="true"
-                style="--w: <%= RadialChart.percent(large_counts[large.id], count_min, count_max) %>%"></span>
-          <span class="genre-hub__count mono"><%= large_counts[large.id] %></span>
-        </summary>
-        <div class="genre-fold__body">
-          <%= link_to words_path(genre_id: large.id), class: "genre-hub__whole icon-label" do %>
-            <%= t("genres.index.whole", name: large.name) %><%= icon "arrow_right" %>
-          <% end %>
+      大分類名のクリックは開閉に充てるため、一覧への絞り込みは「全体を見る」リンクに分ける。
+      「アニメ」「鉄道」がどの大分類にあるかは開くまで分からないので、名前で絞り込む欄を添える(list-filter)。
+      絞り込む単位は小分類で、中分類の名前でも当たる(大分類の名前は「芸術・音楽・演劇・スポーツ・娯楽」のように
+      広すぎて、当てると配下の数百件が残るだけになるので照らさない) %>
+  <div data-controller="list-filter">
+    <%= render "shared/list_filter_field", label: t("genres.index.filter_label"),
+          placeholder: t("genres.index.filter_placeholder"), empty: t("genres.index.filter_empty") %>
+    <div class="genre-hub">
+      <% larges.each do |large| %>
+        <details class="genre-fold genre-hub__fold" data-list-filter-target="group">
+          <summary class="genre-fold__summary genre-hub__summary">
+            <%= icon "caret_down", "genre-fold__caret" %>
+            <span class="genre-hub__large-name"><%= large.name %></span>
+            <span class="genre-hub__bar" aria-hidden="true"
+                  style="--w: <%= RadialChart.percent(large_counts[large.id], count_min, count_max) %>%"></span>
+            <span class="genre-hub__count mono"><%= large_counts[large.id] %></span>
+          </summary>
+          <div class="genre-fold__body">
+            <%= link_to words_path(genre_id: large.id), class: "genre-hub__whole icon-label" do %>
+              <%= t("genres.index.whole", name: large.name) %><%= icon "arrow_right" %>
+            <% end %>
 
-          <% genres_with_published(large.id, @genres_by_parent, @published_counts).each do |medium| %>
-            <div class="genre-hub__medium">
-              <h3 class="genre-hub__medium-title">
-                <%= link_to medium.name, words_path(genre_id: medium.id) %>
-                <span class="genre-hub__count mono"><%= genre_published_count(medium, @genres_by_parent, @published_counts) %></span>
-              </h3>
+            <% genres_with_published(large.id, @genres_by_parent, @published_counts).each do |medium| %>
+              <div class="genre-hub__medium" data-list-filter-target="group">
+                <h3 class="genre-hub__medium-title">
+                  <%= link_to medium.name, words_path(genre_id: medium.id) %>
+                  <span class="genre-hub__count mono"><%= genre_published_count(medium, @genres_by_parent, @published_counts) %></span>
+                </h3>
 
-              <ul class="genre-hub__smalls">
-                <% genres_with_published(medium.id, @genres_by_parent, @published_counts).each do |small| %>
-                  <li>
-                    <%= link_to words_path(genre_id: small.id), class: "tag genre-hub__small" do %>
-                      <span><%= small.name %></span>
-                      <span class="genre-hub__count mono"><%= genre_published_count(small, @genres_by_parent, @published_counts) %></span>
-                    <% end %>
-                  </li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
-        </div>
-      </details>
-    <% end %>
+                <ul class="genre-hub__smalls">
+                  <% genres_with_published(medium.id, @genres_by_parent, @published_counts).each do |small| %>
+                    <li data-list-filter-target="item" data-filter-terms="<%= medium.name %> <%= small.name %>">
+                      <%= link_to words_path(genre_id: small.id), class: "tag genre-hub__small" do %>
+                        <span><%= small.name %></span>
+                        <span class="genre-hub__count mono"><%= genre_published_count(small, @genres_by_parent, @published_counts) %></span>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+    </div>
   </div>
 <% end %>

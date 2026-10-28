@@ -710,6 +710,13 @@ a.browse-length:hover .browse-length__count {
   border-left-color: var(--text-subtle);
 }
 
+/* 表の下に添える数え方の注(モーラ数)。統計の .stats-hint と同じ級数・濃さ */
+.browse-hint {
+  margin: var(--space-4) 0 0;
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
 /* --- シェア導線(Issue 30) --- */
 .share {
   display: flex;
@@ -877,6 +884,134 @@ a.browse-length:hover .browse-length__count {
 
 a.tag:hover .genre-hub__count {
   color: var(--text-muted);
+}
+
+/* --- 探すための一覧を名前で絞り込む欄(/genres・/entity_types。list_filter_controller.js) ---
+   入力の文法(細枠の角丸ボックス)に、ホームの検索バーと同じく先頭のアイコンを入れる。枠はこの箱が持ち、中の入力は枠を持たない */
+.list-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 400px;
+  height: 40px;
+  margin: 0 0 var(--space-5);
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  transition: border-color var(--transition);
+}
+
+/* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
+   (JS がつながるまで欄は出さない) */
+.list-filter[hidden] {
+  display: none;
+}
+
+.list-filter:focus-within {
+  border-color: var(--text-muted);
+}
+
+.list-filter .icon {
+  flex: none;
+  color: var(--text-subtle);
+}
+
+.list-filter__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: inherit;
+  color: var(--text);
+}
+
+.list-filter__input:focus {
+  outline: none;
+}
+
+/* type="search" の既定の外観(iOS の角丸の箱、Chromium の青い消去ボタン)を外す。
+   色はトークンだけにするため。消すときは文字を消せばよく、空にすれば一覧はすべて戻る */
+.list-filter__input,
+.list-filter__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.list-filter__input::placeholder {
+  color: var(--text-subtle);
+}
+
+.list-filter__empty {
+  margin: 0 0 var(--space-5);
+}
+
+/* --- エンティティから探す(/entity_types) ---
+   語の多い順に、件数つきのタグを折り返して並べる(タグの組みはジャンルの小分類 .genre-hub__small と同じ) */
+.entity-hub {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.entity-hub__tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* --- 言語学的特徴から探す(/linguistic_features) ---
+   1 つの特徴 = 名前(一覧へのリンク)と件数 → 説明 → 例。行は単語一覧(.entry-list)と同じく
+   border ではなく gap: 1px の隙間で仕切る(docs/design.md §3) */
+.feature-hub {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.feature-hub__item {
+  padding: var(--space-5) 0;
+  background: var(--surface);
+}
+
+.feature-hub__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin: 0 0 var(--space-2);
+  font-size: 17px;
+}
+
+.feature-hub__name {
+  color: var(--text);
+}
+
+.feature-hub__count {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.feature-hub__description {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.feature-hub__examples {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  color: var(--text-subtle);
 }
 
 .tag-row {
@@ -3935,6 +4070,7 @@ textarea {
   select,
   textarea,
   .hero-search__input,
+  .list-filter__input,
   .admin-words-search__input,
   .sort-form__select,
   .bulk-annotation__meaning,

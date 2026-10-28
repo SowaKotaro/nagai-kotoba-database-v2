@@ -15,6 +15,9 @@ class LinguisticFeatureGlossaryTest < ActiveSupport::TestCase
     entry = LinguisticFeatureGlossary.find("音韻添加")
     assert_match "無い音が間に加わる", entry.description
     assert entry.examples.any? { |example| example.include?("まんなか") }
+    # 定義は説明の最初の 1 文(句点まで)。句点の無い説明は全文
+    assert_equal "複合語を作るとき、もとの語には無い音が間に加わる現象。", entry.definition
+    assert_equal "句点の無い説明", LinguisticFeatureGlossary::Entry.new(description: "句点の無い説明").definition
 
     assert_nil LinguisticFeatureGlossary.find("存在しない特徴")
   end

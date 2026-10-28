@@ -32,7 +32,7 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
 
     # パンくずのあるページに BreadcrumbList が出力される
     # パンくずを描画する主要な公開ページを一巡する(単語詳細は DefinedTerm のテストで別途確認)
-    [ words_path, genres_path, browse_path, about_path ].each do |path|
+    [ words_path, genres_path, entity_types_path, linguistic_features_path, browse_path, about_path ].each do |path|
       get path
       crumb = find_type("BreadcrumbList")
       assert crumb, "#{path} に BreadcrumbList がない"
