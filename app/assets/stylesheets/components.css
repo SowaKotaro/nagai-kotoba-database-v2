@@ -3311,29 +3311,36 @@ textarea {
   padding: 0 var(--space-2);
 }
 
-/* 入力欄に添える畳んだヘルプ(genre-fold の文法を流用)。
-   既定は閉じていて、開くと淡い面のパネルで早見表を出す。ホバーには依存しない */
+/* 入力欄に添える畳んだヘルプ(searches/_field_help)。開くと中身を見出しのキャレットの真下から左罫で吊り、
+   中身にだけ淡い面を敷く(左罫が無いと、見出しから離れた面が別の箱として浮いて見える。見出しにまで面を
+   敷くと主張が強すぎる。design.md §5.6)。見出しの文字の頭は、入力欄の文字の頭(左右の余白 14px)に揃える。
+   ホバーには依存しない */
 .field-help {
   margin-top: var(--space-2);
 }
 
 .field-help__summary {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--space-1);
-  /* タップ領域を確保しつつ、畳んだ状態では小さく目立たせない */
-  padding: 6px 2px;
+  /* タップ領域を確保しつつ(高さ約 41px)、畳んだ状態では小さく目立たせない */
+  padding: var(--space-2) 14px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-subtle);
   list-style: none;
+  transition: color var(--transition);
 }
 
 .field-help__summary::-webkit-details-marker {
   display: none;
 }
 
-.field-help__summary:hover {
+.field-help[open] > .field-help__summary {
+  color: var(--text-muted);
+}
+
+.field-help > .field-help__summary:hover {
   color: var(--text);
 }
 
@@ -3343,7 +3350,6 @@ textarea {
 }
 
 .field-help__caret {
-  color: var(--text-subtle);
   transform: rotate(-90deg);
   transition: transform 0.15s;
 }
@@ -3352,11 +3358,44 @@ textarea {
   transform: rotate(0deg);
 }
 
+/* 開くときだけ、中身の高さを 0 から伸ばして見出しの下から出てくるように見せる
+   (閉じるときはブラウザ標準どおりすぐ畳む。design.md §4)。行の高さ(grid-template-rows)を
+   0fr → 1fr に動かし、伸びきるまでのはみ出しは clip-path で隠す。overflow で隠さないのは、
+   伸びきったあとも残って、用語解説のスクロール枠のフォーカスリングが欠けるため */
 .field-help__body {
-  border: none;
-  border-radius: var(--radius);
+  display: grid;
+  grid-template-rows: 1fr;
+  /* 左罫はキャレット(左の余白 14px ＋ 幅 1em = 13px)の中心に立てる。色はジャンルの中分類を束ねる
+     左罫(.genre-hub__medium)と同じ(--border はダークで地との差が ΔRGB 10 しかなく、罫が消える) */
+  margin-left: 20px;
+  padding: var(--space-3) var(--space-4);
+  border-left: 1px solid var(--border-strong);
+  /* 左罫に接する側は角を立て、罫を面の縁にする */
+  border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--bg-soft);
-  padding: var(--space-4);
+}
+
+.field-help__content {
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .field-help[open] > .field-help__body {
+    animation: field-help-unfold 200ms ease-out;
+  }
+}
+
+@keyframes field-help-unfold {
+  from {
+    grid-template-rows: 0fr;
+    padding-block: 0;
+    opacity: 0;
+    clip-path: inset(0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
 }
 
 .field-help__note {
@@ -3389,7 +3428,7 @@ textarea {
 
 /* 言語学的特徴の用語解説(shared/_feature_glossary)。詳細検索の畳んだヘルプと、管理画面の注釈フォーム
    (annotate.css の .ann-glossary__list が枠を足す)で共有する。特徴が多いので高さを決めてスクロールさせ、
-   項目どうしは罫を引かずに余白だけで分ける */
+   項目どうしは余白で分ける(詳細検索の中では罫で分ける。下の .field-help .feature-glossary) */
 .feature-glossary {
   display: grid;
   gap: var(--space-3);
@@ -3404,6 +3443,19 @@ textarea {
   /* 名前の列は最長の名前(「オノマトペ(擬態語)」の 10 字)が 1 行に収まる幅 */
   grid-template-columns: 10em 1fr;
   gap: 2px var(--space-3);
+}
+
+/* 詳細検索の畳んだヘルプの中では、項目どうしを gap: 1px の罫で分ける(design.md §3)。罫の色は左罫と同じで、
+   項目の面は載せる面(中身の --bg-soft)に合わせる。管理画面の注釈フォームは一覧そのものに余白と面を
+   持たせている(.ann-glossary__list)ので、この組みにはできず、余白で分けたままにする */
+.field-help .feature-glossary {
+  gap: 1px;
+  background: var(--border-strong);
+}
+
+.field-help .feature-glossary__item {
+  padding: var(--space-3) 0;
+  background: var(--bg-soft);
 }
 
 .feature-glossary__item dt {

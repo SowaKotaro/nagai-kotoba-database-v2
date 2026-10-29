@@ -161,16 +161,20 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     %w[regexp vowel_reading rhythm_pattern].each { |id| assert_select "label[for=?]", id }
     # 正規表現の書き方は既定で畳まれたヘルプに入れて目立たせず、入力欄と aria-describedby で結ぶ
     assert_select "input#regexp[aria-describedby=?]", "regexp-help"
-    assert_select "details.field-help#regexp-help"
     assert_select "details.field-help[open]", count: 0
-    assert_select "summary.field-help__summary", text: /#{I18n.t('searches.regexp_help.summary')}/
-    assert_select ".regexp-help__table dt", text: "^ア"
-    assert_select ".regexp-help__table dd", text: "アで始まる"
-    assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
+    # 中身は見出しの下で二重に包む(開くとき高さを 0 から伸ばす動きが、この 2 段を前提にしている。searches/_field_help)
+    assert_select "details.field-help#regexp-help" do
+      assert_select "> summary.field-help__summary", text: /#{I18n.t('searches.regexp_help.summary')}/
+      assert_select "> .field-help__body > .field-help__content" do
+        assert_select ".regexp-help__table dt", text: "^ア"
+        assert_select ".regexp-help__table dd", text: "アで始まる"
+        assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
+      end
+    end
     # 言語学的特徴の区画にも、管理画面と同じ用語解説を畳んで添える(上の [open] count: 0 で既定は閉じている)
     assert_select "details.search-section fieldset:has(input[name='linguistic_feature_id[]']) + details.field-help" do
-      assert_select "summary.field-help__summary", text: /#{I18n.t('searches.feature_glossary_summary')}/
-      assert_select ".feature-glossary__item", count: LinguisticFeatureGlossary.all.size
+      assert_select "> summary.field-help__summary", text: /#{I18n.t('searches.feature_glossary_summary')}/
+      assert_select "> .field-help__body > .field-help__content .feature-glossary__item", count: LinguisticFeatureGlossary.all.size
       assert_select ".feature-glossary__item dt", text: "音韻添加"
       assert_select ".feature-glossary__item dd", text: /まんなか/
     end
