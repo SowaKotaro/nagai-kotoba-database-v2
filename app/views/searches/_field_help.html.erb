@@ -1,0 +1,15 @@
+<%# locals: (summary:, id: nil) -%>
+<%# 入力欄に添える畳んだヘルプ(正規表現の書き方・言語学的特徴の用語解説)。開閉はブラウザ標準に任せる。
+    開くと見出しごと淡い面に包み、中身は見出しの下から伸びて出る(CSS の動きだけ。design.md §5.6)。
+    中身を __body と __content の二重に包むのは、高さを 0 から伸ばす動き(grid-template-rows)に、
+    はみ出しを隠す箱が要るため。render layout: "field_help" で中身をブロックで渡す。 %>
+<%= tag.details class: "field-help", id: id do %>
+  <summary class="field-help__summary">
+    <%= icon "caret_down", "field-help__caret" %><%= summary %>
+  </summary>
+  <div class="field-help__body">
+    <div class="field-help__content">
+      <%= yield %>
+    </div>
+  </div>
+<% end %>
