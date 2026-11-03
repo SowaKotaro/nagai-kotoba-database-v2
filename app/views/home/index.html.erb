@@ -59,10 +59,10 @@
 
 <% if @featured_word %>
   <% featured_sense = @featured_word.primary_sense %>
-  <section class="home-panel home-featured">
-    <div class="home-panel__head">
-      <h2 class="home-panel__title"><%= t("home.index.featured") %></h2>
-      <%= link_to word_path(@featured_word), class: "btn btn--sm home-panel__more" do %>
+  <section class="panel home-featured">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t("home.index.featured") %></h2>
+      <%= link_to word_path(@featured_word), class: "btn btn--sm panel__more" do %>
         <%= t("home.index.featured_more") %><%= icon "arrow_right" %>
       <% end %>
     </div>
@@ -126,10 +126,10 @@
 <% end %>
 
 <%# 新着の行には NEW の印を付けない(見出しが新着だと言い、公開日も出ている) %>
-<section class="home-panel home-column">
-  <div class="home-panel__head">
-    <h2 class="home-panel__title"><%= t("home.index.recent") %></h2>
-    <%= link_to words_path, class: "btn btn--sm home-panel__more" do %>
+<section class="panel home-column">
+  <div class="panel__head">
+    <h2 class="panel__title"><%= t("home.index.recent") %></h2>
+    <%= link_to words_path, class: "btn btn--sm panel__more" do %>
       <%= t("home.index.see_all") %><%= icon "arrow_right" %>
     <% end %>
   </div>
@@ -146,10 +146,10 @@
   </div>
 </section>
 
-<section class="home-panel home-column">
-  <div class="home-panel__head">
-    <h2 class="home-panel__title"><%= t("home.index.ranking") %></h2>
-    <%= link_to rankings_path, class: "btn btn--sm home-panel__more" do %>
+<section class="panel home-column">
+  <div class="panel__head">
+    <h2 class="panel__title"><%= t("home.index.ranking") %></h2>
+    <%= link_to rankings_path, class: "btn btn--sm panel__more" do %>
       <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
     <% end %>
   </div>
@@ -172,10 +172,10 @@
 
 <%# 統計ページへの入口。数字の壁から選んだ数を升に並べ、升ごとにその数を図で見せる章へ送る(HomeHelper#home_stats_figures) %>
 <% if @figures.scale[:words].positive? %>
-  <section class="home-panel home-figures">
-    <div class="home-panel__head">
-      <h2 class="home-panel__title"><%= t("home.index.figures.title") %></h2>
-      <%= link_to stats_path, class: "btn btn--sm home-panel__more" do %>
+  <section class="panel home-figures">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t("home.index.figures.title") %></h2>
+      <%= link_to stats_path, class: "btn btn--sm panel__more" do %>
         <%= t("home.index.figures.more") %><%= icon "arrow_right" %>
       <% end %>
     </div>

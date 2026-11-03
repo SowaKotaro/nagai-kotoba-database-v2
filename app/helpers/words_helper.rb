@@ -21,6 +21,17 @@ module WordsHelper
     card if card.renderable?
   end
 
+  # 一覧の並び順セレクタの選択肢(WordSort::SELECTABLE_KEYS の順)。シャッフルは並び順ではないので選択肢に入れないが、
+  # シャッフル中だけは選べない「シャッフル中」を先頭に出して選択済みにする。出さないと先頭の既定の並びが選ばれて見え、
+  # それを選び直しても change が起きないので、既定の並びへ戻れない
+  def sort_select_options(sort)
+    options = WordSort::SELECTABLE_KEYS.map { |key| [ t("words.index.sort.options.#{key}"), key ] }
+    return options_for_select(options, sort.key) unless sort.shuffle?
+
+    options_for_select([ [ t("words.index.sort.shuffling"), WordSort::SHUFFLE_KEY ], *options ],
+                       selected: WordSort::SHUFFLE_KEY, disabled: WordSort::SHUFFLE_KEY)
+  end
+
   # 単語詳細の自己完結リード文(定義文)を決定的に組み立てる(Issue 18)。
   # 読み・文字数・モーラ・ジャンルという構造データを散文に起こし、
   # meta description(Issue 14)や JSON-LD の description(Issue 16)にも流用する。

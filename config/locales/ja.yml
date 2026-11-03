@@ -116,7 +116,6 @@ ja:
     en:
       site: "NAGAI KOTOBA DATABASE"
       est: "EST. 2026 / JAPAN"
-      words_index: "WORD INDEX"
       headword: "HEADWORD"
       search: "SEARCH"
       browse: "KANA INDEX"
@@ -135,10 +134,6 @@ ja:
       max: "MAX %{unit}"
       # 標識の2行目(必ず数字を持たせる。数字が無い標識は h1 の英訳になって読まれない)
       entries: "%{count} ENTRIES"
-      # 一覧の標識2行目。総件数はレールの巨大数字が持つので、標識はいまの頁の位置を示す
-      page_of: "PAGE %{page} / %{total}"
-      # 一覧のレールに置く線画のキャプション(この頁でいちばん読みが長い語の円環)
-      longest_here: "LONGEST ON THIS PAGE"
       boards: "%{count} BOARDS / TOP %{limit}"
       genre_nodes: "3 LEVELS / %{count} CATEGORIES"
       entity_type_count: "%{count} TYPES"
@@ -147,7 +142,6 @@ ja:
       kana_lengths: "%{kana} KANA / %{lengths} LENGTHS"
       # レールの figure-number に添える単位ラベル
       genres_unit: "GENRES"
-      entries_unit: "ENTRIES"
       # 放射図(円の上に数値を並べた線画)のキャプション
       genre_spread: "SENSES BY CATEGORY"
   shared:
@@ -323,11 +317,20 @@ ja:
       # 「10文字」は収録基準 WordSense::MIN_READING_LENGTH と一致させる(公開の紹介文なので補間しない)
       description: "収録している日本語の長い言葉(読み10文字以上)の一覧。読みの長さ・文字の構成・韻・ジャンル・品詞・語種などの条件で絞り込めます。"
       empty: "まだ単語が登録されていません。"
-      empty_filtered: "条件に一致する言葉が見つかりませんでした。条件を変えるか、絞り込みを解除してください。"
+      # 0 件の札の中央に積む案内。文ごとの文節の配列で、ビューが文ごとに行を分け、文節の切れ目でだけ折る
+      # (中央寄せなので「見つかりませんで／した」のような語の途中の折れが目立つ)
+      empty_filtered:
+        - ["条件に一致する言葉が", "見つかりませんでした。"]
+        - ["条件を変えるか、", "絞り込みを解除してください。"]
       request_link: "この言葉の収録をリクエストする"
+      # キーワードを入れずに条件だけで探して 0 件のとき(引き継ぐ語が無い)
+      request_link_no_keyword: "収録してほしい言葉をリクエストする"
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
-      char_count: "%{count} 字"
+      # 一覧の行の文字数の単位(数は墨の 800 で立て、単位を小さく添える)
+      char_unit: "字"
+      # レールの件数の単位
+      count_unit: "語"
       # キーワード検索で、表層形・読みではなく別表記だけが一致した行に添える注記。
       variant_match: "別表記〈%{surface}〉で一致"
       clear_filter: "絞り込みを解除"
@@ -336,6 +339,8 @@ ja:
       sort:
         label: "並び順"
         apply: "並べ替え"
+        # シャッフル中だけセレクタの先頭に出す、選べない選択肢(シャッフルは並び順ではないので options には入れない)
+        shuffling: "シャッフル中"
         # 選択肢は WordSort::SELECTABLE_KEYS の順に並ぶ（登録順 → 五十音 → 読みの長さ → その他の観点）。
         options:
           kana_asc: "辞書順"

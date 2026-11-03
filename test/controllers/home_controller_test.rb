@@ -49,9 +49,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
                  css_select(".home-figures__item").map { |link| link["href"] }
     assert_select ".home-figures__item[href=?]", stats_path(anchor: "timeline"),
                   text: /#{I18n.t("stats.index.wall.scale.words")}\s*3#{I18n.t("stats.index.unit.words")}/
-    assert_select ".home-figures a.home-panel__more[href=?]", stats_path
+    assert_select ".home-figures a.panel__more[href=?]", stats_path
 
-    assert_select "h2.home-panel__title", text: I18n.t("home.index.ranking")
+    assert_select "h2.panel__title", text: I18n.t("home.index.ranking")
     # 公開(注釈済み)の語が並び、最長以外の番付はランキングページへ送る
     assert_select "a.home-column__item[href=?]", word_path(words(:abc_murder))
     assert_select "a[href=?]", rankings_path
@@ -93,10 +93,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     date += 1 until date.jd.even?
 
     travel_to(date.in_time_zone.change(hour: 12)) { get root_path }
-    assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[0])
+    assert_select ".home-featured a.panel__more[href=?]", word_path(ordered[0])
 
     travel_to((date + 1).in_time_zone.change(hour: 12)) { get root_path }
-    assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[1])
+    assert_select ".home-featured a.panel__more[href=?]", word_path(ordered[1])
 
     # 語数は毎リクエスト COUNT を打たないよう 1 時間キャッシュする(HomeStatistics。Issue 26)。
     # 公開・保留の直後でキャッシュの語数と実際の語数がずれていても、1 時間のうちはキャッシュの語数で選び
@@ -108,18 +108,18 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     with_rails_cache do
       travel_to(date.in_time_zone.change(hour: 12)) do
         get root_path
-        assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[0])
+        assert_select ".home-featured a.panel__more[href=?]", word_path(ordered[0])
 
         create_published_word(surface: "今日の一語の語数ずれの見本", reading: "キョウノイチゴノゴスウズレノミホン")
         assert_equal 3, Word.annotated.count
 
         travel 59.minutes
         get root_path
-        assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[0])
+        assert_select ".home-featured a.panel__more[href=?]", word_path(ordered[0])
 
         travel 2.minutes
         get root_path
-        assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[1])
+        assert_select ".home-featured a.panel__more[href=?]", word_path(ordered[1])
       end
     end
   end

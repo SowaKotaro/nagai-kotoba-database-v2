@@ -128,17 +128,9 @@
   color: var(--text-subtle);
 }
 
-/* --- 一覧の件数と並び順(同じ行に組む。狭幅では折り返す) --- */
+/* --- 一覧の件数と並び順。札(.panel)の頭の帯に置く(罫と余白は .panel__head が持つ)。狭幅では折り返す --- */
 .entry-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: var(--space-5) 0 var(--space-5);
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--text-muted);
-  border-bottom: 1px solid var(--border);
 }
 
 .entry-toolbar .entry-count {
@@ -156,12 +148,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 右側の操作群(シャッフル・並び順)。狭幅では件数の下へ回り込む */
+/* 右側の操作群(シャッフル・並び順)。狭幅では件数の下へ回り込む。
+   min-width: 0 で札の内側まで縮め、並び順のセレクタを縮められるようにする(無いと幅 320px でセレクタが札の余白へはみ出す) */
 .entry-toolbar__controls {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
+  min-width: 0;
 }
 
 .entry-toolbar__shuffle {
@@ -170,20 +164,28 @@
   gap: 6px;
 }
 
+/* 幅が足りないときは、名前ではなくセレクタのほうを縮める(min-width: 0 が無いと、セレクタの元の幅のまま札からはみ出す) */
 .sort-form {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
+/* 名前は縮めない(縮むと「並び／順」や 1 字ずつ縦に折れる) */
 .sort-form__label {
+  flex-shrink: 0;
   font-size: 13px;
   color: var(--text-subtle);
 }
 
+/* 看板の検索バー・ボタンと同じ墨の枠にする。右の余白は矢印のぶん(8px だと、いちばん長い選択肢の
+   閉じ括弧に矢印が重なった。WebKit・Chromium とも) */
 .sort-form__select {
+  min-width: 0;
   font-size: 14px;
-  padding: 4px 8px;
+  padding: 4px 24px 4px 8px;
+  border-color: var(--text);
 }
 
 /* ページの頭と中身を分ける「章の罫」。罫に文字色(--text-muted)を使うのは、docs/design.md §3 に
@@ -219,6 +221,25 @@
   gap: var(--space-5);
 }
 
+/* 単語一覧のレールの件数。トップの数字と同じく墨の 800 で立て、単位を小さく添える(docs/design.md §5.3) */
+.page-header__count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* 40px は、4 桁の件数(「9,999」。数字は等幅)と単位が、レールの幅(160px から左の余白と罫を引いた幅)に 1 行で収まる大きさ。
+   44px では単位だけが下の行へ落ちた。5 桁になったら単位は下の行へ回る */
+.page-header__count-value {
+  margin-right: var(--space-1);
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
 /* レールの中の線画は左揃えにする(数字と頭を合わせる) */
 .page-header__rail .ring-art {
   align-items: flex-start;
@@ -247,6 +268,11 @@
     border-top: 1px solid var(--border);
     padding-left: 0;
     padding-top: var(--space-4);
+  }
+
+  /* 横に並べた線画のほうを縮め、件数は縮めない(縮むと単位が下の行へ落ちる) */
+  .page-header__count {
+    flex-shrink: 0;
   }
 
   .page-header__rail .ring-art__svg {
@@ -1047,40 +1073,33 @@ a.tag:hover .genre-hub__count {
   color: var(--text-subtle);
 }
 
-/* 一覧の絞り込み中インジケータ(どのファセットで絞っているか + 解除) */
+/* 単語一覧の絞り込み条件(どの条件で絞っているか + 変更・解除)。左の列に漏斗、右の列に条件の札とボタンを置く。
+   変更・解除は、トップの探し方と同じ墨の枠の小さいボタン(.btn--sm)にする。すぐ下に札が来るので、下の罫は引かない */
 .active-facet {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--space-3);
-  margin: var(--space-3) 0 var(--space-2);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border);
+  margin: 0 0 var(--space-5);
+}
+
+/* 漏斗は右の列の 1 行目(条件の札と .btn--sm の高さ 32px)の中央に置く。
+   図は正方形のまま箱の中央に描かれるので、箱の高さだけを行に合わせる */
+.active-facet > .icon {
+  height: 32px;
+}
+
+/* 条件の札と変更・解除のボタン。札が多いと札の並びだけで 1 行を取り、ボタンは次の行へ回る */
+.active-facet__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .active-facet .condition-list {
   margin: 0;
-}
-
-.active-facet__edit {
-  font-size: 13px;
-  color: var(--text-muted);
-  text-decoration: none;
-}
-
-.active-facet__edit:hover {
-  color: var(--text);
-}
-
-.active-facet__clear {
-  font-size: 13px;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.active-facet__clear:hover {
-  color: var(--text);
-  text-decoration: underline;
+  align-items: center;
 }
 
 /* --- 一覧: 罫だけで仕切り、1件を 2 段 2 列に組む ---------------------
@@ -1192,6 +1211,7 @@ a.tag:hover .genre-hub__count {
   gap: var(--space-2);
 }
 
+/* 文字数。トップの読みが長い言葉と同じく、数だけを墨の 800 で立て、単位を小さく添える */
 .entry-row__len {
   font-size: 12px;
   color: var(--text-subtle);
@@ -1199,25 +1219,72 @@ a.tag:hover .genre-hub__count {
   font-variant-numeric: tabular-nums;
 }
 
-/* 一覧のタグは各ファセットの絞り込み(単語一覧)への実リンク。行リンクの上に載せる。 */
+.entry-row__number {
+  margin-right: 2px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* 一覧のタグは各ファセットの絞り込み(単語一覧)への実リンク。行リンクの上に載せる。
+   見た目はトップの今日の一語のタグ(.tag)と同じ墨の枠で、級数だけ一覧に合わせて小さくする */
 .entry-row__tag {
   position: relative;
   z-index: 1;
+  border: 1px solid var(--text);
   border-radius: var(--radius-sm);
-  background: var(--bg-soft);
+  background: var(--surface);
   color: var(--text-muted);
   font-size: 12px;
-  line-height: 1.9;
-  padding: 0 10px;
+  line-height: 1.7;
+  padding: 0 8px;
   white-space: nowrap;
   text-decoration: none;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
 }
 
 .entry-row__tag:hover {
+  border-color: var(--bg-tint);
   background: var(--bg-tint);
   color: var(--text);
   text-decoration: none;
+}
+
+/* 単語一覧の札の中の行。札の枠と字が付かないよう左右に余白を取る(上下は 100 行ぶんの量になるので詰めたまま) */
+.entry-panel .entry-row {
+  padding-inline: var(--space-5);
+}
+
+/* 0 件のときの札。溶けた顔・案内・収録リクエストの導線を中央に積む(docs/design.md §5.3) */
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+}
+
+.empty-panel p {
+  margin: 0;
+}
+
+/* 溶けた顔(Phosphor の smiley-melting)。アイコンを図の大きさで置く唯一の場所で、線はほかのアイコンと同じ Light のまま、
+   色は図の補助線の色で淡くする(飾りなので、文字の下限ではなく面と罫の下限 ΔRGB 19 で測る。札の面との差はライト 76・ダーク 56) */
+.empty-panel__face {
+  width: 88px;
+  height: 88px;
+  color: var(--border-strong);
+}
+
+/* 条件つきの案内の 1 文。文ごとに行を分け、文の中は文節の切れ目(ビューが <wbr> を挟む)でだけ折る。
+   中央寄せなので、語の途中(「見つかりませんで／した」)の折れが目立つ。1 文節で幅に収まらないときだけ端で折る */
+.empty-note__sentence {
+  display: block;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* 「押せる行」であることだけを示す矢印。装飾ではないので最小・最弱に置く */
@@ -1258,6 +1325,10 @@ a.tag:hover .genre-hub__count {
   .entry-row {
     grid-template-columns: minmax(0, 1fr);
     padding: var(--space-3);
+  }
+
+  .entry-panel .entry-row {
+    padding-inline: var(--space-4);
   }
 
   .entry-row__head {
@@ -2333,24 +2404,34 @@ html:has(.search-actions) {
   gap: var(--space-2);
 }
 
+/* 名前と値が 1 行に収まらないときは、値を名前の下の行に回す。名前の横で値を折ると、1 語のキーワードが
+   「みつからないな／がいことば」と語の途中で折れ、狭い右の列に値が詰まる */
 .condition-chip {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: 0 var(--space-2);
   border: 1px solid var(--text);
   border-radius: var(--radius-sm);
   background: var(--surface);
   padding: 3px 12px;
 }
 
+/* 名前は縮めない(縮むと「ジャン／ル」と 1 字ずつ折れる)。折り返すのは値だけ */
 .condition-chip__label {
+  flex-shrink: 0;
   font-size: 12px;
   color: var(--text-subtle);
 }
 
+/* 値が折り返すときは「・」の切れ目(ビューが <wbr> を挟む)でだけ折り、行の長さを揃える。
+   語の途中(「スポー／ツ」)や最後の 1 字(「出版／物」)では折らない。1 語で幅に収まらないときだけ端で折る */
 .condition-chip__value {
   font-size: 13px;
   color: var(--text);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 /* --- 収録数の内訳。管理画面のダッシュボードで横並びに置く --- */
@@ -2604,10 +2685,11 @@ html:has(.search-actions) {
   fill: var(--text-muted);
 }
 
-/* --- ホーム: 札(今日の一語 / 2 つのリスト) -----------------------------------
+/* --- 札(ホームの棚と単語一覧) -----------------------------------------------
    看板の検索バー・ボタンと同じ墨の枠(1px・角 8px)の白い札。頭の見出し帯を墨の罫で中身と仕切る。
-   英字の標識(アイブロウ)は置かない(2026-11-03 オーナー判断。棚の組みは layout.css の .home-shelf、docs/design.md §5.2) */
-.home-panel {
+   英字の標識(アイブロウ)は置かない(2026-11-03 オーナー判断。ホームの棚の組みは layout.css の .home-shelf、
+   docs/design.md §5.2・§5.3) */
+.panel {
   border: 1px solid var(--text);
   border-radius: var(--radius);
   background: var(--surface);
@@ -2615,7 +2697,7 @@ html:has(.search-actions) {
 }
 
 /* 見出し帯: 日本語の見出しと、右端の「一覧へ →」のボタン */
-.home-panel__head {
+.panel__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2624,7 +2706,7 @@ html:has(.search-actions) {
   border-bottom: 1px solid var(--text);
 }
 
-.home-panel__title {
+.panel__title {
   margin: 0;
   font-size: 18px;
   letter-spacing: 0.06em;
@@ -2632,7 +2714,7 @@ html:has(.search-actions) {
 
 /* 「詳しく見る →」「一覧へ →」「ランキングへ →」。探し方の入口(.search-ways__item)と同じく、矢印は枠に寄せるぶん
    右の余白を詰める。.btn はこのファイルの後ろで定義しているので、親クラスを重ねて特異度を上げる */
-.home-panel__head .home-panel__more {
+.panel__head .panel__more {
   padding: 0 var(--space-3) 0 var(--space-4);
   white-space: nowrap;
 }
@@ -2822,7 +2904,7 @@ html:has(.search-actions) {
 }
 
 @media (max-width: 767px) {
-  .home-panel__head {
+  .panel__head {
     padding-left: var(--space-4);
   }
 
@@ -3343,7 +3425,8 @@ html:has(.search-actions) {
   font-size: 14px;
 }
 
-.pagination span {
+/* 「1 / 5 ページ」の状態だけを淡くする。子結合子にしないと、前へ・次へのボタンの中の文字まで淡くなる */
+.pagination > span {
   font-size: 13px;
   color: var(--text-subtle);
 }
@@ -3366,6 +3449,23 @@ html:has(.search-actions) {
   background: var(--bg-soft);
   border-color: var(--text);
   text-decoration: none;
+}
+
+/* 前へ・状態・次へは、どれも途中で折らない(縮むと「前／へ」「ペー／ジ」と折れる) */
+.pagination > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 狭い幅では間と左右の余白を詰めて、3 つを 1 行に収める(幅 320px で「12 / 15 ページ」まで収まる) */
+@media (max-width: 560px) {
+  .pagination {
+    gap: var(--space-3);
+  }
+
+  .pagination a {
+    padding-inline: 14px;
+  }
 }
 
 /* --- テーブル(管理画面の一覧。公開側では使っていない): ヘッダは細罫で締め、行は細罫で仕切る --- */

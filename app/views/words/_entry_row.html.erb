@@ -10,7 +10,8 @@
 <article class="entry-row">
   <div class="entry-row__head">
     <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
-    <p class="entry-row__reading"><%= word.ordered_senses.map(&:reading).join("、") %></p>
+    <%# 同じ読みの語義が複数あっても、読みは 1 回だけ出す(語義ごとの読みは詳細で見る) %>
+    <p class="entry-row__reading"><%= word.ordered_senses.map(&:reading).uniq.join("、") %></p>
   </div>
 
   <div class="entry-row__data">
@@ -27,7 +28,7 @@
   <%# 文字数は全行で桁が揃うので、右列の下段に右寄せで置いて縦に揃える %>
   <div class="entry-row__meta">
     <% if primary&.reading_length %>
-      <span class="entry-row__len"><%= t("words.index.char_count", count: primary.reading_length) %></span>
+      <span class="entry-row__len"><span class="entry-row__number"><%= primary.reading_length %></span><%= t("words.index.char_unit") %></span>
     <% end %>
     <%= icon "arrow_right", "entry-row__go" %>
   </div>
