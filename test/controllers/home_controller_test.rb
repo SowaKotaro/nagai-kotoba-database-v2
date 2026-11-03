@@ -2,19 +2,8 @@ require "test_helper"
 
 class HomeControllerTest < ActionDispatch::IntegrationTest
   # 一括登録で下書きを作った日(created_at)と、注釈を終えて公開した日(annotated_at)は何日もずれる。
-  # トップの「今月の新収録」と新着欄は「サイトに出てきた日」で数え、並べる。
-  test "今月の新収録と最近追加された単語は公開日(annotated_at)で数えて並べる" do
-    Word.annotated.update_all(annotated_at: Time.current)
-    get root_path
-    assert_response :success
-    assert_select ".stats-grid__item dt", text: I18n.t("home.index.stats.monthly_new")
-    assert_select ".stats-grid__item dd", text: /\A2/
-
-    Word.annotated.update_all(created_at: Time.current, annotated_at: 2.months.ago)
-    get root_path
-    assert_select ".stats-grid__item dd", text: /\A0/
-
-    # 最近追加された単語は公開日(annotated_at)で並び、その日付を表示する
+  # トップの新着欄は「サイトに出てきた日」で並べ、その日付を出す。
+  test "最近追加された単語は公開日(annotated_at)で並べる" do
     words(:abc_murder).update_columns(created_at: "2026-07-29 10:00:00", annotated_at: "2026-08-04 10:00:00")
     words(:curry).update_columns(created_at: "2026-08-03 10:00:00", annotated_at: "2026-08-03 10:00:00")
 
@@ -26,44 +15,75 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
                     recent.to_s.index(words(:curry).surface)
   end
 
-  # 看板の「最長の読み」は、下の「読みが長い言葉」の1位と同じ値でなければならない
-  # (別々に数えると、片方だけ古い値が出て食い違う)。
-  test "最長ランキングは看板と一致し(多語義語は先頭の語義)、検索欄は単語一覧へ送る" do
+  test "看板の検索欄と探し方の入口は各ページと絞り込みへ送り、読みが長い言葉は先頭の語義の文字数を出す" do
+    # フィクスチャの公開語は読みが 10 字に満たないので、読みの長さの選択肢が出るよう 15 字の公開語を足す
+    create_published_word(surface: "十五字の見本", reading: "アイウエオカキクケコサシスセソ")
     get root_path
     assert_response :success
 
-    assert_select "h2.section-title .section-title__ja", text: I18n.t("home.index.ranking")
+    # 説明は 1 文ずつに分けて組む(広い幅で 1 文 1 行)。分けても文言は欠けない
+    assert_equal I18n.t("home.index.description").scan("。").size, css_select(".hero__lead .hero__lead-sentence").size
+    assert_equal I18n.t("home.index.description"), css_select(".hero__lead").text
+
+    # ホームの検索欄は単語一覧へ q を GET で送る
+    # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。案内は例文を添えない短い文言(スマホで切れるため)
+    assert_select "form.hero-search[action=?][method=get] input[name=q][placeholder=?]", words_path, I18n.t("layouts.search_placeholder")
+    # 検索欄の下の探し方の入口は、選択肢が開くボタン → 索引・ランダム・詳細検索へ進むボタン(HomeHelper#home_search_ways)
+    assert_equal %w[search-way-genre search-way-entity-type search-way-linguistic-feature search-way-reading-length
+                    search-way-word-origin search-way-part-of-speech],
+                 css_select(".search-ways__toggle").map { |button| button["aria-controls"] }
+    # 読みの長さの選択肢は、19 文字までは 1 文字ずつ(15〜19 のようにまとめない。20 文字以上は下の多語義語の見本で見る)
+    assert_select "#search-way-reading-length a[href=?]", words_path(reading_length: 15),
+                  text: I18n.t("home.index.ways.length.exact", count: 15)
+    assert_equal [ browse_path, random_words_path, search_path ], css_select(".search-ways > a.search-ways__item").map { |link| link["href"] }
+    # ランダムは押すたびに行き先が変わるので、検索エンジンには辿らせない
+    assert_select ".search-ways > a[href=?][rel=nofollow]", random_words_path
+    # 選択肢は単語一覧の絞り込みで、探すページを持つ探し方だけが末尾にそのページへのリンクを添える
+    assert_select "#search-way-genre a[href=?]", words_path(genre_id: genres(:large_literature).id), text: genres(:large_literature).name
+    assert_select "#search-way-genre a.search-ways__more[href=?]", genres_path
+    assert_select "#search-way-word-origin a.search-ways__more", count: 0
+
+    # 数字で見る長い言葉は、天井無しに増えていく数だけを、統計ページの章(数字の壁・収録の推移)へのリンクにして並べる。
+    # 語と単位は統計ページの数字の壁と同じ
+    assert_equal %w[timeline number-wall number-wall number-wall number-wall timeline].map { |anchor| stats_path(anchor:) },
+                 css_select(".home-figures__item").map { |link| link["href"] }
+    assert_select ".home-figures__item[href=?]", stats_path(anchor: "timeline"),
+                  text: /#{I18n.t("stats.index.wall.scale.words")}\s*3#{I18n.t("stats.index.unit.words")}/
+    assert_select ".home-figures a.home-panel__more[href=?]", stats_path
+
+    assert_select "h2.home-panel__title", text: I18n.t("home.index.ranking")
     # 公開(注釈済み)の語が並び、最長以外の番付はランキングページへ送る
     assert_select "a.home-column__item[href=?]", word_path(words(:abc_murder))
     assert_select "a[href=?]", rankings_path
 
-    longest = css_select(".home-column").last.css(".home-column__meta").first.text
-    figure = css_select(".stats-grid--rows .stats-grid__item")
-             .find { |item| item.css("dt").text == I18n.t("home.index.stats.longest") }
-    assert_not_nil figure, "看板に「最長の読み」の行がある"
-    assert_equal longest.gsub(/[^0-9]/, ""), figure.css("dd").text.gsub(/[^0-9]/, "")
-
-    # 多語義語が最長のとき、看板と「読みが長い言葉」の数は先頭の語義の文字数
-    # いまは「読みが長い言葉」の並びは words.max_reading_length で決まるが、看板と行に出す数は
-    # 先頭(id が最小)の語義の文字数。先頭の語義が最長でない語では、並びの指標と出る数がずれる(いまの振る舞い)。
+    # 多語義語が最長のとき、「読みが長い言葉」の行に出す数は先頭の語義の文字数
+    # いまは並びは words.max_reading_length で決まるが、行に出す数は先頭(id が最小)の語義の文字数。
+    # 先頭の語義が最長でない語では、並びの指標と出る数がずれる(いまの振る舞い)。
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい
-    word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ") # 15 字
+    word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネホントニネエ") # 21 字
     word.mark_annotated
     word.save!
 
     get root_path
     first_item = css_select(".home-column").last.css(".home-column__item").first
     assert_equal word_path(word), first_item["href"]
-    assert_equal I18n.t("words.index.char_count", count: 6), first_item.css(".home-column__meta").text
-    figure = css_select(".stats-grid--rows .stats-grid__item")
-             .find { |item| item.css("dt").text == I18n.t("home.index.stats.longest") }
-    assert_equal "6", figure.css("dd").text.gsub(/[^0-9]/, "")
+    assert_equal "6", first_item.css(".home-column__number").text
+    # 20 文字以上はまとめて、下限だけで絞る
+    assert_select "#search-way-reading-length a[href=?]", words_path(reading_length_min: 20),
+                  text: I18n.t("home.index.ways.length.at_least", min: 20)
+  end
 
-    # ホームの検索欄は単語一覧へ q を GET で送る
-    # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。
-    get root_path
-    assert_select "form.hero-search[action=?][method=get] input[name=q]", words_path
+  test "探し方の入口は描いた結果を使い回し、選択肢が変わったときだけ描き直す" do
+    with_fragment_cache do
+      get root_path
+      assert_select "#search-way-reading-length", count: 0
+
+      # 読みが 10 字以上の公開語が付くと選択肢が変わり、読みの長さのボタンが出る
+      create_published_word(surface: "十五字の見本", reading: "アイウエオカキクケコサシスセソ")
+      get root_path
+      assert_select "#search-way-reading-length a[href=?]", words_path(reading_length: 15)
+    end
   end
 
   test "今日の一語は日付とキャッシュした語数で決まる" do
@@ -73,15 +93,14 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     date += 1 until date.jd.even?
 
     travel_to(date.in_time_zone.change(hour: 12)) { get root_path }
-    assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[0])
+    assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[0])
 
     travel_to((date + 1).in_time_zone.change(hour: 12)) { get root_path }
-    assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[1])
+    assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[1])
 
-    # 今日の一語は、キャッシュした語数で選ぶ(実際の語数とずれていても)
-    # 語数はホームの統計と一緒にキャッシュしている。公開・保留の直後でキャッシュの語数と実際の語数が
-    # ずれていても、今日の一語はキャッシュの語数で選ぶ(数え直すと COUNT が毎リクエストに戻る)。
-    ordered = Word.annotated.order(:id).to_a
+    # 語数は毎リクエスト COUNT を打たないよう 1 時間キャッシュする(HomeStatistics。Issue 26)。
+    # 公開・保留の直後でキャッシュの語数と実際の語数がずれていても、1 時間のうちはキャッシュの語数で選び
+    # (数え直すと COUNT が毎リクエストに戻る)、期限が切れたら数え直す。
     # 2 語なら先頭、3 語なら 2 番目を選ぶ日(jd % 2 == 0 かつ jd % 3 == 1)
     date = Date.new(2026, 10, 1)
     date += 1 until date.jd % 6 == 4
@@ -89,46 +108,19 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     with_rails_cache do
       travel_to(date.in_time_zone.change(hour: 12)) do
         get root_path
-        assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[0])
+        assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[0])
 
         create_published_word(surface: "今日の一語の語数ずれの見本", reading: "キョウノイチゴノゴスウズレノミホン")
         assert_equal 3, Word.annotated.count
 
+        travel 59.minutes
         get root_path
-        assert_select ".home-featured a.home-featured__more[href=?]", word_path(ordered[0])
+        assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[0])
+
+        travel 2.minutes
+        get root_path
+        assert_select ".home-featured a.home-panel__more[href=?]", word_path(ordered[1])
       end
     end
-  end
-
-  # 看板の数は毎リクエスト COUNT を打たないよう 1 時間キャッシュする(Issue 26)。
-  # 「今月の」を含むのでキーに年月を持たせ、月が変われば期限内でも数え直す。
-  test "看板の数は 1 時間は数え直さず、期限が切れるか月が変わると数え直す" do
-    with_rails_cache do
-      travel_to Time.zone.local(2026, 10, 31, 22, 0)
-      get root_path
-      assert_equal %w[2 0], masthead_counts
-
-      create_published_word(surface: "看板の数の見本の一語目", reading: "カンバンノカズノミホンノイチゴメ")
-      travel 59.minutes
-      get root_path
-      assert_equal %w[2 0], masthead_counts, "1 時間のうちは数え直さない"
-
-      travel 2.minutes
-      get root_path
-      assert_equal %w[3 1], masthead_counts, "期限が切れたら数え直す"
-
-      create_published_word(surface: "看板の数の見本の二語目", reading: "カンバンノカズノミホンノニゴメ")
-      travel_to Time.zone.local(2026, 11, 1, 0, 0, 30)
-      get root_path
-      assert_equal %w[4 0], masthead_counts, "月が変われば期限内でも数え直す(先月の公開は今月の新収録に入らない)"
-    end
-  end
-
-  private
-
-  # [看板の収録語数, 今月の新収録]
-  def masthead_counts
-    monthly = css_select(".stats-grid__item").find { |item| item.css("dt").text == I18n.t("home.index.stats.monthly_new") }
-    [ css_select(".masthead__figures-main .figure-number").first.text, monthly.css("dd").text.gsub(/[^0-9]/, "") ]
   end
 end

@@ -128,16 +128,10 @@ ja:
       about: "ABOUT"
       privacy: "PRIVACY"
       request: "REQUEST"
-      word_of_the_day: "WORD OF THE DAY"
-      recently_added: "RECENTLY ADDED"
-      longest_readings: "LONGEST READINGS"
-      words_collected: "WORDS COLLECTED"
       characters: "CHARACTERS"
       kana_ring: "READING PATH / 50-ON RING"
       # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
       reading_characters: "READING / %{count} CHARACTERS"
-      # 円環の標識2行目に置く値(弦が円の内側で交わった回数)
-      crossings: "%{count} CROSSINGS"
       max: "MAX %{unit}"
       # 標識の2行目(必ず数字を持たせる。数字が無い標識は h1 の英訳になって読まれない)
       entries: "%{count} ENTRIES"
@@ -203,21 +197,29 @@ ja:
       random: "ランダムな単語"
   home:
     index:
-      description: "日本語の長い単語を収集・解析・公開するデータベースです。読みの長さ・文字の構成・韻・ジャンルなど、さまざまな軸から言葉を眺められます。"
+      description: "日本語の長い単語を収集・解析・公開するデータベースです。読みの長さ・文字の構成・韻・ジャンルなどから言葉を検索できます。"
       # <title> 用のタグライン(ブランド名と連結して約35文字)と、meta description 用の
       # 長め(約100文字)の説明。ヒーローの見出し(description)とは分けて管理する。
       title_tagline: "日本語の長い言葉を読み・韻・ジャンルから探す"
       # 「10文字」は収録基準 WordSense::MIN_READING_LENGTH と一致させる(公開の紹介文なので補間しない)
       meta_description: "読みが10文字以上の日本語の長い言葉を収集・解析して公開するデータベース。読みの長さ・文字の構成・韻・ジャンルなど、さまざまな軸から検索・閲覧できます。収録語はすべて運営者が精査しています。"
-      entries:
-        label: "言葉の探し方"
-        genres: "ジャンルから探す"
-        browse: "索引から探す"
-        search: "詳細検索で絞り込む"
-      # ヒーロー: 検索を主役にする(見出し → 短い説明 → ページ最大の検索バー)
+      # ヒーロー: 検索を主役にする(見出し → 短い説明 → ページ最大の検索バー → 探し方の入口)
       hero_title: "長い言葉を探す。"
-      search_placeholder: "単語を検索（例：不完全性定理、メンブレンキーボード）"
-      advanced: "詳細検索はこちら"
+      # 検索バーの下の探し方の入口(nav)の名前。探すページを持つボタンの語はヘッダーの「検索」メニューと同じ layouts.nav.*
+      search_ways: "言葉の探し方"
+      # 探し方の入口のうち、ホームだけに置くボタンの語(HomeHelper#home_search_ways)と、開いたパネルの文言
+      ways:
+        reading_length: "読みの長さ"
+        word_origin: "語種"
+        part_of_speech: "品詞"
+        random: "ランダム"
+        close: "閉じる"
+        # パネルの末尾に添える、全部を並べたページへのリンク。%{name} は探し方の語(layouts.nav.*)
+        more: "%{name}の一覧へ"
+        # 読みの長さの区切り(SearchWayMenus::READING_LENGTH_BANDS)
+        length:
+          exact: "%{count}文字"
+          at_least: "%{min}文字以上"
       featured: "今日の一語"
       featured_more: "詳しく見る"
       # 今日の一語の丸タグ。文字だけだと何の値か読めないのでラベルを添える(docs/design.md §5.5)
@@ -227,18 +229,12 @@ ja:
       ranking: "読みが長い言葉"
       see_all: "一覧へ"
       see_ranking: "ランキングへ"
-      new_badge: "NEW"
+      # ランキングの下の「数字で見る長い言葉」(HomeHelper#home_stats_figures)。数の語・単位と集計の時点は統計ページの文言(stats.index.*)を使う
+      figures:
+        title: "数字で見る長い言葉"
+        more: "統計へ"
       # ページ最上部の印(五十音円環)に使うサイト名の読み。表示はされず、線の形だけになる
       site_reading: "ナガイコトバノデータベース"
-      stats:
-        senses: "語義数"
-        senses_unit: "件"
-        genres: "ジャンル数"
-        genres_unit: "分類"
-        longest: "最長の読み"
-        longest_unit: "字"
-        monthly_new: "今月の新収録数"
-        monthly_new_unit: "語"
   searches:
     # 読みの文字数スライダー(range_slider)の文言。%{min}・%{max} は JS が差し込む(SearchesHelper#reading_length_slider_data)
     reading_length_slider:
@@ -1297,6 +1293,8 @@ ja:
         genres: "分類"
         features: "種"
         days: "日"
+        # 頭文字・末尾文字の種類の分母(清音の 46 字。SiteStatistics#build_letters)
+        kana_coverage: "／%{total}字"
       word_cloud:
         title: "ワードクラウド"
         lead: "収録語を形態素に分け、よく現れる部品を活字の大きさで組みました。大きいほど多くの語に現れます。押すとその部品を含む語を検索します。"

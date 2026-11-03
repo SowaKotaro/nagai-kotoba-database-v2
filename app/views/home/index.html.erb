@@ -1,11 +1,11 @@
-<%# ホーム: 印(サイト名の読みの円環) → 看板 → 1枚の紙(今日の一語 → 2つのリスト)。
-    面で囲った区画を縦に積むと「島」が並んで一体感を失うので、全ページ幅の帯だけで組む。
-    看板は手本と同じく 1 列の中央揃えで、最後に収録語数を線だけの巨大な数字で置く。 %>
+<%# ホーム: 印(サイト名の読みの円環) → 看板 → 札の棚(今日の一語 → 2つのリスト)。
+    看板は手本と同じく 1 列の中央揃えで、検索の下に探し方の入口を並べて終える(数は置かない)。
+    棚の札は看板の検索バー・ボタンと同じ墨の枠で囲み、英字の標識(アイブロウ)は置かない(docs/design.md §5.2)。 %>
 <%# <title> はタグライン付き、meta description は長めの専用文言(ヒーロー見出しとは別管理) %>
 <% content_for :title, t("home.index.title_tagline") %>
 <% content_for :description, t("home.index.meta_description") %>
 
-<%# トップは全幅の帯で組む(角丸の面を縦積みすると「島」が並んで一体感を失うため) %>
+<%# 印・看板の帯と札の棚は、それぞれが幅と余白を持つので、main の幅と左右の余白を外す %>
 <% content_for :main_class, "container--flush" %>
 
 <%# ページの一番上に置く印。**サイト名の読み**「ナガイコトバノデータベース」を五十音の円環で
@@ -18,73 +18,51 @@
   </div>
 </section>
 
-<%# 看板: 紙に載せず、地の上に直接置く。手本(しずかなインターネット)と同じく
-    見出し → 説明 → 検索 → 詳細検索 を 1 列に中央揃えで積み、最後に収録の規模を置く %>
+<%# 看板: 札に載せず、地の上に直接置く。手本(しずかなインターネット)と同じく
+    見出し → 説明 → 検索 → 探し方の入口 を 1 列に中央揃えで積む %>
 <section class="band band--hero">
   <div class="band__inner masthead">
     <h1 class="hero__title"><%= t("home.index.hero_title") %></h1>
-    <p class="hero__lead"><%= t("home.index.description") %></p>
+    <%# 説明は文ごとに分けて、広い幅では 1 文を 1 行に組む(幅だけで折ると「ジャ / ンル」のように語の途中で割れる)。
+        文言は meta description の既定と同じ 1 本(ApplicationHelper#page_description)なので、ここで句点の後ろで分ける %>
+    <p class="hero__lead"><%= safe_join(t("home.index.description").split(/(?<=。)/).map { |sentence| tag.span(sentence, class: "hero__lead-sentence") }) %></p>
 
+    <%# 入力欄の案内は「単語を検索」だけ。例文を添えるとスマホで途中で切れる(docs/design.md §5.2) %>
     <%= form_with url: words_path, method: :get, class: "hero-search" do %>
       <%= icon "magnifying_glass" %>
-      <%= text_field_tag :q, nil, placeholder: t("home.index.search_placeholder"),
+      <%= text_field_tag :q, nil, placeholder: t("layouts.search_placeholder"),
             class: "hero-search__input", aria: { label: t("searches.q_label") } %>
       <button type="submit" class="hero-search__submit"><%= t("layouts.search_submit") %></button>
     <% end %>
 
-    <p class="hero__sub">
-      <%= link_to search_path do %><%= t("home.index.advanced") %><%= icon "arrow_right" %><% end %>
-    </p>
-
-    <%# 収録の規模。左に収録語数を「図」として大きく、右に残りの数を縦罫で分けて積む %>
-    <div class="masthead__figures">
-      <div class="masthead__figures-main">
-        <span class="figure-number"><%= number_with_delimiter(@word_count) %></span>
-        <span class="figure-caption"><%= t("labels.en.words_collected") %></span>
-      </div>
-
-      <dl class="stats-grid stats-grid--rows">
-        <div class="stats-grid__item">
-          <dt><%= t("home.index.stats.senses") %></dt>
-          <dd><%= number_with_delimiter(@sense_count) %><span class="stats-grid__unit"><%= t("home.index.stats.senses_unit") %></span></dd>
-        </div>
-        <div class="stats-grid__item">
-          <dt><%= t("home.index.stats.genres") %></dt>
-          <dd><%= number_with_delimiter(@genre_count) %><span class="stats-grid__unit"><%= t("home.index.stats.genres_unit") %></span></dd>
-        </div>
-        <%# サイト最大のフック。下の「読みが長い言葉」の1位と同じ値になる %>
-        <% if @longest_reading_length %>
-          <div class="stats-grid__item">
-            <dt><%= t("home.index.stats.longest") %></dt>
-            <dd><%= number_with_delimiter(@longest_reading_length) %><span class="stats-grid__unit"><%= t("home.index.stats.longest_unit") %></span></dd>
-          </div>
+    <%# 探し方の入口(HomeHelper#home_search_ways)。選択肢を持つものは押すとその場で開くボタン(∨)、
+        ほかはそのページへ進むボタン(→)。語と印だけを置き、説明やアイコンは添えない(docs/design.md §5.2)。
+        描いた結果は、選択肢が変わるまで使い回す(HomeHelper#home_search_ways_cache_key) %>
+    <% cache home_search_ways_cache_key do %>
+      <nav class="search-ways" aria-label="<%= t("home.index.search_ways") %>">
+        <% home_search_ways.each do |way| %>
+          <% if way[:options] %>
+            <%= render "home/search_way_menu", way: way %>
+          <% else %>
+            <%= link_to way[:path], class: "btn search-ways__item", rel: way[:rel] do %><%= way[:label] %><%= icon "arrow_right" %><% end %>
+          <% end %>
         <% end %>
-        <%# 収録が今も続いていることが分かる指標。0 語の月もそのまま出す %>
-        <div class="stats-grid__item">
-          <dt><%= t("home.index.stats.monthly_new") %></dt>
-          <dd><%= number_with_delimiter(@monthly_new_count) %><span class="stats-grid__unit"><%= t("home.index.stats.monthly_new_unit") %></span></dd>
-        </div>
-      </dl>
-    </div>
+        <%# 狭い幅で開いたパネル(画面の下からのシート)のうしろを覆う幕。どのメニューの外でもあるので、押すと閉じる(nav-menu#closeOnOutside) %>
+        <div class="search-ways__scrim" aria-hidden="true"></div>
+      </nav>
+    <% end %>
   </div>
 </section>
 
-<%# ここから下は 1 枚の紙。区画は全幅の細罫だけで分ける %>
-<div class="sheet">
+<%# ここから下は札の棚。今日の一語 → 2 つのリスト → 数字で見る長い言葉を 1 列に積む %>
+<div class="home-shelf">
 
 <% if @featured_word %>
   <% featured_sense = @featured_word.primary_sense %>
-  <section class="band home-featured">
-    <div class="band__inner">
-    <div class="band__gutter">
-      <p class="label-en"><%= t("labels.en.word_of_the_day") %></p>
-    </div>
-    <div class="band__body">
-    <div class="band__head">
-      <h2 class="section-title">
-        <span class="section-title__ja"><%= t("home.index.featured") %></span>
-      </h2>
-      <%= link_to word_path(@featured_word), class: "home-featured__more" do %>
+  <section class="home-panel home-featured">
+    <div class="home-panel__head">
+      <h2 class="home-panel__title"><%= t("home.index.featured") %></h2>
+      <%= link_to word_path(@featured_word), class: "btn btn--sm home-panel__more" do %>
         <%= t("home.index.featured_more") %><%= icon "arrow_right" %>
       <% end %>
     </div>
@@ -139,36 +117,25 @@
         <% end %>
       </div>
 
-      <%# 写真ではなく、その語の読みを五十音の円環で一筆書きにした線画を添える。
-          標識の2行目には弦の交差回数を置き、線の込み具合を数でも読めるようにする %>
+      <%# 写真ではなく、その語の読みを五十音の円環で一筆書きにした線画を添える。説明(キャプション)は添えない(docs/design.md §5.9) %>
       <% if (featured_reading = featured_sense&.reading).present? %>
-        <%= render "shared/kana_ring_art", reading: featured_reading,
-              caption: t("labels.en.kana_ring"),
-              value: t("labels.en.crossings", count: KanaRing.crossing_count(featured_reading)) %>
+        <%= render "shared/kana_ring_art", reading: featured_reading %>
       <% end %>
-    </div>
-    </div>
     </div>
   </section>
 <% end %>
 
-<section class="band home-column">
-  <div class="band__inner">
-    <div class="band__gutter">
-      <p class="label-en"><%= t("labels.en.recently_added") %></p>
-    </div>
-    <div class="band__body">
-    <div class="band__head">
-      <h2 class="section-title">
-        <span class="section-title__ja"><%= t("home.index.recent") %></span>
-      </h2>
-      <%= link_to words_path, class: "home-column__more" do %>
-        <%= t("home.index.see_all") %><%= icon "arrow_right" %>
-      <% end %>
-    </div>
+<%# 新着の行には NEW の印を付けない(見出しが新着だと言い、公開日も出ている) %>
+<section class="home-panel home-column">
+  <div class="home-panel__head">
+    <h2 class="home-panel__title"><%= t("home.index.recent") %></h2>
+    <%= link_to words_path, class: "btn btn--sm home-panel__more" do %>
+      <%= t("home.index.see_all") %><%= icon "arrow_right" %>
+    <% end %>
+  </div>
+  <div class="home-column__list">
     <% @recent_words.each do |word| %>
       <%= link_to word_path(word), class: "home-column__item" do %>
-        <span class="home-column__mark home-column__mark--new"><%= t("home.index.new_badge") %></span>
         <span class="home-column__body">
           <span class="home-column__word"><%= word.surface %></span>
           <span class="home-column__reading"><%= word.primary_sense&.reading %></span>
@@ -176,37 +143,51 @@
         <span class="home-column__meta"><%= l(word.annotated_at.to_date, format: :short) %></span>
       <% end %>
     <% end %>
-    </div>
   </div>
 </section>
 
-<section class="band home-column">
-  <div class="band__inner">
-    <div class="band__gutter">
-      <p class="label-en"><%= t("labels.en.longest_readings") %></p>
-    </div>
-    <div class="band__body">
-    <div class="band__head">
-      <h2 class="section-title">
-        <span class="section-title__ja"><%= t("home.index.ranking") %></span>
-      </h2>
-      <%= link_to rankings_path, class: "home-column__more" do %>
-        <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
-      <% end %>
-    </div>
+<section class="home-panel home-column">
+  <div class="home-panel__head">
+    <h2 class="home-panel__title"><%= t("home.index.ranking") %></h2>
+    <%= link_to rankings_path, class: "btn btn--sm home-panel__more" do %>
+      <%= t("home.index.see_ranking") %><%= icon "arrow_right" %>
+    <% end %>
+  </div>
+  <div class="home-column__list">
     <% @longest_words.each_with_index do |word, index| %>
       <%= link_to word_path(word), class: "home-column__item" do %>
-        <span class="home-column__mark"><%= index + 1 %></span>
+        <span class="home-column__rank"><%= index + 1 %></span>
         <span class="home-column__body">
           <span class="home-column__word"><%= word.surface %></span>
           <span class="home-column__reading"><%= word.primary_sense&.reading %></span>
         </span>
+        <%# 文字数はこの欄の主題なので、数だけを大きく立てる。単位はランキングの同じ板(読みが長い言葉)から引く %>
         <% if (length = word.primary_sense&.reading_length) %>
-          <span class="home-column__meta"><%= t("words.index.char_count", count: length) %></span>
+          <span class="home-column__meta"><span class="home-column__number"><%= length %></span><%= t("rankings.boards.length_desc.unit") %></span>
         <% end %>
       <% end %>
     <% end %>
-    </div>
   </div>
 </section>
+
+<%# 統計ページへの入口。数字の壁から選んだ数を升に並べ、升ごとにその数を図で見せる章へ送る(HomeHelper#home_stats_figures) %>
+<% if @figures.scale[:words].positive? %>
+  <section class="home-panel home-figures">
+    <div class="home-panel__head">
+      <h2 class="home-panel__title"><%= t("home.index.figures.title") %></h2>
+      <%= link_to stats_path, class: "btn btn--sm home-panel__more" do %>
+        <%= t("home.index.figures.more") %><%= icon "arrow_right" %>
+      <% end %>
+    </div>
+    <div class="home-figures__grid">
+      <% home_stats_figures(@figures).each do |figure| %>
+        <%= link_to figure[:path], class: "home-figures__item" do %>
+          <span class="home-figures__label"><%= figure[:label] %></span>
+          <span class="home-figures__value"><%= figure[:value] %><span class="home-figures__unit"><%= figure[:unit] %></span></span>
+        <% end %>
+      <% end %>
+    </div>
+    <p class="home-figures__note"><%= t("stats.index.computed_at", time: @figures.computed_at.strftime("%Y-%m-%d")) %></p>
+  </section>
+<% end %>
 </div>

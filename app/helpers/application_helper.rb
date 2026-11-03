@@ -50,6 +50,21 @@ module ApplicationHelper
     Rails.application.config.x.indexing_enabled ? content_for(:robots) : "noindex"
   end
 
+  # 探し方の入口(詳細検索から切り出した探し方のページと、詳細検索)。ヘッダーの「検索」メニューが並べ、
+  # ホームの検索バーの下のボタン(HomeHelper#home_search_ways)も、この語と行き先を使う(画面ごとに同じ探し方の名前が食い違わないように)。
+  # 並びは、何についての言葉か(ジャンル → 何の名前か → 言葉のしくみ)→ 読みの形 → 全条件。
+  # key は、ホームで選択肢が開くボタン(SearchWayMenus::KEYS)と突き合わせる名前。
+  # icon はヘッダーのメニューだけが使う(単語詳細の関連データ・詳細検索の区画と同じ印)。
+  def search_ways
+    [
+      { key: :genre, label: t("layouts.nav.genres"), path: genres_path, icon: "tag" },
+      { key: :entity_type, label: t("layouts.nav.entity_types"), path: entity_types_path, icon: "cube" },
+      { key: :linguistic_feature, label: t("layouts.nav.linguistic_features"), path: linguistic_features_path, icon: "pen_nib" },
+      { key: :browse, label: t("layouts.nav.browse"), path: browse_path, icon: "grid_nine" },
+      { key: :advanced_search, label: t("layouts.nav.advanced_search"), path: search_path, icon: "funnel" }
+    ]
+  end
+
   # 収録リクエスト(Issue 75)を受け付けているか。荒らされたときは環境変数 REQUESTS_ENABLED で
   # 止められるようにしてあり、停止中は公開側の導線そのものを出さない。
   def requests_open?

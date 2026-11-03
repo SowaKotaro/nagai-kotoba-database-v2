@@ -7,6 +7,12 @@ class EntityType < ApplicationRecord
 
   validates :name, presence: true, uniqueness: true
 
+  # 公開語義のあるものだけを、語の多い順(同数は登録順)に並べる。counts は PublishedSenseCounts.by_entity_type。
+  # エンティティから探すページ(/entity_types)と、ホームの探し方の入口(SearchWayMenus)が同じ並びを使う。
+  def self.ordered_by_published_count(counts)
+    where(id: counts.keys.compact).sort_by { |entity_type| [ -counts[entity_type.id], entity_type.id ] }
+  end
+
   private
 
   # 統合: このタイプを付けている語義の FK を other に付け替える。

@@ -1,5 +1,5 @@
 # 公開(注釈済み)語義の件数集計。探すための索引のページ(/browse・/genres・/entity_types・/linguistic_features)と、
-# 詳細検索(/search)の50音表のヒート・ジャンルの件数・読みの文字数のヒストグラムが使う。
+# 詳細検索(/search)の50音表のヒート・ジャンルの件数・読みの文字数のヒストグラム、ホームの探し方の入口(SearchWayMenus)が使う。
 #
 # どれも「公開語義の全件を GROUP BY して数える」ので、語数に正比例して重くなる
 # (1万語規模で 30〜70ms/本)。中身は導線に添える件数でしかなく、少し古くても表示に
@@ -31,6 +31,15 @@ class PublishedSenseCounts
 
     # エンティティごとの語義数 { entity_type_id => 5, ... }。未設定の語義は nil キーにまとまる。
     def by_entity_type = fetch(:entity_type) { WordSense.published.group(:entity_type_id).count }
+
+    # 品詞ごとの語義数 { part_of_speech_id => 5, ... }。未設定の語義は nil キーにまとまる。
+    def by_part_of_speech = fetch(:part_of_speech) { WordSense.published.group(:part_of_speech_id).count }
+
+    # 語種ごとの語義数 { word_origin_id => 5, ... }。混種語は語義に語種が複数付くので、付いた語種のそれぞれに 1 と数える
+    # (語義と語種の組は一意。uq_wso_sense_origin)。
+    def by_word_origin
+      fetch(:word_origin) { WordSense.published.joins(:word_sense_origins).group("word_sense_origins.word_origin_id").count }
+    end
 
     # 言語学的特徴ごとの語義数 { linguistic_feature_id => 5, ... }。特徴は該当部分ごとに付くので、
     # 同じ語義に 2 か所あっても 1 と数える(絞り込み先の一覧と同じ単位。統計 §8 は該当部分ごとに数える)。

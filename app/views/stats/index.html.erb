@@ -55,7 +55,8 @@
     </div>
   </section>
 
-  <section class="stats-section">
+  <%# id はホームの「数字で見る長い言葉」の升からのリンク先(HomeHelper::HOME_STATS_FIGURES)。変えるときはホームも直す %>
+  <section class="stats-section" id="timeline">
     <header class="stats-section__header">
       <h2 class="stats-section__title"><%= icon "chart_line_up" %><%= t("stats.index.timeline.title") %></h2>
       <p class="stats-current">

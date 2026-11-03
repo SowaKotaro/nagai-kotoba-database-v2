@@ -7,7 +7,7 @@ class EntityTypesController < ApplicationController
   def index
     # 集計は公開語義の全件走査なので、索引と同じ PublishedSenseCounts のキャッシュを引く。
     @counts = PublishedSenseCounts.by_entity_type
-    # 公開語義のあるものだけを、語の多い順(同数は登録順)に並べる。0 件のものは選んでも空の一覧になるので出さない(/genres と同じ)。
-    @entity_types = EntityType.where(id: @counts.keys.compact).sort_by { |entity_type| [ -@counts[entity_type.id], entity_type.id ] }
+    # 公開語義のあるものだけを、語の多い順に並べる。0 件のものは選んでも空の一覧になるので出さない(/genres と同じ)。
+    @entity_types = EntityType.ordered_by_published_count(@counts)
   end
 end

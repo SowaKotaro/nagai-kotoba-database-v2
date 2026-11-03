@@ -260,7 +260,7 @@
 }
 
 .page-header .page-title {
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1.7;
   margin-top: var(--space-2);
   overflow-wrap: anywhere;
@@ -486,8 +486,8 @@
 /* 特徴名は白地の丸タグ(検索リンク)。hover でわずかに色づく */
 .chip {
   display: inline-block;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text-muted);
   font-size: 13px;
@@ -619,8 +619,8 @@ a.chip:hover {
 /* 品詞・エンティティタイプなどのタグ(検索リンク)。白地の丸タグ */
 .tag {
   display: inline-block;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text-muted);
   font-size: 13px;
@@ -644,7 +644,7 @@ a.tag:hover {
 /* 索引ページの節の見出し(.section-heading を使うのはここだけ) */
 .section-heading {
   font-size: 17px;
-  color: var(--text-muted);
+  color: var(--text);
   margin: var(--space-7) 0 var(--space-4);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
@@ -730,8 +730,8 @@ a.browse-length:hover .browse-length__count {
   align-items: center;
   gap: var(--space-2);
   padding: 6px 16px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--text-muted);
   font-family: inherit;
@@ -756,7 +756,7 @@ a.browse-length:hover .browse-length__count {
 
 .related__title {
   font-size: 17px;
-  color: var(--text-muted);
+  color: var(--text);
   margin: 0 0 var(--space-4);
 }
 
@@ -764,7 +764,7 @@ a.browse-length:hover .browse-length__count {
   margin-top: var(--space-5);
 }
 
-/* 見出し行: 左にラベル、右端に「もっと見る」(ホームの .band__head と同じ配置) */
+/* 見出し行: 左にラベル、右端に「もっと見る」 */
 .related__group-header {
   display: flex;
   align-items: baseline;
@@ -897,7 +897,7 @@ a.tag:hover .genre-hub__count {
   margin: 0 0 var(--space-5);
   padding: 0 14px;
   background: var(--surface);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--text);
   border-radius: var(--radius);
   transition: border-color var(--transition);
 }
@@ -909,7 +909,7 @@ a.tag:hover .genre-hub__count {
 }
 
 .list-filter:focus-within {
-  border-color: var(--text-muted);
+  outline: 1px solid var(--text);
 }
 
 .list-filter .icon {
@@ -1203,7 +1203,7 @@ a.tag:hover .genre-hub__count {
 .entry-row__tag {
   position: relative;
   z-index: 1;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: var(--bg-soft);
   color: var(--text-muted);
   font-size: 12px;
@@ -1285,19 +1285,31 @@ a.tag:hover .genre-hub__count {
 }
 
 /* --- ホームの看板の中身 -------------------------------------------------
-   見出し → 一行の説明 → 検索 → 補助導線。1 列の中央揃え(.masthead)で積む。 */
+   見出し → 説明 → 検索 → 探し方の入口。1 列の中央揃え(.masthead)で、どれも列の幅(--masthead-width)を超えない。 */
 .hero__title {
-  font-size: 26px;
+  font-size: 30px;
   line-height: 1.6;
   margin: 0;
 }
 
 .hero__lead {
   margin: var(--space-4) 0 0;
-  max-width: 30em;
+  max-width: var(--masthead-width);
   font-size: 15px;
   line-height: 2;
   color: var(--text-muted);
+}
+
+/* 広い幅では 1 文を 1 行に組む(説明が 2 行に収まり、語の途中で折れない) */
+.hero__lead-sentence {
+  display: block;
+}
+
+/* 狭幅では 1 文が画面の幅を超えるので、文をつなげて流す(1 文ずつ組むと行が増える) */
+@media (max-width: 767px) {
+  .hero__lead-sentence {
+    display: inline;
+  }
 }
 
 /* 検索は丸い一本のバー。枠は細く、影は落とさない */
@@ -1306,18 +1318,18 @@ a.tag:hover .genre-hub__count {
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  max-width: 560px;
+  max-width: var(--masthead-width);
   margin: var(--space-6) 0 0;
   padding: 0 6px 0 var(--space-5);
   height: 52px;
   background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
   transition: border-color var(--transition);
 }
 
 .hero-search:focus-within {
-  border-color: var(--text-muted);
+  outline: 1px solid var(--text);
 }
 
 .hero-search .icon {
@@ -1352,8 +1364,8 @@ a.tag:hover .genre-hub__count {
   flex: none;
   height: 38px;
   padding: 0 var(--space-5);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   background: var(--bg);
   font-family: inherit;
   font-size: 14px;
@@ -1365,26 +1377,205 @@ a.tag:hover .genre-hub__count {
 
 .hero-search__submit:hover {
   background: var(--bg-soft);
-  border-color: var(--text-subtle);
+  border-color: var(--text);
 }
 
-/* 検索バーの下の補助導線 */
-.hero__sub {
-  margin: var(--space-5) 0 0;
+/* 検索バーの下の探し方の入口。SANKOU! のトップのカテゴリボタンにならい、墨の枠のボタン(.btn)に
+   語と矢印だけを置く。列は検索バーの幅を超えない。ボタンは中身の幅のまま並べ、収まらなければ折り返して
+   中央に寄せる(伸ばしたり余白を詰めたりして端を揃えることはしない。docs/design.md §5.2) */
+/* 開いたパネル(.search-ways__panel)は、この列の幅でボタンの段の下に出す */
+.search-ways {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--masthead-width);
+  margin-top: var(--space-5);
+}
+
+/* .btn はこのファイルの後ろで定義しているので、親クラスを重ねて特異度を上げ、記述順に頼らず上書きする。
+   高さは検索ボタン(.hero-search__submit)と揃え、矢印は枠に寄せるぶん右の余白を詰める */
+.search-ways .search-ways__item {
+  min-height: 38px;
+  padding: 0 var(--space-3) 0 var(--space-4);
+}
+
+.search-ways__item .icon {
+  font-size: 13px;
+}
+
+/* 押すとその場で選択肢が開くボタン(∨。SANKOU! のトップと同じ)。開閉は nav-menu(ヘッダーの「検索」と同じ)。
+   ボタンの外側の箱は位置の基準にしない(パネルはボタンではなく列の幅で開く) */
+.search-ways__menu {
+  display: flex;
+}
+
+/* 開いているあいだは選択状態として墨で塗る(反転は選択状態だけ。docs/design.md §4)。
+   .btn:hover より後ろで勝つよう、親クラスを重ねて特異度を上げる */
+.search-ways .search-ways__toggle[aria-expanded="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+.search-ways__caret {
+  transition: transform var(--transition);
+}
+
+.search-ways__toggle[aria-expanded="true"] .search-ways__caret {
+  transform: rotate(180deg);
+}
+
+/* 広い幅: 列の幅の墨の枠を、ボタンの段の下に重ねて開く。選択肢は SANKOU! と同じく / で区切って流す */
+.search-ways__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  z-index: 25;
+  padding: var(--space-5) var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  text-align: left;
+}
+
+.search-ways__panel[hidden] {
+  display: none;
+}
+
+/* 見出しと閉じるボタンは、狭い幅のシートだけが持つ */
+.search-ways__panel-head {
+  display: none;
+}
+
+.search-ways__options {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 2.2;
+}
+
+/* 区切りは行末にも残す(SANKOU! と同じ)。罫の色なので文字の濃さの下限は掛からない */
+.search-ways__options li:not(:last-child)::after {
+  content: "/";
+  margin: 0 var(--space-3);
+  color: var(--border-strong);
+}
+
+.search-ways__options a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.search-ways__options a:hover {
+  text-decoration: underline;
+}
+
+.search-ways__more {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
   font-size: 13px;
   color: var(--text-muted);
+  text-decoration: none;
 }
 
-.hero__sub a {
-  color: var(--text-muted);
-}
-
-.hero__sub a:hover {
+.search-ways__more:hover {
   color: var(--text);
 }
 
-.hero__sub .icon {
-  margin-left: 4px;
+.search-ways__scrim {
+  display: none;
+}
+
+/* 狭い幅: 画面の下からせり上がるシートにする(SANKOU! のスマホと同じ)。ボタンが 4 段あるので、
+   列の下に開くと画面の外に出る。選択肢は 1 行に 1 つ、行の罫は gap: 1px の隙間で引く */
+@media (max-width: 767px) {
+  .search-ways__panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    z-index: 40;
+    max-height: 72vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--text);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .search-ways__panel-head {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--text);
+    font-size: 16px;
+  }
+
+  .search-ways__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .search-ways__options {
+    display: grid;
+    gap: 1px;
+    background: var(--border);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .search-ways__options li {
+    background: var(--surface);
+  }
+
+  .search-ways__options li:not(:last-child)::after {
+    content: none;
+  }
+
+  .search-ways__options a {
+    display: block;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .search-ways__more {
+    justify-content: flex-start;
+    margin: 0;
+    padding: var(--space-4);
+    font-size: 14px;
+  }
+
+  .search-ways:has(.search-ways__panel:not([hidden])) .search-ways__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: var(--scrim);
+  }
 }
 
 /* --- 詳細検索フォーム(ドロップダウンをやめ、一覧/階層/スライダーで選ばせる) --- */
@@ -1993,8 +2184,8 @@ html:has(.search-actions) {
 
 .check-chip__face {
   display: inline-block;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.9;
@@ -2005,7 +2196,7 @@ html:has(.search-actions) {
 }
 
 .check-chip__face:hover {
-  border-color: var(--text-subtle);
+  border-color: var(--text);
   color: var(--text);
 }
 
@@ -2073,7 +2264,7 @@ html:has(.search-actions) {
 .search-section__count {
   margin-left: auto;
   padding: 0 8px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: var(--bg-tint);
   font-size: 12px;
   color: var(--text-muted);
@@ -2146,8 +2337,8 @@ html:has(.search-actions) {
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   background: var(--surface);
   padding: 3px 12px;
 }
@@ -2162,9 +2353,9 @@ html:has(.search-actions) {
   color: var(--text);
 }
 
-/* --- 収録数の内訳。ホームでは看板のレールに、管理画面では横並びに置く --- */
+/* --- 収録数の内訳。管理画面のダッシュボードで横並びに置く --- */
 
-/* margin は使う側(ホームの .stats-grid--rows と、admin.css の .is-admin .stats-grid)が持つ */
+/* margin は使う側(admin.css の .is-admin .stats-grid)が持つ */
 .stats-grid {
   display: flex;
   flex-wrap: wrap;
@@ -2219,19 +2410,6 @@ html:has(.search-actions) {
   color: var(--text-subtle);
 }
 
-/* 日本語の章見出し(ホーム)。標識(.label-en)は袖(.band__gutter)に置くので、いまは中に
-   .section-title__ja だけが入る(縦組みの flex は、見出しの上に標識を重ねていた頃の組み) */
-.section-title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.section-title__ja {
-  font-size: 15px;
-  color: var(--text-muted);
-}
-
 /* --- 図としての数字(アウトライン) -------------------------------------
    収録語数・文字数のように「サイトの性格を一目で伝える数」を、
    線だけの巨大な数字として置く。文字の中身は塗らない。 */
@@ -2273,73 +2451,7 @@ html:has(.search-actions) {
 }
 
 /* --- 看板(ホーム) -----------------------------------------------------
-   面も枠も持たず、1 列の中央揃えで積む(docs/design.md §5.2)。最後の「収録の規模」だけを、
-   縦罫を挟んで左右に割る。 */
-/* 看板の列の最後に置く「収録の規模」。左に収録語数、縦罫を挟んで右にそのほかの数。
-   検索からは --space-8 離して切り、ここだけ左右に割ることで列の終わりを示す */
-.masthead__figures {
-  margin-top: var(--space-8);
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: center;
-  align-items: stretch;
-  gap: var(--space-6);
-  text-align: left;
-}
-
-/* 左はこのページの主役の数(収録語数)。ページ中でいちばん大きな図にする */
-.masthead__figures-main .figure-number {
-  font-size: clamp(56px, 7vw, 88px);
-}
-
-/* 右はそのほかの数。ラベル左・値右の等幅の行で積み、縦罫で左と分ける。
-   罫は区画の高さいっぱいに通したいので、行のほうを縦中央に寄せる(767px 以下の gap はすぐ下の @media) */
-.stats-grid--rows {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: 2px;
-  margin: 0;
-  min-width: 210px;
-  padding-left: var(--space-6);
-  border-left: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-}
-
-.stats-grid--rows .stats-grid__item {
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.stats-grid--rows .stats-grid__item dd {
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-@media (max-width: 767px) {
-  .stats-grid--rows {
-    gap: var(--space-2) var(--space-4);
-  }
-}
-
-/* 狭幅では左右に割らず、数の下に内訳を積む(縦罫も外す) */
-@media (max-width: 560px) {
-  .masthead__figures {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-5);
-    justify-items: center;
-  }
-
-  .stats-grid--rows {
-    width: 100%;
-    max-width: 260px;
-    padding-left: 0;
-    border-left: none;
-  }
-}
-
+   面も枠も持たず、1 列の中央揃えで積む(docs/design.md §5.2)。 */
 .masthead {
   display: flex;
   flex-direction: column;
@@ -2395,25 +2507,36 @@ html:has(.search-actions) {
   text-align: center;
 }
 
-/* キャプションの 2 行目に置く値(交差回数など)。1 行目の下へ落とす。図のキャプションは
-   標識の「2 行目に必ず値」の規則の対象外なので、値は任意(docs/design.md §5.8) */
-.ring-art__value {
-  display: block;
-}
-
-/* ページ最上部に置く印。サイト名の読みの円環を、看板の上に静かに 1 つだけ、中央に置く */
+/* ページ最上部に置く印。サイト名の読みの円環を、看板の上に 1 つだけ、中央に置く */
 .ring-art--mark .ring-art__svg {
   max-width: 172px;
   margin: 0 auto;
 }
 
-/* 円の外側を回る英字。標識(.label-en)と同じ等幅・大文字で、級数だけ図に合わせる。
-   viewBox 200 を 172px で描くので、11 単位 = 画面上およそ 9.5px(標識とほぼ同じ大きさ) */
+/* 印だけは線を墨で強める。見出しと押せる部品の枠が墨の 800・1px になったぶん、ほかの円環と同じ
+   淡い 1.2px の線では看板に飲まれる。墨の 2px では重すぎたので 1.5px にとどめ、円は図の灰(--chart)で
+   線より一段淡く引く(2026-11-03 オーナー判断。docs/design.md §5.9)。
+   始点の点は大きさを変えない(CSS の r は WebKit で効かないので、変えるなら partial の属性で) */
+.ring-art--mark .ring-art__stroke {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.ring-art--mark .ring-art__guide {
+  stroke: var(--chart);
+}
+
+.ring-art--mark .ring-art__start {
+  fill: var(--text);
+}
+
+/* 円の外側を回る英字(印だけが持つ)。標識(.label-en)と同じ等幅・大文字で、級数だけ図に合わせる。
+   viewBox 200 を 172px で描くので、11 単位 = 画面上およそ 9.5px(標識とほぼ同じ大きさ)。色は線より一段淡い墨 */
 .ring-art__arc {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 1.4px;
-  fill: var(--text-subtle);
+  fill: var(--text-muted);
   text-transform: uppercase;
 }
 
@@ -2481,36 +2604,52 @@ html:has(.search-actions) {
   fill: var(--text-muted);
 }
 
-/* --- ホーム: 2つのリスト(最近追加 / 読みが長い) -------------------------
-   横に並べず、縦に積んで余白で離す。囲いは付けない。 */
-/* 新着と「読みが長い言葉」の区画(ホーム)。今日の一語と同じく、紙(.sheet)の中の白い帯として縦に積む
-   (余白は帯が持つので、ここは margin を持たない) */
-.home-column {
-  margin: 0;
+/* --- ホーム: 札(今日の一語 / 2 つのリスト) -----------------------------------
+   看板の検索バー・ボタンと同じ墨の枠(1px・角 8px)の白い札。頭の見出し帯を墨の罫で中身と仕切る。
+   英字の標識(アイブロウ)は置かない(2026-11-03 オーナー判断。棚の組みは layout.css の .home-shelf、docs/design.md §5.2) */
+.home-panel {
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
 }
 
-/* 「一覧へ →」「ランキングへ →」。今日の一語の導線(.home-featured__more)と同じ重み */
-.home-column__more {
-  display: inline-flex;
+/* 見出し帯: 日本語の見出しと、右端の「一覧へ →」のボタン */
+.home-panel__head {
+  display: flex;
   align-items: center;
-  gap: 0.4em;
-  font-size: 13px;
-  color: var(--text-subtle);
-  text-decoration: none;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--text);
+}
+
+.home-panel__title {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+}
+
+/* 「詳しく見る →」「一覧へ →」「ランキングへ →」。探し方の入口(.search-ways__item)と同じく、矢印は枠に寄せるぶん
+   右の余白を詰める。.btn はこのファイルの後ろで定義しているので、親クラスを重ねて特異度を上げる */
+.home-panel__head .home-panel__more {
+  padding: 0 var(--space-3) 0 var(--space-4);
   white-space: nowrap;
 }
 
-.home-column__more:hover {
-  color: var(--text);
+/* 2 つのリストの行。行どうしの罫は 1px の隙間で見せる(docs/design.md §3) */
+.home-column__list {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
 }
 
 .home-column__item {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3);
-  margin: 0 calc(var(--space-3) * -1);
-  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface);
   text-decoration: none;
   transition: background-color var(--transition);
 }
@@ -2519,18 +2658,21 @@ html:has(.search-actions) {
   background: var(--bg-soft);
 }
 
-/* 順位・NEW などの行頭のしるし。細く小さく、色を付けるのは「新着」だけ */
-.home-column__mark {
+/* 読みが長い言葉の順位。タグ・ボタンと同じ墨の枠の小さな角に入れる */
+.home-column__rank {
   flex: none;
-  width: 2.2em;
-  font-size: 12px;
-  color: var(--text-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
-}
-
-.home-column__mark--new {
-  color: var(--text-subtle);
-  font-size: 11px;
 }
 
 .home-column__body {
@@ -2554,6 +2696,7 @@ html:has(.search-actions) {
   overflow-wrap: anywhere;
 }
 
+/* 行の右端の値(新着は公開日、読みが長い言葉は文字数) */
 .home-column__meta {
   flex: none;
   font-size: 12px;
@@ -2562,22 +2705,33 @@ html:has(.search-actions) {
   white-space: nowrap;
 }
 
-/* --- 今日の一語: 面も角丸も持たない、帯の中の区画。右に読みの円環の線画を添える --------- */
-.home-featured {
-  margin: 0;
+/* 読みが長い言葉の文字数。欄の主題そのものの数なので、数だけを大きく太く立てる(単位は .home-column__meta のまま) */
+.home-column__number {
+  margin-right: 2px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
 }
 
-/* 見出し語+読み → 意味の順に上下へ積む(オーナー判断。左右2段組みは不採用) */
+/* 今日の一語: 左に語・読み・意味・関連データ、右に読みの円環の線画(説明は添えない。docs/design.md §5.9) */
 .home-featured__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 168px;
-  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: var(--space-6);
   align-items: start;
+  padding: var(--space-6);
+}
+
+.home-featured .ring-art__svg {
+  max-width: 200px;
 }
 
 .home-featured__word {
-  font-size: 20px;
-  line-height: 1.7;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
   color: var(--text);
   text-decoration: none;
   overflow-wrap: anywhere;
@@ -2589,7 +2743,7 @@ html:has(.search-actions) {
 }
 
 .home-featured__reading {
-  margin: var(--space-1) 0 0;
+  margin: var(--space-2) 0 0;
   font-size: 13px;
   line-height: 1.8;
   color: var(--text-subtle);
@@ -2612,24 +2766,100 @@ html:has(.search-actions) {
   gap: var(--space-3);
 }
 
-/* 見出し行の右端に置く詳細への導線(2カラムの「一覧へ」と同じ重み) */
-.home-featured__more {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  font-size: 13px;
-  color: var(--text-subtle);
+/* 数字で見る長い言葉: 統計ページの数字の壁から選んだ、天井無しに増えていく 6 つの数を 3 列の升に並べ、升ごとに統計ページの章へ送る。
+   升どうしの罫は 1px の隙間で見せる(docs/design.md §3)。数は読みが長い言葉の文字数と同じ墨の 800 */
+.home-figures__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border);
+}
+
+.home-figures__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
   text-decoration: none;
-  white-space: nowrap;
+  transition: background-color var(--transition);
 }
 
-.home-featured__more:hover {
+.home-figures__item:hover {
+  background: var(--bg-soft);
+}
+
+.home-figures__label {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.home-figures__value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
+.home-figures__unit {
+  margin-left: 2px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* 集計の時点。数は統計ページと同じく 1 日ごとに集計し直す */
+.home-figures__note {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-subtle);
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .home-panel__head {
+    padding-left: var(--space-4);
+  }
+
+  .home-column__item {
+    padding-inline: var(--space-4);
+  }
+
+  .home-featured__body {
+    padding: var(--space-5);
+  }
+
+  .home-featured__word {
+    font-size: 24px;
+  }
+
+  .home-figures__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-figures__item,
+  .home-figures__note {
+    padding-inline: var(--space-4);
+  }
+
+  .home-figures__value {
+    font-size: 24px;
+  }
+}
+
+/* 狭い幅では円環を語と関連データの下へ回す */
 @media (max-width: 700px) {
   .home-featured__body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-featured .ring-art__svg {
+    max-width: 168px;
   }
 }
 
@@ -3122,8 +3352,8 @@ html:has(.search-actions) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
   background: var(--surface);
   padding: 7px 20px;
   font-size: 14px;
@@ -3134,7 +3364,7 @@ html:has(.search-actions) {
 
 .pagination a:hover {
   background: var(--bg-soft);
-  border-color: var(--text-subtle);
+  border-color: var(--text);
   text-decoration: none;
 }
 
@@ -3182,8 +3412,8 @@ html:has(.search-actions) {
   justify-content: center;
   gap: 0.5em;
   min-height: 40px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
   font-size: 14px;
@@ -3197,7 +3427,7 @@ html:has(.search-actions) {
 
 .btn:hover {
   background: var(--bg-soft);
-  border-color: var(--text-subtle);
+  border-color: var(--text);
   color: var(--text);
   text-decoration: none;
 }
@@ -4222,7 +4452,7 @@ textarea {
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
   font-size: 17px;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .stats-section__header {
@@ -4308,7 +4538,7 @@ textarea {
 .segmented__button {
   margin-left: -1px;
   padding: 6px 18px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--text);
   background: var(--surface);
   font-family: inherit;
   font-size: 13px;
@@ -4320,12 +4550,12 @@ textarea {
 
 .segmented__button:first-child {
   margin-left: 0;
-  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  border-radius: var(--radius) 0 0 var(--radius);
   padding-left: var(--space-5);
 }
 
 .segmented__button:last-child {
-  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
   padding-right: var(--space-5);
 }
 
@@ -4641,18 +4871,18 @@ a.sound-matrix__cell:hover {
 }
 
 .waffle__cell--f1 {
-  background: var(--chart);
-  border-color: var(--chart);
+  background: color-mix(in srgb, var(--text) 75%, var(--bg));
+  border-color: color-mix(in srgb, var(--text) 75%, var(--bg));
 }
 
 .waffle__cell--f2 {
-  background: color-mix(in srgb, var(--text) 65%, var(--bg));
-  border-color: color-mix(in srgb, var(--text) 65%, var(--bg));
+  background: color-mix(in srgb, var(--text) 50%, var(--bg));
+  border-color: color-mix(in srgb, var(--text) 50%, var(--bg));
 }
 
 .waffle__cell--f3 {
-  background: color-mix(in srgb, var(--chart) 35%, var(--bg));
-  border-color: color-mix(in srgb, var(--chart) 55%, var(--border-strong));
+  background: color-mix(in srgb, var(--text) 32%, var(--bg));
+  border-color: color-mix(in srgb, var(--text) 32%, var(--bg));
 }
 
 .waffle__cell--f4 {
@@ -4660,7 +4890,7 @@ a.sound-matrix__cell:hover {
 }
 
 .waffle__cell--f5 {
-  background: color-mix(in srgb, var(--text) 20%, var(--bg));
+  background: color-mix(in srgb, var(--text) 16%, var(--bg));
 }
 
 /* 同じ100マスを語種ごとに横へ並べ直した棒(凡例を兼ねる)。
@@ -4818,7 +5048,8 @@ a.entity-treemap__cell:hover {
 }
 
 /* --- 統計ページ §7 母音スペクトルと頭子音 ---
-   帯は --text の濃淡4段 + オ段のみ --chart のチントの5値。右端の段名で識別する。
+   帯は --text の濃淡 5 段(ア段 100% と、§6 のワッフルと同じ 75/50/32/16%。隣どうしの明度差 ΔL* はライト・ダークとも 11 以上)。
+   右端の段名でも識別する。
    帯の混ぜ先と遷移グラフのノードの hover・フォーカスの --bg は、§6 と同じく --bg が地だった頃の名残 */
 .vowel-spectrum {
   display: block;
@@ -4831,19 +5062,19 @@ a.entity-treemap__cell:hover {
 }
 
 .vowel-spectrum__band--i {
-  fill: color-mix(in srgb, var(--text) 68%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 75%, var(--bg));
 }
 
 .vowel-spectrum__band--u {
-  fill: color-mix(in srgb, var(--text) 44%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 50%, var(--bg));
 }
 
 .vowel-spectrum__band--e {
-  fill: color-mix(in srgb, var(--text) 22%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 32%, var(--bg));
 }
 
 .vowel-spectrum__band--o {
-  fill: color-mix(in srgb, var(--chart) 38%, var(--bg));
+  fill: color-mix(in srgb, var(--text) 16%, var(--bg));
 }
 
 .vowel-spectrum__label {
@@ -4860,7 +5091,7 @@ a.entity-treemap__cell:hover {
 
 /* --- 統計ページ §7 母音の遷移グラフ ---
    層 = 拍位置、ノード = 母音、エッジ = 隣り合う層の全結合。
-   太さと濃さで多寡を出す。色(--chart)を持つのは押して選んだ線だけ(最多の 1 本に塗るのはやめた。
+   太さと濃さで多寡を出す。墨のベタ(不透明度 1)で描くのは押して選んだ線だけ(最多の 1 本に塗るのはやめた。
    経緯は下の .vowel-graph__edge.is-selected) */
 /* 「多い遷移だけ」の切替。checkbox + 兄弟セレクタで JS を持たない。
    図の右上に、極小のラベルと 26×14 のスイッチだけで置く(区画の主役は図なので、
@@ -4937,20 +5168,20 @@ a.entity-treemap__cell:hover {
 }
 
 /* 押して選んだ鎖の線(何拍でもつなげる。選び方の正は docs/stats.md の統計ページ §7 の章)。
-   色を持つのはこの「選んでいる状態」だけにする。最多の1本にも --chart を塗っていた時期が
-   あるが(2026-09-10)、押しても消えない線が1本あることになり、選択の色と見分けが付かない。
+   墨のベタにするのはこの「選んでいる状態」だけ(ほかの線は StatsHelper::GRAPH_MAX_OPACITY の 0.55 まで)。
+   最多の1本にも印を付けていた時期があるが(2026-09-10)、押しても消えない線が1本あることになり、選択と見分けが付かない。
    最多は太さで既に出ているうえ、注記に数字つきで書いてある。
    stroke-width の 3.2 は StatsHelper::GRAPH_MAX_EDGE(量から決める線の最大幅)と同じ値。
    選んだ線が最も太い線より細くならないよう、変えるなら両方を揃える。 */
 .vowel-graph__edge.is-selected {
-  stroke: var(--chart);
+  stroke: var(--text);
   stroke-opacity: 1;
   stroke-width: 3.2;
 }
 
 .vowel-graph__node.is-picked {
-  fill: var(--chart);
-  stroke: var(--chart);
+  fill: var(--text);
+  stroke: var(--text);
 }
 
 /* 選んだ移り方と、その語の検索への導線。押すまでは出さない。
@@ -5069,11 +5300,11 @@ a.entity-treemap__cell:hover {
 /* 最多の色は DOM の先頭行に付ける。SiteStatistics#head_consonants が件数の多い順に返すことに頼る
    (ビューの棒の長さも同じ前提。同数のどれが先頭かは決まっていない) */
 .stats-bars__row:first-child .stats-bars__fill {
-  background: var(--chart);
+  background: var(--text);
 }
 
 .stats-bars__bar:hover .stats-bars__fill {
-  background: var(--chart);
+  background: var(--text);
 }
 
 .stats-bars__count {
@@ -5142,7 +5373,7 @@ a.entity-treemap__cell:hover {
 
 /* 最多の色は DOM の先頭行に付ける。SiteStatistics#feature_ranking が件数の多い順に返すことに頼る */
 .feature-rank__row:first-child .feature-rank__fill {
-  background: var(--chart);
+  background: var(--text);
 }
 
 /* --- 出典・更新日の一行(フッター直前) --- */
@@ -5168,7 +5399,7 @@ a.entity-treemap__cell:hover {
 
 .rank-tab {
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: transparent;
   padding: 4px 14px;
   font-family: inherit;

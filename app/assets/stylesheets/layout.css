@@ -3,10 +3,11 @@
    ページは「大きな余白の中に、狭いカラムがひとつ」だけ置かれる。 */
 
 /* --- グローバルヘッダー --- */
-/* ヘッダーはフッターと同じ「一段沈めた面」。白いコンテンツを上下から挟んで境目を作る。
-   --bg(#EFF2F6)だと白との差が ΔRGB 16 しかなく、design.md の下限 19 に届かなかった(実測) */
+/* ヘッダーは帯を持たず、地(--bg)の上にブランドとナビだけを置き、下に墨の罫 1 本を引いて本文と分ける
+   (SANKOU! がナビの区切りに引く罫と同じ。フッターの上の罫と対になる。2026-11-03 オーナー指示) */
 .site-header {
-  background: var(--bg-soft);
+  background: transparent;
+  border-bottom: 1px solid var(--text);
 }
 
 /* ヘッダーだけは本文より少し広く取り、ブランドとナビが1行に収まるようにする */
@@ -62,9 +63,11 @@
 
 .site-brand__name {
   /* 書体は本文と同じ --font-sans を継承する(2026-09-04 オーナー判断。手本「ただ、そこ」の
-     スタックを当てていたが、イメージと違うとして戻した)。太字もやめてサイト全体と同じ 400 に
-     戻した(2026-09-05 オーナー指示。これで「太字を使わない」の例外が無くなった) */
+     スタックを当てていたが、イメージと違うとして戻した)。太さと字間は SANKOU! のロゴと同じ
+     800・0.04em(本文の 0.08em より詰める。390px 幅でもメニューのボタンと 1 行に並ぶ幅を保つ) */
   font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 /* ブランド名の右に添える英字。縦罫で仕切り、等幅で 1 語 1 行の 3 段に積む。
@@ -304,19 +307,12 @@ main.container {
   }
 }
 
-/* --- 全幅の帯で組むページ(トップ) ---------------------------------------
-   区画を「角丸の面」で囲うと、閉じた図形がいくつも縦に並んで一体感を失う。
-   面ではなく**画面端まで届く帯**で割り、境目は全幅の罫が受け持つ。
-   帯は左右に輪郭を持てないので、原理的に「島」にならない(docs/design.md §5.2)。 */
+/* --- 本文の幅に縛られないページ(トップ) ---------------------------------------
+   印と看板は帯(.band)が、その下の札の棚(.home-shelf)は棚自身が、幅と余白を持つので、
+   main の幅と左右の余白を外す(docs/design.md §5.2) */
 main.container--flush {
   max-width: none;
   padding: 0;
-}
-
-
-/* 全幅ページでは紙とフッターを直に継ぐ(あいだに地が覗くと帯が途切れて見える) */
-main.container--flush + .site-footer {
-  margin-top: 0;
 }
 
 /* 全幅でもフラッシュだけは本文カラムの幅に揃える */
@@ -338,94 +334,22 @@ main.container--flush > .flash {
   padding-block: var(--space-6) 0;
 }
 
-/* 看板の帯。印を受けて始まるので上は詰め、紙に入る前の下だけ広く取る */
+/* 看板の帯。印を受けて始まるので上は詰め、札の棚に入る前の下だけ広く取る */
 .band--hero .band__inner {
   padding-block: var(--space-5) var(--space-7);
 }
 
-/* 紙の面は白 1 枚(2026-09-04 オーナー指示「やっぱり背景を全部白色に戻しましょう」)。
-   面を敷く案(区画ごとに交互 / 一覧の棚だけ)はどちらも試作のうえ取りやめ。
-   本当の困りごとは「区画の境目が分かりにくい」「中身が宙に浮いて見える」ことだったので、
-   色ではなく罫で解く。手本「ただ、そこ」も面ではなく罫で区画を割っている(design.md §3)。
-
-   区画どうしの罫は border ではなく **1px の隙間**で作る(2026-09-06 オーナー指示)。
-   紙を罫の色で塗り、各区画を面の色で塗ると、gap がそのまま全幅の境界線になる。
-   看板と本文の切れ目だけは「ここから下は本文」の合図なので、章の罫(--text-muted)を
-   .sheet 自身の border-top として残す(要素と要素のあいだではなく、紙の上端に引く線なので) */
-.sheet {
-  border-top: 1px solid var(--text-muted);
+/* --- 札の棚(トップの看板の下) -------------------------------------------------
+   今日の一語 → 2 つのリストを 1 列に積む。札(.home-panel)はどれも墨の枠で囲む。
+   幅は帯と同じ本文の幅(800px。左右の余白を含む)で、札(752px)は看板の列(640px)から左右に 56px ずつはみ出すだけにする。
+   ヘッダーと同じ 1040px では看板が負け、2 列に割るとリストが細って長い語が 3〜4 行に折れた
+   (2026-11-03 オーナー判断。docs/design.md §5.2) */
+.home-shelf {
   display: grid;
-  gap: 1px;
-  background: var(--border);
-}
-
-.sheet .band {
-  background: var(--surface);
-}
-
-/* 左のガター: 標識と小さな図を置く柱。縦罫は区画ごとに引き、紙全体を貫く線は持たない
-   (docs/design.md §5.2)。どの区画でも同じ位置に立つので、並ぶと 1 本の柱に見える */
-.sheet .band__inner {
-  display: grid;
-  /* 袖と本体のあいだに縦罫を通すので、gap は持たせず padding で振り分ける。
-     袖の幅は「WORD OF THE DAY」が収まる値(標識 12px 化に伴い 132 → 152px) */
-  grid-template-columns: 152px minmax(0, 1fr);
-  gap: 0;
-  align-items: stretch;
-  /* 区画の左右にも縦罫を立てる。袖の柱と合わせて 3 本になり、紙が額に収まる
-     (2026-09-04 オーナー指示「標識の左側と、導線の右側にも罫線を」) */
-  border-inline: 1px solid var(--border);
-}
-
-/* 袖と本体を分ける縦罫。区画をまたいで同じ位置に立つので、紙全体で 1 本の柱に見える。
-   design.md §5.2 が意図していた「縦に長い 1 本の索引の背」は、この罫があってはじめて成立する。
-   中身がこの背に綴じられるので、宙に浮いて見えなくなる
-   (2026-09-04 オーナー指示「band__body の各コンテンツが浮いているのが気になる」) */
-.sheet .band__body {
-  border-left: 1px solid var(--border);
-  padding-left: var(--space-6);
-}
-
-/* 縦罫は区画の全高に通す。宙で途切れると「切り株」に見えて、
-   かえって中身が浮く(design.md §5.4 で単語詳細のレールについて確かめたのと同じ)。
-   そのため上下の余白は .band__inner ではなく、袖と本体それぞれが持つ */
-.sheet .band__inner {
-  padding-block: 0;
-}
-
-.sheet .band__gutter,
-.sheet .band__body {
-  padding-block: var(--space-7);
-}
-
-/* 袖は罫のきわに寄せる(標識が背の左に貼り付いて、柱の一部として読める) */
-.sheet .band__gutter {
-  padding-right: var(--space-5);
-}
-
-.band__gutter {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-5);
-  min-width: 0;
-}
-
-.band__body {
-  min-width: 0;
-}
-
-/* 区画の頭: 日本語の見出しと導線を同じ行に置く */
-/* 区画の見出し行。下に細罫を敷いて中身と地続きにする。
-   罫が無いと見出しと中身が別々に宙に置かれて見える
-   (手本「ただ、そこ」も .archive-control の下に同じ罫を持つ) */
-.band__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-bottom: var(--space-3);
-  margin-bottom: var(--space-5);
-  border-bottom: 1px solid var(--border);
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--space-5);
 }
 
 @media (max-width: 767px) {
@@ -433,36 +357,9 @@ main.container--flush > .flash {
     padding: var(--space-6) var(--space-4);
   }
 
-  .sheet .band__inner {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
-    padding-block: var(--space-6);
-    /* 狭幅ではカラムが画面幅いっぱいになるので、左右の罫は画面の縁に貼り付いて
-       見切れたように見える。額は外して横罫だけで割る */
-    border-inline: none;
-  }
-
-  /* 1 カラムに畳むと袖が本体の上に回るので、縦罫は外す
-     (残すと本体の左端に意味のない線が立つ)。上下の余白も .band__inner 側へ戻す */
-  .sheet .band__gutter,
-  .sheet .band__body {
-    padding-block: 0;
-  }
-
-  .sheet .band__body {
-    border-left: none;
-    padding-left: 0;
-  }
-
-  .sheet .band__gutter {
-    padding-right: 0;
-  }
-
-  /* 狭幅ではガターを横に寝かせ、標識と図を1行に並べる */
-  .band__gutter {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-4);
+  /* 札の棚の左右の余白も、帯と同じ 16px に詰める */
+  .home-shelf {
+    padding-inline: var(--space-4);
   }
 }
 
@@ -515,9 +412,10 @@ main.container--flush > .flash {
 }
 
 /* --- フッター(奥付) ------------------------------------------------
-   1列目にブランドと説明、右の3列に導線を割る。地を一段沈めた帯で静かに閉じる。 */
+   1列目にブランドと説明、右の3列に導線を割る。帯は持たず、墨の罫 1 本で静かに閉じる。 */
 .site-footer {
-  background: var(--bg-soft);
+  /* 帯は持たず、墨の罫 1 本で本文と分ける(SANKOU! と同じ) */
+  border-top: 1px solid var(--text);
   color: var(--text);
   margin-top: var(--space-9);
 }
@@ -538,6 +436,7 @@ main.container--flush > .flash {
 
 .site-footer__brand {
   font-size: 15px;
+  font-weight: 800;
   margin: 0 0 var(--space-2);
 }
 
@@ -707,12 +606,26 @@ main.container--flush > .flash {
 
 /* 狭幅: ナビをハンバーガーで開閉するサイドパネルに格納する */
 @media (max-width: 767px) {
+  /* ブランドとメニューのボタンを 360px 幅まで 1 行に収める(24px のままだと 390px 幅でも 2 行に落ちていた)。
+     左右の余白は本文の帯(.band__inner)と同じ 16px にし、ブランドの左端とボタンの三本線の右端を本文の端に揃える。
+     ボタンは押せる大きさを保ったまま、内側の余白(12px)のぶんだけ右の余白へはみ出させる */
+  .site-header__inner {
+    padding-inline: var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .site-brand {
+    gap: var(--space-2);
+  }
+
   .nav-toggle {
     display: block;
     position: relative;
     z-index: 21;
+    margin-right: -12px;
   }
 
+  /* 影は開いているときだけ落とす(閉じて画面の外に退いたパネルの影が、右端に薄く漏れていた) */
   .site-header__right {
     position: fixed;
     top: 0;
@@ -722,19 +635,19 @@ main.container--flush > .flash {
     height: 100vh;
     margin: 0;
     background: var(--bg);
-    box-shadow: var(--shadow-pop);
     flex-wrap: nowrap;
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-4);
     padding: var(--space-6) var(--space-5);
     transform: translateX(100%);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow-y: auto;
   }
 
   .site-header__right.is-open {
     transform: translateX(0);
+    box-shadow: var(--shadow-pop);
   }
 
   .site-nav {

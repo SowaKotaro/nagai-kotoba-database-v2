@@ -10,6 +10,47 @@ module StatsHelper
     number_with_delimiter(value)
   end
 
+  # 数字の壁(統計ページ §0)の 4 群 × 5 指標。[{ heading:, icon:, rows: [{ key:, label:, value:, unit: }, ...] }, ...]
+  # stats は集計一式(SiteStatistics)でも、ホームが読む写し(SiteStatistics::Wall)でもよい。
+  # ホームの「数字で見る長い言葉」(HomeHelper#home_stats_figures)は、ここからキーで行を選んで出す
+  def stats_number_wall(stats)
+    unit = ->(key) { t("stats.index.unit.#{key}") }
+    kana_coverage = t("stats.index.unit.kana_coverage", total: stats.letters[:kana_total])
+    {
+      scale: [ "books", [
+        [ :words, stats.scale[:words], unit.(:words) ],
+        [ :senses, stats.scale[:senses], unit.(:senses) ],
+        [ :variants, stats.scale[:variants], unit.(:senses) ],
+        [ :homophones, stats.scale[:homophone_groups], unit.(:pairs) ],
+        [ :total_reading_chars, stats.scale[:total_reading_chars], unit.(:chars) ]
+      ] ],
+      length: [ "ruler", [
+        [ :average, stats.reading_length[:average], unit.(:chars) ],
+        [ :median, stats.reading_length[:median], unit.(:chars) ],
+        [ :mode, stats.reading_length[:mode], unit.(:chars) ],
+        [ :max, stats.reading_length[:max], unit.(:chars) ],
+        [ :average_mora, stats.reading_length[:average_mora], unit.(:mora) ]
+      ] ],
+      letters: [ "text_aa", [
+        [ :first_kinds, stats.letters[:first_char_kinds], kana_coverage ],
+        [ :last_kinds, stats.letters[:last_char_kinds], kana_coverage ],
+        [ :katakana_only, stats.letters[:katakana_only_pct], unit.(:percent) ],
+        [ :with_kanji, stats.letters[:with_kanji_pct], unit.(:percent) ],
+        [ :with_chouon, stats.letters[:with_chouon_pct], unit.(:percent) ]
+      ] ],
+      growth: [ "chart_line_up", [
+        [ :this_month, stats.growth[:this_month], unit.(:words) ],
+        [ :genres, stats.growth[:genre_count], unit.(:genres) ],
+        [ :features, stats.growth[:feature_count], unit.(:features) ],
+        [ :per_day, stats.growth[:per_day], unit.(:words) ],
+        [ :days_open, stats.growth[:days_open], unit.(:days) ]
+      ] ]
+    }.map do |group, (icon_name, rows)|
+      { heading: t("stats.index.wall.#{group}.heading"), icon: icon_name,
+        rows: rows.map { |key, value, unit_text| { key:, label: t("stats.index.wall.#{group}.#{key}"), value: stats_number(value), unit: unit_text } } }
+    end
+  end
+
   # ==== 統計ページ §3 波形塗りバー ==============================================================
 
   WAVE_BAR_WIDTH = 40

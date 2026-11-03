@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
-// ヘッダーナビのプルダウン(「検索」→ ジャンル/索引/詳細検索)。
-// 外側クリックと Escape で閉じ、aria-expanded を同期する。
+// 押すと開くパネル。ヘッダーナビの「検索」のプルダウンと、ホームの探し方の入口の開くボタン(home/_search_way_menu)が使う。
+// 外側クリックと Escape で閉じ、aria-expanded を同期する。同じ画面に複数あっても、別のトリガーを押すと
+// それが外側クリックになって、開いていたほうは閉じる(開くのは常に 1 つ)。JS が無いとパネルは開かない(hidden のまま)。
 export default class extends Controller {
   static targets = ["trigger", "panel"]
 

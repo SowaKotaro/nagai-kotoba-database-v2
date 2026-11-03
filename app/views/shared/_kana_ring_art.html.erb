@@ -7,7 +7,7 @@
     取るが、始点の点の半径(ここは r="2.6" の直書き、カードは WordShareCard::RING_START_RADIUS)と
     線の太さ(Web は components.css、カードは SVG に直書き)はそれぞれが持ち、1 点だけの読みでは
     カードだけが折れ線を省く。見た目を変えるときは 3 か所を見る。
-    locals: reading(必須) / caption(任意) / value(任意: キャプション2行目の値) / modifier(任意: 追加クラス)
+    locals: reading(必須) / caption(任意) / modifier(任意: 追加クラス)
            / arc_label(任意: 円の外側を弧を描いて回る英字。ホーム最上部の印だけで使う) %>
 <% path = KanaRing.path(reading) %>
 <% if path.present? %>
@@ -46,14 +46,8 @@
     </svg>
     <% if local_assigns[:caption].present? %>
       <%# 図のキャプション。クラスは標識(.label-en)を兼ねるが、標識の「2 行目に必ず値」の規則の
-          対象外(docs/design.md §5.8)。value は任意で、いまはホームの今日の一語だけが交差数を渡す
-          (図が何本の弦で交差しているかを数で併記すると、線の込み具合が読める) %>
-      <figcaption class="ring-art__caption label-en">
-        <%= caption %>
-        <% if local_assigns[:value].present? %>
-          <span class="ring-art__value"><%= value %></span>
-        <% end %>
-      </figcaption>
+          対象外(docs/design.md §5.8) %>
+      <figcaption class="ring-art__caption label-en"><%= caption %></figcaption>
     <% end %>
   </figure>
 <% end %>
