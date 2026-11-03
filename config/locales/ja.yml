@@ -116,7 +116,6 @@ ja:
     en:
       site: "NAGAI KOTOBA DATABASE"
       est: "EST. 2026 / JAPAN"
-      headword: "HEADWORD"
       search: "SEARCH"
       browse: "KANA INDEX"
       genres: "GENRES"
@@ -127,8 +126,6 @@ ja:
       about: "ABOUT"
       privacy: "PRIVACY"
       request: "REQUEST"
-      characters: "CHARACTERS"
-      kana_ring: "READING PATH / 50-ON RING"
       # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
       reading_characters: "READING / %{count} CHARACTERS"
       max: "MAX %{unit}"
@@ -327,7 +324,7 @@ ja:
       request_link_no_keyword: "収録してほしい言葉をリクエストする"
       total: "全 %{count} 語"
       senses_count: "%{count} 語義"
-      # 一覧の行の文字数の単位(数は墨の 800 で立て、単位を小さく添える)
+      # 読みの文字数の単位(一覧の行と、単語詳細のレール。数は墨の 800 で立て、単位を小さく添える)
       char_unit: "字"
       # レールの件数の単位
       count_unit: "語"
@@ -374,7 +371,6 @@ ja:
       sense_number: "語義 %{number}"
       char_type_pattern: "文字種"
       web_search: "「%{surface}」をWebで検索（別タブ）"
-      flavor_label: "説明"
       undefined: "—"
       reading_length: "読みの文字数"
       chars: "%{count}文字"
@@ -395,14 +391,12 @@ ja:
       features: "言語学的特徴"
       no_senses: "語義がまだ登録されていません。"
       back: "一覧に戻る"
-      random: "ランダムな言葉へ"
       random_next: "別の言葉へ"
       share:
         x: "Xでシェア"
         copy: "URLをコピー"
         copied: "コピーしました"
       related:
-        title: "関連する言葉"
         genre: "同じジャンルの言葉"
         reading_length: "同じ文字数の言葉"
         more: "もっと見る"

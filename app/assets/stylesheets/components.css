@@ -21,11 +21,8 @@
 .sense-attrs dt .icon,
 .stats-section__title .icon,
 .stats-wall__heading .icon,
-.page-eyebrow .icon,
-.related__title .icon,
 .prose h2 .icon,
 .sort-form__label .icon,
-.word-flavor__label .icon,
 .empty-note .icon {
   margin-right: 6px;
 }
@@ -93,33 +90,19 @@
   color: var(--text-subtle);
 }
 
-/* 記録番号とランダム導線を右肩にまとめる。導線は情報より右に置き「めくる」向きにする */
-.page-eyebrow__meta {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-3);
-}
-
-/* 見出し語ストリップに溶け込む控えめなランダム導線。弱い文字色にシャッフル印を1つ添え、
-   hover で全体を本文色(--text)へ転じて操作可能と気づかせる */
-.eyebrow-random {
-  color: var(--text-subtle);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.eyebrow-random .icon {
-  color: var(--text);
-}
-
-.eyebrow-random:hover {
-  color: var(--text);
-}
-
+/* 単語詳細の見出しの下のメタ(記録番号・文字種)。値が長いと 2 つめが下の行へ回る */
 .page-title-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
   margin: var(--space-3) 0 0;
   font-size: 13px;
   color: var(--text-subtle);
+  overflow-wrap: anywhere;
+}
+
+.page-title-meta > span {
+  min-width: 0;
 }
 
 .entry-count {
@@ -221,7 +204,8 @@
   gap: var(--space-5);
 }
 
-/* 単語一覧のレールの件数。トップの数字と同じく墨の 800 で立て、単位を小さく添える(docs/design.md §5.3) */
+/* レールの数(単語一覧は件数、単語詳細は読みの文字数)。トップの数字と同じく墨の 800 で立て、単位を小さく添える
+   (docs/design.md §5.3・§5.4) */
 .page-header__count {
   margin: 0;
   font-size: 13px;
@@ -229,7 +213,7 @@
 }
 
 /* 40px は、4 桁の件数(「9,999」。数字は等幅)と単位が、レールの幅(160px から左の余白と罫を引いた幅)に 1 行で収まる大きさ。
-   44px では単位だけが下の行へ落ちた。5 桁になったら単位は下の行へ回る */
+   44px では単位だけが下の行へ落ちた。5 桁になったら単位は下の行へ回る(読みの文字数は 2 桁なので収まる) */
 .page-header__count-value {
   margin-right: var(--space-1);
   font-family: var(--font-display);
@@ -307,28 +291,6 @@
   color: var(--text-muted);
 }
 
-/* 動的に組み立てる解説文。--bg-soft の淡い角丸の面に控えめに置き、突拍子ない印象を避ける。
-   横幅は親(見出し語ブロック)いっぱいまで取り、ひっそりと添える */
-.word-flavor {
-  margin: var(--space-5) 0 0;
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--bg-soft);
-}
-
-.word-flavor__label {
-  margin: 0 0 var(--space-1);
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
-.word-flavor__text {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.95;
-}
-
 /* 恒久ページ(About 等)の本文。幅は読み物の幅(--reading-width、640px)までに抑える(Issue 20) */
 .prose {
   font-size: 15px;
@@ -389,31 +351,25 @@
   font-size: 13px;
 }
 
-/* --- 語義パネル: 1px の細罫(--border)で囲む大きな角丸。面は塗らない(docs/design.md §5.4) --- */
+/* --- 語義の札: トップの今日の一語と同じ墨の枠の札(.panel)。頭に通し番号(語義 1 / 2 …)、中身に見出し・意味・特徴を置き、
+   関連データの行(.sense-attrs)は札の幅いっぱいに敷く(docs/design.md §5.4) --- */
 .sense-list {
   display: grid;
   gap: var(--space-5);
 }
 
+/* グリッド項目の既定 min-width: auto だと、長いローマ字などの折り返せない
+   文字列が列幅を押し広げ、モバイルで枠ごと画面からはみ出す */
 .sense-card {
-  position: relative;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  /* グリッド項目の既定 min-width: auto だと、長いローマ字などの折り返せない
-     文字列が列幅を押し広げ、モバイルで枠ごと画面からはみ出す */
   min-width: 0;
 }
 
-/* 通し番号(語義 1 / 2 …)。小さな見出しとして静かに置く */
-.sense-card__number {
-  display: block;
-  font-size: 12px;
-  color: var(--text-subtle);
+/* 左右の余白は札の頭の見出し(.panel__head の左の余白)と揃える */
+.sense-card__body {
+  padding: var(--space-5);
 }
 
 .sense-heading {
-  margin-top: var(--space-3);
   font-size: 19px;
   overflow-wrap: anywhere;
 }
@@ -530,9 +486,11 @@ a.chip:hover {
   text-decoration: none;
 }
 
-/* --- 語義の関連データ: ラベル列 + 値列。行を細罫で仕切る(面が広いので余白だけでは読めない) --- */
+/* --- 語義の関連データ: ラベル列 + 値列。札の幅いっぱいに敷き、行を細罫で仕切る(面が広いので余白だけでは読めない) --- */
 .sense-attrs {
-  margin: var(--space-5) 0 0;
+  margin: 0;
+  /* 上の本文との境は単独の区切り線なので border で引く(docs/design.md §3) */
+  border-top: 1px solid var(--border);
   /* 行の区切りは border ではなく 1px の隙間で作る(design.md §5.3 と同じ組み) */
   display: grid;
   gap: 1px;
@@ -547,21 +505,27 @@ a.chip:hover {
   grid-template-columns: 140px minmax(0, 1fr);
   gap: var(--space-4);
   align-items: baseline;
-  padding: var(--space-3) 0;
-  /* 語義カードは枠だけで背景を持たない(地は白)ので、行も面の色で塗る */
+  padding: var(--space-3) var(--space-5);
+  /* 行も札の面の色で塗り、親(罫の色)を 1px の隙間だけ覗かせる */
   background: var(--surface);
 }
 
-/* モバイルではラベルと値を縦に積む(固定ラベル列が画面幅を圧迫しないように)。
-   語義パネルの左右余白も詰めて本文の実効幅を確保する */
+/* 札の頭の左の余白が詰まる幅(.panel__head)では、本文と行の左右の余白も同じだけ詰める */
+@media (max-width: 767px) {
+  .sense-card__body {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .sense-attrs__item {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* モバイルではラベルと値を縦に積む(固定ラベル列が画面幅を圧迫しないように) */
 @media (max-width: 560px) {
   .sense-attrs__item {
     grid-template-columns: 1fr;
     gap: var(--space-1);
-  }
-
-  .sense-card {
-    padding: var(--space-4);
   }
 }
 
@@ -743,81 +707,98 @@ a.browse-length:hover .browse-length__count {
   color: var(--text-subtle);
 }
 
-/* --- シェア導線(Issue 30) --- */
-.share {
+/* --- 操作の行(単語詳細の見出しの下): 左にシェア(Issue 30)、右端に別の言葉へ。どれもトップ・一覧と同じ小さいボタン(.btn--sm)。
+   シェアは「この語を共有する」、別の言葉へは「引き直す」で役目が違うので、同じ並びにせず右端へ離す(docs/design.md §5.4) --- */
+.word-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
 
-.share__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 6px 16px;
-  border: 1px solid var(--text);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 13px;
-  letter-spacing: inherit;
-  line-height: 1.8;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
-}
-
-.share__btn:hover {
-  background: var(--bg-soft);
-  color: var(--text);
-  text-decoration: none;
-}
-
-/* --- 関連語セクション(Issue 23) --- */
-.related {
-  margin-top: var(--space-8);
-}
-
-.related__title {
-  font-size: 17px;
-  color: var(--text);
-  margin: 0 0 var(--space-4);
-}
-
-.related__group + .related__group {
-  margin-top: var(--space-5);
-}
-
-/* 見出し行: 左にラベル、右端に「もっと見る」 */
-.related__group-header {
+.share {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin: var(--space-5) 0 var(--space-3);
+  gap: var(--space-3);
 }
 
-.related__group-header .section-label {
+.word-actions__random {
+  margin-left: auto;
+}
+
+/* コピーが済んだ印。完了の表示のあいだ(clipboard_controller が data-copied を付ける)だけ、リンクの印をチェックの印に替える */
+.share__done-icon {
+  display: none;
+}
+
+.share[data-copied] .share__link-icon {
+  display: none;
+}
+
+.share[data-copied] .share__done-icon {
+  display: inline-block;
+}
+
+/* 3 つが 1 行に収まらない幅では、シェアの 2 つを名前を隠したアイコンだけの四角(32px)にする。
+   2 段に折ると、右端へ離した別の言葉へが下の段の中途半端な位置に取り残される(2026-11-04 オーナー指摘)。
+   名前は .visually-hidden と同じ方法で隠し、読み上げには残す。.btn--sm はこのファイルの後ろで定義しているので、親クラスを重ねて特異度を上げる */
+@media (max-width: 519px) {
+  .share {
+    gap: var(--space-2);
+  }
+
+  .share .share__btn {
+    width: 32px;
+    padding: 0;
+  }
+
+  .share__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* --- 関連語・しりとりの札(Issue 23)。どれも次の語への入口なので、トップの棚と同じ間(24px)で札を積む(docs/design.md §5.4) --- */
+.related-shelf {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+/* しりとりの札の頭の下に添える「末尾の「ウ」から始まる言葉」。行の並びとは単独の区切り線で分ける */
+.related__lead {
   margin: 0;
-}
-
-.related__more {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
   font-size: 13px;
   color: var(--text-subtle);
-  text-decoration: none;
 }
 
-/* しりとりの「次の一手」。関連語セクションの文法を流用し、繋ぎ目の文字だけ色を付ける */
-.related--shiritori .empty-note {
-  margin-top: var(--space-4);
+/* 次の一手が無いとき(行き止まり・まだ収録が無い)の一文 */
+.related__note {
+  margin: 0;
+  padding: var(--space-5);
 }
 
-/* 使用元はビューではなく ja.yml(words.show.shiritori の lead_html・dead_end_html・none_html)。
+@media (max-width: 767px) {
+  .related__lead {
+    padding-inline: var(--space-4);
+  }
+
+  .related__note {
+    padding: var(--space-5) var(--space-4);
+  }
+}
+
+/* しりとりの繋ぎ目の文字だけ色を濃くする。
+   使用元はビューではなく ja.yml(words.show.shiritori の lead_html・dead_end_html・none_html)。
    ビューだけを grep すると未使用に見える */
 .shiritori__char {
   color: var(--text);
@@ -1252,7 +1233,8 @@ a.tag:hover .genre-hub__count {
   text-decoration: none;
 }
 
-/* 単語一覧の札の中の行。札の枠と字が付かないよう左右に余白を取る(上下は 100 行ぶんの量になるので詰めたまま) */
+/* 札の中の行(単語一覧と、単語詳細の関連語・しりとり)。札の枠と字が付かないよう左右に余白を取る
+   (上下は一覧で 100 行ぶんの量になるので詰めたまま) */
 .entry-panel .entry-row {
   padding-inline: var(--space-5);
 }
@@ -2474,7 +2456,7 @@ html:has(.search-actions) {
    資料館のキャプションのように、区画の頭に等幅の小さな英字を置く。
    本文の代わりではなく「そこが何の区画か」を示す標識なので、必ず日本語の
    見出しと対にして使う(docs/design.md §5.8)。
-   図のキャプション(.ring-art__caption。五十音円環と放射図の両方)はこのクラスを兼ね、級数・行間・字送りを
+   図のキャプション(.ring-art__caption。いまはジャンル一覧の放射図だけが使う)はこのクラスを兼ね、級数・行間・字送りを
    後ろの規則で上書きする。その上書きは、この規則より後に書いてあることで効く(記述順に依存)。 */
 .label-en {
   display: block;
@@ -2578,7 +2560,8 @@ html:has(.search-actions) {
 }
 
 /* 図に添えるキャプションは標識より一段小さい 10px。
-   級数を上げると「READING PATH / 50-ON RING」がレール幅(168px)で 2 行に折り返し、図より重くなる。
+   級数を上げるとレール幅(168px)で 2 行に折り返し、図より重くなる(単語詳細の円環に添えていた
+   「READING PATH / 50-ON RING」で確かめた。いまの単語詳細は説明を添えない)。
    標識=区画が何かを示す / キャプション=図が何かを示す、で役割が違うので揃えなくてよい。
    要素は .label-en も兼ねるので、ここの級数・行間・字送りは .label-en より後に書いてあることで効く */
 .ring-art__caption {
@@ -4254,24 +4237,9 @@ textarea {
   color: var(--text-subtle);
 }
 
-.back-link {
-  display: inline-block;
-  margin-top: var(--space-6);
-  font-size: 15px;
-}
-
-/* 詳細ページ下部のナビ(一覧へ戻る)。ランダム導線は見出し語ストリップに集約した */
+/* 詳細ページ下部のナビ(一覧へ戻る。一覧のページ送りと同じ墨の枠のボタン)。ランダム導線は見出しの下の操作の行に置いた */
 .word-footer-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-4);
   margin-top: var(--space-6);
-}
-/* 間隔は nav 側で管理するので、back-link 既定の上余白は打ち消す */
-.word-footer-nav .back-link {
-  margin-top: 0;
 }
 
 .actions {

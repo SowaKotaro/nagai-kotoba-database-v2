@@ -265,13 +265,16 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     sense = word_senses(:murder)
     get word_path(sense.word)
 
-    # 読みは表層形へのグループルビ(<ruby><rt>)で表示する
-    assert_select "h2.sense-heading rt", text: sense.reading
+    # 読みは表層形へのグループルビ(<ruby><rt>)で表示する。語義の札の頭は通し番号
+    assert_select "article.sense-card h2.panel__title", text: I18n.t("words.show.sense_number", number: 1)
+    assert_select "h3.sense-heading rt", text: sense.reading
     assert_select ".sense-heading-meta", text: /#{sense.rhythm_pattern}/
     assert_select ".sense-heading-meta", text: /#{sense.vowel_pattern}/
     assert_match sense.meaning, response.body
     # 読み・文字数・ジャンルを散文化した定義文(Issue 18)。文面の組み立ては WordsHelperTest で見る
-    assert_select ".word-flavor .word-flavor__text", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
+    assert_select ".page-header .page-lead", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
+    # レールには代表の語義の読みの文字数を立てる
+    assert_select ".page-header__rail .page-header__count-value", text: sense.reading_length.to_s
     # 円環交差数(さつじんじけん は 3 回)
     assert_select ".kana-ring__count", text: I18n.t("words.show.crossings_count", count: 3)
 
@@ -286,13 +289,14 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     # X 共有(intent リンク・canonical URL をエンコードして含む)と URL コピー(Stimulus)
-    assert_select "a.share__btn[href^=?]", "https://x.com/intent/post"
-    assert_select "a.share__btn[href*=?]", "#{URI(CANONICAL_HOST).host}%2Fwords%2F#{word.id}"
+    assert_select ".share a[href^=?]", "https://x.com/intent/post"
+    assert_select ".share a[href*=?]", "#{URI(CANONICAL_HOST).host}%2Fwords%2F#{word.id}"
     assert_select "div.share[data-clipboard-text-value=?]", "#{CANONICAL_HOST}/words/#{word.id}"
-    assert_select "button.share__btn[data-action=?]", "clipboard#copy"
+    assert_select ".share button[data-action=?]", "clipboard#copy"
 
-    # ランダム導線は見出し語ストリップに置く
-    assert_select ".page-eyebrow a.eyebrow-random[href=?]", random_words_path
+    # ランダム導線は操作の行の右端に、シェアとは別のまとまりで置く(行き先が毎回変わるのでクロールさせない)
+    assert_select ".word-actions > a.word-actions__random[href=?][rel=nofollow]", random_words_path
+    assert_select ".share a[href=?]", random_words_path, count: 0
   end
 
   test "詳細の属性は絞り込みリンクになり、未登録は「—」で示す" do
@@ -364,13 +368,15 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
     get word_path(words(:abc_murder)) # 読み さつじんじけん
     assert_response :success
-    assert_select "section.related .related__title", text: I18n.t("words.show.related.title")
+    assert_select "section.related h2.panel__title", text: I18n.t("words.show.related.genre")
     # 同ジャンルの別語への実リンク(単語→単語の内部リンク)と、ファセット一覧への「もっと見る」
     assert_select "section.related a.entry-row__surface[href=?]", word_path(sibling)
-    assert_select "section.related a.related__more[href=?]", words_path(genre_id: genres(:small_novel).id)
+    assert_select "section.related a.panel__more[href=?]", words_path(genre_id: genres(:small_novel).id)
 
+    # 行き止まりの札は一文だけで、行も「もっと見る」も出さない
     assert_select "section.related--shiritori .empty-note", text: /しりとりはここで終わり/
     assert_select "section.related--shiritori .entry-list", false
+    assert_select "section.related--shiritori a.panel__more", false
 
     # しりとりの次の一手は末尾文字から始まる公開語へ繋がる
     # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
@@ -378,10 +384,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
     get word_path(words(:curry))
     assert_response :success
-    assert_select "section.related--shiritori .related__title", text: I18n.t("words.show.shiritori.title")
+    assert_select "section.related--shiritori h2.panel__title", text: I18n.t("words.show.shiritori.title")
     assert_select "section.related--shiritori .shiritori__char", text: "レ"
     assert_select "section.related--shiritori a.entry-row__surface[href=?]", word_path(next_word)
-    assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
+    assert_select "section.related--shiritori a.panel__more[href=?]", words_path(first_char: "レ")
   end
 
   # --- HTTP キャッシュ(Issue 26) ---
