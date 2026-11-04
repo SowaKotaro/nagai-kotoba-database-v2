@@ -1,44 +1,57 @@
-<%# ランキング1枠。細罫のパネルに、見出し行 → 順位表 の順で組む。
-    順位は等幅(上位3位は文字を一段濃く、1位は本文色)、語は読みの下に大きさで立て(太字にしない)、右端に指標値。
-    「もっと見る」は同じ並びキーの単語一覧へ渡し、そこから先は通常のページ送りで全件辿れる。
-    locals: ranking(WordRanking), rows(#board の結果) %>
-<section class="rank-board" id="rank-<%= ranking.key.dasherize %>">
-  <div class="rank-board__header">
-    <div class="rank-board__head-main">
-      <h2 class="rank-board__title"><%= icon ranking.icon %><%= ranking.title %></h2>
-      <%# 遷移先は「同じ集合の順列違い」で必ず noindex になる。クロールさせる価値が無いので
-          nofollow を付ける(全語は sitemap と素の一覧のページ送りから辿れる)。 %>
-      <%= link_to words_path(sort: ranking.key), class: "rank-board__more icon-label", rel: "nofollow" do %>
-        <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
-      <% end %>
-    </div>
-
-    <%# この板の性格を一言で表す数(1位の値)を、線だけの数字で置く(docs/design.md §5.9)。
-        切替タブで板が入れ替わると数字も入れ替わる。画面に出るのは常に1つだけ %>
-    <% if (top_row = rows.first) %>
-      <div class="rank-board__figure">
-        <span class="figure-number figure-number--sm"><%= ranking.decimal? ? number_with_precision(top_row[:value], precision: 2) : number_with_delimiter(top_row[:value]) %></span>
-        <span class="figure-caption"><%= t("labels.en.max", unit: ranking.unit) %></span>
-      </div>
-    <% end %>
+<%# ランキング1枠。トップ・一覧と同じ墨の枠の札(.panel)に、見出し帯 → 順位表 → 足(もっと見る) の順で組む。
+    行は「同じ値の組」1 つ(WordRanking#board): 順位(墨の枠の角)・代表の見出し語と読み・指標値(800 の数)。
+    組にほかの語があれば、行の 2 段目に「ほかN語」として畳む。
+    「もっと見る」は同じ並びキーの単語一覧へ渡し、そこから先は通常のページ送りで全件辿れる(docs/design.md §5.5.1)。
+    locals: ranking(WordRanking), groups(#board の結果) %>
+<section class="panel rank-panel" id="rank-<%= ranking.key.dasherize %>">
+  <div class="panel__head">
+    <h2 class="panel__title rank-panel__title"><%= icon ranking.icon %><%= ranking.title %></h2>
   </div>
 
   <ol class="rank-list">
-    <% rows.each do |row| %>
+    <% groups.each do |group| %>
+      <% representative = group[:representative] %>
       <li class="rank-row">
-        <%# 順位は等幅で淡々と置き、上位だけ文字色を一段濃くして段を作る(面では塗らない)。
-            同率1位が複数あるとベタ塗りが連続して誤読を招くため、塗りはやめた %>
-        <% rank_modifiers = [ ("rank-row__no--top" if row[:rank] <= 3), ("rank-row__no--first" if row[:rank] == 1) ].compact %>
-        <span class="rank-row__no <%= rank_modifiers.join(" ") %>"><%= row[:rank] %></span>
+        <%# 同率の語は 1 つの組にまとまるので、順位は組ごとに 1 つだけ出る。1 位だけを塗るなどの差は付けない %>
+        <span class="rank-row__no"><%= group[:rank] %></span>
         <span class="rank-row__main">
-          <span class="rank-row__reading"><%= row[:readings].join("、") %></span>
-          <%= link_to row[:surface], word_path(row[:id]), class: "rank-row__surface" %>
+          <%= link_to representative[:surface], word_path(representative[:id]), class: "rank-row__surface" %>
+          <span class="rank-row__reading"><%= representative[:readings].join("、") %></span>
         </span>
+        <%# 指標値はこの板の主題そのものの数なので、数だけを大きく太く立てる %>
         <span class="rank-row__value">
-          <span class="rank-row__number <%= "rank-row__number--first" if row[:rank] == 1 %>"><%= ranking.decimal? ? number_with_precision(row[:value], precision: 2) : number_with_delimiter(row[:value]) %></span>
-          <span class="rank-row__unit"><%= ranking.unit %></span>
+          <span class="rank-row__number"><%= ranking.decimal? ? number_with_precision(group[:value], precision: WordRanking::DECIMAL_PLACES) : number_with_delimiter(group[:value]) %></span><span class="rank-row__unit"><%= ranking.unit %></span>
         </span>
+
+        <% if group[:others].any? %>
+          <details class="rank-fold">
+            <summary class="rank-fold__summary">
+              <%= icon "caret_down", "rank-fold__caret" %><%= t(".others", count: group[:count] - 1) %>
+            </summary>
+            <ul class="rank-fold__list">
+              <% group[:others].each do |word| %>
+                <li><%= link_to word[:surface], word_path(word[:id]) %></li>
+              <% end %>
+            </ul>
+            <%# 畳む語には上限がある(WordRanking::FOLD_LIMIT)。残りは同じ並びの一覧で続きを辿る(nofollow の理由は足と同じ) %>
+            <% rest = group[:count] - 1 - group[:others].size %>
+            <% if rest.positive? %>
+              <%= link_to rank_fold_rest_path(ranking, group), class: "rank-fold__rest icon-label", rel: "nofollow" do %>
+                <%= t(".rest", count: rest) %><%= icon "arrow_right" %>
+              <% end %>
+            <% end %>
+          </details>
+        <% end %>
       </li>
     <% end %>
   </ol>
+
+  <%# 「もっと見る」は順位表を読み終えた位置(札の足)に置く。頭に置くと、見出しの長い板ではスマホで 2 行に折れる。
+      遷移先は「同じ集合の順列違い」で必ず noindex になる。クロールさせる価値が無いので
+      nofollow を付ける(全語は sitemap と素の一覧のページ送りから辿れる)。 %>
+  <div class="rank-panel__foot">
+    <%= link_to words_path(sort: ranking.key), class: "btn btn--sm rank-panel__more", rel: "nofollow" do %>
+      <%= t("rankings.index.see_all") %><%= icon "arrow_right" %>
+    <% end %>
+  </div>
 </section>

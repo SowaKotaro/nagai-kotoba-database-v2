@@ -86,9 +86,8 @@
 
     <%# 絞り込み結果が 0 件のときは「DB が空」ではなく「条件に一致なし」と伝える(誤解防止)。
         条件を外す導線は上の active-facet(絞り込みを解除)が担う。
-        条件つきの案内は文ごとの文節の配列で、文ごとに行を分け、文節は <wbr> でつなぐ(.empty-note__sentence と対)。
-        text: の完全一致検証に余分な空白が入らないよう、あえて1行で組む。 %>
-    <% note = @search.conditions? ? safe_join(t("words.index.empty_filtered").map { |phrases| tag.span(safe_join(phrases, tag.wbr), class: "empty-note__sentence") }) : t("words.index.empty") %>
+        条件つきの案内は文ごとの文節の配列で、文ごとに行を分け、文節の切れ目でだけ折る(phrased_sentences)。 %>
+    <% note = @search.conditions? ? phrased_sentences(t("words.index.empty_filtered")) : t("words.index.empty") %>
     <p class="empty-note"><%= note %></p>
 
     <%# 探して見つからなかった瞬間が収録リクエストの一番の動機なので、ここに導線を置く(Issue 75)。

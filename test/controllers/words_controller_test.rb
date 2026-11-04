@@ -60,9 +60,9 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "0件のときは絞り込みの有無で案内を出し分ける" do
     get words_path(first_char: "ヲ")
-    # 案内は文ごとに行を分け(.empty-note__sentence)、文の中の文節の切れ目にだけ wbr を挟む
+    # 案内は文ごとに行を分け(.phrase-sentence)、文の中の文節の切れ目にだけ wbr を挟む
     assert_select "p.empty-note", text: I18n.t("words.index.empty_filtered").flatten.join do
-      assert_select ".empty-note__sentence", count: I18n.t("words.index.empty_filtered").size
+      assert_select ".phrase-sentence", count: I18n.t("words.index.empty_filtered").size
       assert_select "wbr", count: I18n.t("words.index.empty_filtered").sum { |phrases| phrases.size - 1 }
     end
     # リクエストの導線が「この言葉の」と言うのは、キーワードを引き継ぐときだけ

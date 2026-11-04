@@ -27,6 +27,14 @@ module ApplicationHelper
     @canonical_path = path
   end
 
+  # 文ごとの文節の配列(ja.yml)を、文ごとに行を分け、文の中は文節の切れ目でだけ折れる形に組む(.phrase-sentence と対)。
+  # 語の途中(「見つかりませんで／した」)や語尾だけ(「…全順位を／辿れます。」)の折れを防ぐ。
+  def phrased_sentences(sentences)
+    safe_join(sentences.map do |phrases|
+      tag.span(safe_join(phrases.map { |phrase| tag.span(phrase, class: "phrase") }, tag.wbr), class: "phrase-sentence")
+    end)
+  end
+
   # og:image の絶対URL。ページ側の content_for(:og_image) を優先し、無ければ既定カード。
   def page_og_image
     path = content_for?(:og_image) ? content_for(:og_image).to_s : SiteUrl::DEFAULT_OG_IMAGE_PATH

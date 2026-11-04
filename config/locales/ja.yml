@@ -121,16 +121,13 @@ ja:
       genres: "GENRES"
       entity_types: "ENTITY TYPES"
       linguistic_features: "LINGUISTIC FEATURES"
-      rankings: "RANKINGS"
       stats: "STATISTICS"
       about: "ABOUT"
       privacy: "PRIVACY"
       # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
       reading_characters: "READING / %{count} CHARACTERS"
-      max: "MAX %{unit}"
       # 標識の2行目(必ず数字を持たせる。数字が無い標識は h1 の英訳になって読まれない)
       entries: "%{count} ENTRIES"
-      boards: "%{count} BOARDS / TOP %{limit}"
       genre_nodes: "3 LEVELS / %{count} CATEGORIES"
       entity_type_count: "%{count} TYPES"
       feature_count: "%{count} FEATURES"
@@ -1206,11 +1203,17 @@ ja:
     index:
       title: "ランキング"
       description: "「長い言葉のデータベース」のランキング。読みの長さ・拍数・表記の長さ・一字あたりの読み・拗音や促音・長音符・濁点・五十音円環の交差・語義や別表記の多さなど、さまざまな観点の上位を公開しています。"
-      lead: "収録語を色々な物差しで並べたランキングです。各ランキングの「もっと見る」から全順位を辿れます。"
+      # 文ごとの文節の配列(phrased_sentences)。文ごとに行を分け、文節の切れ目でだけ折る
+      lead:
+        - ["収録語を", "色々な", "物差しで", "並べた", "ランキングです。"]
+        - ["各ランキングの", "「もっと見る」から", "全順位を", "辿れます。"]
       toc_label: "ランキングの目次"
       see_all: "もっと見る"
       empty: "まだ公開されている語がありません。"
-      colophon: "各ランキングは上位%{count}件までを掲載しています。集計は1日ごとに更新されます。"
+      colophon: "各ランキングは上位%{count}位までを掲載しています。同じ値の言葉は、読みがいちばん長いものの下にまとめています。集計は1日ごとに更新されます。"
+    board:
+      others: "ほか%{count}語"
+      rest: "残り%{count}語は一覧で"
     boards:
       length_desc:
         title: "読みが長い言葉"

@@ -6,8 +6,8 @@ class RankingsController < ApplicationController
   def index
     # 順位表として成立しない枠(該当語が少なく全員が載ってしまう枠)は丸ごと出さない。
     @boards = WordRanking.all.filter_map do |ranking|
-      rows = ranking.board
-      [ ranking, rows ] if rows.any?
+      groups = ranking.board
+      [ ranking, groups ] if groups.any?
     end
   end
 end

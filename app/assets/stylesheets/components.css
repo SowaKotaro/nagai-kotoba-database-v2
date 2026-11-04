@@ -172,7 +172,7 @@
 }
 
 /* ページの頭と中身を分ける「章の罫」。罫に文字色(--text-muted)を使うのは、docs/design.md §3 に
-   列挙した 5 か所だけで、ここはその 1 つ。
+   列挙した場所だけで、ここはその 1 つ。
    手本が淡い縦罫と濃い横罫の二層を持つのに倣う(濃さは --text-muted まで。黒にはしない) */
 .page-header:not(.page-header--rail) {
   border-bottom: 1px solid var(--text-muted);
@@ -1261,12 +1261,19 @@ a.tag:hover .genre-hub__count {
   color: var(--border-strong);
 }
 
-/* 条件つきの案内の 1 文。文ごとに行を分け、文の中は文節の切れ目(ビューが <wbr> を挟む)でだけ折る。
-   中央寄せなので、語の途中(「見つかりませんで／した」)の折れが目立つ。1 文節で幅に収まらないときだけ端で折る */
-.empty-note__sentence {
+/* 文ごとの文節の配列で持つ文言の 1 文(ApplicationHelper#phrased_sentences。単語一覧の 0 件の案内・ランキングのリード)。
+   文ごとに行を分け、文の中は文節の切れ目(<wbr>)でだけ折る。語の途中(「見つかりませんで／した」)や
+   語尾だけ(「…全順位を／辿れます。」)の折れを防ぐ。折れるときは行の長さを揃える
+   (balance。揃えないと 390px で「辿れます。」だけが次の行に残った) */
+.phrase-sentence {
   display: block;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+/* 文節は 1 つの塊にして中で折らない(keep-all では Chromium が「「もっと見る」から」の 」 の後ろで折った)。
+   1 文節で幅に収まらないときだけ、塊の中で折れる */
+.phrase {
+  display: inline-block;
 }
 
 /* 「押せる行」であることだけを示す矢印。装飾ではないので最小・最弱に置く */
@@ -5453,107 +5460,55 @@ a.entity-treemap__cell:hover {
   color: var(--text-subtle);
 }
 
-/* --- ランキング(/rankings): 切替タブ + 細罫パネルのランキング --- */
-/* 種類が多いので目次を兼ねた切替タブにする(タグの文法・現在地は本文色(--text)のベタで文字は反転) */
+/* --- ランキング(/rankings): 切替のボタン + 墨の枠の札(docs/design.md §5.5.1) --- */
+/* 種類が多いので目次を兼ねた切替にする。探し方の入口と同じ墨の枠の小さなボタン(.btn--sm)を並べる */
 .rank-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  margin-bottom: var(--space-6);
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
 }
 
-.rank-tab {
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  padding: 4px 14px;
-  font-family: inherit;
-  font-size: 13px;
-  letter-spacing: inherit;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
-}
-
-.rank-tab:hover {
-  background: var(--bg-soft);
-  color: var(--text);
-}
-
-.rank-tab[aria-pressed="true"] {
+/* 選んでいる板だけ墨のベタ(文字は地の色。.btn--primary と同じ)。hover でもベタのまま。
+   .btn はこのファイルの後ろで定義しているので、親クラスを重ねて特異度を上げる */
+.rank-tabs .rank-tab[aria-pressed="true"] {
   background: var(--text);
   border-color: var(--text);
   color: var(--bg);
 }
 
-/* 1枠 = 細罫のパネル(区切りは示すが、面としては主張させない) */
-.rank-board {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  margin-bottom: var(--space-6);
+/* JS が無いときは札が縦に並ぶので、札どうしの間を空ける(切替が効くときは 1 枚だけ出る) */
+.rank-panel {
+  margin-bottom: var(--space-4);
 }
 
-/* 見出し行(題と 1 位の値)。罫は引かず、余白で順位表と分ける */
-.rank-board__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-5);
-  padding: var(--space-4) var(--space-3) var(--space-5);
+/* 見出しに板ごとのアイコンを添える(音の成分などで板を見分ける。docs/design.md §5.6) */
+.rank-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
 }
 
-.rank-board__head-main {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.rank-board__title {
-  margin: 0;
-  font-size: 16px;
-  color: var(--text);
-}
-
-/* その板の最大値。縦罫で仕切って右肩に置く */
-.rank-board__figure {
-  flex: none;
-  border-left: 1px solid var(--border);
-  padding-left: var(--space-5);
-  text-align: right;
-}
-
-.rank-board__more {
-  font-size: 13px;
-  color: var(--text-subtle);
-  text-decoration: none;
-}
-
+/* 行どうしの罫は 1px の隙間で見せる(docs/design.md §3) */
 .rank-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  /* 行の区切りは border ではなく 1px の隙間で作る(design.md §5.3 と同じ組み)。
-     親を罫の色で塗り、行を面の色で塗る */
   display: grid;
   gap: 1px;
   background: var(--border);
 }
 
-/* 順位 / 読み+見出し語 / 指標値 の3列。狭幅でも3列のまま折り返す */
+/* 順位 / 見出し語と読み / 指標値 の 3 列。左右の余白は札の頭の見出しと揃える(トップの札の行と同じ)。
+   長い語は何行にも折れるので、順位と値は 1 行目の高さに揃えて上に置く。
+   同じ値のほかの語(.rank-fold)は 2 段目に置くので、段の間は空けずに読みのすぐ下へ続ける */
 .rank-row {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-3);
-  /* 隙間が 1px しかないので角丸は持たせない(角が丸いと線が途切れて見える) */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0 var(--space-3);
+  padding: var(--space-3) var(--space-5);
   background: var(--surface);
   transition: background-color var(--transition);
 }
@@ -5562,46 +5517,32 @@ a.entity-treemap__cell:hover {
   background: var(--bg-soft);
 }
 
+/* 順位はトップの「読みが長い言葉」の札(.home-column__rank)と同じ墨の枠の小さな角に入れる */
 .rank-row__no {
   display: inline-flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  min-width: 1.8em;
-  font-family: var(--font-mono);
-  font-size: 12px;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: var(--text-subtle);
-}
-
-/* 上位3位だけ文字を一段濃くする(同率1位が続いてもベタが連続しない) */
-.rank-row__no--top {
-  color: var(--text-muted);
-}
-
-.rank-row__no--first {
-  color: var(--text);
-}
-
-/* 1位の「値」だけを本文色まで濃くして、板の中の頂点を示す */
-.rank-row__number--first {
   color: var(--text);
 }
 
 .rank-row__main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   min-width: 0;
-}
-
-.rank-row__reading {
-  font-size: 12px;
-  color: var(--text-subtle);
 }
 
 .rank-row__surface {
   font-size: 16px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--text);
   text-decoration: none;
   overflow-wrap: anywhere;
@@ -5614,17 +5555,27 @@ a.entity-treemap__cell:hover {
   inset: 0;
 }
 
+.rank-row__reading {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-subtle);
+  overflow-wrap: anywhere;
+}
+
+/* 値は順位の角と同じ高さの 1 行に置き、数と単位は同じ基線に載せる */
 .rank-row__value {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
+  line-height: 28px;
   white-space: nowrap;
 }
 
+/* 指標値。板の主題そのものの数なので、数だけを大きく太く立てる(.home-column__number と同じ) */
 .rank-row__number {
-  font-size: 15px;
+  margin-right: 2px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .rank-row__unit {
@@ -5632,10 +5583,119 @@ a.entity-treemap__cell:hover {
   color: var(--text-subtle);
 }
 
+/* 同じ値のほかの語(WordRanking#board の組)。見出し語の列から右端までを使う。
+   行全体を覆う詳細へのリンク(::after)より上に重ね、開閉と各語へのリンクを押せるようにする。
+   幅は中身に合わせ(justify-self)、畳んでいるときに「ほかN語」の右の空きが行のリンクを塞がないようにする */
+.rank-fold {
+  position: relative;
+  z-index: 1;
+  grid-column: 2 / -1;
+  justify-self: start;
+  min-width: 0;
+}
+
+/* 押せる高さを取るため上下に余白を持たせ、そのぶん読みとの間を詰めて見せる */
+.rank-fold__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  list-style: none;
+  transition: color var(--transition);
+}
+
+.rank-fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.rank-fold__summary:hover {
+  color: var(--text);
+}
+
+.rank-fold__caret {
+  color: var(--text-subtle);
+  transform: rotate(-90deg);
+  transition: transform 0.15s;
+}
+
+.rank-fold[open] > .rank-fold__summary .rank-fold__caret {
+  transform: rotate(0deg);
+}
+
+/* 畳んだ語は読みを付けず、見出し語だけを折り返して並べる(数十語になっても縦に伸びすぎない) */
+.rank-fold__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 var(--space-1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: 14px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.rank-fold__rest {
+  margin-bottom: var(--space-1);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* 札の足: 「もっと見る」を順位表の後ろの右端に置く */
+.rank-panel__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+/* 矢印は枠に寄せるぶん右の余白を詰める(.panel__more と同じ)。.btn は後ろで定義しているので親クラスを重ねる */
+.rank-panel__foot .rank-panel__more {
+  padding: 0 var(--space-3) 0 var(--space-4);
+  white-space: nowrap;
+}
+
 .rank-colophon {
-  margin-top: var(--space-6);
+  margin: 0;
   font-size: 12px;
   color: var(--text-subtle);
+}
+
+@media (max-width: 767px) {
+  /* 切替は折り返さずに 1 段に並べ、横に送って選ぶ(折り返すと 390px で 7 段・272px が札の上に積まれる)。
+     段は本文の左右の余白(main.container)まで広げ、端で切れたボタンが続きのあることを示す。
+     上下の余白は、ボタンの焦点の枠(:focus-visible)を段の箱で切らないため */
+  .rank-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--space-5)) var(--space-4);
+    padding: var(--space-1) var(--space-5);
+    scrollbar-width: none;
+  }
+
+  .rank-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rank-tab {
+    flex: none;
+  }
+
+  /* 札の頭の左の余白が詰まる幅(.panel__head)では、行の左右の余白も同じだけ詰める */
+  .rank-row {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* 本文の左右の余白が 16px に詰まる幅(main.container)では、切替の段の広げ方も合わせる */
+@media (max-width: 560px) {
+  .rank-tabs {
+    margin-inline: calc(-1 * var(--space-4));
+    padding-inline: var(--space-4);
+  }
 }
 
 /* ============================================================
