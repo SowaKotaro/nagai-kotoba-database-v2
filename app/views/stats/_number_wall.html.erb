@@ -1,18 +1,20 @@
-<%# 数字の壁。4群×5指標を罫線区切りの定義リストで組む(統計ページ §0。中身は StatsHelper#stats_number_wall)。
-    値は大きめ(太字にはしない) + tabular-nums、ラベルは小さく添える。箱にしない。
+<%# 数字の壁。4群×5指標を、群ごとに墨の枠の札(.panel)に収めて 2 列に並べる(統計ページ §0。中身は StatsHelper#stats_number_wall)。
+    行は「語 … 値」の定義リストで、値はトップの「数字で見る長い言葉」と同じ墨の 800 で立て、単位を小さく添える。
     id はホームの「数字で見る長い言葉」の升からのリンク先(HomeHelper::HOME_STATS_FIGURES) %>
-<section class="stats-wall" id="number-wall">
+<div class="stats-wall" id="number-wall">
   <% stats_number_wall(@stats).each do |group| %>
-    <div class="stats-wall__group">
-      <h2 class="stats-wall__heading"><%= icon group[:icon] %><%= group[:heading] %></h2>
+    <section class="panel stats-wall__group">
+      <div class="panel__head">
+        <h2 class="panel__title stats-section__title"><%= icon group[:icon] %><%= group[:heading] %></h2>
+      </div>
       <dl class="stats-wall__list">
         <% group[:rows].each do |row| %>
           <div class="stats-wall__row">
             <dt><%= row[:label] %></dt>
-            <dd><%= row[:value] %><span class="stats-wall__unit"><%= row[:unit] %></span></dd>
+            <dd><span class="stats-wall__value"><%= row[:value] %></span><span class="stats-wall__unit"><%= row[:unit] %></span></dd>
           </div>
         <% end %>
       </dl>
-    </div>
+    </section>
   <% end %>
-</section>
+</div>

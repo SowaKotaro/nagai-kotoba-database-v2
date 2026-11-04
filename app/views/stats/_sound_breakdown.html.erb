@@ -1,57 +1,63 @@
-<%# 統計ページ §7「母音と子音」の母音スペクトルと頭子音。
+<%# 統計ページ §7「母音と子音」の母音スペクトルと頭子音。札(統計ページの章)の中では、図ごとに区画を分ける。
     母音スペクトル: 横=語頭からの拍位置、縦=母音(ア〜オ段)構成比の積み上げ面。
     帯は --text の濃淡4段(ア〜エ段)と --chart の淡い1段(オ段) + 右端に段名の直書き(識別を色に依存させない)。
     頭の子音: 読み第1拍の子音(ヘボン式)の横棒ランキング。棒押下で頭文字の絞り込みへ %>
 <% spectrum = stats_vowel_spectrum(@stats.vowel_spectrum[:positions]) %>
 <% if spectrum %>
-  <h3 class="stats-subheading"><%= t("stats.index.sound.spectrum_heading") %></h3>
-  <p class="stats-section__lead"><%= t("stats.index.sound.spectrum_lead") %></p>
-  <div class="stats-scroll">
-    <svg class="vowel-spectrum" viewBox="0 0 <%= spectrum[:width] %> <%= spectrum[:height] %>" role="img"
-         aria-label="<%= t("stats.index.sound.spectrum_aria") %>">
-      <% spectrum[:bands].each do |band| %>
-        <path class="vowel-spectrum__band vowel-spectrum__band--<%= band[:vowel] %>" d="<%= band[:path] %>" />
-      <% end %>
-      <% spectrum[:bands].each do |band| %>
-        <text class="vowel-spectrum__label" x="<%= spectrum[:label_x] %>" y="<%= band[:label_y] + 4 %>"><%= t("vowel_rows.#{band[:vowel]}") %></text>
-      <% end %>
-      <%# 横軸: 拍位置の番号(等幅極小)。全点に振らず、1 と 5 刻みだけ %>
-      <% spectrum[:xs].each_with_index do |x, index| %>
-        <% position = index + 1 %>
-        <% if position == 1 || (position % 5).zero? %>
-          <text class="vowel-spectrum__tick" x="<%= x %>" y="<%= spectrum[:height] - 2 %>" text-anchor="middle"><%= position %></text>
+  <div class="stats-section__body">
+    <h3 class="stats-subheading"><%= t("stats.index.sound.spectrum_heading") %></h3>
+    <p class="stats-section__lead"><%= t("stats.index.sound.spectrum_lead") %></p>
+    <div class="stats-scroll">
+      <svg class="vowel-spectrum" viewBox="0 0 <%= spectrum[:width] %> <%= spectrum[:height] %>" role="img"
+           aria-label="<%= t("stats.index.sound.spectrum_aria") %>">
+        <% spectrum[:bands].each do |band| %>
+          <path class="vowel-spectrum__band vowel-spectrum__band--<%= band[:vowel] %>" d="<%= band[:path] %>" />
         <% end %>
-      <% end %>
-    </svg>
+        <% spectrum[:bands].each do |band| %>
+          <text class="vowel-spectrum__label" x="<%= spectrum[:label_x] %>" y="<%= band[:label_y] + 4 %>"><%= t("vowel_rows.#{band[:vowel]}") %></text>
+        <% end %>
+        <%# 横軸: 拍位置の番号(等幅極小)。全点に振らず、1 と 5 刻みだけ %>
+        <% spectrum[:xs].each_with_index do |x, index| %>
+          <% position = index + 1 %>
+          <% if position == 1 || (position % 5).zero? %>
+            <text class="vowel-spectrum__tick" x="<%= x %>" y="<%= spectrum[:height] - 2 %>" text-anchor="middle"><%= position %></text>
+          <% end %>
+        <% end %>
+      </svg>
+    </div>
+    <p class="stats-hint"><%= t("stats.index.sound.position_axis") %></p>
   </div>
-  <p class="stats-hint"><%= t("stats.index.sound.position_axis") %></p>
 <% end %>
 
 <%# 母音の遷移グラフ(層=拍位置・ノード=母音・エッジ=全結合)。層が2つ揃わなければ出さない %>
 <% graph = stats_vowel_graph(@stats.vowel_transitions) %>
 <% if graph %>
-  <%= render "vowel_graph", graph: graph %>
+  <div class="stats-section__body">
+    <%= render "vowel_graph", graph: graph %>
+  </div>
 <% end %>
 
 <% if @stats.head_consonants.any? %>
-  <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
-  <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
-  <%# 棒の長さ(bar_percent)は SiteStatistics#head_consonants が先頭(最多)の行を 100 として返す。最多の色は
-      CSS の .stats-bars__row:first-child が付けるので、件数の多い順に返すことが前提(並びを変えると
-      色が別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>
-  <ol class="stats-bars">
-    <% @stats.head_consonants.each do |group| %>
-      <li class="stats-bars__row">
-        <span class="stats-bars__label"><%= group[:consonant] || t("stats.index.sound.vowel_initial") %></span>
-        <%# 複数の文字をまとめて渡す群は noindex(複数値)なのでクロールもさせない。
-            1文字だけの群はスカラ形になり単一ファセットとして index されるので、普通に辿らせる %>
-        <%= link_to char_facet_words_path(first_char: group[:chars]), class: "stats-bars__bar",
-              rel: ("nofollow" if group[:chars].size > 1),
-              title: t("stats.index.sound.consonant_title", chars: group[:chars].join("・"), count: group[:count]) do %>
-          <span class="stats-bars__fill" style="--w: <%= group[:bar_percent] %>%"></span>
-        <% end %>
-        <span class="stats-bars__count"><%= number_with_delimiter(group[:count]) %></span>
-      </li>
-    <% end %>
-  </ol>
+  <div class="stats-section__body">
+    <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
+    <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
+    <%# 棒の長さ(bar_percent)は SiteStatistics#head_consonants が先頭(最多)の行を 100 として返す。最多の色は
+        CSS の .stats-bars__row:first-child が付けるので、件数の多い順に返すことが前提(並びを変えると
+        色が別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>
+    <ol class="stats-bars">
+      <% @stats.head_consonants.each do |group| %>
+        <li class="stats-bars__row">
+          <span class="stats-bars__label"><%= group[:consonant] || t("stats.index.sound.vowel_initial") %></span>
+          <%# 複数の文字をまとめて渡す群は noindex(複数値)なのでクロールもさせない。
+              1文字だけの群はスカラ形になり単一ファセットとして index されるので、普通に辿らせる %>
+          <%= link_to char_facet_words_path(first_char: group[:chars]), class: "stats-bars__bar",
+                rel: ("nofollow" if group[:chars].size > 1),
+                title: t("stats.index.sound.consonant_title", chars: group[:chars].join("・"), count: group[:count]) do %>
+            <span class="stats-bars__fill" style="--w: <%= group[:bar_percent] %>%"></span>
+          <% end %>
+          <span class="stats-bars__count"><%= number_with_delimiter(group[:count]) %></span>
+        </li>
+      <% end %>
+    </ol>
+  </div>
 <% end %>

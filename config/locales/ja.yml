@@ -121,7 +121,6 @@ ja:
       genres: "GENRES"
       entity_types: "ENTITY TYPES"
       linguistic_features: "LINGUISTIC FEATURES"
-      stats: "STATISTICS"
       about: "ABOUT"
       privacy: "PRIVACY"
       # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
@@ -131,7 +130,6 @@ ja:
       genre_nodes: "3 LEVELS / %{count} CATEGORIES"
       entity_type_count: "%{count} TYPES"
       feature_count: "%{count} FEATURES"
-      updated: "UPDATED %{date}"
       kana_lengths: "%{kana} KANA / %{lengths} LENGTHS"
       # レールの figure-number に添える単位ラベル
       genres_unit: "GENRES"
@@ -1252,7 +1250,10 @@ ja:
     index:
       title: "収録統計"
       description: "「長い言葉のデータベース」の収録統計。収録語数・読みの長さの分布・頭文字と末尾文字の分布・収録の推移・ジャンルや語種の構成などを公開しています。"
-      lead: "公開中(注釈済み)の語を対象にした収録統計です。数値は1日ごとに再集計されます。"
+      # 文ごとの文節の配列(phrased_sentences)。文ごとに行を分け、文節の切れ目でだけ折る
+      lead:
+        - ["公開中(注釈済み)の", "語を", "対象にした", "収録統計です。"]
+        - ["数値は", "1日ごとに", "再集計されます。"]
       computed_at: "集計 %{time} 時点"
       empty: "まだ公開されている語がありません。"
       annotated_note: "集計対象は注釈済み %{count} 語義"
@@ -1331,7 +1332,6 @@ ja:
       timeline:
         title: "収録の推移"
         lead: "収録語の累計(折れ線)と、週ごとの新収録数(棒)です。"
-        current: "%{count}語"
         this_month: "+%{count}(今月)"
         period_label: "期間の切替"
         period_all: "全期間"

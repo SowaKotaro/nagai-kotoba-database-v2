@@ -19,8 +19,6 @@
 .section-label .icon,
 .section-heading .icon,
 .sense-attrs dt .icon,
-.stats-section__title .icon,
-.stats-wall__heading .icon,
 .prose h2 .icon,
 .sort-form__label .icon,
 .empty-note .icon {
@@ -4443,6 +4441,7 @@ textarea {
 }
 
 /* --- 統計ページ(Issue 34 / docs/stats.md) ---------------------------------
+   章はトップ・一覧・ランキングと同じ墨の枠の札(.panel)に 1 枚ずつ収めて積む(docs/design.md §5.13)。
    チャートはインライン SVG で描く。量の濃淡は --chart のチント(color-mix)、
    識別は色でなくラベルと位置で持つ。--chart のベタは「最」にだけ使う。 */
 
@@ -4452,23 +4451,51 @@ textarea {
   color: var(--text-subtle);
 }
 
-/* 数字の壁: 4群×5指標の定義リスト。罫線で仕切り、箱にしない */
+/* 札の棚。札どうしはホームの棚(.home-shelf)と同じ余白で空ける */
+.stats-shelf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+/* 札の見出しに章ごとのアイコンを添える(ランキングの板の見出し .rank-panel__title と同じ組み) */
+.stats-section__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+/* 見出しの右端に数を置く札の頭(収録の推移)。収まらない幅では、数を見出しの下の行へ回す。
+   右の余白はボタンを置く札の頭(.panel__head)より広げ、数の右端を中身の区画の右端に揃える */
+.stats-section__head {
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  padding-right: var(--space-5);
+}
+
+/* 札の中身の区画。左右の余白は札の頭の見出しと揃える */
+.stats-section__body {
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--surface);
+}
+
+/* 図が 2 つ以上ある章は、区画を縦に積み、区画どうしの罫を 1px の隙間で見せる(docs/design.md §3) */
+.stats-section__bodies {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+
+/* 数字の壁: 4群×5指標を群ごとの札に収め、2 列に並べる(統計ページ §0)。札の間は棚と同じ余白 */
 .stats-wall {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4) var(--space-5);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-7);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
 }
 
-.stats-wall__heading {
-  margin: 0 0 var(--space-2);
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
+/* 行どうしの罫は 1px の隙間で見せる(docs/design.md §3) */
 .stats-wall__list {
   margin: 0;
   display: grid;
@@ -4476,12 +4503,13 @@ textarea {
   background: var(--border);
 }
 
+/* 「語 … 値」の 1 行。左右の余白は札の頭の見出しと揃える */
 .stats-wall__row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: 6px 0;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-5);
   background: var(--surface);
 }
 
@@ -4492,59 +4520,23 @@ textarea {
 
 .stats-wall__row dd {
   margin: 0;
-  font-weight: 400;
-  font-size: 18px;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.stats-wall__unit {
-  margin-left: 3px;
-  font-weight: 400;
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
-@media (max-width: 1023px) {
-  .stats-wall {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 519px) {
-  .stats-wall {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* 章立て。章の区切りは細罫だけで作る */
-.stats-section {
-  margin-bottom: var(--space-7);
-}
-
-.stats-section__title {
-  margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border);
-  font-size: 17px;
+/* 値はトップの「数字で見る長い言葉」の数(.home-figures__value)と同じ墨の 800。行に収まる大きさに下げる */
+.stats-wall__value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
-.stats-section__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-4);
-}
-
-.stats-section__header .stats-section__title {
-  margin: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+.stats-wall__unit {
+  margin-left: 2px;
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .stats-section__lead {
@@ -4555,14 +4547,11 @@ textarea {
   color: var(--text-muted);
 }
 
+/* 区画の見出し。区画の先頭に置くので上の余白は持たない(区画の間は罫と余白が分ける) */
 .stats-subheading {
-  margin: var(--space-6) 0 var(--space-2);
+  margin: 0 0 var(--space-2);
   font-size: 15px;
   color: var(--text-muted);
-}
-
-.stats-subheading:first-child {
-  margin-top: 0;
 }
 
 /* 章内の注記・補足 */
@@ -4597,6 +4586,50 @@ textarea {
   position: absolute;
   left: 0;
   color: var(--text-subtle);
+}
+
+/* 札の頭の左の余白が詰まる幅(.panel__head)では、区画と数字の壁の行の左右の余白も同じだけ詰める */
+@media (max-width: 767px) {
+  .stats-section__body {
+    padding: var(--space-4);
+  }
+
+  .stats-section__head {
+    padding-right: var(--space-4);
+  }
+
+  .stats-wall__row {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* 狭い幅でも数字の壁は 2 列のまま、行を「語の下に値」の 2 段に積む(トップの数字の升と同じ組み)。
+   1 列にすると 4 枚の札が縦に並び、壁の高さが 846px から 1,224px に伸びる(390px と 359px での 2026-11-04 実測) */
+@media (max-width: 519px) {
+  .stats-wall {
+    gap: var(--space-3);
+  }
+
+  .stats-wall__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+}
+
+/* 2 列だと群の見出しが 1 行に収まらない幅(320px の端末)では 1 列にし、行も「語 … 値」の 1 行に戻す。
+   いちばん長い見出し(「読みの長さ」。アイコンと 5 字)は、札の頭の余白と枠を含めて 148px 要る(2026-11-04 実測)。
+   2 列の 1 列ぶんがそれを超えるのは、画面の幅が 340px 以上のとき */
+@media (max-width: 359px) {
+  .stats-wall {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stats-wall__row {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
 }
 
 /* 幅の広いチャートは自身の中で横スクロールさせる(ページ全体は横スクロール禁止) */
@@ -4652,7 +4685,6 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-5) var(--space-6);
-  margin-bottom: var(--space-5);
 }
 
 .stats-kana {
@@ -4661,9 +4693,10 @@ textarea {
   overflow-x: auto;
 }
 
+/* 表は自身の幅のまま置き、注記は右の残りの幅に流す(札の中は札の枠と余白のぶん狭く、注記の列の幅を決め打ちすると表が横に送られる) */
 .stats-matrix-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 250px;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
@@ -4793,15 +4826,26 @@ a.sound-matrix__cell:hover {
 }
 
 /* --- 統計ページ §4 収録の推移(株価チャート式) --- */
+/* 札の頭の右端に置く、いまの収録語数。行の高さは見出しに揃える */
 .stats-current {
   margin: 0;
+  line-height: 1.5;
   white-space: nowrap;
 }
 
-.stats-current__total {
-  font-weight: 400;
+/* 数字の壁の値(.stats-wall__value)と同じ墨の 800 */
+.stats-current__value {
+  font-family: var(--font-display);
   font-size: 20px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.stats-current__unit {
+  margin-left: 2px;
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 .stats-current__delta {
@@ -5451,12 +5495,10 @@ a.entity-treemap__cell:hover {
   background: var(--text);
 }
 
-/* --- 出典・更新日の一行(フッター直前) --- */
+/* --- 出典の一行(フッター直前)。ランキングの注記(.rank-colophon)と同じく、札の棚のすぐ下に小さく添える --- */
 .stats-colophon {
-  margin: var(--space-7) 0 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-  font-size: 13px;
+  margin: var(--space-4) 0 0;
+  font-size: 12px;
   color: var(--text-subtle);
 }
 
@@ -6171,13 +6213,8 @@ a.entity-treemap__cell:hover {
    よく現れる形態素を「活字の大きさ＝頻度」で組む。最頻の1語を中心に据え、
    残りはばらばらに置いて隙間を詰める(オーナー指示 2026-08-11 / 2026-09-10)。
    100 件を余白が見えないくらい詰めて組む(統計ページ §1)。
-   配置は MorphemeCloud が仮想平面で決め、viewBox 付き SVG で拡縮する。 */
-.word-cloud {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
-}
-
+   配置は MorphemeCloud が仮想平面で決め、viewBox 付き SVG で拡縮する。
+   囲いは持たない(章の札 .panel の中に置くので、枠を重ねると入れ子になる) */
 .word-cloud__svg {
   display: block;
   width: 100%;
