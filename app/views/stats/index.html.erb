@@ -17,16 +17,16 @@
   <p class="empty-note"><%= icon "binoculars" %><%= t("stats.index.empty") %></p>
 <% else %>
   <%# 章はトップ・一覧・ランキングと同じ墨の枠の札(.panel)に 1 枚ずつ収めて積む(docs/design.md §5.13)。
-      札の頭はアイコンと日本語の見出しだけ。中身は区画(.stats-section__body)ごとに淡い罫で仕切る %>
-  <div class="stats-shelf">
+      札の頭はアイコンと日本語の見出しだけ。中身は区画(.panel__body)ごとに淡い罫で仕切る %>
+  <div class="panel-shelf">
     <%# 統計ページ §1「ワードクラウド」。頻度は事前集計のため、集計ファイルが無ければ丸ごと出さない %>
     <% if MorphemeFrequencies.available? %>
       <section class="panel stats-section stats-section--word-cloud">
         <div class="panel__head">
-          <h2 class="panel__title stats-section__title"><%= icon "text_aa" %><%= t("stats.index.word_cloud.title") %></h2>
+          <h2 class="panel__title"><%= icon "text_aa" %><%= t("stats.index.word_cloud.title") %></h2>
         </div>
-        <div class="stats-section__body">
-          <p class="stats-section__lead"><%= t("stats.index.word_cloud.lead") %></p>
+        <div class="panel__body">
+          <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.word_cloud.lead")) %></p>
           <%= render "word_cloud" %>
         </div>
       </section>
@@ -37,9 +37,9 @@
 
     <section class="panel stats-section">
       <div class="panel__head">
-        <h2 class="panel__title stats-section__title"><%= icon "grid_nine" %><%= t("stats.index.sound_matrix.title") %></h2>
+        <h2 class="panel__title"><%= icon "grid_nine" %><%= t("stats.index.sound_matrix.title") %></h2>
       </div>
-      <%# 図ごとの区画(.stats-section__body)を、罫で仕切って縦に積む %>
+      <%# 図ごとの区画(.panel__body)を、罫で仕切って縦に積む %>
       <div class="stats-section__bodies">
         <%= render "sound_matrix" %>
       </div>
@@ -47,10 +47,10 @@
 
     <section class="panel stats-section">
       <div class="panel__head">
-        <h2 class="panel__title stats-section__title"><%= icon "ruler" %><%= t("stats.index.length_chart.title") %></h2>
+        <h2 class="panel__title"><%= icon "ruler" %><%= t("stats.index.length_chart.title") %></h2>
       </div>
-      <div class="stats-section__body">
-        <p class="stats-section__lead"><%= t("stats.index.length_chart.lead") %></p>
+      <div class="panel__body">
+        <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.length_chart.lead")) %></p>
         <div data-controller="panel-switch">
           <div class="segmented" role="group" aria-label="<%= t("stats.index.length_chart.toggle_label") %>">
             <button type="button" class="segmented__button" aria-pressed="true"
@@ -66,7 +66,7 @@
           <div data-panel-switch-target="panel" data-panel-key="mora" hidden>
             <%= render "length_chart", distribution: @stats.mora_distribution, param: :mora_count,
                   title_key: "stats.index.length_chart.mora_bar_title", aria: t("stats.index.length_chart.mora_aria") %>
-            <p class="stats-hint"><%= t("stats.index.length_chart.mora_hint") %></p>
+            <p class="stats-hint"><%= phrased_sentences(t("stats.index.length_chart.mora_hint")) %></p>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@
         いまの収録語数は札の頭の右端に、数字の壁と同じ墨の 800 で立てる %>
     <section class="panel stats-section" id="timeline">
       <div class="panel__head stats-section__head">
-        <h2 class="panel__title stats-section__title"><%= icon "chart_line_up" %><%= t("stats.index.timeline.title") %></h2>
+        <h2 class="panel__title"><%= icon "chart_line_up" %><%= t("stats.index.timeline.title") %></h2>
         <p class="stats-current">
           <span class="stats-current__value"><%= number_with_delimiter(@stats.word_count) %></span><span class="stats-current__unit"><%= t("stats.index.unit.words") %></span>
           <% if @stats.growth[:this_month].positive? %>
@@ -84,8 +84,8 @@
           <% end %>
         </p>
       </div>
-      <div class="stats-section__body">
-        <p class="stats-section__lead"><%= t("stats.index.timeline.lead") %></p>
+      <div class="panel__body">
+        <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.timeline.lead")) %></p>
         <% periods = [ [ "all", t("stats.index.timeline.period_all"), @stats.timeline ] ] %>
         <% periods << [ "m6", t("stats.index.timeline.period_6m"), @stats.timeline.last(26) ] if @stats.timeline.size > 26 %>
         <% periods << [ "m3", t("stats.index.timeline.period_3m"), @stats.timeline.last(13) ] if @stats.timeline.size > 13 %>
@@ -110,10 +110,10 @@
     <% if @stats.genre_map[:covered].positive? %>
       <section class="panel stats-section">
         <div class="panel__head">
-          <h2 class="panel__title stats-section__title"><%= icon "tag" %><%= t("stats.index.genre_map.title") %></h2>
+          <h2 class="panel__title"><%= icon "tag" %><%= t("stats.index.genre_map.title") %></h2>
         </div>
-        <div class="stats-section__body">
-          <p class="stats-section__lead"><%= t("stats.index.genre_map.lead") %></p>
+        <div class="panel__body">
+          <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.genre_map.lead")) %></p>
           <%= render "genre_sunburst" %>
           <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.genre_map[:covered])) %></p>
         </div>
@@ -123,7 +123,7 @@
     <% if @stats.origins[:categories].any? || @stats.entity_types.any? %>
       <section class="panel stats-section">
         <div class="panel__head">
-          <h2 class="panel__title stats-section__title"><%= icon "globe_hemisphere_east" %><%= t("stats.index.origins.title") %></h2>
+          <h2 class="panel__title"><%= icon "globe_hemisphere_east" %><%= t("stats.index.origins.title") %></h2>
         </div>
         <div class="stats-section__bodies">
           <%= render "origins" %>
@@ -133,7 +133,7 @@
 
     <section class="panel stats-section">
       <div class="panel__head">
-        <h2 class="panel__title stats-section__title"><%= icon "music_notes" %><%= t("stats.index.sound.title") %></h2>
+        <h2 class="panel__title"><%= icon "music_notes" %><%= t("stats.index.sound.title") %></h2>
       </div>
       <div class="stats-section__bodies">
         <%= render "sound_breakdown" %>
@@ -143,10 +143,10 @@
     <% if @stats.feature_ranking[:rows].any? %>
       <section class="panel stats-section">
         <div class="panel__head">
-          <h2 class="panel__title stats-section__title"><%= icon "pen_nib" %><%= t("stats.index.features.title") %></h2>
+          <h2 class="panel__title"><%= icon "pen_nib" %><%= t("stats.index.features.title") %></h2>
         </div>
-        <div class="stats-section__body">
-          <p class="stats-section__lead"><%= t("stats.index.features.lead") %></p>
+        <div class="panel__body">
+          <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.features.lead")) %></p>
           <%= render "feature_ranking" %>
         </div>
       </section>

@@ -21,11 +21,12 @@ class LinguisticFeaturesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".feature-hub__count", text: I18n.t("linguistic_features.index.count", count: 1), count: 2
     assert_select "a.feature-hub__name[href=?]", words_path(linguistic_feature_id: sokuon.id), count: 0
 
-    # 説明は定義の 1 文だけ、例は頭から EXAMPLE_LIMIT 件
+    # 説明は定義の 1 文だけ、例は頭から EXAMPLE_LIMIT 件(1 つずつ塊にして、例の途中では折らない)
     rendaku = LinguisticFeatureGlossary.find("連濁")
     assert_equal rendaku.definition, items.first.at_css(".feature-hub__description").text
     examples = rendaku.examples.first(LinguisticFeaturesController::EXAMPLE_LIMIT)
-                      .join(I18n.t("shared.feature_glossary.examples_separator"))
-    assert_equal I18n.t("linguistic_features.index.examples", examples: examples), items.first.at_css(".feature-hub__examples").text.strip
+    assert_equal examples.size, items.first.css(".feature-hub__examples > .phrase").size
+    assert_equal I18n.t("linguistic_features.index.examples_label") + examples.join(I18n.t("shared.feature_glossary.examples_separator")),
+                 items.first.at_css(".feature-hub__examples").text.strip
   end
 end

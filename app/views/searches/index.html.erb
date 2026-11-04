@@ -5,22 +5,28 @@
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("searches.title"), nil ] ] %>
 
-<p class="label-en"><%= t("labels.en.search") %></p>
-<div class="search-head">
+<%# 英字の標識(SEARCH)は置かない。トップ・一覧と同じく見出しは日本語だけにする(docs/design.md §5.8) %>
+<header class="page-header">
   <h1 class="page-title"><%= t("searches.title") %></h1>
-  <%# 区画どうしの組み合わせ(AND / OR)。見出しと同じ行に置くためフォームの外にあり、form 属性でフォームに結ぶ。
-      チェックボックスを CSS だけでスイッチに見せる(JS が無くても送れる)。オンで match=any(OR)を送り、既定は AND %>
-  <label class="match-switch">
-    <%= check_box_tag :match, WordSenseSearch::MATCH_ANY, @search.match_any?, form: "search-form", role: "switch",
-          class: "match-switch__input visually-hidden", aria: { label: t("searches.match.switch_label") } %>
-    <span class="match-switch__option match-switch__option--all" aria-hidden="true"><%= t("searches.match.all") %></span>
-    <span class="match-switch__track" aria-hidden="true"><span class="match-switch__thumb"></span></span>
-    <span class="match-switch__option match-switch__option--any" aria-hidden="true"><%= t("searches.match.any") %></span>
-  </label>
-</div>
+</header>
 
-<%= form_with url: search_path, method: :get, id: "search-form", class: "search-form",
+<%# フォームそのものを、トップ・一覧と同じ墨の枠の札(.panel)にする。頭に区画どうしの組み合わせ(AND / OR)、
+    足に送信の行(画面の下端に貼り付く)を置き、そのあいだに条件の区画を細罫で仕切って積む %>
+<%= form_with url: search_path, method: :get, id: "search-form", class: "panel search-form",
       data: { turbo_action: "advance", controller: "fold-count", action: "change->fold-count#sync" } do %>
+  <div class="panel__head">
+    <h2 class="panel__title"><%= icon "funnel" %><%= t("searches.panel_title") %></h2>
+    <%# 区画どうしの組み合わせ(AND / OR)。チェックボックスを CSS だけでスイッチに見せる(JS が無くても送れる)。
+        オンで match=any(OR)を送り、既定は AND %>
+    <label class="match-switch">
+      <%= check_box_tag :match, WordSenseSearch::MATCH_ANY, @search.match_any?, role: "switch",
+            class: "match-switch__input visually-hidden", aria: { label: t("searches.match.switch_label") } %>
+      <span class="match-switch__option match-switch__option--all" aria-hidden="true"><%= t("searches.match.all") %></span>
+      <span class="match-switch__track" aria-hidden="true"><span class="match-switch__thumb"></span></span>
+      <span class="match-switch__option match-switch__option--any" aria-hidden="true"><%= t("searches.match.any") %></span>
+    </label>
+  </div>
+
   <%# キーワードだけは畳まずに常に出す(いちばん多い使い方。ここだけ入れて Enter で探せる)。
       ほかの条件は区画ごとに見出しだけへ畳み、条件が入っている区画は開いて描く(_section) %>
   <div class="field">
@@ -42,7 +48,7 @@
           <dd><%= row[:meaning] %></dd>
         <% end %>
       </dl>
-      <p class="field-help__note"><%= t("searches.regexp_help.note") %></p>
+      <p class="field-help__note"><%= phrased_sentences(t("searches.regexp_help.note")) %></p>
     <% end %>
   <% end %>
 
@@ -93,7 +99,7 @@
           </div>
         <% end %>
       </div>
-      <p class="field-hint" id="sound-count-hint"><%= t("searches.sound_counts.hint") %></p>
+      <p class="field-hint" id="sound-count-hint"><%= phrased_sentences(t("searches.sound_counts.hint")) %></p>
     </fieldset>
   <% end %>
 
@@ -137,7 +143,7 @@
     <%= label_tag :vowel_reading, t("searches.vowel_pattern"), class: "visually-hidden" %>
     <%= text_field_tag :vowel_reading, @search.vowel_reading,
           placeholder: "トウキョウタワー", autocomplete: "off", enterkeyhint: "search" %>
-    <p class="field-hint"><%= t("searches.vowel_pattern_hint") %></p>
+    <p class="field-hint"><%= phrased_sentences(t("searches.vowel_pattern_hint")) %></p>
   <% end %>
 
   <%= render layout: "section", locals: { title: t("searches.rhythm_pattern"), icon: "romaji",

@@ -33,7 +33,7 @@ class BrowseControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-panel-key=mora_count][hidden]" do
       assert_select "a.browse-length[href=?]", words_path(mora_count: 7),
                     text: /#{I18n.t("browse.index.length_unit.mora_count", count: 7)}/
-      assert_select ".browse-hint", text: I18n.t("browse.index.mora_hint")
+      assert_select ".browse-hint", text: I18n.t("browse.index.mora_hint").join
     end
   end
 end

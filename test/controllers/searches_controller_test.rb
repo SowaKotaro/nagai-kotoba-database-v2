@@ -7,8 +7,8 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "form.search-form"
     assert_select ".entry-list", count: 0
-    # 区画どうしの組み合わせのスイッチは見出しの行にあり、form 属性でフォームに結ぶ。既定は AND(オフ)
-    assert_select ".search-head input#match[type=checkbox][role=switch][form=search-form][value=?]", WordSenseSearch::MATCH_ANY
+    # 区画どうしの組み合わせのスイッチは、フォームそのものである札の頭にある。既定は AND(オフ)
+    assert_select "form#search-form.panel > .panel__head input#match[type=checkbox][role=switch][value=?]", WordSenseSearch::MATCH_ANY
     assert_select "input#match[checked]", count: 0
     assert_select "form#search-form"
     # キーワードだけを常に出し、ほかの条件は区画ごとに見出しだけへ畳んで描く
@@ -155,7 +155,7 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     get search_path, params: { dakuten_min: "4" }
     assert_select "fieldset.sound-count-field input[type=number]", count: 3
     assert_select "input#dakuten_min[value=?]", "4"
-    assert_select ".field-hint", text: I18n.t("searches.vowel_pattern_hint")
+    assert_select ".field-hint", text: I18n.t("searches.vowel_pattern_hint").join
 
     # 区画の見出しが欄の名前を兼ねるが、畳める入力欄にも名前(label)は残す
     %w[regexp vowel_reading rhythm_pattern].each { |id| assert_select "label[for=?]", id }
@@ -168,7 +168,7 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
       assert_select "> .field-help__body > .field-help__content" do
         assert_select ".regexp-help__table dt", text: "^ア"
         assert_select ".regexp-help__table dd", text: "アで始まる"
-        assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note")
+        assert_select ".field-help__note", text: I18n.t("searches.regexp_help.note").join
       end
     end
     # 言語学的特徴の区画にも、管理画面と同じ用語解説を畳んで添える(上の [open] count: 0 で既定は閉じている)

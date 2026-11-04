@@ -9,7 +9,7 @@
   <%# 標識の2行目は必ず「値」を持たせる。同じ数は下の「収録の基準」に日本語でも置く %>
   <p class="label-en"><%= t("labels.en.entries", count: number_with_delimiter(@word_count)) %></p>
   <h1 class="page-title"><%= t("layouts.brand") %></h1>
-  <p class="page-lead"><%= t("pages.about.lead") %></p>
+  <p class="page-lead"><%= phrased_sentences(t("pages.about.lead")) %></p>
 </header>
 
 <div class="prose">
@@ -44,7 +44,7 @@
     </p>
     <p><%= t("pages.about.license_credit_label") %></p>
     <p class="prose__credit"><%= t("pages.about.license_credit", url: SiteUrl.origin) %></p>
-    <p class="prose__note"><%= t("pages.about.license_note") %></p>
+    <p class="prose__note"><%= phrased_sentences(t("pages.about.license_note")) %></p>
   </section>
 
   <section>

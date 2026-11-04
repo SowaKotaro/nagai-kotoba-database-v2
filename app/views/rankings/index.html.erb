@@ -34,5 +34,5 @@
     <% end %>
   </div>
 
-  <p class="rank-colophon"><%= t("rankings.index.colophon", count: WordRanking::TOP_LIMIT) %></p>
+  <p class="rank-colophon"><%= phrased_sentences(t("rankings.index.colophon", count: WordRanking::TOP_LIMIT)) %></p>
 <% end %>

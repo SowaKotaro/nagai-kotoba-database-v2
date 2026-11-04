@@ -17,7 +17,6 @@
 .field-legend .icon,
 .search-section__title .icon,
 .section-label .icon,
-.section-heading .icon,
 .sense-attrs dt .icon,
 .prose h2 .icon,
 .sort-form__label .icon,
@@ -229,10 +228,6 @@
 
 .page-header__rail .ring-art__svg {
   max-width: 104px;
-}
-
-.page-header__rail .ring-art__caption {
-  text-align: left;
 }
 
 /* 本文が痩せるので、1024px 未満ではレールを下へ回して横並びにする */
@@ -624,20 +619,7 @@ a.tag:hover {
   text-decoration: none;
 }
 
-/* --- 索引ページ(Issue 22) --- */
-.browse-section + .browse-section {
-  margin-top: var(--space-6);
-}
-
-/* 索引ページの節の見出し(.section-heading を使うのはここだけ) */
-.section-heading {
-  font-size: 17px;
-  color: var(--text);
-  margin: var(--space-7) 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border);
-}
-
+/* --- 索引ページ(Issue 22)。区画は 2 枚の札(.panel)に収めて札の棚(.panel-shelf)に積む(docs/design.md §5.11) --- */
 /* 索引の 50音セルは(検索フォームのチェックボックスと違い)一覧への実リンク */
 .kana-cell--link {
   display: flex;
@@ -803,21 +785,38 @@ a.browse-length:hover .browse-length__count {
 }
 
 /* --- ジャンル・ハブページ(Issue 21) --- */
-/* 大分類は折り畳み(details)。初期表示は大分類の一覧だけに畳む(genre-fold の文法を流用) */
+/* 大分類は折り畳み(details)。初期表示は大分類の一覧だけに畳む(genre-fold の文法を流用)。
+   札(.panel)の中に行として積み、行どうしの罫は 1px の隙間で見せる(docs/design.md §3)。
+   詳細検索のジャンル(.genre-filter)も同じく行に積み、区画の中なので淡い罫の外枠で束ねる */
 .genre-hub {
   display: grid;
-  gap: var(--space-3);
+  gap: 1px;
+  background: var(--border);
 }
 
-/* ハブの summary は見出しを兼ねるので、検索フィルタの折り畳みより大きく組む */
-.genre-hub__summary {
-  padding: var(--space-3) var(--space-4);
+.genre-hub > .genre-fold {
+  border: none;
+  border-radius: 0;
 }
 
+/* ハブの summary は見出しを兼ねるので、検索フィルタの折り畳みより大きく組む。
+   左右の余白は札の頭の見出しと揃え、hover はほかの札の行と同じく面の色だけを変える */
+.genre-hub__fold > .genre-hub__summary {
+  padding: var(--space-3) var(--space-5);
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.genre-hub__fold > .genre-hub__summary:hover {
+  background: var(--bg-soft);
+}
+
+/* 名前は「・」の後ろと「（」の前(ApplicationHelper#phrased_name の塊の切れ目)でだけ折る。
+   1 つの塊で幅に収まらないときだけ端で折る(詳細検索のジャンルも同じ) */
 .genre-hub__large-name {
   font-weight: 400;
   font-size: 17px;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 /* 件数の左に、最大値で正規化した細い横棒を添える(数値は必ず併記する) */
@@ -838,20 +837,39 @@ a.browse-length:hover .browse-length__count {
   background: var(--text-subtle);
 }
 
+/* 大分類の公開語義数。単語一覧の文字数と同じ墨の 800 で立てる(中・小分類の数は名前に添える小さな等幅のまま) */
 .genre-hub__summary .genre-hub__count {
   min-width: 3em;
   text-align: right;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .genre-hub__fold > .genre-fold__body {
-  padding: var(--space-4) var(--space-4) var(--space-5);
+  padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
-/* 大分類そのもので絞り込む導線(名前クリックは開閉に充てるため別リンク) */
+/* 大分類そのもので絞り込む導線(名前クリックは開閉に充てるため別リンク)。札の頭の「一覧へ →」と同じ小さいボタン */
 .genre-hub__whole {
-  font-size: 13px;
-  color: var(--text);
   align-self: flex-start;
+}
+
+@media (max-width: 767px) {
+  .genre-hub__fold > .genre-hub__summary,
+  .genre-hub__fold > .genre-fold__body {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* 狭い幅では横棒を縮めて、大分類の名前の幅に回す(72px のままだと 320px 幅で名前が 1 行 5 字ほどに痩せる)。
+   比べられるのは棒どうしの長さの比なので、縮めても読み方は変わらない(詳細検索のジャンルも同じ) */
+@media (max-width: 519px) {
+  .genre-hub__bar {
+    width: 48px;
+  }
 }
 
 .genre-hub__medium {
@@ -892,14 +910,15 @@ a.tag:hover .genre-hub__count {
 }
 
 /* --- 探すための一覧を名前で絞り込む欄(/genres・/entity_types。list_filter_controller.js) ---
-   入力の文法(細枠の角丸ボックス)に、ホームの検索バーと同じく先頭のアイコンを入れる。枠はこの箱が持ち、中の入力は枠を持たない */
+   入力の文法(細枠の角丸ボックス)に、ホームの検索バーと同じく先頭のアイコンを入れる。枠はこの箱が持ち、中の入力は枠を持たない。
+   札の頭の右端に、見出しと並べて置く(.hub-panel__head)。高さは札の頭のボタン(.btn--sm)と揃える */
 .list-filter {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  max-width: 400px;
-  height: 40px;
-  margin: 0 0 var(--space-5);
+  flex: 1 1 240px;
+  max-width: 320px;
+  height: 32px;
   padding: 0 14px;
   background: var(--surface);
   border: 1px solid var(--text);
@@ -952,7 +971,34 @@ a.tag:hover .genre-hub__count {
 }
 
 .list-filter__empty {
-  margin: 0 0 var(--space-5);
+  margin: 0;
+}
+
+/* 探し方の札(ジャンル・エンティティ)の頭。左に見出し、右端に名前で絞り込む欄。
+   欄が見出しの横に収まらない幅では、欄を見出しの下の行へ回して幅いっぱいに広げる */
+.hub-panel__head {
+  flex-wrap: wrap;
+}
+
+/* スマホでは入力の文字が 16px に上がる(iOS の自動ズーム対策)ので、欄はいつも見出しの下の行に、上限なしの幅いっぱいで置く。
+   見出しの横に残った幅に収めると、例文が途中で切れた(414px 幅で入力 204px に対して例文 287px。2026-11-04 実測) */
+@media (max-width: 767px) {
+  .hub-panel__head .list-filter {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+/* ジャンルは行が札の幅いっぱいに並ぶので、何も残らなかったときの一言には札の中身と同じ余白を取る
+   (エンティティは札の中身 .panel__body の中に置くので余白は要らない) */
+.hub-panel > .list-filter__empty {
+  padding: var(--space-5);
+}
+
+@media (max-width: 767px) {
+  .hub-panel > .list-filter__empty {
+    padding: var(--space-4);
+  }
 }
 
 /* --- エンティティから探す(/entity_types) ---
@@ -973,8 +1019,8 @@ a.tag:hover .genre-hub__count {
 }
 
 /* --- 言語学的特徴から探す(/linguistic_features) ---
-   1 つの特徴 = 名前(一覧へのリンク)と件数 → 説明 → 例。行は単語一覧(.entry-list)と同じく
-   border ではなく gap: 1px の隙間で仕切る(docs/design.md §3) */
+   1 つの特徴 = 名前(一覧へのリンク)と件数 → 説明 → 例。札(.panel)の中に行として積み、行は単語一覧(.entry-list)と同じく
+   border ではなく gap: 1px の隙間で仕切る(docs/design.md §3)。左右の余白は札の頭の見出しと揃える */
 .feature-hub {
   list-style: none;
   margin: 0;
@@ -985,8 +1031,14 @@ a.tag:hover .genre-hub__count {
 }
 
 .feature-hub__item {
-  padding: var(--space-5) 0;
+  padding: var(--space-4) var(--space-5);
   background: var(--surface);
+}
+
+@media (max-width: 767px) {
+  .feature-hub__item {
+    padding-inline: var(--space-4);
+  }
 }
 
 .feature-hub__head {
@@ -1259,7 +1311,7 @@ a.tag:hover .genre-hub__count {
   color: var(--border-strong);
 }
 
-/* 文ごとの文節の配列で持つ文言の 1 文(ApplicationHelper#phrased_sentences。単語一覧の 0 件の案内・ランキングのリード)。
+/* 文ごとの文節の配列で持つ文言の 1 文(ApplicationHelper#phrased_sentences。ページのリード・補足・注意書き・奥付)。
    文ごとに行を分け、文の中は文節の切れ目(<wbr>)でだけ折る。語の途中(「見つかりませんで／した」)や
    語尾だけ(「…全順位を／辿れます。」)の折れを防ぐ。折れるときは行の長さを揃える
    (balance。揃えないと 390px で「辿れます。」だけが次の行に残った) */
@@ -1269,9 +1321,35 @@ a.tag:hover .genre-hub__count {
 }
 
 /* 文節は 1 つの塊にして中で折らない(keep-all では Chromium が「「もっと見る」から」の 」 の後ろで折った)。
-   1 文節で幅に収まらないときだけ、塊の中で折れる */
+   1 文節で幅に収まらないときだけ、塊の中で折れる。名前の塊(ApplicationHelper#phrased_name)と
+   用語解説の例の塊(ApplicationHelper#feature_examples)も同じ。
+   塊の中で折れるときは行の長さを揃え、行頭に「ー」や小書きのかなを置かない(strict)。揃えないと 320px 幅で
+   長いカタカナの分類名が「コンピュータアーキテクチ／ャ」と最後の 1 字だけ次の行に残った */
 .phrase {
   display: inline-block;
+  text-wrap: balance;
+  line-break: strict;
+}
+
+/* 用語解説の例の区切り(「　／　」)は、前の例の最後の片と離さない(ApplicationHelper#feature_examples)。
+   全角空白の後ろでも折れるので、折らない片にしないと 320px 幅で「／」だけが次の行に残った */
+.phrase-mark {
+  white-space: nowrap;
+}
+
+/* 文節を持たない、データから組む文(用語解説の定義・語義の意味・単語詳細のリード・About とプライバシーの本文)。
+   Chromium は語句の切れ目で折り(auto-phrase。lang="ja" のときだけ効く)、最後の行に 1〜2 字だけを残さない(pretty)。
+   どちらも効かないブラウザ(Safari 18 など)は、これまでどおり字の切れ目で折る。
+   文節の配列で組むリード(.phrase-sentence)は、この上に文ごとの balance が乗る */
+.page-lead,
+.feature-hub__description,
+.feature-glossary dd,
+.sense-meaning,
+.prose p,
+.prose li {
+  word-break: auto-phrase;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 
 /* 「押せる行」であることだけを示す矢印。装飾ではないので最小・最弱に置く */
@@ -1356,18 +1434,6 @@ a.tag:hover .genre-hub__count {
   font-size: 15px;
   line-height: 2;
   color: var(--text-muted);
-}
-
-/* 広い幅では 1 文を 1 行に組む(説明が 2 行に収まり、語の途中で折れない) */
-.hero__lead-sentence {
-  display: block;
-}
-
-/* 狭幅では 1 文が画面の幅を超えるので、文をつなげて流す(1 文ずつ組むと行が増える) */
-@media (max-width: 767px) {
-  .hero__lead-sentence {
-    display: inline;
-  }
 }
 
 /* 検索は丸い一本のバー。枠は細く、影は落とさない */
@@ -1658,15 +1724,12 @@ a.tag:hover .genre-hub__count {
   margin-bottom: var(--space-3);
 }
 
-/* 詳細検索の見出しの行。右端に区画どうしの組み合わせ(AND / OR)のスイッチを置く */
-.search-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+/* フォームの札の頭。右端のスイッチは文字なので、右の余白を中身の欄と揃える(ボタンを置く札の頭より広い) */
+.search-form > .panel__head {
+  padding-right: var(--space-5);
 }
 
-/* AND / OR のスイッチ。テーマの切り替え(.theme-toggle__track)と同じ寸法のトラックを、両脇の AND・OR で挟む。
+/* AND / OR のスイッチ(フォームの札の頭の右端)。テーマの切り替え(.theme-toggle__track)と同じ寸法のトラックを、両脇の AND・OR で挟む。
    どちらも「オン」ではないのでトラックは塗らず、つまみの位置と、効いている側の文字の濃さ(--text)で示す */
 .match-switch {
   display: inline-flex;
@@ -1723,18 +1786,20 @@ a.tag:hover .genre-hub__count {
   transform: translateX(14px);
 }
 
-/* 検索フォームは面を持たない。条件どうしを細罫で仕切るだけにする
+/* 検索フォームそのものを、トップ・一覧と同じ墨の枠の札(.panel)にする。条件どうしは面を変えずに細罫で仕切るだけにする
    (全高の7割が単色の面だと、条件が平坦に流れて目が滑るため)。
-   内容の幅は50音表の最小幅(セル34px×16列 + すき間4px×15 = 604px)より余裕を持たせる。 */
-.search-form {
-  margin: var(--space-5) 0 var(--space-7);
+   内容の幅は50音表の最小幅(セル34px×16列 + すき間4px×15 = 604px)より余裕を持たせる。
+   札の既定の overflow: hidden はスクロールの入れ物を作り、送信の行の貼り付き(sticky)が画面ではなく札に対して効いてしまう。
+   clip は入れ物を作らずに角丸で中身を切るだけなので、送信の行は画面の下端に貼り付く(.panel より後ろの定義に勝つよう詳細度を上げる) */
+.panel.search-form {
+  overflow: clip;
 }
 
-/* 常に出すキーワードの欄。後続の .field の margin 指定に負けないよう詳細度を上げている */
+/* 常に出すキーワードの欄。札の頭のすぐ下に置くので、上の罫は札の頭の墨の罫が兼ねる。
+   後続の .field の margin 指定に負けないよう詳細度を上げている */
 .search-form > .field {
   margin-bottom: 0;
-  padding: var(--space-5) 0;
-  border-top: 1px solid var(--border);
+  padding: var(--space-5);
 }
 
 /* 畳める条件の区画(searches/_section)。見出しの行全体を押せるよう、余白は区画ではなく見出しと中身が持つ。
@@ -1743,16 +1808,22 @@ a.tag:hover .genre-hub__count {
   border-top: 1px solid var(--border);
 }
 
-/* 見出しは区画の目印なので、中身の欄やチップ(13〜14px・--text-muted)より一段大きく濃く組む(太字にはしない) */
+/* 見出しは区画の目印なので、中身の欄やチップ(13〜14px・--text-muted)より一段大きく濃く組む(太字にはしない)。
+   左右の余白は札の頭の見出しと揃え、hover はほかの札の行と同じく面の色だけを変える */
 .search-section__summary {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-4) 0;
+  padding: var(--space-4) var(--space-5);
   cursor: pointer;
   font-size: 16px;
   color: var(--text);
   list-style: none;
+  transition: background-color var(--transition);
+}
+
+.search-section__summary:hover {
+  background: var(--bg-soft);
 }
 
 .search-section__summary::-webkit-details-marker {
@@ -1774,28 +1845,13 @@ a.tag:hover .genre-hub__count {
 }
 
 .search-section__body {
-  padding-bottom: var(--space-5);
+  padding: 0 var(--space-5) var(--space-5);
 }
 
-/* 狭幅では余白を詰めて、50音表・チップ群の実効幅を確保する(見出しの行は押せる高さ 44px を割らない) */
-@media (max-width: 560px) {
-  .search-form > .field {
-    padding: var(--space-4) 0;
-  }
-
-  .search-section__summary {
-    padding: var(--space-3) 0;
-  }
-
-  .search-section__body {
-    padding-bottom: var(--space-4);
-  }
-}
-
-/* 送信ボタンと「条件をクリア」を同じ行に。クリアは控えめなテキストリンク。
+/* 送信ボタンと「条件をクリア」を同じ行に。クリアは控えめなテキストリンク。札の足として、上を札の頭と同じ墨の罫で仕切る。
    条件の区画を開くとフォームは画面より長くなるので、送信の行だけ画面の下端に貼り付けて、
-   どこまで読み進めても押せるようにする(フォームの終わりまで来たら本来の位置に収まる)。
-   下を流れる条件は地と同じ面で隠し、縁は章の罫が兼ねる(影は付けない。design.md §5.6) */
+   どこまで読み進めても押せるようにする(フォームの終わりまで来たら札の足に収まる)。
+   下を流れる条件は札と同じ面で隠し、縁は墨の罫が兼ねる(影は付けない。design.md §5.6) */
 .search-actions {
   position: sticky;
   bottom: 0;
@@ -1804,15 +1860,37 @@ a.tag:hover .genre-hub__count {
   display: flex;
   align-items: center;
   gap: var(--space-5);
-  margin-top: var(--space-6);
-  padding: var(--space-4) 0;
+  padding: var(--space-3) var(--space-5);
   background: var(--surface);
-  border-top: 1px solid var(--text-muted);
+  border-top: 1px solid var(--text);
 }
 
-@media (max-width: 560px) {
+/* 札の頭の左の余白が詰まる幅(.panel__head)では、欄・区画・送信の行の左右の余白も同じだけ詰める */
+@media (max-width: 767px) {
+  .search-form > .panel__head {
+    padding-right: var(--space-4);
+  }
+
+  .search-form > .field,
+  .search-section__summary,
+  .search-section__body,
   .search-actions {
-    padding: var(--space-3) 0;
+    padding-inline: var(--space-4);
+  }
+}
+
+/* 狭幅では上下の余白も詰めて、50音表・チップ群の実効幅を確保する(見出しの行は押せる高さ 44px を割らない) */
+@media (max-width: 560px) {
+  .search-form > .field {
+    padding-block: var(--space-4);
+  }
+
+  .search-section__summary {
+    padding-block: var(--space-3);
+  }
+
+  .search-section__body {
+    padding-bottom: var(--space-4);
   }
 }
 
@@ -2271,10 +2349,20 @@ html:has(.search-actions) {
 
 /* ジャンル階層フィルタ: 大分類→中分類を折り畳み(details)で辿る。
    初期表示は大分類の一覧だけに畳み、ジャンルが増えても見通しを保つ */
+/* 詳細検索のジャンル。/genres と同じく大分類を行として積み、行どうしの罫は 1px の隙間で見せる(docs/design.md §3)。
+   区画(フォームの札の中)に置くので、外枠は入力欄と同じく淡い罫にして、札の墨の枠と重ねない */
 .genre-filter {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.genre-filter > .genre-fold {
+  border: none;
+  border-radius: 0;
 }
 
 .genre-fold {
@@ -2340,11 +2428,17 @@ html:has(.search-actions) {
    中分類ごとに左罫で束ねる .genre-hub__medium)。選択数のバッジは名前の直後に置き、横棒と件数を右端へ寄せる */
 .genre-filter__summary {
   padding: var(--space-2) var(--space-3);
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.genre-filter__summary:hover {
+  background: var(--bg-soft);
 }
 
 .genre-filter__large-name {
   font-size: 15px;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 .genre-filter__summary .genre-fold__count {
@@ -2411,12 +2505,11 @@ html:has(.search-actions) {
   color: var(--text-subtle);
 }
 
-/* 値が折り返すときは「・」の切れ目(ビューが <wbr> を挟む)でだけ折り、行の長さを揃える。
-   語の途中(「スポー／ツ」)や最後の 1 字(「出版／物」)では折らない。1 語で幅に収まらないときだけ端で折る */
+/* 値が折り返すときは「・」の後ろと「（」の前(ApplicationHelper#phrased_name の塊の切れ目)でだけ折り、行の長さを揃える。
+   語の途中(「スポー／ツ」)や最後の 1 字(「出版／物」)では折らない。1 つの塊で幅に収まらないときだけ端で折る */
 .condition-chip__value {
   font-size: 13px;
   color: var(--text);
-  word-break: keep-all;
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
@@ -2460,59 +2553,17 @@ html:has(.search-actions) {
 /* --- 標識(英字の極小ラベル) -------------------------------------------
    資料館のキャプションのように、区画の頭に等幅の小さな英字を置く。
    本文の代わりではなく「そこが何の区画か」を示す標識なので、必ず日本語の
-   見出しと対にして使う(docs/design.md §5.8)。
-   図のキャプション(.ring-art__caption。いまはジャンル一覧の放射図だけが使う)はこのクラスを兼ね、級数・行間・字送りを
-   後ろの規則で上書きする。その上書きは、この規則より後に書いてあることで効く(記述順に依存)。 */
+   見出しと対にして使う(docs/design.md §5.8)。 */
 .label-en {
   display: block;
   margin: 0;
   font-family: var(--font-mono);
   /* 級数は 12px。design.md §2 の「補足・ラベルは 11px 未満にしない」を満たす最小。標識は塗りで置く
      (白抜きにする案は試したうえで、オーナー判断で不採用。経緯と実測は design.md §5.8)。
-     16px / 20px の縦積み / 30px(figure-number の書体)まで上げて試したが、
+     16px / 20px の縦積み / 30px(数字の書体 --font-display)まで上げて試したが、
      いずれもオーナー判断で戻した(2026-09-05)。字送りは 0.04em */
   font-size: 12px;
   line-height: 1.7;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-/* --- 図としての数字(アウトライン) -------------------------------------
-   収録語数・文字数のように「サイトの性格を一目で伝える数」を、
-   線だけの巨大な数字として置く。文字の中身は塗らない。 */
-.figure-number {
-  display: block;
-  font-family: var(--font-display);
-  font-size: clamp(44px, 5.5vw, 68px);
-  line-height: 0.9;
-  letter-spacing: -0.05em;
-  font-variant-numeric: tabular-nums;
-  /* -webkit-text-stroke が無い環境では塗りのまま見えるようにしておく。
-     塗りで出るときは太字にしない(design.md §2「太字を使わない」)。 */
-  color: var(--border-strong);
-}
-
-@supports (-webkit-text-stroke: 1px currentColor) {
-  .figure-number {
-    /* 1px の線で輪郭を描くので、字面の太い 700 で骨格を確保する(塗らないので太字には見えない) */
-    font-weight: 700;
-    color: transparent;
-    -webkit-text-stroke: 1px var(--text-muted);
-  }
-}
-
-.figure-number--sm {
-  font-size: clamp(36px, 4vw, 48px);
-}
-
-/* 数字に添える単位・キャプション */
-/* 線だけの数字に添える単位ラベル。標識(.label-en)と同じ級数・同じ塗りで置く */
-.figure-caption {
-  display: block;
-  margin-top: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -2562,18 +2613,6 @@ html:has(.search-actions) {
 
 .ring-art__start {
   fill: var(--text-muted);
-}
-
-/* 図に添えるキャプションは標識より一段小さい 10px。
-   級数を上げるとレール幅(168px)で 2 行に折り返し、図より重くなる(単語詳細の円環に添えていた
-   「READING PATH / 50-ON RING」で確かめた。いまの単語詳細は説明を添えない)。
-   標識=区画が何かを示す / キャプション=図が何かを示す、で役割が違うので揃えなくてよい。
-   要素は .label-en も兼ねるので、ここの級数・行間・字送りは .label-en より後に書いてあることで効く */
-.ring-art__caption {
-  font-size: 10px;
-  line-height: 1.9;
-  letter-spacing: 0.06em;
-  text-align: center;
 }
 
 /* ページ最上部に置く印。サイト名の読みの円環を、看板の上に 1 つだけ、中央に置く */
@@ -2694,7 +2733,11 @@ html:has(.search-actions) {
   border-bottom: 1px solid var(--text);
 }
 
+/* 見出しの頭にアイコンを添える札(ランキング・統計・探し方のページ)もあるので、アイコンと文字を中央で揃えて並べる */
 .panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
   margin: 0;
   font-size: 18px;
   letter-spacing: 0.06em;
@@ -2705,6 +2748,21 @@ html:has(.search-actions) {
 .panel__head .panel__more {
   padding: 0 var(--space-3) 0 var(--space-4);
   white-space: nowrap;
+}
+
+/* 札の中身の区画(統計の章・探し方のページ)。左右の余白は札の頭の見出しと揃える。
+   区画を 1px の隙間で仕切って積む札(.stats-section__bodies)もあるので、面の色も持たせる */
+.panel__body {
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--surface);
+}
+
+/* 札の棚(統計・索引)。札どうしはホームの棚(.home-shelf)と同じ余白で空ける */
+.panel-shelf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
 }
 
 /* 2 つのリストの行。行どうしの罫は 1px の隙間で見せる(docs/design.md §3) */
@@ -2894,6 +2952,10 @@ html:has(.search-actions) {
 @media (max-width: 767px) {
   .panel__head {
     padding-left: var(--space-4);
+  }
+
+  .panel__body {
+    padding: var(--space-4);
   }
 
   .home-column__item {
@@ -4451,33 +4513,12 @@ textarea {
   color: var(--text-subtle);
 }
 
-/* 札の棚。札どうしはホームの棚(.home-shelf)と同じ余白で空ける */
-.stats-shelf {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
-}
-
-/* 札の見出しに章ごとのアイコンを添える(ランキングの板の見出し .rank-panel__title と同じ組み) */
-.stats-section__title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-}
-
 /* 見出しの右端に数を置く札の頭(収録の推移)。収まらない幅では、数を見出しの下の行へ回す。
    右の余白はボタンを置く札の頭(.panel__head)より広げ、数の右端を中身の区画の右端に揃える */
 .stats-section__head {
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-3);
   padding-right: var(--space-5);
-}
-
-/* 札の中身の区画。左右の余白は札の頭の見出しと揃える */
-.stats-section__body {
-  min-width: 0;
-  padding: var(--space-5);
-  background: var(--surface);
 }
 
 /* 図が 2 つ以上ある章は、区画を縦に積み、区画どうしの罫を 1px の隙間で見せる(docs/design.md §3) */
@@ -4588,12 +4629,8 @@ textarea {
   color: var(--text-subtle);
 }
 
-/* 札の頭の左の余白が詰まる幅(.panel__head)では、区画と数字の壁の行の左右の余白も同じだけ詰める */
+/* 札の頭の左の余白が詰まる幅(.panel__head)では、見出しの右端の数と数字の壁の行の左右の余白も同じだけ詰める */
 @media (max-width: 767px) {
-  .stats-section__body {
-    padding: var(--space-4);
-  }
-
   .stats-section__head {
     padding-right: var(--space-4);
   }
@@ -5524,13 +5561,6 @@ a.entity-treemap__cell:hover {
   margin-bottom: var(--space-4);
 }
 
-/* 見出しに板ごとのアイコンを添える(音の成分などで板を見分ける。docs/design.md §5.6) */
-.rank-panel__title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-}
-
 /* 行どうしの罫は 1px の隙間で見せる(docs/design.md §3) */
 .rank-list {
   list-style: none;
@@ -5950,6 +5980,11 @@ a.entity-treemap__cell:hover {
 
 .request-notes .section-label {
   margin-top: 0;
+}
+
+/* 「プライバシーポリシー」へのリンクは 1 語なので途中で折らない(文言がリンクを含む _html なので、文節の配列にできない) */
+.request-notes a {
+  white-space: nowrap;
 }
 
 .request-notes ul {

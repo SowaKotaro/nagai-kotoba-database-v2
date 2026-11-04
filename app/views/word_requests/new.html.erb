@@ -9,7 +9,7 @@
     レール(数と線画)も持たない(docs/design.md §5.12) %>
 <header class="page-header">
   <h1 class="page-title"><%= t(".title") %></h1>
-  <p class="page-lead"><%= t(".lead") %></p>
+  <p class="page-lead"><%= phrased_sentences(t(".lead")) %></p>
 </header>
 
 <% if @word_request.errors.any? %>
@@ -76,8 +76,8 @@
   <div class="request-notes">
     <p class="section-label"><%= t(".notes_title") %></p>
     <ul>
-      <li><%= t(".note_use") %></li>
-      <li><%= t(".note_no_reply") %></li>
+      <li><%= phrased_sentences(t(".note_use")) %></li>
+      <li><%= phrased_sentences(t(".note_no_reply")) %></li>
       <li><%= t(".note_privacy_html", link: link_to(t(".note_privacy_link"), privacy_path)) %></li>
     </ul>
   </div>

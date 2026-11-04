@@ -28,7 +28,7 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
       assert_select "meta[name=robots]", { count: 0 }, "#{params} が noindex になっている"
       assert_select "h1.page-title", text: heading
       assert_select "title", text: "#{heading} | #{I18n.t('layouts.brand')}"
-      assert_select "meta[name=description][content=?]", I18n.t("words.index.facet_description", label: heading)
+      assert_select "meta[name=description][content=?]", I18n.t("words.index.facet_description", label: heading).join
       assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}#{canonical}"
       # 条件を引き継ぐ /search?... はファセットの数だけ増えるので、「検索条件を編集」はクロールさせない
       assert_select "a.active-facet__edit[rel=nofollow]", count: 1

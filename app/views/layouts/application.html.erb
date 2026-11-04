@@ -120,7 +120,7 @@
           <%# 3 行のワードマークはヘッダーのブランド名の右へ移した(2026-09-05 オーナー指示)。
               同じ英字を 2 箇所に出さないので、奥付はブランド名から始める %>
           <p class="site-footer__brand"><%= t("layouts.brand") %></p>
-          <p class="site-footer__desc"><%= t("layouts.footer.about") %></p>
+          <p class="site-footer__desc"><%= phrased_sentences(t("layouts.footer.about")) %></p>
           <nav class="site-footer__nav">
             <%= link_to about_path, class: "icon-label" do %><%= t("layouts.footer.more") %><%= icon "arrow_right" %><% end %>
           </nav>

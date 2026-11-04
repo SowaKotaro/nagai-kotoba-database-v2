@@ -58,7 +58,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     # (auiie と aee のうち 5 拍目まで届くのは auiie だけ = 50.0%)
     assert_select ".stats-hint", text: I18n.t("stats.index.sound.graph_hint",
                                               top_position: 1, top_from: I18n.t("vowel_rows.a"), top_to: I18n.t("vowel_rows.u"),
-                                              top_count: "1", last: 5, last_count: "1", last_percent: 50.0)
+                                              top_count: "1", last: 5, last_count: "1", last_percent: 50.0).join
 
     # ワードクラウド(Issue 78)は集計ファイルの語をすべて並べ、8色とも使う
     entries = MorphemeFrequencies.entries

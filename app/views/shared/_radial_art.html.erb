@@ -1,7 +1,7 @@
 <%# 「並んだ数値を、円の上の一筆書きにした線画」。五十音円環(shared/_kana_ring_art)と
     同じ円・同じ線の濃さで描くので、サイトの図は「円」ひとつの家族に収まる(docs/design.md §5.9)。
-    実データから生まれる図なので、装飾でありながら嘘がない。
-    locals: entries(必須: [[ラベル, 値], ...]) / caption(任意) / modifier(任意: 追加クラス) %>
+    実データから生まれる図なので、装飾でありながら嘘がない。説明(キャプション)は添えない(五十音円環と同じ)。
+    locals: entries(必須: [[ラベル, 値], ...]) / modifier(任意: 追加クラス) %>
 <% points = RadialChart.points(entries) %>
 <% if points.present? %>
   <figure class="ring-art radial-art <%= local_assigns[:modifier] %>">
@@ -26,8 +26,5 @@
         <circle class="radial-art__node" cx="<%= point.cx %>" cy="<%= point.cy %>" r="1.8"></circle>
       <% end %>
     </svg>
-    <% if local_assigns[:caption].present? %>
-      <figcaption class="ring-art__caption label-en"><%= caption %></figcaption>
-    <% end %>
   </figure>
 <% end %>

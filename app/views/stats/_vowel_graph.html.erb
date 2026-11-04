@@ -8,7 +8,7 @@
     ノードを押して母音の並び(鎖)を選び、検索へ進む導線だけ Stimulus(vowel-graph)で足している
     (選び方の正は docs/stats.md の統計ページ §7 の章)。 %>
 <h3 class="stats-subheading"><%= t("stats.index.sound.graph_heading") %></h3>
-<p class="stats-section__lead"><%= t("stats.index.sound.graph_lead", positions: graph[:layers].size) %></p>
+<p class="stats-section__lead"><%= phrased_sentences(t("stats.index.sound.graph_lead", positions: graph[:layers].size)) %></p>
 <div class="vowel-graph-panel" data-controller="vowel-graph"
      data-vowel-graph-path-value="<%= words_path %>"
      data-vowel-graph-label-value="<%= t("searches.vowel_transition_value") %>">
@@ -84,10 +84,10 @@
 <%# 最多の遷移。stats_vowel_graph が edge[:top] に真偽で立てた 1 本を探し直す。SiteStatistics の
     データでは層が 2 つ以上あれば件数が正の遷移が必ずあるので、nil にはならない %>
 <% top = graph[:edges].find { |edge| edge[:top] } %>
-<p class="stats-hint"><%= t("stats.index.sound.graph_hint",
+<p class="stats-hint"><%= phrased_sentences(t("stats.index.sound.graph_hint",
       top_position: top[:position],
       top_from: t("vowel_rows.#{top[:from]}"),
       top_to: t("vowel_rows.#{top[:to]}"),
       top_count: number_with_delimiter(top[:count]),
       last: last[:position], last_count: number_with_delimiter(last[:total]),
-      last_percent: last[:reach_percent]) %></p>
+      last_percent: last[:reach_percent])) %></p>

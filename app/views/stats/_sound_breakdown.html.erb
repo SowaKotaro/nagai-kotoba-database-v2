@@ -4,9 +4,9 @@
     頭の子音: 読み第1拍の子音(ヘボン式)の横棒ランキング。棒押下で頭文字の絞り込みへ %>
 <% spectrum = stats_vowel_spectrum(@stats.vowel_spectrum[:positions]) %>
 <% if spectrum %>
-  <div class="stats-section__body">
+  <div class="panel__body">
     <h3 class="stats-subheading"><%= t("stats.index.sound.spectrum_heading") %></h3>
-    <p class="stats-section__lead"><%= t("stats.index.sound.spectrum_lead") %></p>
+    <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.sound.spectrum_lead")) %></p>
     <div class="stats-scroll">
       <svg class="vowel-spectrum" viewBox="0 0 <%= spectrum[:width] %> <%= spectrum[:height] %>" role="img"
            aria-label="<%= t("stats.index.sound.spectrum_aria") %>">
@@ -32,15 +32,15 @@
 <%# 母音の遷移グラフ(層=拍位置・ノード=母音・エッジ=全結合)。層が2つ揃わなければ出さない %>
 <% graph = stats_vowel_graph(@stats.vowel_transitions) %>
 <% if graph %>
-  <div class="stats-section__body">
+  <div class="panel__body">
     <%= render "vowel_graph", graph: graph %>
   </div>
 <% end %>
 
 <% if @stats.head_consonants.any? %>
-  <div class="stats-section__body">
+  <div class="panel__body">
     <h3 class="stats-subheading"><%= t("stats.index.sound.consonant_heading") %></h3>
-    <p class="stats-section__lead"><%= t("stats.index.sound.consonant_lead") %></p>
+    <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.sound.consonant_lead")) %></p>
     <%# 棒の長さ(bar_percent)は SiteStatistics#head_consonants が先頭(最多)の行を 100 として返す。最多の色は
         CSS の .stats-bars__row:first-child が付けるので、件数の多い順に返すことが前提(並びを変えると
         色が別の行に移る。エラーは出ない)。同数のどれが先頭かは決まっていない %>

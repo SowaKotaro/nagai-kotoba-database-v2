@@ -24,7 +24,7 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
 
     # 素の単語一覧と検索フォームはトップと異なる固有の description を持つ
     get words_path
-    assert_select "meta[name=description][content=?]", I18n.t("words.index.description")
+    assert_select "meta[name=description][content=?]", I18n.t("words.index.description").join
 
     get search_path
     assert_select "meta[name=description][content=?]", I18n.t("searches.description")

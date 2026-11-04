@@ -7,7 +7,7 @@
       <dt><%= entry.name %></dt>
       <dd>
         <%= entry.description %>
-        <span class="feature-glossary__examples"><%= entry.examples.join(t(".examples_separator")) %></span>
+        <span class="feature-glossary__examples"><%= feature_examples(entry.examples) %></span>
       </dd>
     </div>
   <% end %>

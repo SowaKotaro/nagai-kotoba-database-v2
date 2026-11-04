@@ -23,9 +23,9 @@
 <section class="band band--hero">
   <div class="band__inner masthead">
     <h1 class="hero__title"><%= t("home.index.hero_title") %></h1>
-    <%# 説明は文ごとに分けて、広い幅では 1 文を 1 行に組む(幅だけで折ると「ジャ / ンル」のように語の途中で割れる)。
-        文言は meta description の既定と同じ 1 本(ApplicationHelper#page_description)なので、ここで句点の後ろで分ける %>
-    <p class="hero__lead"><%= safe_join(t("home.index.description").split(/(?<=。)/).map { |sentence| tag.span(sentence, class: "hero__lead-sentence") }) %></p>
+    <%# 説明は文ごとに行を分け、文節の切れ目でだけ折る(幅だけで折ると「ジャ / ンル」のように語の途中で割れる)。
+        文言は meta description の既定と同じ 1 本(ApplicationHelper#page_description はつないで使う) %>
+    <p class="hero__lead"><%= phrased_sentences(t("home.index.description")) %></p>
 
     <%# 入力欄の案内は「単語を検索」だけ。例文を添えるとスマホで途中で切れる(docs/design.md §5.2) %>
     <%= form_with url: words_path, method: :get, class: "hero-search" do %>

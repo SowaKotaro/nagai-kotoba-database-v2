@@ -6,9 +6,9 @@ module ApplicationHelper
   end
 
   # meta description / og:description。ページ側の content_for(:description) を優先し、
-  # 無ければサイト既定の説明にフォールバックする。検索スニペット向けに1行・約120字に整える。
+  # 無ければサイト既定の説明(文節の配列。つないで使う)にフォールバックする。検索スニペット向けに1行・約120字に整える。
   def page_description
-    raw = content_for?(:description) ? content_for(:description) : t("home.index.description")
+    raw = content_for?(:description) ? content_for(:description) : t("home.index.description").join
     raw.to_s.squish.truncate(120)
   end
 
@@ -29,10 +29,33 @@ module ApplicationHelper
 
   # 文ごとの文節の配列(ja.yml)を、文ごとに行を分け、文の中は文節の切れ目でだけ折れる形に組む(.phrase-sentence と対)。
   # 語の途中(「見つかりませんで／した」)や語尾だけ(「…全順位を／辿れます。」)の折れを防ぐ。
+  # 文節の末尾の空白(「棒 → 」)は塊の外に出す。塊の中に置くと行末の空白として消え、次の文節と詰まって見える
   def phrased_sentences(sentences)
     safe_join(sentences.map do |phrases|
-      tag.span(safe_join(phrases.map { |phrase| tag.span(phrase, class: "phrase") }, tag.wbr), class: "phrase-sentence")
+      tag.span(safe_join(phrases.map { |phrase| phrase_with_trailing_space(phrase) }, tag.wbr), class: "phrase-sentence")
     end)
+  end
+
+  # 用語解説の例(「硫黄 + 島 → いおうじま（シマ → ジマ）」)を 1 つずつ塊にして区切りでつなぐ(.phrase と対)。
+  # 例の途中(「（ソラ／→ ゾラ）」)では折らず、区切りの後ろで折る。label(「例: 」)は最初の例の塊に含め、ラベルだけが行に残らないようにする。
+  # 区切りは丸ごと前の例の塊に含め、折らない片(.phrase-mark)にする。塊の外に出すと、「／」だけの行や、
+  # 塊が幅いっぱいに折れたときに区切りの全角空白だけの行と、全角空白で始まる行ができた。
+  # 1 つの例で幅に収まらないときは、例の中の切れ目(example_parts)で折る
+  def feature_examples(examples, label: nil)
+    separator = t("shared.feature_glossary.examples_separator")
+    safe_join(examples.each_with_index.map do |example, index|
+      *heads, tail = example_parts("#{label if index.zero?}#{example}")
+      parts = heads.map { |part| phrase_with_trailing_space(part) }
+      parts << tag.span(safe_join([ tail, (tag.span(separator, class: "phrase-mark") unless index == examples.size - 1) ]), class: "phrase")
+      tag.span(safe_join(parts, tag.wbr), class: "phrase")
+    end, tag.wbr)
+  end
+
+  # 名前(ジャンルの分類名・絞り込みの条件の値・区画の見出し)を、「・」の後ろ・「（」の前・空白でだけ折れる形にする(.phrase と対)。
+  # 語の途中(「スポー／ツ」「部分一／致」)や最後の 1 字(「出版／物」)では折らない。切れ目ごとに塊にするのは、
+  # keep-all では WebKit が「（」の後ろで折ったため。1 つの塊で幅に収まらないときだけ、塊の中で折れる
+  def phrased_name(text)
+    safe_join(text.to_s.split(/(?<=[・ ])|(?=（)/).map { |part| phrase_with_trailing_space(part) }, tag.wbr)
   end
 
   # og:image の絶対URL。ページ側の content_for(:og_image) を優先し、無ければ既定カード。
@@ -92,4 +115,19 @@ module ApplicationHelper
   # 値はいずれも環境変数から。未設定ならタグを出さない。
   def google_site_verification = ENV["GOOGLE_SITE_VERIFICATION"].presence
   def bing_site_verification = ENV["BING_SITE_VERIFICATION"].presence
+
+  private
+
+  def phrase_with_trailing_space(phrase)
+    text = phrase.rstrip
+    safe_join([ tag.span(text, class: "phrase"), phrase.delete_prefix(text) ])
+  end
+
+  # 例を、演算子の後ろ(「硫黄 + 」「島 → 」)・「・」の後ろ・全角の括弧書きの前で切る。括弧書きの中は句読点の後ろでだけ切り、
+  # 空白では割らない(320px 幅で「（シマ →／ジマ）」と割れた)。読みを添える半角の括弧(「菅(すが)」)では切らない
+  def example_parts(example)
+    example.split(/(（[^）]*）)/).reject(&:empty?).flat_map do |segment|
+      segment.split(segment.start_with?("（") ? /(?<=[、。])/ : /(?<=[+→] |・)/)
+    end
+  end
 end

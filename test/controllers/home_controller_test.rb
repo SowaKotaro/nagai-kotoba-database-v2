@@ -21,9 +21,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
 
-    # 説明は 1 文ずつに分けて組む(広い幅で 1 文 1 行)。分けても文言は欠けない
-    assert_equal I18n.t("home.index.description").scan("。").size, css_select(".hero__lead .hero__lead-sentence").size
-    assert_equal I18n.t("home.index.description"), css_select(".hero__lead").text
+    # 説明は文ごとに行を分け、文節の切れ目でだけ折る(.phrase-sentence)。分けても文言は欠けない
+    assert_equal I18n.t("home.index.description").size, css_select(".hero__lead .phrase-sentence").size
+    assert_equal I18n.t("home.index.description").join, css_select(".hero__lead").text
 
     # ホームの検索欄は単語一覧へ q を GET で送る
     # 公開クエリ名 q は世に出ているので変えない(CLAUDE.md)。案内は例文を添えない短い文言(スマホで切れるため)

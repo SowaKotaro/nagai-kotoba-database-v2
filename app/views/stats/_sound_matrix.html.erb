@@ -2,7 +2,7 @@
     頭文字の行×末尾文字の行の11×11マトリクス(ンの行を含む)。
     セルのヒートは索引と同じ式(--fill 0〜1)。最多セルのみ数字を直書き、他はホバー(title) %>
 <%# 札(統計ページの章)の中身を 2 つの区画に分ける: 50音表の対 / 行×行マトリクス %>
-<div class="stats-section__body stats-kana-pair">
+<div class="panel__body stats-kana-pair">
   <%= render "kana_heatmap", counts: @stats.first_char_counts, param: :first_char,
         heading: t("stats.index.sound_matrix.first_heading") %>
   <%= render "kana_heatmap", counts: @stats.last_char_counts, param: :last_char,
@@ -14,9 +14,9 @@
 <% rows = KanaRow::ROW_KEYS %>
 <% cols = KanaRow::ROW_KEYS %>
 <% col_label = ->(col) { col == "ン" ? t("stats.index.sound_matrix.n_column") : t("stats.index.sound_matrix.row_label", row: col) } %>
-<div class="stats-section__body">
+<div class="panel__body">
   <h3 class="stats-subheading"><%= t("stats.index.sound_matrix.matrix_heading") %></h3>
-  <p class="stats-section__lead"><%= t("stats.index.sound_matrix.matrix_lead") %></p>
+  <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.sound_matrix.matrix_lead")) %></p>
   <div class="stats-matrix-layout">
     <div class="stats-scroll">
       <table class="sound-matrix">

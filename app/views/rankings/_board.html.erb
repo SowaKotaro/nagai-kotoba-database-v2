@@ -5,7 +5,7 @@
     locals: ranking(WordRanking), groups(#board の結果) %>
 <section class="panel rank-panel" id="rank-<%= ranking.key.dasherize %>">
   <div class="panel__head">
-    <h2 class="panel__title rank-panel__title"><%= icon ranking.icon %><%= ranking.title %></h2>
+    <h2 class="panel__title"><%= icon ranking.icon %><%= ranking.title %></h2>
   </div>
 
   <ol class="rank-list">

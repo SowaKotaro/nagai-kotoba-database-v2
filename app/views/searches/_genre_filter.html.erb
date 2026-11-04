@@ -26,7 +26,7 @@
         <details class="genre-fold genre-filter__fold" data-fold-count-target="fold" <%= "open" if selected_count.positive? %>>
           <summary class="genre-fold__summary genre-filter__summary">
             <%= icon "caret_down", "genre-fold__caret" %>
-            <span class="genre-filter__large-name"><%= large.name %></span>
+            <span class="genre-filter__large-name"><%= phrased_name(large.name) %></span>
             <span class="genre-fold__count" data-fold-count-target="count"
                   <%= "hidden" if selected_count.zero? %>><%= selected_count if selected_count.positive? %></span>
             <span class="genre-hub__bar" aria-hidden="true"

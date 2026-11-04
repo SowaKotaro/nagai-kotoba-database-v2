@@ -4,9 +4,9 @@
     4位=--bg / 5番目(その他)=--text の 16%(色相を持たないので、明度差だけで識別する) %>
 <% categories = @stats.origins[:categories] %>
 <% if categories.any? %>
-  <div class="stats-section__body">
+  <div class="panel__body">
     <h3 class="stats-subheading"><%= t("stats.index.origins.waffle_heading") %></h3>
-    <p class="stats-section__lead"><%= t("stats.index.origins.waffle_lead") %></p>
+    <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.origins.waffle_lead")) %></p>
     <div class="origin-case">
       <div class="waffle" role="img" aria-label="<%= t("stats.index.origins.waffle_aria") %>">
         <% categories.each_with_index do |category, index| %>
@@ -35,9 +35,9 @@
 <% end %>
 
 <% if @stats.entity_types.any? %>
-  <div class="stats-section__body">
+  <div class="panel__body">
     <h3 class="stats-subheading"><%= t("stats.index.origins.entity_heading") %></h3>
-    <p class="stats-section__lead"><%= t("stats.index.origins.entity_lead") %></p>
+    <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.origins.entity_lead")) %></p>
     <div class="entity-treemap">
       <% stats_entity_treemap(@stats.entity_types).each do |rect| %>
         <%= render "entity_cell", rect: rect %>
