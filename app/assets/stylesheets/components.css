@@ -5642,7 +5642,22 @@ a.entity-treemap__cell:hover {
    収録リクエスト(Issue 75)
    公開側から「この言葉を入れてほしい」を受け取るフォーム。
    入力欄と重複チェックの結果を1つの表に収め、送信ボタンの位置を動かさない。
+   表はトップ・一覧と同じ墨の枠の札(.panel)に収める(docs/design.md §5.12)
    ============================================================ */
+
+/* 見出しと上限が 1 行に収まらない幅(Noto Sans JP で 347px 以下)では、見出しを割らずに上限を下の行へ回す */
+.request-panel .panel__head {
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+/* 札の頭の右端に置く語数の上限 */
+.request-panel__limit {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
 
 .request-frame {
   display: block;
@@ -5651,21 +5666,21 @@ a.entity-treemap__cell:hover {
 .request-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: var(--space-3);
 }
 
 .request-table thead th {
   text-align: left;
-  padding: 0 var(--space-2) var(--space-2);
-  border-bottom: 1px solid var(--border-strong);
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border);
   font-size: 12px;
   font-weight: 400;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
+/* 行の罫は最後の行にも引く(札の足との仕切りを兼ねる)。<table> なので gap の罫は使えない(docs/design.md §3) */
 .request-table td {
-  padding: var(--space-3) var(--space-2);
+  padding: var(--space-2);
   border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
@@ -5683,20 +5698,26 @@ a.entity-treemap__cell:hover {
   counter-increment: request-row;
 }
 
-.request-table__no {
-  width: 2.5em;
+/* 両端の列は、札の枠と字が付かないよう札の頭と同じ余白を取る(左は見出しの頭、右は札の頭の右の余白) */
+.request-table .request-table__no {
+  width: calc(var(--space-5) + 2em);
+  padding-left: var(--space-5);
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text-subtle);
   white-space: nowrap;
 }
 
+/* 番号は入力欄の字の高さに合わせる(入力欄の上下の余白 9px + 枠 1px のぶん下げる) */
 .request-row .request-table__no::before {
   content: counter(request-row);
+  display: block;
+  padding-top: 10px;
 }
 
-.request-table__remove {
-  width: 3em;
+.request-table .request-table__remove {
+  width: calc(var(--space-3) + 3em);
+  padding-right: var(--space-3);
   text-align: right;
 }
 
@@ -5716,12 +5737,18 @@ a.entity-treemap__cell:hover {
   white-space: nowrap;
 }
 
-/* 読みの字数カウンタ。収録基準を満たしたときだけ緑にする */
+/* 読みの字数カウンタ。収録基準を満たしたときだけ緑にする。
+   読みを打つまでは高さを取らない(行を詰めて積むため。打ちはじめた行だけが 1 行ぶん伸びる)。
+   空でも display: none にはしない(aria-live の領域が読み上げの木から消え、出た文が読まれなくなる) */
 .reading-counter {
   margin: var(--space-1) 0 0;
-  min-height: 1.4em;
   font-size: 12px;
+  line-height: 1.5;
   color: var(--text-subtle);
+}
+
+.reading-counter:empty {
+  margin: 0;
 }
 
 .reading-counter--ok {
@@ -5733,8 +5760,9 @@ a.entity-treemap__cell:hover {
 /* 判定の kind(WordRequestDuplicateCheck の :exact / :similar / :none)を補間して修飾子を付ける。
    --none(未収録)は枠なしで静かに伝える既定の見た目なので、規則を持たない */
 .dup-note {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 12px;
+  line-height: 1.6;
   color: var(--text-subtle);
 }
 
@@ -5742,17 +5770,17 @@ a.entity-treemap__cell:hover {
 .dup-note--similar {
   border: 1px solid var(--danger);
   border-radius: var(--radius);
-  padding: var(--space-2);
+  padding: var(--space-1) var(--space-2);
   color: var(--danger);
 }
 
+/* 判定と、その語へのリンクを 1 行に流す(収まらなければリンクの前で折り返す) */
 .dup-note__verdict {
-  display: block;
+  margin-right: var(--space-2);
 }
 
 .dup-note__link {
   display: inline-block;
-  margin-top: 2px;
   margin-right: var(--space-2);
   font-size: 14px;
   font-weight: 400;
@@ -5761,7 +5789,8 @@ a.entity-treemap__cell:hover {
 /* 照合中だけ出す(turbo が turbo-frame に busy を立てる) */
 .request-table__loading {
   display: none;
-  margin: 0 0 var(--space-3);
+  margin: 0;
+  padding: var(--space-2) var(--space-5) 0;
   font-size: 13px;
   color: var(--text-subtle);
 }
@@ -5778,27 +5807,27 @@ a.entity-treemap__cell:hover {
 }
 
 .request-table__notice {
-  margin: 0 0 var(--space-3);
+  margin: 0;
+  padding: var(--space-2) var(--space-5) 0;
   font-size: 14px;
   color: var(--danger);
 }
 
+/* 札の足: 左に行の追加、右端に重複チェック(送信の手前に置く補助操作なので、行の追加から離す)。
+   上の罫は最後の行の下罫が兼ねる。2 つが 1 行に収まらない幅(320px)では、どちらも左端に揃えて積む
+   (margin-left: auto で右へ寄せると、折れたときに重複チェックだけが右にずれて残る) */
 .request-actions {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
   flex-wrap: wrap;
-  margin-bottom: var(--space-5);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
 }
 
-.request-actions__limit {
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
-/* 重複チェックは送信の手前に置く補助操作なので、主 CTA から離して右へ寄せる */
-.request-actions__check {
-  margin-left: auto;
+/* 送るボタンは札の外、札の左端に揃えて置く */
+.request-submit {
+  margin-top: var(--space-4);
 }
 
 /* ハニーポット: 人間には見えず、タブ移動でも触れない欄 */
@@ -5812,73 +5841,144 @@ a.entity-treemap__cell:hover {
 
 /* 送信前のお願い(静かに置く) */
 .request-notes {
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
+  margin-top: var(--space-5);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
 
+.request-notes .section-label {
+  margin-top: 0;
+}
+
 .request-notes ul {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
   padding-left: 1.2em;
   font-size: 14px;
-  line-height: 1.9;
+  line-height: 1.8;
   color: var(--text-muted);
 }
 
-/* 狭幅では表を組まず、1行 = 1枚の面に積む(横スクロールを作らない) */
-@media (max-width: 700px) {
-  .request-table thead {
-    display: none;
+/* 札の頭の左の余白が詰まる幅(.panel__head)では、表と足の左右の余白も同じだけ詰める */
+@media (max-width: 767px) {
+  .request-table .request-table__no {
+    width: calc(var(--space-4) + 2em);
+    padding-left: var(--space-4);
   }
 
+  .request-table__loading,
+  .request-table__notice {
+    padding-inline: var(--space-4);
+  }
+
+  .request-actions {
+    padding-left: var(--space-4);
+  }
+}
+
+/* 狭幅では表を組まず、1 行 = 1 段に積む(横スクロールを作らない)。
+   段は枠で囲まず、札の中で罫だけで分ける(札の中に枠を入れ子にしない)。
+   欄の名前は段ごとに挟まず、表の見出し行を札の頭の下に 1 行だけ残す(PC の表と同じく 1 回だけ読ませる)。
+   段の中は「言葉の欄 + 消すボタン」→ 重複チェックの判定 → 読みの欄 → 字数の表示 の順に積む。
+   セルを display: contents で開き、欄と判定を段の格子に直接並べる(消すボタンを言葉の欄の高さの中央に揃えるため。
+   欄の名前は <label for> のまま読み上げに残る) */
+@media (max-width: 700px) {
   .request-table,
   .request-table tbody,
+  .request-table thead,
   .request-table tr,
   .request-table td {
     display: block;
   }
 
-  .request-row {
-    position: relative;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--space-3) var(--space-3) var(--space-2);
-    margin-bottom: var(--space-3);
+  /* 見出し行: 「言葉 │ 読み（任意）」を 1 行に。上の欄が言葉、下の欄が読みの順に対応する */
+  .request-table thead tr {
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-4) var(--space-1);
+    border-bottom: 1px solid var(--border);
   }
 
-  .request-table td {
-    padding: 0 0 var(--space-3);
+  /* 幅は名前の幅まで(PC の列幅 50% を持ち越すと、仕切りの罫が見出し行の真ん中に来る) */
+  .request-table thead th {
+    width: auto;
+    padding: 0;
     border-bottom: none;
   }
 
-  .request-table__label {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip-path: none;
+  .request-table thead .request-table__no,
+  .request-table thead .request-table__remove {
+    display: none;
   }
 
-  .request-table__no,
-  .request-table__surface,
-  .request-table__reading {
-    width: auto;
+  .request-table thead .request-table__reading {
+    margin-left: var(--space-3);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--border);
   }
 
-  .request-table__no {
-    padding-bottom: var(--space-2);
+  .request-table .request-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-2);
+    align-items: start;
+    /* 右の余白は札の頭・足の右の余白(12px)と揃え、消すボタンの右端を上限の文字・重複チェックの右端に合わせる */
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
   }
 
-  .request-table__remove {
-    position: absolute;
-    top: var(--space-2);
-    right: var(--space-2);
+  .request-table td {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  /* 番号の列は畳む(行の数の上限は札の頭が言い、段どうしは罫で分かれる) */
+  .request-table .request-table__no {
+    display: none;
+  }
+
+  /* 開くのは段のセルだけ(見出し行のセルは開かない。開くと仕切りの罫を引く箱が消える) */
+  .request-row .request-table__surface,
+  .request-row .request-table__reading {
+    display: contents;
+  }
+
+  .request-table__surface input {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .request-table__surface .dup-note {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .request-table__reading input {
+    grid-column: 1;
+    grid-row: 3;
+    margin-top: var(--space-2);
+  }
+
+  /* 字数の表示は消すボタンの下まで使う(文字だけなので、上の欄の幅を超えても外形は崩れない) */
+  .request-table__reading .reading-counter {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+
+  .request-table .request-table__remove {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    display: flex;
     width: auto;
     padding: 0;
   }
 
-  .request-actions__check {
-    margin-left: 0;
+  /* 消すボタンは 28px の正方形に縮め(PC は 38×30px)、空いた幅を入力欄に回す(読みの例が切れにくくなる) */
+  .request-table__remove .btn--icon {
+    width: 28px;
+    min-height: 28px;
+    padding: 0;
   }
 }
 

@@ -40,6 +40,9 @@ class WordRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=hidden][name=form_token]"
     assert_select "input[type=hidden][name=origin_path]"
     assert_select "input[name=?]", WordRequestsController::HONEYPOT_FIELD.to_s
+
+    # 入力欄で Enter を押すと、送信ではなく重複チェックが走る(フォームの中で最初の送信ボタンが押されるため)
+    assert_equal duplicates_requests_path, css_select("form[action='#{requests_path}'] [type=submit]").first["formaction"]
   end
 
   test "送信すると未着手のリクエストとして保存し、送信の技術メタデータを記録する" do

@@ -125,7 +125,6 @@ ja:
       stats: "STATISTICS"
       about: "ABOUT"
       privacy: "PRIVACY"
-      request: "REQUEST"
       # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
       reading_characters: "READING / %{count} CHARACTERS"
       max: "MAX %{unit}"
@@ -441,6 +440,8 @@ ja:
       # 「10文字」は収録基準 WordSense::MIN_READING_LENGTH と一致させる(公開の紹介文なので補間しない)
       description: "「長い言葉のデータベース」に収録してほしい言葉を教えていただくページ。読みが10文字以上の言葉を集めています。"
       lead: "「この言葉が載っていない」と気づいたら、教えてください。いただいた言葉は収録基準に照らして一つずつ確認したうえで、登録を検討します。"
+      # 入力の表を収める札の見出し
+      items_title: "収録してほしい言葉"
       surface_placeholder: "例: フェルマーの最終定理"
       reading_placeholder: "例: フェルマーノサイシュウテイリ"
       add_row: "行を追加"

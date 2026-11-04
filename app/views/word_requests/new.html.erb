@@ -5,11 +5,12 @@
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t(".title"), nil ] ] %>
 
-<div class="page-header">
-  <p class="label-en"><%= t("labels.en.request") %></p>
+<%# 英字の標識(REQUEST)は置かない。トップ・一覧・単語詳細と同じく見出しは日本語だけにする(docs/design.md §5.8)。
+    レール(数と線画)も持たない(docs/design.md §5.12) %>
+<header class="page-header">
   <h1 class="page-title"><%= t(".title") %></h1>
   <p class="page-lead"><%= t(".lead") %></p>
-</div>
+</header>
 
 <% if @word_request.errors.any? %>
   <ul class="form-errors">
@@ -32,33 +33,43 @@
     <%= text_field_tag WordRequestsController::HONEYPOT_FIELD, nil, tabindex: -1, autocomplete: "off" %>
   </div>
 
-  <%= render "rows", form: form, results: {}, throttled: false %>
+  <%# 書く欄をトップ・一覧と同じ墨の枠の札に収める。頭に見出しと語数の上限、中に入力の表、
+      足に行の追加と重複チェック。送るボタンは札の外に置く(docs/design.md §5.12) %>
+  <section class="panel request-panel">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t(".items_title") %></h2>
+      <%# 上限は行を追加できなくなる理由でもあるので、札の頭に常に出しておく %>
+      <p class="request-panel__limit"><%= t(".limit", max: WordRequest::MAX_ITEMS) %></p>
+    </div>
 
-  <%# 行の追加用テンプレート。NEW_RECORD は Stimulus 側で一意な値に置き換わる。
-      差し替わる turbo-frame の外に置き、チェックしても失われないようにする %>
-  <template data-nested-form-target="template">
-    <%= form.fields_for :items, WordRequestItem.new, child_index: "NEW_RECORD" do |item_form| %>
-      <%= render "row", form: item_form, result: nil %>
-    <% end %>
-  </template>
+    <%= render "rows", form: form, results: {}, throttled: false %>
 
-  <div class="request-actions">
-    <button type="button" class="btn btn--sm" data-action="nested-form#add" data-nested-form-target="addButton">
-      <%= t(".add_row") %>
-    </button>
-    <span class="request-actions__limit"><%= t(".limit", max: WordRequest::MAX_ITEMS) %></span>
+    <%# 行の追加用テンプレート。NEW_RECORD は Stimulus 側で一意な値に置き換わる。
+        差し替わる turbo-frame の外に置き、チェックしても失われないようにする %>
+    <template data-nested-form-target="template">
+      <%= form.fields_for :items, WordRequestItem.new, child_index: "NEW_RECORD" do |item_form| %>
+        <%= render "row", form: item_form, result: nil %>
+      <% end %>
+    </template>
 
-    <%# 重複チェック: 送信とは独立した任意操作。結果がどうであれ送信は妨げない。
-        同じフォームの内容を formaction で別 URL へ投げ、表の turbo-frame だけを差し替える。
-        Enter キーでは(送信ではなく)このチェックが走る = 誤操作しても安全な側に倒れる。 %>
-    <button type="submit" class="btn btn--sm request-actions__check"
-            formaction="<%= duplicates_requests_path %>" formmethod="post" formnovalidate
-            data-turbo-frame="request-rows">
-      <%= icon "magnifying_glass" %><%= t(".check") %>
-    </button>
-  </div>
+    <div class="request-actions">
+      <button type="button" class="btn btn--sm" data-action="nested-form#add" data-nested-form-target="addButton">
+        <%= icon "plus" %><%= t(".add_row") %>
+      </button>
 
-  <div class="actions">
+      <%# 重複チェック: 送信とは独立した任意操作。結果がどうであれ送信は妨げない。
+          同じフォームの内容を formaction で別 URL へ投げ、表の turbo-frame だけを差し替える。
+          Enter キーでは(送信ではなく)このチェックが走る = 誤操作しても安全な側に倒れる
+          (送るボタンより前に置くこと。Enter はフォームの中で最初の送信ボタンを押す)。 %>
+      <button type="submit" class="btn btn--sm"
+              formaction="<%= duplicates_requests_path %>" formmethod="post" formnovalidate
+              data-turbo-frame="request-rows">
+        <%= icon "magnifying_glass" %><%= t(".check") %>
+      </button>
+    </div>
+  </section>
+
+  <div class="request-submit">
     <%= form.submit t(".submit"), class: "btn btn--primary" %>
   </div>
 
