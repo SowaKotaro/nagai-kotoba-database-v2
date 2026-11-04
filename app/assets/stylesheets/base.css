@@ -1,8 +1,8 @@
 /* 素のタグへの基本設定と、全体で使うユーティリティ(.mono)(docs/design.md)。
-   手本(しずかなインターネット)の骨格:
-   - 太字を使わない。強さは「級数」と「文字の濃さ」だけで作る
-   - 字間をわずかに開け、行間を広く取る
-   - リンクは色を変えず、細い下線で示す */
+   書体・太さ・字間・リンクの手本は SANKOU!(sankoudesign.com)そのもの:
+   - 太さは本文 400 と見出し・強調 800 の二段だけ。中間の太さは使わない
+   - 和文を palt で詰めてから字間を広く開け、行間を広く取る
+   - リンクは色を変えず、墨の細い下線で示し、hover で下線を消す */
 *,
 *::before,
 *::after {
@@ -14,24 +14,26 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* 地はコンテンツの面と同じ白。色を持つのはヘッダーとフッター(どちらも --bg-soft)だけで、
-   その 2 つと色が変わることで、罫も影も引かずに上下の境目が出る
-   (2026-09-04 オーナー指示「ヘッダーとの境目が現在だとわからない」) */
+/* 地は SANKOU! と同じ #FAFAFA(--bg)。一覧の行・ボタン・入力は一段明るい白(--surface)で載せる。
+   ヘッダーもフッターも帯を持たず、同じ地の上に載る */
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  /* 和文の約物と仮名を詰めてから(palt)、--tracking で一律に開ける(SANKOU! と同じ組み方) */
+  font-feature-settings: "palt";
   font-size: 16px;
   line-height: 1.9;
   letter-spacing: var(--tracking);
   -webkit-font-smoothing: antialiased;
 }
 
-/* 見出しも本文と同じ書体・同じ太さ(400)。大きさと余白だけで段を作る */
+/* 見出しは本文と同じ書体の極太(800)。字間は本文よりわずかに詰める(SANKOU! の h1〜h6 と同じ 0.06em) */
 h1, h2, h3, h4 {
   font-family: inherit;
-  font-weight: 400;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   line-height: 1.75;
   margin: 0;
 }
@@ -40,19 +42,20 @@ p {
   margin: 0 0 var(--space-4);
 }
 
-/* リンクは本文と同じ色。細い下線だけで「押せる」ことを示す(青くしない) */
+/* リンクは本文と同じ色。文字と同じ色の細い下線で「押せる」ことを示し(青くしない)、
+   hover で下線を消す(SANKOU! と同じ) */
 a {
   color: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-decoration-color: var(--border-strong);
+  text-decoration-color: currentColor;
   text-underline-offset: 5px;
   transition: text-decoration-color var(--transition), color var(--transition),
               background-color var(--transition), border-color var(--transition);
 }
 
 a:hover {
-  text-decoration-color: var(--text-muted);
+  text-decoration-color: transparent;
 }
 
 ::selection {
@@ -72,9 +75,9 @@ button {
   letter-spacing: inherit;
 }
 
-/* 太字は使わない方針なので、b / strong もごく僅かな差にとどめる */
+/* 強調は見出しと同じ 800(SANKOU! の b と同じ。太さは 400 と 800 の二段だけ) */
 b, strong {
-  font-weight: 500;
+  font-weight: 800;
 }
 
 img {

@@ -43,7 +43,7 @@ module StructuredDataHelper
   end
 
   # About の FAQ(items = [{ question:, answer: }, ...])を FAQPage にする。
-  # 文言は pages.about.faq_items(i18n)を画面表示と共用し、内容の食い違いを防ぐ。
+  # 文言は pages.about.faq_items(i18n)を画面表示と共用し、内容の食い違いを防ぐ。問いは文節の配列なので join して平文にする。
   def faq_json_ld(items)
     json_ld_tag(
       "@context" => "https://schema.org",
@@ -51,7 +51,7 @@ module StructuredDataHelper
       "mainEntity" => items.map do |item|
         {
           "@type" => "Question",
-          "name" => item[:question],
+          "name" => item[:question].join,
           "acceptedAnswer" => { "@type" => "Answer", "text" => item[:answer] }
         }
       end

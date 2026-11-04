@@ -7,6 +7,25 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     @stats = SiteStatistics.new
   end
 
+  test "ホームが読む数字の壁の写しは、集計一式と同じ時点の数で、一式を集計し直すたびに書き直す" do
+    with_rails_cache do
+      stats = SiteStatistics.fetch
+      assert_equal stats.wall, SiteStatistics.wall
+
+      # 写しだけが先に切れたときは、キャッシュの一式から作り直す(時点は変わらない)
+      Rails.cache.delete(SiteStatistics::WALL_CACHE_KEY)
+      assert_equal stats.computed_at, SiteStatistics.wall.computed_at
+
+      # 一式を集計し直すと、写しも新しい時点の数になる
+      travel 1.hour do
+        Rails.cache.delete(SiteStatistics::CACHE_KEY)
+        recomputed = SiteStatistics.fetch
+        assert_operator recomputed.computed_at, :>, stats.computed_at
+        assert_equal recomputed.wall, SiteStatistics.wall
+      end
+    end
+  end
+
   test "規模・読みの長さ・文字と音(フィクスチャの2語義)" do
     assert_equal 2, @stats.scale[:words]
     assert_equal 2, @stats.scale[:senses]

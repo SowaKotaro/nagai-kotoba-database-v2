@@ -14,12 +14,12 @@ export default class extends Controller {
                     "smallContainer", "smallTitle", "smallList"]
   static values = { script: String, searchUrl: String, countLabel: String, smallsSuffix: String }
 
-  // チャート色(--chart #6F8EA8)の濃淡だけのパレット。多色カテゴリカルは作らない。
+  // チャート色(--chart #8F8682)を地(#FAFAFA)へ寄せた濃淡だけのパレット。多色カテゴリカルは作らない。
   // ライトの --chart から作った値の直書きなので、塗りはダークに追従しない(区切り線と文字の色は
   // 下の token で CSS から読む)。塗りの色の正はここ
   static palette = [
-    "#6F8EA8", "#829DB4", "#95ACC0", "#A8BBCC", "#BBCAD8",
-    "#C9D5E0", "#D7E0E8", "#E3E9EF", "#EDF1F5", "#F5F8FA"
+    "#8F8682", "#99918D", "#A39C98", "#ADA6A3", "#B7B1AF",
+    "#C1BCBA", "#CBC7C5", "#D5D2D0", "#DFDCDB", "#E9E7E6"
   ]
 
   async connect() {

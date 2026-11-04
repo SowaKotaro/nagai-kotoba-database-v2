@@ -4,7 +4,7 @@ class PublishedSenseCountsTest < ActiveSupport::TestCase
   # 公開語はフィクスチャの ABC殺人事件(さつじんじけん・7字)と カレーライス(カレー・3字)。
   # 未注釈の 涼宮ハルヒの憂鬱 / バミューダトライアングル は数えない。
 
-  test "先頭・末尾の文字、読みの文字数・モーラ数、ジャンル・エンティティ・言語学的特徴ごとの公開語義数を数える" do
+  test "先頭・末尾の文字、読みの文字数・モーラ数、ジャンル・エンティティ・品詞・語種・言語学的特徴ごとの公開語義数を数える" do
     counts = PublishedSenseCounts.by_first_char
     assert_equal 1, counts["さ"]
     assert_equal 1, counts["カ"]
@@ -30,6 +30,10 @@ class PublishedSenseCountsTest < ActiveSupport::TestCase
 
     # エンティティも同じく、未設定の語義(カレー)は nil キーにまとまる
     assert_equal({ entity_types(:book_title).id => 1, nil => 1 }, PublishedSenseCounts.by_entity_type)
+
+    # 品詞(どちらも名詞)と語種(漢語・英語)。未注釈の語義は数えない
+    assert_equal({ parts_of_speech(:noun).id => 2 }, PublishedSenseCounts.by_part_of_speech)
+    assert_equal({ word_origins(:kango).id => 1, word_origins(:eigo).id => 1 }, PublishedSenseCounts.by_word_origin)
 
     # 言語学的特徴は語義の数で数える(同じ語義に 2 か所付いても 1。未注釈の語義に付いたものは数えない)
     WordSenseFeature.create!(word_sense: word_senses(:murder), linguistic_feature: linguistic_features(:rendaku),

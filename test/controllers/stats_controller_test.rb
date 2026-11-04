@@ -8,11 +8,14 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     get stats_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("stats.index.title")
+    # リードは文ごとに行を分ける(文節の折り方は WordsControllerTest の 0 件の案内で見る)
+    assert_select "p.page-lead .phrase-sentence", count: I18n.t("stats.index.lead").size
     assert_select "meta[name=robots]", count: 0
 
-    # 数字の壁は4群×5指標の定義リスト
-    assert_select ".stats-wall__group", count: 4
+    # 数字の壁は4群×5指標の定義リスト。数字の壁と収録の推移は、ホームの「数字で見る長い言葉」の升から id で直に開く
+    assert_select "#number-wall .stats-wall__group", count: 4
     assert_select ".stats-wall__row", count: 20
+    assert_select "section#timeline svg.timeline-chart", minimum: 1
     # 50音表(先頭文字 / 末尾文字)・行×行・波形バー(文字数 / モーラ数)・推移・スペクトル・頭子音(s / k)
     assert_select ".stats-kana .kana-grid", count: 2
     assert_select "table.sound-matrix", count: 1
@@ -55,7 +58,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     # (auiie と aee のうち 5 拍目まで届くのは auiie だけ = 50.0%)
     assert_select ".stats-hint", text: I18n.t("stats.index.sound.graph_hint",
                                               top_position: 1, top_from: I18n.t("vowel_rows.a"), top_to: I18n.t("vowel_rows.u"),
-                                              top_count: "1", last: 5, last_count: "1", last_percent: 50.0)
+                                              top_count: "1", last: 5, last_count: "1", last_percent: 50.0).join
 
     # ワードクラウド(Issue 78)は集計ファイルの語をすべて並べ、8色とも使う
     entries = MorphemeFrequencies.entries

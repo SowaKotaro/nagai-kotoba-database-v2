@@ -290,7 +290,6 @@ utf8mb4 のインデックスキー長制限（3072 バイト）に収めるた�
 |---|---|---|
 | 統計ページ §1 のワードクラウド | コミット済みの事前集計ファイル `db/morpheme_frequencies.json`（`MorphemeFrequencies`） | 生成（`bin/rails stats:morphemes`）は `Word.annotated` を通る。`SURFACES_FILE` を渡すときは公開語だけのファイルにする（`lib/tasks/stats.rake`）。載るのは 2 語以上に現れた部品（`MorphemeFrequencies::MIN_COUNT`）で、語そのものは出ない。生成した後に公開を取り消した語の部品は、作り直すまで残る |
 | /search のフォームの選択肢と、一覧のファセットの見出し | マスタ（ジャンル・品詞・エンティティ・語種・特徴）の全件 | 出るのはマスタの名前だけで、語は出ない。ただし公開語に使われていない名前も出る（未公開の語のために作ったマスタの名前も出うる）。/genres は 0 件の分類を隠すので、画面によって見せ方が違う |
-| ホームの「ジャンル数」 | `HomeStatistics` の `Genre.small.count`（マスタの小分類の全件） | 数だけで、語は出ない。公開語の有無を問わず数えるので、/genres のレールの数・統計の「使用ジャンル」とは定義が違う |
 
 ### 8.2 公開の取り消しが反映されるまで
 
@@ -303,7 +302,10 @@ utf8mb4 のインデックスキー長制限（3072 バイト）に収めるた�
 - **最大 1 日残る（表層形・読み・意味を含む）**: `llms-full.txt` と `sitemap.xml`。版（`PublishedWordsDigest`）が
   「公開語の最終更新日」なので、語が減っても版が変わらない。`Cache-Control` でも 1 日の猶予を宣言している。
   /rankings（`WordRanking`）と /stats（`SiteStatistics`）も 1 日キャッシュで、表層形と読みを含む。
-- **数だけ残る**: ホームの数（`HomeStatistics`。1 時間）、About の収録語数（`AboutStatistics`。1 日）、/genres・/browse の件数（`PublishedSenseCounts`。1 時間）。
+- **数だけ残る**: About の収録語数（`AboutStatistics`。1 日）、/genres・/browse の件数（`PublishedSenseCounts`。1 時間）。
+  ホームの「数字で見る長い言葉」は /stats と同じ数（`SiteStatistics.wall`。1 日）。`HomeStatistics` の語数（1 時間）は
+  今日の一語を選ぶのに使うだけで、画面には出さない（選ぶ語は公開スコープから引く）。
+  ホームの探し方の選択肢（`SearchWayMenus`。1 時間）は、公開語義が無くなったマスタの名前を最大 1 時間残す。
 - 本番のキャッシュはプロセス内のメモリ（`config.cache_store = :memory_store`）なので、Puma の再起動・デプロイで消える。
   すぐ消したいときは再起動する。
 

@@ -12,7 +12,7 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     # 見出し語(surface)が詳細へのリンク
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), text: words(:abc_murder).surface
     # 文字数は読みの文字数(さつじんじけん=7字)
-    assert_select ".entry-row__len", text: I18n.t("words.index.char_count", count: word_senses(:murder).reading.length)
+    assert_select ".entry-row__len", text: "#{word_senses(:murder).reading.length}#{I18n.t("words.index.char_unit")}"
     # エンティティタグはファセット絞り込みへの実リンク。品詞は語の見分けに効かないので一覧には出さない
     assert_select "a.entry-row__tag[href=?]", words_path(entity_type_id: entity_types(:book_title).id),
                   text: entity_types(:book_title).name
@@ -60,7 +60,15 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
   test "0件のときは絞り込みの有無で案内を出し分ける" do
     get words_path(first_char: "ヲ")
-    assert_select "p.empty-note", text: I18n.t("words.index.empty_filtered")
+    # 案内は文ごとに行を分け(.phrase-sentence)、文の中の文節の切れ目にだけ wbr を挟む
+    assert_select "p.empty-note", text: I18n.t("words.index.empty_filtered").flatten.join do
+      assert_select ".phrase-sentence", count: I18n.t("words.index.empty_filtered").size
+      assert_select "wbr", count: I18n.t("words.index.empty_filtered").sum { |phrases| phrases.size - 1 }
+    end
+    # リクエストの導線が「この言葉の」と言うのは、キーワードを引き継ぐときだけ
+    assert_select ".empty-request a", text: I18n.t("words.index.request_link_no_keyword")
+    get words_path(q: "収録されていない言葉の見本")
+    assert_select ".empty-request a", text: I18n.t("words.index.request_link")
 
     Word.update_all(annotated_at: nil) # 公開(注釈済み)を無くす
     get words_path
@@ -75,6 +83,12 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".condition-chip__value", text: parts_of_speech(:noun).name
     assert_select "a.active-facet__edit[href=?]", search_path(part_of_speech_id: parts_of_speech(:noun).id)
     assert_select "a.active-facet__clear[href=?]", words_path
+
+    # 複数の値は「・」でつなぎ、折り返してよい位置(wbr)は「・」の後ろにだけ挟む
+    get words_path(first_char: %w[カ サ])
+    assert_select ".condition-chip__value", text: "カ・サ" do
+      assert_select "wbr", count: 1
+    end
   end
 
   test "音の成分で絞ると該当語だけが並び、条件チップに「◯つ以上」と出る" do
@@ -209,6 +223,8 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     # シャッフルは同じ URL でも並びが毎回変わるので、preview を許すと1クリックで2回シャッフルして見える。
     get words_path(sort: "shuffle")
     assert_select "meta[name=turbo-cache-control][content=no-preview]", count: 1
+    # シャッフル中だけ、選べない「シャッフル中」をセレクタの先頭に出して選択済みにする(既定の並びを選べば変更として送られる)
+    assert_select "select#sort option:first-child[selected][disabled][value=shuffle]", text: I18n.t("words.index.sort.shuffling")
 
     [ words_path, words_path(sort: "kana_asc") ].each do |path|
       get path
@@ -249,13 +265,16 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     sense = word_senses(:murder)
     get word_path(sense.word)
 
-    # 読みは表層形へのグループルビ(<ruby><rt>)で表示する
-    assert_select "h2.sense-heading rt", text: sense.reading
+    # 読みは表層形へのグループルビ(<ruby><rt>)で表示する。語義の札の頭は通し番号
+    assert_select "article.sense-card h2.panel__title", text: I18n.t("words.show.sense_number", number: 1)
+    assert_select "h3.sense-heading rt", text: sense.reading
     assert_select ".sense-heading-meta", text: /#{sense.rhythm_pattern}/
     assert_select ".sense-heading-meta", text: /#{sense.vowel_pattern}/
     assert_match sense.meaning, response.body
     # 読み・文字数・ジャンルを散文化した定義文(Issue 18)。文面の組み立ては WordsHelperTest で見る
-    assert_select ".word-flavor .word-flavor__text", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
+    assert_select ".page-header .page-lead", text: /「#{sense.word.surface}」は、読み「#{sense.reading}」/
+    # レールには代表の語義の読みの文字数を立てる
+    assert_select ".page-header__rail .page-header__count-value", text: sense.reading_length.to_s
     # 円環交差数(さつじんじけん は 3 回)
     assert_select ".kana-ring__count", text: I18n.t("words.show.crossings_count", count: 3)
 
@@ -270,13 +289,14 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     # X 共有(intent リンク・canonical URL をエンコードして含む)と URL コピー(Stimulus)
-    assert_select "a.share__btn[href^=?]", "https://x.com/intent/post"
-    assert_select "a.share__btn[href*=?]", "#{URI(CANONICAL_HOST).host}%2Fwords%2F#{word.id}"
+    assert_select ".share a[href^=?]", "https://x.com/intent/post"
+    assert_select ".share a[href*=?]", "#{URI(CANONICAL_HOST).host}%2Fwords%2F#{word.id}"
     assert_select "div.share[data-clipboard-text-value=?]", "#{CANONICAL_HOST}/words/#{word.id}"
-    assert_select "button.share__btn[data-action=?]", "clipboard#copy"
+    assert_select ".share button[data-action=?]", "clipboard#copy"
 
-    # ランダム導線は見出し語ストリップに置く
-    assert_select ".page-eyebrow a.eyebrow-random[href=?]", random_words_path
+    # ランダム導線は操作の行の右端に、シェアとは別のまとまりで置く(行き先が毎回変わるのでクロールさせない)
+    assert_select ".word-actions > a.word-actions__random[href=?][rel=nofollow]", random_words_path
+    assert_select ".share a[href=?]", random_words_path, count: 0
   end
 
   test "詳細の属性は絞り込みリンクになり、未登録は「—」で示す" do
@@ -329,16 +349,17 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     word = Word.new(surface: "代表語義の見本")
     word.word_senses.build(reading: "ミジカイヨミ")                 # 6 字・id が小さい
     word.word_senses.build(reading: "トテモナガイヨミノゴギデスヨネ") # 15 字
+    word.word_senses.build(reading: "ミジカイヨミ")                 # 1 つ目と同じ読み。一覧の行には 2 回出さない
     word.mark_annotated
     word.save!
 
     get words_path(q: word.surface)
     assert_select "article.entry-row", 1
-    assert_select ".entry-row__len", text: I18n.t("words.index.char_count", count: 6)
+    assert_select ".entry-row__len", text: "6#{I18n.t("words.index.char_unit")}"
     assert_select ".entry-row__reading", text: "ミジカイヨミ、トテモナガイヨミノゴギデスヨネ"
 
     get word_path(word)
-    assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ], css_select(".sense-card .sense-heading rt").map(&:text)
+    assert_equal %w[ミジカイヨミ トテモナガイヨミノゴギデスヨネ ミジカイヨミ], css_select(".sense-card .sense-heading rt").map(&:text)
   end
 
   test "詳細の関連語としりとり(「ん」で終わる語は行き止まり)" do
@@ -347,13 +368,15 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
     get word_path(words(:abc_murder)) # 読み さつじんじけん
     assert_response :success
-    assert_select "section.related .related__title", text: I18n.t("words.show.related.title")
+    assert_select "section.related h2.panel__title", text: I18n.t("words.show.related.genre")
     # 同ジャンルの別語への実リンク(単語→単語の内部リンク)と、ファセット一覧への「もっと見る」
     assert_select "section.related a.entry-row__surface[href=?]", word_path(sibling)
-    assert_select "section.related a.related__more[href=?]", words_path(genre_id: genres(:small_novel).id)
+    assert_select "section.related a.panel__more[href=?]", words_path(genre_id: genres(:small_novel).id)
 
+    # 行き止まりの札は一文だけで、行も「もっと見る」も出さない
     assert_select "section.related--shiritori .empty-note", text: /しりとりはここで終わり/
     assert_select "section.related--shiritori .entry-list", false
+    assert_select "section.related--shiritori a.panel__more", false
 
     # しりとりの次の一手は末尾文字から始まる公開語へ繋がる
     # curry(読み カレー → 末尾文字 レ)から「レ」で始まる公開語へ繋ぐ
@@ -361,10 +384,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
 
     get word_path(words(:curry))
     assert_response :success
-    assert_select "section.related--shiritori .related__title", text: I18n.t("words.show.shiritori.title")
+    assert_select "section.related--shiritori h2.panel__title", text: I18n.t("words.show.shiritori.title")
     assert_select "section.related--shiritori .shiritori__char", text: "レ"
     assert_select "section.related--shiritori a.entry-row__surface[href=?]", word_path(next_word)
-    assert_select "section.related--shiritori a.related__more[href=?]", words_path(first_char: "レ")
+    assert_select "section.related--shiritori a.panel__more[href=?]", words_path(first_char: "レ")
   end
 
   # --- HTTP キャッシュ(Issue 26) ---

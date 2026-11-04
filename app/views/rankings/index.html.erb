@@ -4,11 +4,11 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("rankings.index.title"), nil ] ] %>
 
+<%# 英字の標識(RANKINGS・板の数)は置かない。トップ・一覧・単語詳細と同じく見出しは日本語だけにする(docs/design.md §5.8) %>
 <header class="page-header">
-  <p class="label-en"><%= t("labels.en.rankings") %></p>
-  <p class="label-en"><%= t("labels.en.boards", count: @boards.size, limit: WordRanking::TOP_LIMIT) %></p>
   <h1 class="page-title"><%= t("rankings.index.title") %></h1>
-  <p class="page-lead"><%= t("rankings.index.lead") %></p>
+  <%# リードは文ごとに行を分け、文節の切れ目でだけ折る(1 段で流すと PC で「辿れます。」だけが次の行に残った) %>
+  <p class="page-lead"><%= phrased_sentences(t("rankings.index.lead")) %></p>
 </header>
 
 <% if @boards.empty? %>
@@ -18,20 +18,21 @@
       パネルは全部サーバ側で描画しておき、JS が繋がったときだけ初期表示へ畳む
       (JS 無効なら全ランキングがそのまま縦に並ぶ)。 %>
   <div data-controller="panel-switch" data-panel-switch-hide-on-connect-value="true">
+    <%# 切替は目次を兼ねる。探し方の入口と同じ墨の枠の小さなボタンを並べ、選んでいる板だけ墨のベタにする(docs/design.md §5.5.1) %>
     <div class="rank-tabs" role="group" aria-label="<%= t("rankings.index.toc_label") %>">
-      <% @boards.each_with_index do |(ranking, _rows), index| %>
-        <button type="button" class="rank-tab" aria-pressed="<%= index.zero? %>"
+      <% @boards.each_with_index do |(ranking, _groups), index| %>
+        <button type="button" class="btn btn--sm rank-tab" aria-pressed="<%= index.zero? %>"
                 data-panel-switch-target="button" data-panel-key="<%= ranking.key %>"
                 data-action="panel-switch#show"><%= ranking.title %></button>
       <% end %>
     </div>
 
-    <% @boards.each do |ranking, rows| %>
+    <% @boards.each do |ranking, groups| %>
       <div data-panel-switch-target="panel" data-panel-key="<%= ranking.key %>">
-        <%= render "board", ranking: ranking, rows: rows %>
+        <%= render "board", ranking: ranking, groups: groups %>
       </div>
     <% end %>
   </div>
 
-  <p class="rank-colophon"><%= t("rankings.index.colophon", count: WordRanking::TOP_LIMIT) %></p>
+  <p class="rank-colophon"><%= phrased_sentences(t("rankings.index.colophon", count: WordRanking::TOP_LIMIT)) %></p>
 <% end %>

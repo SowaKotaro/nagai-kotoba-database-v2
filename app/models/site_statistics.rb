@@ -14,6 +14,11 @@ class SiteStatistics
   # 集計は1万語規模で 0.8 秒かかる。期限切れの直後に複数リクエストが重なると全員が
   # 集計を始めてしまい、Puma(1プロセス・GIL)がその間ずっと塞がる。再計算は1本だけに絞る。
   RACE_CONDITION_TTL = 1.minute
+  # ホームの「数字で見る長い言葉」(docs/design.md §5.2)が読む、数字の壁と集計日時だけの写し。
+  # ホームは毎リクエスト読むので、集計一式(数十 KB。キャッシュから戻すだけで 1ms を超える)とは別のキーに小さく置く。
+  # 版は一式のキーに従う(数字の壁の形が変わるのは、一式の版を上げるとき)。
+  WALL_CACHE_KEY = "#{CACHE_KEY}/wall"
+  Wall = Struct.new(:computed_at, :scale, :reading_length, :letters, :growth)
 
   # 語義に複数の語種が付いた語(語種の多対多)を束ねる表示名。
   MIXED_ORIGIN = "混種語"
@@ -32,8 +37,15 @@ class SiteStatistics
   TRANSITION_MAX_POSITIONS = 15
   VOWELS = %w[a i u e o].freeze
 
+  # 一式を集計し直すたびに写しも書き直す(ホームと統計ページに、同じ時点の数が出る)
   def self.fetch
-    Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL, race_condition_ttl: RACE_CONDITION_TTL) { new }
+    Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL, race_condition_ttl: RACE_CONDITION_TTL) do
+      new.tap { |stats| Rails.cache.write(WALL_CACHE_KEY, stats.wall, expires_in: CACHE_TTL) }
+    end
+  end
+
+  def self.wall
+    Rails.cache.fetch(WALL_CACHE_KEY, expires_in: CACHE_TTL, race_condition_ttl: RACE_CONDITION_TTL) { fetch.wall }
   end
 
   attr_reader :computed_at,
@@ -74,6 +86,7 @@ class SiteStatistics
 
   def word_count = @word_count
   def sense_count = @sense_count
+  def wall = Wall.new(computed_at, scale, reading_length, letters, growth)
 
   private
 

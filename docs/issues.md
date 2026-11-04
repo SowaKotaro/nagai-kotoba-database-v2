@@ -324,7 +324,7 @@
 - 内容:
   - [ ] 単語詳細の関連語・しりとり区画(キー `[word, PublishedWordsDigest]`)
   - [ ] `/genres` のツリー(キー `[:genre_tree, Genre.all.cache_key_with_version, PublishedSenseCounts]`)
-  - [ ] `/rankings` の各板の HTML(集計は `WordRanking#top` で `Rails.cache` 済み、描画は毎回)
+  - [ ] `/rankings` の各板の HTML(集計は `WordRanking#board` で `Rails.cache` 済み、描画は毎回)
   - [ ] 検証は `ActionController::Base.cache_store` を差し替えて行う
 - 期待効果: 描画に CPU を握られている画面の2回目以降を軽くする。
 

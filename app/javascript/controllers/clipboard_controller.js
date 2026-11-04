@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // URL などのテキストをクリップボードにコピーする。コピー後は一時的に完了表示に切り替える。
 // data-clipboard-text-value にコピー対象、data-clipboard-copied-label-value に完了時の文言。
+// 完了表示のあいだは要素に data-copied を付ける(単語詳細のシェアは、これを見て印をチェックに替える。components.css の .share)。
 export default class extends Controller {
   static values = { text: String, copiedLabel: String }
   static targets = ["label"]
@@ -27,6 +28,7 @@ export default class extends Controller {
     // 戻す先の文言は最初の 1 回だけ覚える(完了の表示中に押し直したとき、完了の文言を「元」として覚えないように)
     this.originalLabel ??= this.labelTarget.textContent
     this.labelTarget.textContent = this.copiedLabelValue
+    this.element.dataset.copied = ""
     clearTimeout(this.resetTimer)
     this.resetTimer = setTimeout(() => this.restoreLabel(), 2000)
   }
@@ -36,6 +38,7 @@ export default class extends Controller {
     if (this.originalLabel === undefined) return
 
     this.labelTarget.textContent = this.originalLabel
+    delete this.element.dataset.copied
   }
 
   disconnect() {

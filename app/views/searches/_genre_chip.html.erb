@@ -4,7 +4,7 @@
 <label class="check-chip">
   <%= check_box_tag "genre_id[]", genre.id, selected.include?(genre.id.to_s), id: nil, class: "visually-hidden" %>
   <span class="check-chip__face genre-filter__chip <%= extra_class %>">
-    <span><%= label || genre.name %></span>
+    <span><%= phrased_name(label || genre.name) %></span>
     <span class="genre-hub__count mono"><%= count %></span>
   </span>
 </label>

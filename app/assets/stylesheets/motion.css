@@ -1,0 +1,158 @@
+/*
+ * 遊びの動き(docs/design.md §4)。SANKOU! にならい、マウスで触れたものだけが、短く・小さく・1 度だけ動く。
+ * 読み込みやスクロールで動くもの、止まらずに動き続けるものは足さない(動き続けるのはホームの印の外周だけ。§5.9)。
+ *
+ * 守ること:
+ *   - hover で動くものは、hover できる端末(hover: hover)だけで動かす。タッチでは押した印が残り、選択の印に見える。
+ *   - prefers-reduced-motion: reduce では動かさない。下線は伸ばさずにそのまま出す(線と色の変化は残す)。
+ *   - 動かすのは transform・背景の大きさ・破線のずれだけにして、まわりの組みを揺らさない。
+ *   - 管理画面では動かさない(admin.css が距離と時間を 0 にする)。
+ *
+ * ボタンが墨に反転する色の変化は、各部品の hover に書く(components.css の .btn など)。ここに置くのは動きだけ。
+ * 動きの型はこのファイルの 6 つ。足すときも、まずこの型のどれかに当てる。
+ */
+
+/* --- 1. 下線を引く(文字のリンクと、押せる行・升の名前) ---------------------------------------
+   墨の 1px の下線が左から引かれ、離すと右へ抜ける(SANKOU! と同じ)。下線は背景で描く(text-decoration は伸ばせない)。
+   折れた見出し語は、1 行目から最終行へ続けて 1 本に引かれる(box-decoration-break は既定の slice のまま)。
+   見出し語は、背景が字に沿うよう inline の span(〜__surface-text・〜__word-text)に入れてある。
+   一覧とランキングの行は、行のリンク(見出し語を行全体に広げたもの)に触れたときだけ引く。
+   行の上に載る分類やタグに触れたときはそちらに引き、見出し語には引かない(押した先が見出し語ではないため) */
+.entry-row__surface-text,
+.rank-row__surface-text,
+.home-column__word-text,
+.home-figures__label,
+.home-featured__word,
+.breadcrumbs a,
+.genre-path a,
+.search-ways__options a,
+.site-footer__nav a:not(.icon-label) {
+  background: linear-gradient(currentColor, currentColor) no-repeat 100% 100% / 0 1px;
+}
+
+@media (hover: hover) {
+  .entry-row__surface:hover .entry-row__surface-text,
+  .rank-row__surface:hover .rank-row__surface-text,
+  .home-column__item:hover .home-column__word-text,
+  .home-figures__item:hover .home-figures__label,
+  .home-featured__word:hover,
+  .breadcrumbs a:hover,
+  .genre-path a:hover,
+  .search-ways__options a:hover,
+  .site-footer__nav a:not(.icon-label):hover {
+    background-position: 0 100%;
+    background-size: 100% 1px;
+  }
+}
+
+/* 狭い幅の探し方の選択肢は、下からのシートの 1 行になる。行の幅いっぱいに引かないよう、下線を持たせない */
+@media (max-width: 767px) {
+  .search-ways__options a {
+    background: none;
+  }
+}
+
+/* 位置は動かさずに切り替え、長さだけを伸ばす(引くときは左に、抜けるときは右に寄せた線が伸び縮みする)。
+   リンクの文字色の移り(base.css の a)も、ここで上書きして消えないよう並べて書く */
+@media (prefers-reduced-motion: no-preference) {
+  .entry-row__surface-text,
+  .rank-row__surface-text,
+  .home-column__word-text,
+  .home-figures__label,
+  .home-featured__word,
+  .breadcrumbs a,
+  .genre-path a,
+  .search-ways__options a,
+  .site-footer__nav a:not(.icon-label) {
+    transition: background-size var(--motion-line), color var(--transition);
+  }
+}
+
+/* --- 2. 矢印が進む ------------------------------------------------------------------------
+   ボタンとリンクの矢印は、触れると向いている方へ 3px 進む(→ は右へ、← は左へ。SANKOU! の「戻る」と同じ)。
+   矢印の見分けは IconsHelper が付ける名前の修飾子(.icon--arrow-right など) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .icon--arrow-right,
+  .icon--arrow-left {
+    transition: transform var(--motion);
+  }
+
+  a:hover .icon--arrow-right,
+  button:hover .icon--arrow-right {
+    transform: translateX(var(--nudge));
+  }
+
+  a:hover .icon--arrow-left,
+  button:hover .icon--arrow-left {
+    transform: translateX(calc(var(--nudge) * -1));
+  }
+}
+
+/* --- 3. サイト名が沈む ---------------------------------------------------------------------
+   ヘッダーのサイト名は、触れると 3px 沈む(SANKOU! のロゴと同じ)。transform なので帯の高さは変わらない */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .site-brand {
+    transition: transform var(--motion);
+  }
+
+  .site-brand:hover {
+    transform: translateY(var(--nudge));
+  }
+}
+
+/* --- 4. シャッフルの印がめくれる -------------------------------------------------------------
+   ランダム・シャッフルのボタンの印は、触れると 1 度だけ裏返って戻る(札をめくる動き。400ms) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  a:hover .icon--shuffle,
+  button:hover .icon--shuffle {
+    animation: icon-flip 400ms ease;
+  }
+}
+
+@keyframes icon-flip {
+  50% {
+    transform: scaleX(-1);
+  }
+}
+
+/* --- 5. 円環をなぞり直す ---------------------------------------------------------------------
+   語の読みの円環(今日の一語・単語一覧と単語詳細のレール)は、触れると始点から読みを 1 度なぞり直す。
+   ホームの印の描き方(components.css の .ring-art--mark)と同じく、線の全長(--ring-length)の破線をずらして描き、
+   速さは一定(linear)。途中で離すと、描き終えた形にすぐ戻る。
+   描き終えるまでの時間は 図の幅 ÷ 200 × 1.6 秒(今日の一語の 200px で 1.6 秒、レールの 104px で約 0.8 秒。
+   Chrome・WebKit で実測)。線の太さを保つ指定(non-scaling-stroke)があると、viewBox の単位で渡した破線が
+   画面の上の長さで数えられ、小さい図ほど早く線の端に届くため。小さい図ほど短く済むので、そのままにしている。
+   ホームの印は読み込みのときに描くので対象にしない(印の animation を hover で上書きすると、離したときに最初から描き直す)。
+   放射図(.radial-art)も .ring-art の見た目を借りているが、線の全長を持たないので対象にしない */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ring-art:not(.ring-art--mark, .radial-art):hover .ring-art__stroke {
+    stroke-dasharray: var(--ring-length);
+    animation: ring-trace 1600ms linear;
+  }
+}
+
+@keyframes ring-trace {
+  from {
+    stroke-dashoffset: var(--ring-length);
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- 6. 済んだ印が出る -----------------------------------------------------------------------
+   単語詳細でリンクをコピーし終えたときのチェックの印は、小さく膨らんで出る(250ms)。
+   押したあとの手応えなので、hover できない端末でも動かす */
+@media (prefers-reduced-motion: no-preference) {
+  .share[data-copied] .share__done-icon {
+    animation: icon-pop 250ms ease-out;
+  }
+}
+
+@keyframes icon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}

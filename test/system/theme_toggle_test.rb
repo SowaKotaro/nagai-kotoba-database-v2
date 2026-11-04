@@ -3,10 +3,10 @@ require "application_system_test_case"
 # ダークモードの切り替え(docs/design.md §9)。
 # 「data-theme が付く」だけでなく、実際に地の色が変わることまで見る。
 class ThemeToggleTest < ApplicationSystemTestCase
-  # body の地 = tokens.css の --surface / --dark-surface。トークンを変えたらここも合わせる
-  # (色を持つのはヘッダーとフッターだけで、コンテンツの地は面と同じ白。docs/design.md §3)
-  LIGHT_BG = "rgb(255, 255, 255)".freeze
-  DARK_BG = "rgb(35, 41, 48)".freeze
+  # body の地 = tokens.css の --bg / --dark-bg。トークンを変えたらここも合わせる
+  # (ヘッダーもフッターも帯を持たず、ページ全体が同じ地に載る。docs/design.md §3)
+  LIGHT_BG = "rgb(250, 250, 250)".freeze
+  DARK_BG = "rgb(38, 33, 32)".freeze
 
   # localStorage はセッションのリセットでは消えないため、テスト間で持ち越さない
   teardown do

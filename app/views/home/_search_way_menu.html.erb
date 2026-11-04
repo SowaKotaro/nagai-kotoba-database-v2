@@ -1,0 +1,29 @@
+<%# locals: (way:) -%>
+<%# 探し方の入口のうち、押すとその場で選択肢が開くボタン 1 つ(HomeHelper#home_search_ways の 1 件)。
+    開閉はヘッダーの「検索」と同じ nav-menu で、JS が無いと開かない。パネルは列(.search-ways)の幅でボタンの段の下に開き、
+    狭い幅では画面の下から出るシートになって、見出しと閉じるボタンが付く(docs/design.md §5.2) %>
+<% panel_id = "search-way-#{way[:key].to_s.dasherize}" %>
+<div class="search-ways__menu" data-controller="nav-menu"
+     data-action="click@window->nav-menu#closeOnOutside keydown.esc@window->nav-menu#close">
+  <button type="button" id="<%= panel_id %>-trigger" class="btn search-ways__item search-ways__toggle"
+          aria-expanded="false" aria-haspopup="true" aria-controls="<%= panel_id %>"
+          data-nav-menu-target="trigger" data-action="nav-menu#toggle">
+    <%= way[:label] %><%= icon "caret_down", "search-ways__caret" %>
+  </button>
+  <div class="search-ways__panel" id="<%= panel_id %>" hidden
+       data-nav-menu-target="panel" aria-labelledby="<%= panel_id %>-trigger">
+    <div class="search-ways__panel-head">
+      <span><%= way[:label] %></span>
+      <button type="button" class="search-ways__close" aria-label="<%= t("home.index.ways.close") %>"
+              data-action="nav-menu#close"><%= icon "x" %></button>
+    </div>
+    <ul class="search-ways__options">
+      <% way[:options].each do |label, path| %>
+        <li><%= link_to label, path %></li>
+      <% end %>
+    </ul>
+    <% if way[:more] %>
+      <%= link_to way[:more].last, class: "search-ways__more" do %><%= way[:more].first %><%= icon "arrow_right" %><% end %>
+    <% end %>
+  </div>
+</div>

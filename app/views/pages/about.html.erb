@@ -4,77 +4,94 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("pages.about.title"), nil ] ] %>
 
-<header class="page-header">
-  <p class="label-en"><%= t("labels.en.about") %></p>
-  <%# 標識の2行目は必ず「値」を持たせる。同じ数は下の「収録の基準」に日本語でも置く %>
-  <p class="label-en"><%= t("labels.en.entries", count: number_with_delimiter(@word_count)) %></p>
-  <h1 class="page-title"><%= t("layouts.brand") %></h1>
-  <p class="page-lead"><%= t("pages.about.lead") %></p>
+<%# 英字の標識(ABOUT・収録語数)は置かない。トップ・一覧と同じく見出しは日本語だけにし、収録語数は
+    単語一覧のレールの件数と同じ墨の 800 で立てる。図は置かない(docs/design.md §5.6.1・§5.7) %>
+<header class="page-header page-header--rail">
+  <div class="page-header__main">
+    <h1 class="page-title"><%= t("layouts.brand") %></h1>
+    <p class="page-lead"><%= phrased_sentences(t("pages.about.lead")) %></p>
+  </div>
+  <div class="page-header__rail">
+    <p class="page-header__count"><span class="page-header__count-value"><%= number_with_delimiter(@word_count) %></span><%= t("pages.about.count_unit") %></p>
+  </div>
 </header>
 
-<div class="prose">
-  <section>
-    <h2><%= icon "list_checks" %><%= t("pages.about.criteria_title") %></h2>
-    <p><%= t("pages.about.criteria_body") %></p>
-    <p><%= t("pages.about.criteria_count", count: number_with_delimiter(@word_count)) %></p>
-  </section>
+<%# 章は 1 つずつ墨の枠の札に収め、札の棚に積む(統計の章と同じ組み) %>
+<div class="panel-shelf">
+  <%= render layout: "pages/chapter", locals: { icon_name: "list_checks", title: t("pages.about.criteria_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.criteria_body") %></p>
+      <p><%= t("pages.about.criteria_count", count: number_with_delimiter(@word_count)) %></p>
+    </div>
+  <% end %>
 
-  <section>
-    <h2><%= icon "seal_check" %><%= t("pages.about.curation_title") %></h2>
-    <p><%= t("pages.about.curation_body") %></p>
-  </section>
+  <%= render layout: "pages/chapter", locals: { icon_name: "seal_check", title: t("pages.about.curation_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.curation_body") %></p>
+    </div>
+  <% end %>
 
-  <section>
-    <h2><%= icon "binoculars" %><%= t("pages.about.usecases_title") %></h2>
-    <p><%= t("pages.about.usecases_intro") %></p>
-    <ul>
-      <% t("pages.about.usecases_items").each do |item| %>
-        <li><%= item %></li>
+  <%= render layout: "pages/chapter", locals: { icon_name: "binoculars", title: t("pages.about.usecases_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.usecases_intro") %></p>
+      <ul>
+        <% t("pages.about.usecases_items").each do |item| %>
+          <li><%= item %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= render layout: "pages/chapter", locals: { icon_name: "scales", title: t("pages.about.license_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.license_intro") %></p>
+      <%# ライセンス名とクレジットは括弧書きの前で折り、括弧書き(「(CC BY 4.0)」・URL)の中では折らない %>
+      <p>
+        <%= link_to phrased_name(t("pages.about.license_name")),
+              DataLicense::URL,
+              rel: "license noopener", target: "_blank" %>
+      </p>
+      <p><%= t("pages.about.license_credit_label") %></p>
+      <p class="prose__credit"><%= phrased_name(t("pages.about.license_credit", url: SiteUrl.origin)) %></p>
+      <p class="prose__note"><%= phrased_sentences(t("pages.about.license_note")) %></p>
+    </div>
+  <% end %>
+
+  <%= render layout: "pages/chapter", locals: { icon_name: "code", title: t("pages.about.api_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.api_body") %></p>
+    </div>
+  <% end %>
+
+  <%= render layout: "pages/chapter", locals: { icon_name: "lock_simple", title: t("pages.about.privacy_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.privacy_body") %></p>
+      <p><%= link_to t("pages.about.privacy_link"), privacy_path %></p>
+    </div>
+  <% end %>
+
+  <%# 問答は札の幅いっぱいの行に積み、行どうしを 1px の隙間で仕切る %>
+  <%= render layout: "pages/chapter", locals: { icon_name: "quotes", title: t("pages.about.faq_title") } do %>
+    <div class="faq-list">
+      <% t("pages.about.faq_items").each do |item| %>
+        <div class="faq-list__item">
+          <h3 class="faq-list__question"><%= phrased_sentences(item[:question]) %></h3>
+          <p class="faq-list__answer"><%= item[:answer] %></p>
+        </div>
       <% end %>
-    </ul>
-  </section>
+    </div>
+  <% end %>
 
-  <section>
-    <h2><%= icon "scales" %><%= t("pages.about.license_title") %></h2>
-    <p><%= t("pages.about.license_intro") %></p>
-    <p>
-      <%= link_to t("pages.about.license_name"),
-            DataLicense::URL,
-            rel: "license noopener", target: "_blank" %>
-    </p>
-    <p><%= t("pages.about.license_credit_label") %></p>
-    <p class="prose__credit"><%= t("pages.about.license_credit", url: SiteUrl.origin) %></p>
-    <p class="prose__note"><%= t("pages.about.license_note") %></p>
-  </section>
-
-  <section>
-    <h2><%= icon "code" %><%= t("pages.about.api_title") %></h2>
-    <p><%= t("pages.about.api_body") %></p>
-  </section>
-
-  <section>
-    <h2><%= icon "seal_check" %><%= t("pages.about.privacy_title") %></h2>
-    <p><%= t("pages.about.privacy_body") %></p>
-    <p><%= link_to t("pages.about.privacy_link"), privacy_path %></p>
-  </section>
-
-  <section>
-    <h2><%= icon "quotes" %><%= t("pages.about.faq_title") %></h2>
-    <% t("pages.about.faq_items").each do |item| %>
-      <h3><%= item[:question] %></h3>
-      <p><%= item[:answer] %></p>
-    <% end %>
-  </section>
-
-  <section>
-    <h2><%= icon "envelope_simple" %><%= t("pages.about.contact_title") %></h2>
-    <p><%= t("pages.about.contact_body") %></p>
-    <p><%= mail_to t("pages.about.contact_email") %></p>
-    <%# 「載っていない言葉を教えたい」はメールより専用フォームの方が早い(Issue 75) %>
-    <% if requests_open? %>
-      <p><%= link_to t("pages.about.request_link"), new_request_path, class: "icon-label" %></p>
-    <% end %>
-  </section>
+  <%= render layout: "pages/chapter", locals: { icon_name: "envelope_simple", title: t("pages.about.contact_title") } do %>
+    <div class="panel__body prose">
+      <p><%= t("pages.about.contact_body") %></p>
+      <p><%= mail_to t("pages.about.contact_email") %></p>
+      <%# 「載っていない言葉を教えたい」はメールより専用フォームの方が早い(Issue 75) %>
+      <% if requests_open? %>
+        <p><%= link_to t("pages.about.request_link"), new_request_path, class: "icon-label" %></p>
+      <% end %>
+    </div>
+  <% end %>
 </div>
 
 <%# FAQ の構造化データ(FAQPage)。文言は画面と同じ i18n を共用する %>

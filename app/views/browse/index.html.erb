@@ -4,55 +4,63 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("browse.index.title"), nil ] ] %>
 
+<%# 英字の標識(KANA INDEX・文字と長さの数)は置かない。トップ・一覧と同じく見出しは日本語だけにする(docs/design.md §5.8) %>
 <header class="page-header">
-  <p class="label-en"><%= t("labels.en.browse") %></p>
-  <p class="label-en"><%= t("labels.en.kana_lengths", kana: @first_char_counts.size, lengths: @reading_length_counts.size) %></p>
   <h1 class="page-title"><%= t("browse.index.title") %></h1>
-  <p class="page-lead"><%= t("browse.index.lead") %></p>
+  <p class="page-lead"><%= phrased_sentences(t("browse.index.lead")) %></p>
 </header>
 
-<%# 区画は 2 つ(50音・読みの長さ)。それぞれ統計 §3 と同じセグメントボタンで表を切り替え、ページを長くしない。
+<%# 区画は 2 つ(50音・読みの長さ)。統計の章と同じく、1 つずつ墨の枠の札(.panel)に収めて積む。
+    それぞれ統計 §3 と同じセグメントボタンで表を切り替え、ページを長くしない。
     切り替えた先の表もサーバが描いておき(hidden)、JS が無いときは既定の表(先頭の文字・文字数)だけが出る %>
-<section class="browse-section">
-  <h2 class="section-heading"><%= icon "grid_nine" %><%= t("browse.index.by_kana") %></h2>
-  <div data-controller="panel-switch">
-    <div class="segmented" role="group" aria-label="<%= t("browse.index.kana_toggle_label") %>">
-      <% %i[first_char last_char].each_with_index do |param, index| %>
-        <button type="button" class="segmented__button" aria-pressed="<%= index.zero? %>"
-                data-panel-switch-target="button" data-panel-key="<%= param %>"
-                data-action="panel-switch#show"><%= t("browse.index.toggle.#{param}") %></button>
-      <% end %>
+<div class="panel-shelf">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= icon "grid_nine" %><%= t("browse.index.by_kana") %></h2>
     </div>
-    <% { first_char: @first_char_counts, last_char: @last_char_counts }.each_with_index do |(param, counts), index| %>
-      <div data-panel-switch-target="panel" data-panel-key="<%= param %>" <%= "hidden" unless index.zero? %>>
-        <%= render "shared/kana_heat_grid", counts: counts, param: param, max: @max_counts[param] %>
-      </div>
-    <% end %>
-  </div>
-</section>
-
-<section class="browse-section">
-  <h2 class="section-heading"><%= icon "ruler" %><%= t("browse.index.by_length") %></h2>
-  <% if @reading_length_counts.empty? %>
-    <p class="empty-note"><%= icon "binoculars" %><%= t("browse.index.empty") %></p>
-  <% else %>
-    <div data-controller="panel-switch">
-      <div class="segmented" role="group" aria-label="<%= t("browse.index.length_toggle_label") %>">
-        <% %i[reading_length mora_count].each_with_index do |param, index| %>
+    <div class="panel__body" data-controller="panel-switch">
+      <div class="segmented" role="group" aria-label="<%= t("browse.index.kana_toggle_label") %>">
+        <% %i[first_char last_char].each_with_index do |param, index| %>
           <button type="button" class="segmented__button" aria-pressed="<%= index.zero? %>"
                   data-panel-switch-target="button" data-panel-key="<%= param %>"
                   data-action="panel-switch#show"><%= t("browse.index.toggle.#{param}") %></button>
         <% end %>
       </div>
-      <% { reading_length: @reading_length_counts, mora_count: @mora_counts }.each_with_index do |(param, counts), index| %>
+      <% { first_char: @first_char_counts, last_char: @last_char_counts }.each_with_index do |(param, counts), index| %>
         <div data-panel-switch-target="panel" data-panel-key="<%= param %>" <%= "hidden" unless index.zero? %>>
-          <%= render "length_tags", counts: counts, param: param, max: @max_counts[param] %>
-          <%# モーラは馴染みの薄い数え方なので、統計 §3 と同じく数え方を添える %>
-          <% if param == :mora_count %>
-            <p class="browse-hint"><%= t("browse.index.mora_hint") %></p>
+          <%= render "shared/kana_heat_grid", counts: counts, param: param, max: @max_counts[param] %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= icon "ruler" %><%= t("browse.index.by_length") %></h2>
+    </div>
+    <div class="panel__body">
+      <% if @reading_length_counts.empty? %>
+        <p class="empty-note"><%= icon "binoculars" %><%= t("browse.index.empty") %></p>
+      <% else %>
+        <div data-controller="panel-switch">
+          <div class="segmented" role="group" aria-label="<%= t("browse.index.length_toggle_label") %>">
+            <% %i[reading_length mora_count].each_with_index do |param, index| %>
+              <button type="button" class="segmented__button" aria-pressed="<%= index.zero? %>"
+                      data-panel-switch-target="button" data-panel-key="<%= param %>"
+                      data-action="panel-switch#show"><%= t("browse.index.toggle.#{param}") %></button>
+            <% end %>
+          </div>
+          <% { reading_length: @reading_length_counts, mora_count: @mora_counts }.each_with_index do |(param, counts), index| %>
+            <div data-panel-switch-target="panel" data-panel-key="<%= param %>" <%= "hidden" unless index.zero? %>>
+              <%= render "length_tags", counts: counts, param: param, max: @max_counts[param] %>
+              <%# モーラは馴染みの薄い数え方なので、統計 §3 と同じく数え方を添える %>
+              <% if param == :mora_count %>
+                <p class="browse-hint"><%= phrased_sentences(t("browse.index.mora_hint")) %></p>
+              <% end %>
+            </div>
           <% end %>
         </div>
       <% end %>
     </div>
-  <% end %>
-</section>
+  </section>
+</div>

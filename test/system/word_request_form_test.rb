@@ -8,7 +8,8 @@ class WordRequestFormTest < ApplicationSystemTestCase
 
   test "検索で見つからなかった語をその場でリクエストでき、読みの字数と行の上限を表示に反映する" do
     visit words_path(q: MISSING_WORD)
-    assert_text I18n.t("words.index.empty_filtered")
+    # 案内は文ごとに行を分けて出すので、1 文目で確かめる
+    assert_text I18n.t("words.index.empty_filtered").first.join
     click_on I18n.t("words.index.request_link")
 
     # 探していたキーワードが引き継がれている

@@ -37,7 +37,7 @@
 - **Ruby 3.4.2 / Rails 8.1**（`config.load_defaults 8.1`）
 - **MySQL 8.x（mysql2）** — 照合順序は `utf8mb4_0900_ai_ci` 基準（読みまわりだけ `as_ci`。[`data-model.md`](data-model.md) §6）
 - Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
-- CSS は手書き（`tokens → base → layout → components` ＋ `annotate.css` / `candidates.css` / `admin.css`）
+- CSS は手書き（`tokens → base → layout → components → motion` ＋ `annotate.css` / `candidates.css` / `admin.css`）
 - テスト: **Minitest**（`test/` 配下。RSpec は使っていない）
 - デプロイ: **Capistrano**（`cap production deploy`）。**main への push（PR の merge を含む）で自動で実行する**（§11）
 - CI: GitHub Actions（`.github/workflows/ci.yml`。DB は `mysql:8.4`。§11）
@@ -77,7 +77,7 @@
 
 | パス | 内容 |
 |---|---|
-| `/` | ホーム。サイト名の読みの円環 → 看板（検索）→ 今日の一語 → 新着 / 読みが長い |
+| `/` | ホーム。サイト名の読みの円環 → 看板（検索と探し方の入口）→ 今日の一語 → 新着 / 読みが長い |
 | `/words` | 単語一覧。絞り込み（ファセット）・並び替え・シャッフル・ページネーション |
 | `/words/:id` | 単語詳細。語義・関連データ・五十音円環・関連語・しりとりの次の一手 |
 | `/words/random` | ランダムに 1 語へ 302 |

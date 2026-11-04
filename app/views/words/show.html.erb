@@ -14,64 +14,58 @@
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("words.index.title"), words_path ], [ @word.surface, nil ] ] %>
 
+<%# 見出しまわりは単語一覧と同じ組み(見出し → メタ → リード。英字の標識は置かない)に、操作の行を足す(docs/design.md §5.4) %>
 <header class="page-header page-header--rail">
   <div class="page-header__main">
-  <p class="page-eyebrow">
-    <span class="label-en"><%= t("labels.en.headword") %></span>
-    <%# 見出し語ストリップに溶け込ませた控えめなランダム導線。下部まで下がらずに回遊できる %>
-    <span class="page-eyebrow__meta">
+    <%# 見出しの末尾にさりげない虫眼鏡。アプリ内検索ではなく Web 検索へ別タブで飛ばす。
+        リンク内に空白を作ると下線だけが浮くので、ブロックではなく引数で渡す %>
+    <h1 class="page-title"><%= @word.surface %><%= link_to icon("magnifying_glass"),
+          web_search_url(@word.surface), class: "page-title__web-search",
+          target: "_blank", rel: "noopener noreferrer external",
+          aria: { label: t("words.show.web_search", surface: @word.surface) } %></h1>
+    <%# 記録番号と文字種。どちらも機械が読む値なので等幅で添える %>
+    <p class="page-title-meta">
       <span class="mono"><%= t("words.show.record_number", id: @word.id) %></span>
-      <%# ランダムは毎回別の語へ 302 する導線。クロールしても意味がないので nofollow %>
-      <%= link_to random_words_path, class: "eyebrow-random", rel: "nofollow",
-            aria: { label: t("words.show.random") } do %>
-        <%= icon "shuffle" %><span><%= t("words.show.random_next") %></span>
-      <% end %>
-    </span>
-  </p>
-  <%# 見出しの末尾にさりげない虫眼鏡。アプリ内検索ではなく Web 検索へ別タブで飛ばす。
-      リンク内に空白を作ると下線だけが浮くので、ブロックではなく引数で渡す %>
-  <h1 class="page-title"><%= @word.surface %><%= link_to icon("magnifying_glass"),
-        web_search_url(@word.surface), class: "page-title__web-search",
-        target: "_blank", rel: "noopener noreferrer external",
-        aria: { label: t("words.show.web_search", surface: @word.surface) } %></h1>
-  <p class="page-title-meta">
-    <%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span>
-  </p>
-  <%# 動的に組み立てる解説文。細罫の下に控えめに添える %>
-  <% if lead.present? %>
-    <figure class="word-flavor">
-      <figcaption class="word-flavor__label mono"><%= icon "quotes" %><%= t("words.show.flavor_label") %></figcaption>
-      <p class="word-flavor__text"><%= lead %></p>
-    </figure>
-  <% end %>
-
-  <%# シェア導線(Issue 30)。X共有 + URLコピー。アイコンはインラインSVG %>
-  <% share_url = canonical_url %>
-  <%# 本文はXの文字数上限(全角128文字相当)に収まるよう切り詰める %>
-  <% x_href = "https://x.com/intent/post?" + { text: x_share_text(@word, lead), url: share_url }.to_query %>
-  <div class="share" data-controller="clipboard"
-       data-clipboard-text-value="<%= share_url %>"
-       data-clipboard-copied-label-value="<%= t('words.show.share.copied') %>">
-    <%= link_to x_href, class: "share__btn", target: "_blank", rel: "noopener" do %>
-      <%= icon "x_logo" %><span><%= t("words.show.share.x") %></span>
+      <span><%= t("words.show.char_type_pattern") %>：<span class="mono"><%= @word.char_type_pattern %></span></span>
+    </p>
+    <%# 動的に組み立てる定義文(Issue 18)。単語一覧のリードと同じく、見出しの下に地のまま置く %>
+    <% if lead.present? %>
+      <p class="page-lead"><%= lead %></p>
     <% end %>
-    <button type="button" class="share__btn" data-action="clipboard#copy">
-      <%= icon "link" %><span data-clipboard-target="label"><%= t("words.show.share.copy") %></span>
-    </button>
-  </div>
+
+    <%# 操作の行: 左にシェア(Issue 30。この語を共有する)、右端に「別の言葉へ」(引き直す)。どれもトップ・一覧と同じ小さいボタン(.btn--sm)。
+        役目が違うので同じ並びにはせず、別の言葉へは行の右端へ離す。狭い幅でも 2 段に折らず、シェアの 2 つをアイコンだけにして 1 行に収める %>
+    <div class="word-actions">
+      <% share_url = canonical_url %>
+      <%# 本文はXの文字数上限(全角128文字相当)に収まるよう切り詰める %>
+      <% x_href = "https://x.com/intent/post?" + { text: x_share_text(@word, lead), url: share_url }.to_query %>
+      <div class="share" data-controller="clipboard"
+           data-clipboard-text-value="<%= share_url %>"
+           data-clipboard-copied-label-value="<%= t('words.show.share.copied') %>">
+        <%# 名前(.share__label)は狭い幅で見た目だけ隠す。読み上げには残る %>
+        <%= link_to x_href, class: "btn btn--sm share__btn", target: "_blank", rel: "noopener" do %>
+          <%= icon "x_logo" %><span class="share__label"><%= t("words.show.share.x") %></span>
+        <% end %>
+        <%# コピーが済んだあいだは、リンクの印をチェックの印に替える(名前を隠した幅でも、済んだことが見える) %>
+        <button type="button" class="btn btn--sm share__btn" data-action="clipboard#copy">
+          <%= icon "link", "share__link-icon" %><%= icon "check_circle", "share__done-icon" %><span class="share__label" data-clipboard-target="label"><%= t("words.show.share.copy") %></span>
+        </button>
+      </div>
+      <%# 見出しのすぐ下に置くので、下まで降りずに次の語へめくれる。
+          ランダムは毎回別の語へ 302 する導線なので、クロールさせない(nofollow) %>
+      <%= link_to random_words_path, class: "btn btn--sm word-actions__random", rel: "nofollow" do %>
+        <%= icon "shuffle" %><%= t("words.show.random_next") %>
+      <% end %>
+    </div>
   </div>
 
-  <%# 右のレール: この語の一番の指標(読みの文字数)を線だけの数字で置き、
-      その下に読みを五十音の円環で一筆書きにした線画を常時出す(docs/design.md §5.9) %>
+  <%# 右のレール: この語の一番の指標(読みの文字数)を、単語一覧の件数と同じ墨の 800 で立て、
+      その下に読みを五十音の円環で一筆書きにした線画を置く。円環には説明を添えない(docs/design.md §5.9) %>
   <% headline_sense = @word.primary_sense %>
   <% if headline_sense&.reading_length %>
     <div class="page-header__rail">
-      <div>
-        <span class="figure-number figure-number--sm"><%= headline_sense.reading_length %></span>
-        <span class="figure-caption"><%= t("labels.en.characters") %></span>
-      </div>
-      <%= render "shared/kana_ring_art", reading: headline_sense.reading,
-            caption: t("labels.en.kana_ring") %>
+      <p class="page-header__count"><span class="page-header__count-value"><%= headline_sense.reading_length %></span><%= t("words.index.char_unit") %></p>
+      <%= render "shared/kana_ring_art", reading: headline_sense.reading %>
     </div>
   <% end %>
 </header>
@@ -81,42 +75,47 @@
 <% else %>
   <div class="sense-list">
     <% @word.ordered_senses.each.with_index(1) do |sense, number| %>
-      <%# 語義カードは見出し+意味+属性で自己完結する辞書項目なので article %>
-      <article class="sense-card">
-        <span class="sense-card__number"><%= t("words.show.sense_number", number: number) %></span>
+      <%# 語義は見出し+意味+属性で自己完結する辞書項目なので article。トップの今日の一語と同じ札に収め、
+          頭に通し番号、中身に見出し・意味・特徴を置き、関連データの行は札の幅いっぱいに敷く(docs/design.md §5.4) %>
+      <article class="panel sense-card">
+        <div class="panel__head">
+          <h2 class="panel__title"><%= t("words.show.sense_number", number: number) %></h2>
+        </div>
 
-        <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.4) %>
-        <h2 class="sense-heading">
-          <ruby><%= @word.surface %><rt><%= sense.reading %></rt></ruby>
-        </h2>
+        <div class="sense-card__body">
+          <%# 語義ごとの読みをグループルビで示す(読みは必ずテキスト。docs/design.md §5.4) %>
+          <h3 class="sense-heading">
+            <ruby><%= @word.surface %><rt><%= sense.reading %></rt></ruby>
+          </h3>
 
-        <%# 韻・母音パターンは検索対象ではなく、見出し語の直下にメタとして添える %>
-        <p class="sense-heading-meta">
-          <span><%= WordSense.human_attribute_name(:rhythm_pattern) %>：<span class="mono"><%= sense.rhythm_pattern %></span></span>
-          <% if sense.vowel_pattern.present? %>
-            <span><%= t("words.show.vowel_pattern") %>：<span class="mono"><%= sense.vowel_pattern %></span></span>
-          <% end %>
-        </p>
-
-        <% if sense.meaning.present? %>
-          <p class="sense-meaning"><%= sense.meaning %></p>
-        <% end %>
-
-        <p class="section-label"><%= icon "pen_nib" %><%= t("words.show.features") %></p>
-        <% if sense.word_sense_features.any? %>
-          <ul class="annotations">
-            <% sense.word_sense_features.each do |feature| %>
-              <li class="annotation">
-                <%# チップは同じ特徴の単語一覧へ、該当部分は淡いハイライト+読みルビ %>
-                <%= link_to feature.linguistic_feature.name,
-                      words_path(linguistic_feature_id: feature.linguistic_feature_id), class: "chip" %>
-                <ruby class="annotation-target"><%= feature.target %><rt><%= feature.target_reading %></rt></ruby>
-              </li>
+          <%# 韻・母音パターンは検索対象ではなく、見出し語の直下にメタとして添える %>
+          <p class="sense-heading-meta">
+            <span><%= WordSense.human_attribute_name(:rhythm_pattern) %>：<span class="mono"><%= sense.rhythm_pattern %></span></span>
+            <% if sense.vowel_pattern.present? %>
+              <span><%= t("words.show.vowel_pattern") %>：<span class="mono"><%= sense.vowel_pattern %></span></span>
             <% end %>
-          </ul>
-        <% else %>
-          <p class="sense-undefined"><%= t("words.show.undefined") %></p>
-        <% end %>
+          </p>
+
+          <% if sense.meaning.present? %>
+            <p class="sense-meaning"><%= sense.meaning %></p>
+          <% end %>
+
+          <p class="section-label"><%= icon "pen_nib" %><%= t("words.show.features") %></p>
+          <% if sense.word_sense_features.any? %>
+            <ul class="annotations">
+              <% sense.word_sense_features.each do |feature| %>
+                <li class="annotation">
+                  <%# チップは同じ特徴の単語一覧へ、該当部分は淡いハイライト+読みルビ %>
+                  <%= link_to feature.linguistic_feature.name,
+                        words_path(linguistic_feature_id: feature.linguistic_feature_id), class: "chip" %>
+                  <ruby class="annotation-target"><%= feature.target %><rt><%= feature.target_reading %></rt></ruby>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="sense-undefined"><%= t("words.show.undefined") %></p>
+          <% end %>
+        </div>
 
         <dl class="sense-attrs">
           <%# 表示順: (言語学的特徴は上の注釈ブロック) → ジャンル → エンティティ → 品詞 →
@@ -222,53 +221,55 @@
   </div>
 <% end %>
 
-<% if @related_word_groups.any? %>
-  <section class="related">
-    <h2 class="related__title"><%= icon "graph" %><%= t("words.show.related.title") %></h2>
+<%# 関連語としりとりは、トップの「最近追加」と同じく、見出しと「もっと見る →」を頭に持つ札に一覧の行を収める。
+    どれも次の語への入口なので、トップの棚と同じく札を積む(docs/design.md §5.4) %>
+<% if @related_word_groups.any? || @shiritori&.head_char.present? %>
+  <div class="related-shelf">
     <% @related_word_groups.each do |group| %>
-      <div class="related__group">
-        <%# 見出しと「もっと見る」を同じ行に置く(ホームの「新着の単語 / すべて見る」と同じ文法) %>
-        <div class="related__group-header">
-          <p class="section-label"><%= t("words.show.related.#{group.key}") %></p>
-          <%= link_to words_path(group.facet_params), class: "related__more icon-label" do %>
+      <section class="panel entry-panel related">
+        <div class="panel__head">
+          <h2 class="panel__title"><%= t("words.show.related.#{group.key}") %></h2>
+          <%= link_to words_path(group.facet_params), class: "btn btn--sm panel__more" do %>
             <%= t("words.show.related.more") %><%= icon "arrow_right" %>
           <% end %>
         </div>
         <div class="entry-list">
           <%= render partial: "words/entry_row", collection: group.words, as: :word %>
         </div>
-      </div>
+      </section>
     <% end %>
-  </section>
-<% end %>
 
-<%# しりとりの「次の一手」。末尾文字を先頭文字に持つ語へ繋ぐ回遊導線。
-    「ん」で終わる語・在庫が無い語では、その旨を静かに書いて手詰まりも見どころにする %>
-<% if @shiritori&.head_char.present? %>
-  <section class="related related--shiritori">
-    <h2 class="related__title"><%= icon "flow_arrow" %><%= t("words.show.shiritori.title") %></h2>
-    <% if @shiritori.dead_end? %>
-      <p class="empty-note"><%= t("words.show.shiritori.dead_end_html", char: @shiritori.head_char) %></p>
-    <% elsif @shiritori.words.any? %>
-      <div class="related__group">
-        <div class="related__group-header">
-          <p class="section-label"><%= t("words.show.shiritori.lead_html", char: @shiritori.head_char) %></p>
-          <%= link_to words_path(@shiritori.facet_params), class: "related__more icon-label" do %>
-            <%= t("words.show.related.more") %><%= icon "arrow_right" %>
+    <%# しりとりの「次の一手」。末尾文字を先頭文字に持つ語へ繋ぐ回遊導線。
+        「ん」で終わる語・在庫が無い語では、その旨を静かに書いて手詰まりも見どころにする %>
+    <% if @shiritori&.head_char.present? %>
+      <%# 行き止まりの語は候補を引かないので、words は空になる(ShiritoriWords#candidate_word_ids) %>
+      <% next_words = @shiritori.words %>
+      <section class="panel entry-panel related related--shiritori">
+        <div class="panel__head">
+          <h2 class="panel__title"><%= t("words.show.shiritori.title") %></h2>
+          <% if next_words.any? %>
+            <%= link_to words_path(@shiritori.facet_params), class: "btn btn--sm panel__more" do %>
+              <%= t("words.show.related.more") %><%= icon "arrow_right" %>
+            <% end %>
           <% end %>
         </div>
-        <div class="entry-list">
-          <%= render partial: "words/entry_row", collection: @shiritori.words, as: :word %>
-        </div>
-      </div>
-    <% else %>
-      <p class="empty-note"><%= t("words.show.shiritori.none_html", char: @shiritori.head_char) %></p>
+        <% if @shiritori.dead_end? %>
+          <p class="empty-note related__note"><%= t("words.show.shiritori.dead_end_html", char: @shiritori.head_char) %></p>
+        <% elsif next_words.any? %>
+          <p class="related__lead"><%= t("words.show.shiritori.lead_html", char: @shiritori.head_char) %></p>
+          <div class="entry-list">
+            <%= render partial: "words/entry_row", collection: next_words, as: :word %>
+          </div>
+        <% else %>
+          <p class="empty-note related__note"><%= t("words.show.shiritori.none_html", char: @shiritori.head_char) %></p>
+        <% end %>
+      </section>
     <% end %>
-  </section>
+  </div>
 <% end %>
 
 <nav class="word-footer-nav">
-  <%= link_to words_path, class: "back-link icon-label" do %>
+  <%= link_to words_path, class: "btn" do %>
     <%= icon "arrow_left" %><%= t("words.show.back") %>
   <% end %>
 </nav>

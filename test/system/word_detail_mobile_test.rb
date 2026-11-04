@@ -13,7 +13,11 @@ class WordDetailMobileTest < ApplicationSystemTestCase
   # ルビ配置をやめて上下 2 段に積んでいる(PR #116。components.css の .sense-heading ruby)。
   # このテストは Chrome で動き、Chrome はルビの途中で改行できてはみ出し自体は再現しないため、
   # 「読みが丸ごと表記の上に積まれていること」を見る。
-  test "読みが長い語の詳細ページはモバイル幅でも横にはみ出さず、読みは表記の上に丸ごと積まれる" do
+  #
+  # 見出しの下の操作の行(シェアと別の言葉へ)は、狭い幅でも 2 段に折らない。折ると、右端へ離した
+  # 別の言葉へが下の段の中途半端な位置に取り残される。狭い幅のシェアは名前を隠したアイコンだけになるので、
+  # URL のコピーが済んだことは印の差し替えで見せる(components.css の .share)。
+  test "読みが長い語の詳細ページはモバイル幅でも横にはみ出さず、操作の行は 1 行に収まり、読みは表記の上に丸ごと積まれる" do
     word = Word.create!(surface: SURFACE)
     sense = word.word_senses.create!(reading: READING)
     sense.word_sense_variants.create!(surface: SURFACE.sub("抱き合う", "抱きあう"), reading: READING)
@@ -43,6 +47,21 @@ class WordDetailMobileTest < ApplicationSystemTestCase
       JS
       assert_operator overflow["over"], :<=, 0, "語義カードが画面右端からはみ出している"
       assert_empty overflow["inner"], "語義カード内に枠からはみ出した要素がある"
+
+      tops = page.evaluate_script(
+        "[...document.querySelectorAll('.word-actions .btn')].map((el) => Math.round(el.getBoundingClientRect().top))"
+      )
+      assert_equal 3, tops.size
+      assert_equal 1, tops.uniq.size, "操作の行が 2 段に折れている"
+
+      # クリップボードへの書き込みは成功したことにして、完了の印だけを見る
+      wait_for_stimulus "clipboard"
+      page.execute_script(<<~JS)
+        Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.resolve() }, configurable: true })
+      JS
+      find(".share button").click
+      assert_selector ".share[data-copied] .share__done-icon", visible: true
+      assert_selector ".share .share__link-icon", visible: false
 
       assert_reading_stacked ".sense-heading ruby", "語義見出し"
       assert_reading_stacked ".variant-list ruby", "別表記"

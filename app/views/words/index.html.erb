@@ -24,9 +24,9 @@
 <% content_for :robots, "noindex,follow" unless indexable %>
 <% canonical_path canonical_index_path(@search, @page, @sort) %>
 <% content_for :title, page_heading %>
-<%# ページの説明文。meta description と、ページ頭のリードの両方で使う %>
+<%# ページの説明文(文節の配列)。meta description にはつないで渡し、ページ頭のリードは文節の切れ目でだけ折る %>
 <% page_description = heading ? t("words.index.facet_description", label: heading) : t("words.index.description") %>
-<% content_for :description, page_description %>
+<% content_for :description, page_description.join %>
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ page_heading, nil ] ] %>
 
@@ -34,112 +34,116 @@
     代表の語義(Word#primary_sense)ではなく、表示中の語義から選ぶ %>
 <% headline_sense = @words.flat_map(&:word_senses).max_by { |sense| sense.reading_length.to_i } %>
 
+<%# 英字の標識(WORD INDEX・頁の位置)は置かない。トップと同じく見出しは日本語だけにする(docs/design.md §5.3) %>
 <header class="page-header page-header--rail">
   <div class="page-header__main">
-    <p class="label-en"><%= t("labels.en.words_index") %></p>
-    <%# 標識の2行目はいまの頁の位置。総件数はレールの数字とツールバーの「全 N 語」が持つ %>
-    <p class="label-en"><%= t("labels.en.page_of", page: @page, total: @total_pages) %></p>
     <h1 class="page-title"><%= page_heading %></h1>
-    <p class="page-lead"><%= page_description %></p>
+    <p class="page-lead"><%= phrased_sentences(page_description) %></p>
   </div>
 
-  <%# レール: この面が何件の面なのか(絞り込むと変わる)と、その中でいちばん長い読みの円環 %>
+  <%# レール: この面が何件の面なのか(絞り込むと変わる)と、その中でいちばん長い読みの円環。
+      数はトップの数字と同じ墨の 800 で立て、円環には説明を添えない(トップの今日の一語と同じ) %>
   <div class="page-header__rail">
-    <div>
-      <span class="figure-number figure-number--sm"><%= number_with_delimiter(@total_count) %></span>
-      <span class="figure-caption"><%= t("labels.en.entries_unit") %></span>
-    </div>
+    <p class="page-header__count"><span class="page-header__count-value"><%= number_with_delimiter(@total_count) %></span><%= t("words.index.count_unit") %></p>
     <% if headline_sense&.reading.present? %>
-      <%= render "shared/kana_ring_art", reading: headline_sense.reading,
-            caption: t("labels.en.longest_here") %>
+      <%= render "shared/kana_ring_art", reading: headline_sense.reading %>
     <% end %>
   </div>
 </header>
 
 <% conditions = applied_search_conditions(@search) %>
 <% if conditions.any? %>
+  <%# 左の列に漏斗、右の列に条件の札と変更・解除のボタン。札が折り返しても、漏斗は 1 行目の高さに留まる %>
   <div class="active-facet">
     <%= icon "funnel" %>
-    <ul class="condition-list">
-      <% conditions.each do |label, value| %>
-        <li class="condition-chip">
-          <span class="condition-chip__label"><%= label %></span>
-          <span class="condition-chip__value"><%= value %></span>
-        </li>
+    <div class="active-facet__body">
+      <ul class="condition-list">
+        <% conditions.each do |label, value| %>
+          <li class="condition-chip">
+            <span class="condition-chip__label"><%= label %></span>
+            <%# 値は「・」の後ろと「（」の前でだけ折り返す(ApplicationHelper#phrased_name。語の途中では折らない) %>
+            <span class="condition-chip__value"><%= phrased_name(value) %></span>
+          </li>
+        <% end %>
+      </ul>
+      <%# 条件を引き継ぐ /search?... はファセットの数だけ URL が増える(実測 500 超)。
+          クロールさせる価値が無いので nofollow を付ける(/search 自体はヘッダーから普通に辿れる) %>
+      <%= link_to search_path(request.query_parameters.except("page")),
+            class: "btn btn--sm active-facet__edit", rel: "nofollow" do %>
+        <%= icon "magnifying_glass" %><%= t("words.index.edit_conditions") %>
       <% end %>
-    </ul>
-    <%# 条件を引き継ぐ /search?... はファセットの数だけ URL が増える(実測 500 超)。
-        クロールさせる価値が無いので nofollow を付ける(/search 自体はヘッダーから普通に辿れる) %>
-    <%= link_to search_path(request.query_parameters.except("page")),
-          class: "active-facet__edit icon-label", rel: "nofollow" do %>
-      <%= icon "magnifying_glass" %><%= t("words.index.edit_conditions") %>
-    <% end %>
-    <%= link_to words_path, class: "active-facet__clear icon-label" do %>
-      <%= icon "x" %><%= t("words.index.clear_filter") %>
-    <% end %>
+      <%= link_to words_path, class: "btn btn--sm active-facet__clear" do %>
+        <%= icon "x" %><%= t("words.index.clear_filter") %>
+      <% end %>
+    </div>
   </div>
 <% end %>
 
-<div class="entry-toolbar">
-  <p class="entry-count">
-    <%= t("words.index.total", count: @total_count) %>
-    <%# いま何件目を見ているか。手本(ただ、そこ)の「001–022 / 022」と同じ役割 %>
-    <% if @words.any? %>
-      <% first_index = (@page - 1) * WordsController::PER_PAGE + 1 %>
-      <span class="entry-range mono"><%= format("%03d", first_index) %>–<%= format("%03d", first_index + @words.size - 1) %></span>
-    <% end %>
-  </p>
-
-  <% if @words.any? %>
-    <div class="entry-toolbar__controls">
-      <%# シャッフルは並び順ではなく「引き直す」操作なので、セレクタから外してボタンで置く。
-          押すたびにサーバ側で新しいシードが振られ、並びを引き直せる。
-          結果は必ず noindex(並び違いの重複)なので、クロールもさせない %>
-      <%= link_to shuffle_words_path, class: "btn btn--sm entry-toolbar__shuffle", rel: "nofollow" do %>
-        <%= icon "shuffle" %><%= t("words.index.shuffle") %>
-      <% end %>
-
-      <%# 並び順。絞り込み条件は hidden で引き継ぎ、select 変更で即送信(JS 無効時は noscript のボタン) %>
-      <%= form_with url: words_path, method: :get, class: "sort-form", data: { controller: "auto-submit" } do %>
-        <% request.query_parameters.except("page", "sort", "seed").each do |key, value| %>
-          <% Array(value).each do |item| %>
-            <%= hidden_field_tag(value.is_a?(Array) ? "#{key}[]" : key, item, id: nil) %>
-          <% end %>
-        <% end %>
-        <label class="sort-form__label" for="sort"><%= icon "arrows_down_up" %><%= t("words.index.sort.label") %></label>
-        <%= select_tag :sort,
-              options_for_select(WordSort::SELECTABLE_KEYS.map { |key| [ t("words.index.sort.options.#{key}"), key ] },
-                                 @sort.key),
-              class: "sort-form__select",
-              data: { action: "change->auto-submit#submit" } %>
-        <noscript><%= submit_tag t("words.index.sort.apply"), class: "btn btn--sm", name: nil %></noscript>
-      <% end %>
-    </div>
-  <% end %>
-</div>
-
 <% if @words.empty? %>
-  <%# 絞り込み結果が 0 件のときは「DB が空」ではなく「条件に一致なし」と伝える(誤解防止)。
-      条件を外す導線は上の active-facet(絞り込みを解除)が担う。
-      text: の完全一致検証に余分な空白が入らないよう、あえて1行で組む。 %>
-  <p class="empty-note"><%= icon "binoculars" %><%= @search.conditions? ? t("words.index.empty_filtered") : t("words.index.empty") %></p>
+  <%# 0 件の案内。結果があるときの一覧と同じ札に、溶けた顔・案内・収録リクエストの導線を中央に積む(docs/design.md §5.3) %>
+  <div class="panel empty-panel">
+    <%= icon "smiley_melting", "empty-panel__face" %>
 
-  <%# 探して見つからなかった瞬間が収録リクエストの一番の動機なので、ここに導線を置く(Issue 75)。
-      キーワードはフォームへ引き継ぐ(条件だけの 0 件は語が特定できないので空のフォームへ)。
-      フォーム自体は埋め込まず、HTTP キャッシュさせない専用ページへリンクする。CSRF トークン入りの
-      フォームは共有キャッシュに載りうるページに置かない方針(WordRequestsController の冒頭)。
-      なお、この一覧の HTML はいま HTTP キャッシュを宣言していない(public なのは単語詳細と Atom)。
-      .empty-request はスタイルを持たない。結合テスト(word_requests_controller_test)の目印。 %>
-  <% if requests_open? %>
-    <p class="empty-request">
-      <%= link_to t("words.index.request_link"), new_request_path(surface: @search.q.presence),
-            class: "icon-label" %>
-    </p>
-  <% end %>
+    <%# 絞り込み結果が 0 件のときは「DB が空」ではなく「条件に一致なし」と伝える(誤解防止)。
+        条件を外す導線は上の active-facet(絞り込みを解除)が担う。
+        条件つきの案内は文ごとの文節の配列で、文ごとに行を分け、文節の切れ目でだけ折る(phrased_sentences)。 %>
+    <% note = @search.conditions? ? phrased_sentences(t("words.index.empty_filtered")) : t("words.index.empty") %>
+    <p class="empty-note"><%= note %></p>
+
+    <%# 探して見つからなかった瞬間が収録リクエストの一番の動機なので、ここに導線を置く(Issue 75)。
+        キーワードはフォームへ引き継ぐ(条件だけの 0 件は語が特定できないので空のフォームへ)。
+        フォーム自体は埋め込まず、HTTP キャッシュさせない専用ページへリンクする。CSRF トークン入りの
+        フォームは共有キャッシュに載りうるページに置かない方針(WordRequestsController の冒頭)。
+        なお、この一覧の HTML はいま HTTP キャッシュを宣言していない(public なのは単語詳細と Atom)。
+        .empty-request はスタイルを持たない。結合テスト(word_requests_controller_test)の目印。 %>
+    <% if requests_open? %>
+      <%# 「この言葉の」と言えるのは、キーワードをフォームへ引き継ぐときだけ(条件だけの 0 件には指す語が無い) %>
+      <% request_label = @search.q.present? ? t("words.index.request_link") : t("words.index.request_link_no_keyword") %>
+      <p class="empty-request">
+        <%= link_to request_label, new_request_path(surface: @search.q.presence), class: "icon-label" %>
+      </p>
+    <% end %>
+  </div>
 <% else %>
-  <div class="entry-list">
-    <%# query は「別表記だけが一致した」注記の判定に使う(Issue 72) %>
-    <%= render partial: "words/entry_row", collection: @words, as: :word, locals: { query: @search.q } %>
+  <%# 件数と並び順を頭に、行を中身にした札。トップの札(.panel)と同じ墨の枠で囲む(docs/design.md §5.3) %>
+  <div class="panel entry-panel">
+    <div class="panel__head entry-toolbar">
+      <p class="entry-count">
+        <%# レールの件数と同じく 3 桁で区切る %>
+        <%= t("words.index.total", count: number_with_delimiter(@total_count)) %>
+        <%# いま何件目を見ているか。手本(ただ、そこ)の「001–022 / 022」と同じ役割 %>
+        <% first_index = (@page - 1) * WordsController::PER_PAGE + 1 %>
+        <span class="entry-range mono"><%= format("%03d", first_index) %>–<%= format("%03d", first_index + @words.size - 1) %></span>
+      </p>
+
+      <div class="entry-toolbar__controls">
+        <%# シャッフルは並び順ではなく「引き直す」操作なので、セレクタから外してボタンで置く。
+            押すたびにサーバ側で新しいシードが振られ、並びを引き直せる。
+            結果は必ず noindex(並び違いの重複)なので、クロールもさせない %>
+        <%= link_to shuffle_words_path, class: "btn btn--sm entry-toolbar__shuffle", rel: "nofollow" do %>
+          <%= icon "shuffle" %><%= t("words.index.shuffle") %>
+        <% end %>
+
+        <%# 並び順。絞り込み条件は hidden で引き継ぎ、select 変更で即送信(JS 無効時は noscript のボタン) %>
+        <%= form_with url: words_path, method: :get, class: "sort-form", data: { controller: "auto-submit" } do %>
+          <% request.query_parameters.except("page", "sort", "seed").each do |key, value| %>
+            <% Array(value).each do |item| %>
+              <%= hidden_field_tag(value.is_a?(Array) ? "#{key}[]" : key, item, id: nil) %>
+            <% end %>
+          <% end %>
+          <label class="sort-form__label" for="sort"><%= icon "arrows_down_up" %><%= t("words.index.sort.label") %></label>
+          <%= select_tag :sort, sort_select_options(@sort),
+                class: "sort-form__select",
+                data: { action: "change->auto-submit#submit" } %>
+          <noscript><%= submit_tag t("words.index.sort.apply"), class: "btn btn--sm", name: nil %></noscript>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="entry-list">
+      <%# query は「別表記だけが一致した」注記の判定に使う(Issue 72) %>
+      <%= render partial: "words/entry_row", collection: @words, as: :word, locals: { query: @search.q } %>
+    </div>
   </div>
 
   <%= render "pagination" %>

@@ -10,26 +10,27 @@
     body {
       margin: 0; min-height: 100vh; padding: 24px;
       display: flex; align-items: center; justify-content: center;
-      background: #EFF2F6; color: #232A31; line-height: 1.9; letter-spacing: .03em;
-      font-family: -apple-system, BlinkMacSystemFont, Inter, "Segoe UI",
-                   "Hiragino Kaku Gothic Pro", "Noto Sans JP", Meiryo, sans-serif;
+      background: #FAFAFA; color: #2F2725; line-height: 1.9; letter-spacing: .08em;
+      font-family: "Avenir Next", "Noto Sans JP", "Yu Gothic Medium", "游ゴシック Medium", YuGothic,
+                   "Hiragino Kaku Gothic ProN", "Hiragino Kaku Gothic Pro", Meiryo, sans-serif;
+      font-feature-settings: "palt";
     }
     .box { width: 100%; max-width: 30em; text-align: center; }
-    .code { margin: 0 0 8px; font-size: 12px; color: #63686C; }
-    h1 { margin: 0 0 16px; font-size: 20px; font-weight: 400; }
-    p { margin: 0 0 32px; color: #5F6568; font-size: 14px; }
+    .code { margin: 0 0 8px; font-size: 12px; color: #6A605C; }
+    h1 { margin: 0 0 16px; font-size: 20px; font-weight: 800; letter-spacing: .06em; }
+    p { margin: 0 0 32px; color: #5C4E4A; font-size: 14px; }
     .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
     .links a {
-      color: #232A31; text-decoration: none; border: 1px solid #C6CCD5; border-radius: 999px;
+      color: #2F2725; text-decoration: none; border: 1px solid #2F2725; border-radius: 8px;
       padding: 8px 20px; font-size: 14px;
     }
-    .links a:hover { background: #F7F9FC; border-color: #63686C; }
+    .links a:hover { background: #EBE9E7; }
     @media (prefers-color-scheme: dark) {
-      body { background: #191D22; color: #E3E7EA; }
-      .code { color: #798085; }
-      p { color: #98A0A5; }
-      .links a { color: #E3E7EA; border-color: #3A4148; }
-      .links a:hover { background: #14181C; border-color: #868D92; }
+      body { background: #262120; color: #F2EEEC; }
+      .code { color: #B0A6A2; }
+      p { color: #C8BEBB; }
+      .links a { color: #F2EEEC; border-color: #F2EEEC; }
+      .links a:hover { background: #120E0D; }
     }
   </style>
 </head>

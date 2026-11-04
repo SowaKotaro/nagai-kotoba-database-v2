@@ -32,10 +32,10 @@ class DesignTokensTest < ActiveSupport::TestCase
                  media.reject { |name, _| name == "color-scheme" }
     assert_equal "dark", media["color-scheme"]
 
-    # application.css は tokens → base → layout → components → annotate → candidates → admin の順に読む
+    # application.css は tokens → base → layout → components → motion → annotate → candidates → admin の順に読む
     # 同じ特異度の規則は後に書いた方が勝つので、読み込み順そのものが見た目を決めている(application.css の冒頭)。
     manifest = File.read(Rails.root.join("app/assets/stylesheets/application.css"))
-    assert_equal %w[tokens base layout components annotate candidates admin], manifest.scan(/^\s*\*= require (\w+)$/).flatten
+    assert_equal %w[tokens base layout components motion annotate candidates admin], manifest.scan(/^\s*\*= require (\w+)$/).flatten
     assert_match(/^\s*\*= require_self$/, manifest)
     assert_no_match(/require_tree/, manifest.lines.grep(/^\s*\*=/).join)
   end

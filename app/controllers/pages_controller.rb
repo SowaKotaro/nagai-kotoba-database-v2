@@ -3,7 +3,7 @@ class PagesController < ApplicationController
   allow_unauthenticated_access only: %i[about privacy]
 
   def about
-    # 標識の2行目と本文に置く収録語数(1 日キャッシュ。AboutStatistics)。
+    # ページの頭のレールと本文に置く収録語数(1 日キャッシュ。AboutStatistics)。
     @word_count = AboutStatistics.word_count
   end
 

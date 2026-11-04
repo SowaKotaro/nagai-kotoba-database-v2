@@ -8,7 +8,7 @@
 <details class="search-section" data-fold-count-target="fold" <%= "open" if open %>>
   <summary class="search-section__summary">
     <%= icon "caret_down", "search-section__caret" %>
-    <span class="search-section__title"><%= icon(icon) %><%= title %></span>
+    <span class="search-section__title"><%= icon(icon) %><%= phrased_name(title) %></span>
     <% if count %>
       <span class="search-section__count" data-fold-count-target="count"
             <%= "hidden" if count.zero? %>><%= count if count.positive? %></span>

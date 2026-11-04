@@ -51,10 +51,10 @@
     <%# web フォントは読まない(書体は OS 標準のゴシック 1 本。docs/design.md §2)。
         外部フォント CDN への接続をなくすことが、そのまま表示速度になる。 %>
 
-    <%# モバイルのブラウザ UI の色。#ffffff は JS が動かないときに残る既定値(ライトの --surface と同じ白)。
+    <%# モバイルのブラウザ UI の色。#fafafa は JS が動かないときに残る既定値(ライトの --bg と同じ地の色)。
         JS が動けば、直後のスクリプトと theme_controller.js の sync が CSS の --bg を読んで上書きする
-        (--bg はヘッダーの --bg-soft とも本文の --surface とも違う色)。読むトークンを変えるなら 2 か所を揃える %>
-    <meta name="theme-color" content="#ffffff">
+        (ヘッダーは帯を持たないので、ブラウザ UI と地が続いて見える)。読むトークンを変えるなら 2 か所を揃える %>
+    <meta name="theme-color" content="#fafafa">
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
@@ -101,8 +101,8 @@
     <%# 管理画面だけに出す共通サブナビ(Issue 35) %>
     <%= render "admin/nav" if admin_page? %>
 
-    <%# トップだけは全幅の帯で組むため、ページ側からクラスを差し込めるようにする
-        (container--flush = 幅と左右の余白を外し、帯が画面端まで届くようにする) %>
+    <%# トップだけは本文の幅に縛られずに組むため、ページ側からクラスを差し込めるようにする
+        (container--flush = 幅と左右の余白を外し、帯と札の棚がそれぞれの幅を持つ) %>
     <%# id はスキップリンクの飛び先。tabindex="-1" で、飛んだあとの Tab が本文の続きから進む %>
     <main id="main" tabindex="-1" class="container <%= yield(:main_class) %>">
       <%# フラッシュはここで一元表示する(各ビューでは表示しない)。
@@ -117,10 +117,10 @@
     <footer class="site-footer">
       <div class="site-footer__inner">
         <div class="site-footer__about">
-          <%# 3 行のワードマークはヘッダーのブランド名の右へ移した(2026-09-05 オーナー指示)。
-              同じ英字を 2 箇所に出さないので、奥付はブランド名から始める %>
+          <%# 3 行のワードマークは 2026-09-05 にヘッダーのブランド名の右へ移し、2026-11-04 にヘッダーからも外した
+              (docs/design.md §5.1)。奥付はブランド名から始める %>
           <p class="site-footer__brand"><%= t("layouts.brand") %></p>
-          <p class="site-footer__desc"><%= t("layouts.footer.about") %></p>
+          <p class="site-footer__desc"><%= phrased_sentences(t("layouts.footer.about")) %></p>
           <nav class="site-footer__nav">
             <%= link_to about_path, class: "icon-label" do %><%= t("layouts.footer.more") %><%= icon "arrow_right" %><% end %>
           </nav>
