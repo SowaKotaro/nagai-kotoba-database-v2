@@ -18,7 +18,6 @@
 .search-section__title .icon,
 .section-label .icon,
 .sense-attrs dt .icon,
-.prose h2 .icon,
 .sort-form__label .icon,
 .empty-note .icon {
   margin-right: 6px;
@@ -284,41 +283,19 @@
   color: var(--text-muted);
 }
 
-/* 恒久ページ(About 等)の本文。幅は読み物の幅(--reading-width、640px)までに抑える(Issue 20) */
+/* 恒久ページ(About・プライバシー)の章の本文。章は 1 つずつ札に収め(pages/_chapter)、本文は札の幅いっぱいに組む
+   (15px・字間 0.08em で 1 行 43 字ほど。札に収める前の 640px の読み物の幅は取りやめた。docs/design.md §5.6.1) */
 .prose {
   font-size: 15px;
-  max-width: var(--reading-width);
 }
 
-.prose section + section {
-  margin-top: var(--space-7);
-}
-
-/* 章の見出し。design.md §3 の「細罫はセクション見出しの下」に従って 1px の細罫で章の頭を示す。
-   h2 が等間隔に並ぶだけだと、どこで話題が変わるのか読めない(濃い章の罫は
-   ページ見出しの下など design.md §3 に列挙した箇所だけなので、ここは --border で止める) */
-.prose h2 {
-  margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border);
-  font-size: 17px;
-  color: var(--text);
-}
-
-/* FAQ の質問文(h3)。太字を使わないので、問いと答えの差は「大きさ」と「文字の濃さ」で作る
-   (質問 = 16px の --text / 答え = 15px の --text-muted)。問いの上は広く空ける */
-.prose h3 {
-  margin: var(--space-6) 0 var(--space-2);
-  font-size: 16px;
-  color: var(--text);
-}
-
-.prose h3 + p {
-  color: var(--text-muted);
+/* 区画の最後の段落・箇条の下の余白は、区画の余白に任せる */
+.prose > :last-child {
+  margin-bottom: 0;
 }
 
 .prose ul {
-  margin: 0;
+  margin: 0 0 var(--space-4);
   padding-left: 1.4em;
 }
 
@@ -339,9 +316,84 @@
   text-underline-offset: 2px;
 }
 
+/* 文節の塊(.phrase。inline-block)には親の下線が届かないので、塊にも引き直す(ライセンス名のリンク) */
+.prose a .phrase {
+  text-decoration: inherit;
+}
+
 .prose__note {
   color: var(--text-subtle);
   font-size: 13px;
+}
+
+/* よくある質問の問答。札の幅いっぱいの行に積み、行どうしの罫は 1px の隙間で見せる(docs/design.md §3)。
+   問いと答えの差は大きさと文字の濃さで作る(問い = 16px の --text / 答え = 15px の --text-muted) */
+.faq-list {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.faq-list__item {
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+}
+
+.faq-list__question {
+  margin: 0 0 var(--space-2);
+  font-size: 16px;
+}
+
+.faq-list__answer {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* 外部送信の公表事項(送信先・情報・目的)。単語詳細の関連データ(.sense-attrs)と同じく、名前の列と値の列の行を
+   札の幅いっぱいに積み、行どうしの罫は 1px の隙間で見せる。上下の本文の区画との境は単独の区切り線なので border で引く */
+.fact-list {
+  margin: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+  border-block: 1px solid var(--border);
+}
+
+/* 名前の列は「送信される情報」(13px で 7 字)が 1 行に収まる幅 */
+.fact-list__item {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: baseline;
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface);
+}
+
+.fact-list dt {
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.fact-list dd {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* 札の頭の左の余白が詰まる幅(.panel__head)では、行の左右の余白も同じだけ詰める */
+@media (max-width: 767px) {
+  .faq-list__item,
+  .fact-list__item {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* 狭い幅では名前と値を縦に積む(単語詳細の関連データと同じ) */
+@media (max-width: 560px) {
+  .fact-list__item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
 }
 
 /* --- 語義の札: トップの今日の一語と同じ墨の枠の札(.panel)。頭に通し番号(語義 1 / 2 …)、中身に見出し・意味・特徴を置き、
@@ -1346,7 +1398,9 @@ a.tag:hover .genre-hub__count {
 .feature-glossary dd,
 .sense-meaning,
 .prose p,
-.prose li {
+.prose li,
+.faq-list__answer,
+.fact-list dd {
   word-break: auto-phrase;
   overflow-wrap: anywhere;
   text-wrap: pretty;
@@ -2741,6 +2795,20 @@ html:has(.search-actions) {
   margin: 0;
   font-size: 18px;
   letter-spacing: 0.06em;
+}
+
+/* スマホで 2 行に折れる見出し(恒久ページの章。pages/_chapter)。アイコンは 2 行の間に下ろさず、1 行目の高さの中ほどに置く
+   (行の高さ 1.75 とアイコンの 1em の差の半分を上に空ける)。文字は文節の塊で組み(ApplicationHelper#phrased_name)、
+   Chromium は塊の中でも語句の切れ目で折る(auto-phrase)。ほかの札の見出しは 1 行に収まるので中央揃えのまま
+   (こちらに揃えると、WebKit が行の高さを丸めるぶんアイコンが 1px 下がる) */
+.panel__title--wrap {
+  align-items: flex-start;
+  line-height: 1.75;
+  word-break: auto-phrase;
+}
+
+.panel__title--wrap > .icon {
+  margin-top: 0.375em;
 }
 
 /* 「詳しく見る →」「一覧へ →」「ランキングへ →」。探し方の入口(.search-ways__item)と同じく、矢印は枠に寄せるぶん

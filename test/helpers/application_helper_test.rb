@@ -10,6 +10,12 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal [ "雑誌・", "逐次刊行物", "（カレンダー含む）", "全体を見る" ], name.css(".phrase").map(&:text)
     assert_equal "雑誌・逐次刊行物（カレンダー含む） 全体を見る", name.text
     assert_equal 3, name.css("wbr").size
+    # 括弧書きの中(半角の括弧も)の空白では切らない
+    license = Nokogiri::HTML5.fragment(phrased_name("クリエイティブ・コモンズ 表示 4.0 国際 (CC BY 4.0)"))
+    assert_equal [ "クリエイティブ・", "コモンズ", "表示", "4.0", "国際", "(CC BY 4.0)" ], license.css(".phrase").map(&:text)
+    # 文節に分けた配列(切れ目の記号を持たない見出し)は、そのまま塊にする
+    title = Nokogiri::HTML5.fragment(phrased_name([ "収録リクエストで", "受け取る情報" ]))
+    assert_equal [ "収録リクエストで", "受け取る情報" ], title.css(".phrase").map(&:text)
 
     # 用語解説の例は、区切りを丸ごと前の例に、ラベルを最初の例に含めた塊にする(「／」やラベルだけの行を作らない)。
     # 例の中は演算子の後ろ・「・」の後ろ・括弧書きの前と、括弧書きの中の句読点の後ろで切る(括弧書きの中の空白と半角の括弧では切らない)

@@ -25,7 +25,8 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     faq = find_type("FAQPage")
     items = I18n.t("pages.about.faq_items")
 
-    assert_equal items.map { |item| item[:question] }, faq["mainEntity"].map { |q| q["name"] }
+    assert_equal items.map { |item| item[:question].join }, faq["mainEntity"].map { |q| q["name"] }
+    assert_equal "どんな言葉が収録されていますか？", faq["mainEntity"].first["name"]
     first = faq["mainEntity"].first
     assert_equal "Question", first["@type"]
     assert_equal items.first[:answer], first.dig("acceptedAnswer", "text")

@@ -51,11 +51,14 @@ module ApplicationHelper
     end, tag.wbr)
   end
 
-  # 名前(ジャンルの分類名・絞り込みの条件の値・区画の見出し)を、「・」の後ろ・「（」の前・空白でだけ折れる形にする(.phrase と対)。
-  # 語の途中(「スポー／ツ」「部分一／致」)や最後の 1 字(「出版／物」)では折らない。切れ目ごとに塊にするのは、
-  # keep-all では WebKit が「（」の後ろで折ったため。1 つの塊で幅に収まらないときだけ、塊の中で折れる
+  # 名前(ジャンルの分類名・絞り込みの条件の値・区画の見出し・ライセンス名とクレジット)を、「・」の後ろ・「（」の前・空白でだけ
+  # 折れる形にする(.phrase と対)。語の途中(「スポー／ツ」「部分一／致」)や最後の 1 字(「出版／物」)では折らない。切れ目ごとに塊にするのは、
+  # keep-all では WebKit が「（」の後ろで折ったため。括弧書きの中の空白と「・」では切らない(390px 幅で「(CC／BY 4.0)」と割れた)。
+  # 切れ目の記号を持たない名前は、ja.yml で文節に分けた配列で渡すと、その切れ目でだけ折れる。
+  # 1 つの塊で幅に収まらないときだけ、塊の中で折れる
   def phrased_name(text)
-    safe_join(text.to_s.split(/(?<=[・ ])|(?=（)/).map { |part| phrase_with_trailing_space(part) }, tag.wbr)
+    parts = text.is_a?(Array) ? text : text.to_s.split(/(?<=[・ ])(?![^(（]*[)）])|(?=（)/)
+    safe_join(parts.map { |part| phrase_with_trailing_space(part) }, tag.wbr)
   end
 
   # og:image の絶対URL。ページ側の content_for(:og_image) を優先し、無ければ既定カード。

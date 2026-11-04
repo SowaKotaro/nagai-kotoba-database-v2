@@ -1,0 +1,10 @@
+<%# locals: (icon_name:, title:) -%>
+<%# 恒久ページ(About・プライバシー)の章の札。頭にアイコンと章の見出しを置き、中身(本文の区画・問答の行)は
+    呼び出し側が render layout: のブロックで組む(docs/design.md §5.6.1) %>
+<section class="panel">
+  <div class="panel__head">
+    <%# 見出しは「（」の前で折る(「アクセス解析／（外部送信情報の公表）」)。文節の塊を 1 つの子にまとめ、アイコンと横に並べる %>
+    <h2 class="panel__title panel__title--wrap"><%= icon icon_name %><span><%= phrased_name(title) %></span></h2>
+  </div>
+  <%= yield %>
+</section>
