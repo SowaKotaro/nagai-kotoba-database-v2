@@ -1,23 +1,13 @@
-<%# グローバルヘッダー(docs/design.md §5.1)。ブランドマーク(サイト名の読みの円環) + サイト名 + ナビ(現在地表示)。
+<%# グローバルヘッダー(docs/design.md §5.1)。サイト名 + ナビ(現在地表示)。
     キーワード検索はヘッダーに常設せず、トップページのヒーロー中央に置く(検索を主役にするため)。
-    狭幅ではナビをハンバーガーで開閉するサイドパネルに格納する(nav-drawer コントローラ)。 %>
+    900px 以下ではナビをハンバーガーで開閉するドロワーに格納する(nav-drawer コントローラ)。 %>
 <header class="site-header" data-controller="nav-drawer"
+        data-action="keydown.esc@window->nav-drawer#close turbo:before-cache@document->nav-drawer#close"
         data-nav-drawer-open-label-value="<%= t("layouts.menu_open") %>"
         data-nav-drawer-close-label-value="<%= t("layouts.menu_close") %>">
   <div class="site-header__inner">
-    <%= link_to root_path, class: "site-brand" do %>
-      <%# ブランドマークはサイト名の読みの五十音円環(ホーム最上部の印と同じ図) %>
-      <%= render "shared/brand_mark" %>
-      <span class="site-brand__name"><%= t("layouts.brand") %></span>
-      <%# ブランド名の右に、縦罫で仕切って英字を小さく添える。ページを名前で締める印で、
-          もとは奥付(フッター)に 3 行のワードマークとして置いていたものをここへ移した
-          (2026-09-05 オーナー指示)。値ではなく名前なので標識(.label-en)とは別物 %>
-      <span class="site-brand__roman" aria-hidden="true">
-        <% t("labels.en.site").split.each do |word| %>
-          <span class="site-brand__roman-line"><%= word %></span>
-        <% end %>
-      </span>
-    <% end %>
+    <%# 左はサイト名だけ。円環のブランドマークと 3 行の英字は 2026-11-04 に外した(docs/design.md §5.1) %>
+    <%= link_to t("layouts.brand"), root_path, class: "site-brand" %>
 
     <button type="button" class="nav-toggle" aria-label="<%= t("layouts.menu_open") %>" aria-expanded="false"
             data-nav-drawer-target="button" data-action="nav-drawer#toggle">
@@ -29,6 +19,16 @@
     </button>
 
     <div class="site-header__right" data-nav-drawer-target="panel">
+      <%# ドロワーの頭(狭幅だけ。広い幅では出さない)。ヘッダーと同じ高さに組んで下に墨の罫を引き、
+          閉じるボタンをハンバーガーと同じ位置に置く(docs/design.md §5.1) %>
+      <div class="nav-drawer__head">
+        <span class="nav-drawer__title"><%= t("layouts.menu_title") %></span>
+        <button type="button" class="nav-drawer__close" aria-label="<%= t("layouts.menu_close") %>"
+                data-nav-drawer-target="close" data-action="nav-drawer#close">
+          <%= icon "x" %>
+        </button>
+      </div>
+
       <nav class="site-nav">
         <%= link_to t("layouts.nav.words"), words_path, class: ("is-current" if request.path == words_path) %>
         <%# ランキング。読みの長さをはじめ、さまざまな観点のランキングを束ねたハブ %>
@@ -78,6 +78,8 @@
                 aria-label="<%= t("layouts.theme.toggle") %>"
                 data-theme-target="button" data-action="theme#toggle">
           <%= icon "moon", "theme-toggle__icon" %>
+          <%# 名前は狭幅のドロワーの行でだけ見せる(広い幅はアイコンとスイッチだけ。どちらも名前は aria-label が持つ) %>
+          <span class="theme-toggle__label"><%= t("layouts.theme.toggle") %></span>
           <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__thumb"></span></span>
         </button>
       </div>

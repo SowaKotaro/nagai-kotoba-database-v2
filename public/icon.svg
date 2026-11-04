@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- ファビコン。サイト名の読み「ナガイコトバノデータベース」を五十音の円環で一筆書きにした図で、
-     ヘッダーのブランドマーク(shared/_brand_mark)・ホーム最上部の印と同じ KanaRing の座標を使う。
+     ホーム最上部の印と同じ KanaRing の座標を使う。
      座標は KanaRing.path("ナガイコトバノデータベース") の出力(viewBox 200)。
      単体ファイルなので色はトークンと同値をリテラルで持つ(text #232A31 / dark-text #E3E7EA)。
      ブラウザのタブがライトでもダークでも沈まないよう、地と線を prefers-color-scheme で入れ替える。 -->

@@ -154,6 +154,7 @@ ja:
       logout: "ログアウト"
     menu_open: "メニューを開く"
     menu_close: "メニューを閉じる"
+    menu_title: "メニュー"
     theme:
       toggle: "ダークモード"
     footer:

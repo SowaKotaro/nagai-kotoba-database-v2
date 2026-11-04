@@ -2,11 +2,10 @@
     ring_crossing_count を出す)と同じ KanaRing の円環から作るが、こちらは数値を読ませない装飾なので、
     ラベルも枠も持たせない。
     実データから生まれる図なので、写真のプレースホルダを置かずに済む(docs/design.md §5.7)。
-    同じ円環(補助の円 + 折れ線)は、ヘッダーの shared/_brand_mark と、共有カードの
-    share_cards/word.svg.erb(寸法は WordShareCard)も別々に組んでいる。座標はどれも KanaRing から
-    取るが、始点の点の半径(ここは r="2.6" の直書き、カードは WordShareCard::RING_START_RADIUS)と
-    線の太さ(Web は components.css、カードは SVG に直書き)はそれぞれが持ち、1 点だけの読みでは
-    カードだけが折れ線を省く。見た目を変えるときは 3 か所を見る。
+    同じ円環(補助の円 + 折れ線)は、共有カードの share_cards/word.svg.erb(寸法は WordShareCard)も
+    別に組んでいる。座標はどちらも KanaRing から取るが、始点の点の半径(ここは r="2.6" の直書き、
+    カードは WordShareCard::RING_START_RADIUS)と線の太さ(Web は components.css、カードは SVG に直書き)は
+    それぞれが持ち、1 点だけの読みではカードだけが折れ線を省く。見た目を変えるときは 2 か所を見る。
     説明(キャプション)はどの置き場所にも添えない(docs/design.md §5.9)。
     locals: reading(必須) / modifier(任意: 追加クラス)
            / arc_label(任意: 円の外側を弧を描いて回る英字。ホーム最上部の印だけで使う) %>

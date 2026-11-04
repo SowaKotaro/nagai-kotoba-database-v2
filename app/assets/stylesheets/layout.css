@@ -6,6 +6,10 @@
 /* ヘッダーは帯を持たず、地(--bg)の上にブランドとナビだけを置き、下に墨の罫 1 本を引いて本文と分ける
    (SANKOU! がナビの区切りに引く罫と同じ。フッターの上の罫と対になる。2026-11-03 オーナー指示) */
 .site-header {
+  /* 帯の余白(左右と上下)。ドロワーの頭(閉じるボタンをハンバーガーに重ねる)と、「検索」のプルダウンを
+     吊り下げる位置も同じ値で組むので、変数 1 つずつで持つ(狭い幅と管理画面はこの変数を上書きする) */
+  --header-gutter: var(--space-5);
+  --header-padding-block: var(--space-4);
   background: transparent;
   border-bottom: 1px solid var(--text);
 }
@@ -14,8 +18,9 @@
 .site-header__inner {
   max-width: var(--frame-width);
   margin: 0 auto;
-  /* 帯は低く。ページの主役ではないので、掴めるだけの高さがあればよい */
-  padding: var(--space-3) var(--space-5);
+  /* 帯は低く。ページの主役ではないので、掴めるだけの高さがあればよい
+     (広い幅は上下 16px + ナビの札 34px + 罫 1px = 67px) */
+  padding: var(--header-padding-block) var(--header-gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,74 +28,23 @@
   flex-wrap: wrap;
 }
 
+/* サイト名。円環のブランドマークと 3 行の英字は持たず、名前だけを少し大きく置く(2026-11-04 オーナー指示。16px → 20px)。
+   書体は本文と同じ --font-sans を継承する(2026-09-04 オーナー判断。手本「ただ、そこ」のスタックを当てていたが、
+   イメージと違うとして戻した)。太さと字間は SANKOU! のロゴと同じ 800・0.04em(本文の 0.08em より詰める)。
+   行の高さは 1.4(28px)に詰め、帯の高さを決めるナビの札(34px)とハンバーガー(36px)を超えないようにする。
+   狭幅のドロワーの頭の見出し(「メニュー」)も同じ組みにする(頭は帯に重なって開くので、見出しの大きさも帯に揃える) */
+.site-brand,
+.nav-drawer__title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
 .site-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   color: var(--text);
   text-decoration: none;
   white-space: nowrap;
-}
-
-/* ブランドマーク: サイト名の読みの五十音円環(ホーム最上部の印と同じ図)。
-   小さく置くので線は実寸 1px に固定する(non-scaling-stroke。viewBox 200 のまま
-   縮めると線が消える) */
-.site-brand__seal {
-  width: 30px;
-  height: 30px;
-  flex: none;
-}
-
-.site-brand__ring {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.5;
-}
-
-.site-brand__path {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  /* 30px まで縮めると 12 本の弦が密集して塊に見えるので、線は淡く落として
-     「円の中の軌跡」として読ませる(濃くすると汚れに見える) */
-  opacity: 0.62;
-}
-
-.site-brand__name {
-  /* 書体は本文と同じ --font-sans を継承する(2026-09-04 オーナー判断。手本「ただ、そこ」の
-     スタックを当てていたが、イメージと違うとして戻した)。太さと字間は SANKOU! のロゴと同じ
-     800・0.04em(本文の 0.08em より詰める。390px 幅でもメニューのボタンと 1 行に並ぶ幅を保つ) */
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-/* ブランド名の右に添える英字。縦罫で仕切り、等幅で 1 語 1 行の 3 段に積む。
-   もとは奥付に 22px のワードマークとして置いていたものを、小さくしてここへ移した
-   (2026-09-05 オーナー指示)。**名前を掴めればよいので、読ませには来ない**濃さに留める */
-.site-brand__roman {
-  flex: none;
-  align-self: center;
-  padding-left: var(--space-3);
-  border-left: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.01em;
-  color: var(--text-subtle);
-  /* 3 行を塊として詰める。行送りを字面ぎりぎり(1.05)まで寄せると、行間の余りが減って
-     1 行目は下へ・最終行は上へ寄り、3 行が中央に凝縮される
-     (2026-09-05 オーナー指示「NAGAI は下揃え、DATABASE は上揃え」)。
-     負のマージンで押し込むと字面がボックスの外へ出て上下が欠けるので、行送りだけで詰める */
-  line-height: 1.05;
-}
-
-.site-brand__roman-line {
-  display: block;
 }
 
 .site-header__right {
@@ -100,13 +54,14 @@
   flex-wrap: wrap;
 }
 
-/* ハンバーガー(狭幅のみ表示) */
+/* ハンバーガー(900px 以下だけ表示)。開いている間はスクリムとドロワーの下に隠れ、同じ位置にドロワーの閉じるボタンが来るので、
+   三本線は × に変形させない。線は閉じるボタンの × と同じ墨 */
 .nav-toggle {
   display: none;
   border: none;
   background: none;
   padding: 12px;
-  color: var(--text-muted);
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -124,98 +79,63 @@
   height: 1px;
   border-radius: 1px;
   background: currentColor;
-  transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease;
 }
 
 .nav-toggle__bar:nth-child(1) { top: 0; }
 .nav-toggle__bar:nth-child(2) { top: 5px; }
 .nav-toggle__bar:nth-child(3) { top: 10px; }
 
-.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
-  top: 5px;
-  transform: rotate(45deg);
-}
-
-.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(2) {
-  opacity: 0;
-}
-
-.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
-  top: 5px;
-  transform: rotate(-45deg);
-}
-
+/* ドロワーの頭とスクリムは狭幅だけで使う */
+.nav-drawer__head,
 .nav-drawer__scrim {
   display: none;
 }
 
+/* --- ナビ(docs/design.md §5.1) ---
+   項目(リンク・「検索」の開くボタン・ログアウト)は同じ札の形にそろえ、文字は墨にする。現在地は墨のベタで塗る
+   (狭幅のドロワーの行と同じ印)。札の高さは 34px(行の高さ 22px + 上下 6px)で、帯の高さの基準になる */
 .site-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-1);
   font-size: 14px;
 }
 
-/* 直下のリンクだけを対象にする(プルダウン内のリンクは .nav-menu__panel a が受け持つ) */
-.site-nav > a {
-  text-decoration: none;
-  color: var(--text-muted);
-  padding: var(--space-2) 2px;
-}
-
-.site-nav > a:hover {
-  color: var(--text);
-}
-
-/* 現在地は色を濃くするだけ。下線も面も足さない */
-.site-nav > a.is-current {
-  color: var(--text);
-}
-
-/* ログアウト(button_to)をナビリンクと同じ見た目にする */
+/* ログアウトは button_to のフォームに入っている。フォームを項目の箱として並べ、ボタンをほかの項目と同じ札にする
+   (flex にして、行の箱の高さでボタンの札より高くならないようにする) */
 .site-nav form {
-  display: inline;
+  display: flex;
 }
 
+.site-nav > a,
+.nav-menu__trigger,
 .site-nav form button {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px var(--space-3);
   border: none;
-  padding: var(--space-2) 2px;
-  font-size: 14px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.site-nav form button:hover {
+  border-radius: var(--radius-sm);
+  background: none;
   color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
 }
 
-/* --- ナビのプルダウン(「検索」→ ジャンル/索引/詳細検索) --- */
+/* --- ナビのプルダウン(「検索」→ ジャンル/エンティティ/言語学的特徴/索引/詳細検索) --- */
 .nav-menu {
   position: relative;
 }
 
-.nav-menu__trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  padding: var(--space-2) 2px;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.nav-menu__trigger:hover,
-.nav-menu__trigger.is-current {
-  color: var(--text);
-}
-
+/* 開閉の印は、ホームの探し方の開くボタンと同じ 1em */
 .nav-menu__trigger .nav-menu__caret {
-  width: 0.7em;
-  height: 0.7em;
+  width: 1em;
+  height: 1em;
   transition: transform 0.15s ease;
 }
 
@@ -223,21 +143,22 @@
   transform: rotate(180deg);
 }
 
-/* 浮かせるパネルなので、ここだけは影を許す */
+/* 墨の枠の札を、ヘッダーの下の罫から吊り下げる(上辺を罫に重ねるので、上の角は丸めない)。影は落とさない。
+   top は開くボタンの下端から帯の下の余白のぶん下 = ヘッダーの罫の位置。行は 1px の隙間で仕切る(docs/design.md §3) */
 .nav-menu__panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--header-padding-block));
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
-  min-width: 10rem;
-  padding: var(--space-2);
+  min-width: 12rem;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-pop);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--text);
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
 }
 
 .nav-menu__panel[hidden] {
@@ -248,21 +169,41 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
+  padding: 10px var(--space-4);
+  background: var(--surface);
   font-size: 14px;
-  color: var(--text-muted);
+  line-height: 22px;
+  color: var(--text);
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color var(--transition), color var(--transition);
 }
 
-.nav-menu__panel a:hover {
-  background: var(--bg-soft);
-  color: var(--text);
+/* 枠の中で 1px の隙間で並べた行は、フォーカスの輪を行の内側に描き、角も丸めない
+   (外側に出すと枠と隣の行に切られる。手本は .admin-card__link) */
+.nav-menu__panel a:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0;
 }
 
+/* hover の面はマウスの端末だけに敷く。タッチではタップした項目に面が残り、現在地とは別の選択の印に見えるため
+   (狭幅のドロワーで、開閉するだけの「検索」の行に残っていた) */
+@media (hover: hover) {
+  .site-nav > a:hover,
+  .nav-menu__trigger:hover,
+  .site-nav form button:hover,
+  .nav-menu__panel a:hover {
+    background: var(--bg-soft);
+  }
+}
+
+/* 現在地は墨のベタ(ランキングの切替・主要ボタンと同じ選択の印。docs/design.md §4)。hover でもベタのまま。
+   「検索」の配下にいるときは、畳んでいる間は「検索」を、開くと配下の行を塗る(ベタは常に 1 つだけ) */
+.site-nav > a.is-current,
+.nav-menu__trigger.is-current[aria-expanded="false"],
 .nav-menu__panel a.is-current {
-  color: var(--text);
+  background: var(--text);
+  color: var(--bg);
 }
 
 /* --- 本文へのスキップリンク(Issue 99) ------------------------------------
@@ -531,6 +472,11 @@ main.container--flush > .flash {
   font-size: 16px;
 }
 
+/* 名前は狭幅のドロワーの行でだけ見せる(下の狭幅の区画) */
+.theme-toggle__label {
+  display: none;
+}
+
 .theme-toggle__track {
   position: relative;
   width: 32px;
@@ -604,28 +550,26 @@ main.container--flush > .flash {
   color: var(--danger);
 }
 
-/* 狭幅: ナビをハンバーガーで開閉するサイドパネルに格納する */
-@media (max-width: 767px) {
-  /* ブランドとメニューのボタンを 360px 幅まで 1 行に収める(24px のままだと 390px 幅でも 2 行に落ちていた)。
-     左右の余白は本文の帯(.band__inner)と同じ 16px にし、ブランドの左端とボタンの三本線の右端を本文の端に揃える。
-     ボタンは押せる大きさを保ったまま、内側の余白(12px)のぶんだけ右の余白へはみ出させる */
-  .site-header__inner {
-    padding-inline: var(--space-4);
-    gap: var(--space-2);
+/* 900px 以下: ナビをハンバーガーで開閉するドロワーに格納する(docs/design.md §5.1)。
+   サイト名(約 220px)と、ナビ・テーマの切り替え(約 490px)は、左右の余白を含めて 780px ほどないと 1 行に並ばない
+   (WebKit で実測。767px で切り替えていたころは、768px 幅でナビが 2 段目に落ちていた) */
+@media (max-width: 900px) {
+  /* 帯の高さはハンバーガー(36px)で決まる(上下 12px + 36px + 罫 1px = 61px) */
+  .site-header {
+    --header-padding-block: var(--space-3);
   }
 
-  .site-brand {
-    gap: var(--space-2);
-  }
-
+  /* ボタンは押せる大きさを保ったまま、内側の余白(12px)のぶんだけ右の余白へはみ出させ、三本線の右端を余白の端に揃える */
   .nav-toggle {
     display: block;
-    position: relative;
-    z-index: 21;
     margin-right: -12px;
   }
 
-  /* 影は開いているときだけ落とす(閉じて画面の外に退いたパネルの影が、右端に薄く漏れていた) */
+  /* --- ドロワー ---
+     札と同じ白い面に、左端の墨の罫 1 本で輪郭を持たせる(影は落とさない。下はスクリムで沈める)。
+     閉じている間は visibility でも隠し、画面の外へ退いたナビとスイッチに Tab で入らないようにする。
+     隠すのはスライドし終わってから(閉じるときだけ visibility の切り替えを 0.2s 遅らせる)。
+     高さは見えている画面の高さ(100dvh)。100vh だと iOS のツールバーの裏に下の行が潜る */
   .site-header__right {
     position: fixed;
     top: 0;
@@ -633,31 +577,70 @@ main.container--flush > .flash {
     z-index: 20;
     width: min(280px, 82vw);
     height: 100vh;
+    height: 100dvh;
     margin: 0;
-    background: var(--bg);
+    background: var(--surface);
+    border-left: 1px solid var(--text);
     flex-wrap: nowrap;
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-4);
-    padding: var(--space-6) var(--space-5);
+    gap: 0;
     transform: translateX(100%);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0s linear 0.2s;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .site-header__right.is-open {
     transform: translateX(0);
-    box-shadow: var(--shadow-pop);
+    visibility: visible;
+    transition: transform 0.2s ease, visibility 0s;
   }
 
+  .site-header__right > * {
+    flex: none;
+  }
+
+  /* 頭はヘッダーと同じ上下の余白とボタンの高さで組み(帯と同じ高さになる)、下にヘッダーと同じ墨の罫を引く。
+     開いた画面では、スクリムの下のヘッダーの罫とこの罫が同じ高さで横につながる。
+     右の余白もヘッダーと同じにして、閉じるボタンをハンバーガーと同じ位置に置く */
+  .nav-drawer__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--header-padding-block) var(--header-gutter) var(--header-padding-block) var(--space-4);
+    border-bottom: 1px solid var(--text);
+  }
+
+  /* 閉じるボタンはハンバーガーと同じ箱(42×36。右の余白へ 12px はみ出す)で、× の中心を三本線の中心に重ねる。
+     × の線(Phosphor Light)は 22px で約 1px になり、三本線と同じ太さに揃う */
+  .nav-drawer__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 36px;
+    margin-right: -12px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text);
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  /* 行は 1px の隙間で仕切って積み(docs/design.md §3)、並びの終わりにも罫を 1 本引いて閉じる。
+     現在地のベタと hover の面は、広い幅の項目と同じ規則がそのまま効く */
   .site-nav {
     flex-direction: column;
     align-items: stretch;
-    gap: 0;
-    margin-top: var(--space-5);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
   }
 
-  .site-nav > a,
   .site-nav form {
     display: block;
   }
@@ -665,36 +648,72 @@ main.container--flush > .flash {
   .site-nav > a,
   .nav-menu__trigger,
   .site-nav form button {
+    display: flex;
     width: 100%;
-    padding: var(--space-3) 2px;
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: 0;
+    background: var(--surface);
+    font-size: 15px;
+    line-height: 1.6;
     text-align: left;
-  }
-
-  .theme-toggle__button {
-    width: 100%;
-    justify-content: space-between;
-    padding: var(--space-3) 2px;
   }
 
   .nav-menu__trigger {
     justify-content: space-between;
   }
 
-  /* ドロワー内ではプルダウンを浮かせず、その場で開いて下の項目を押し下げる */
+  /* 行のフォーカスの輪は、プルダウンの行と同じく内側に描く(ドロワーはスクロールの箱なので、外側の輪は左右で切られる) */
+  .site-nav > a:focus-visible,
+  .nav-menu__trigger:focus-visible,
+  .site-nav form button:focus-visible,
+  .theme-toggle__button:focus-visible {
+    outline-offset: -2px;
+    border-radius: 0;
+  }
+
+  .nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  /* 「検索」の配下は吊り下げず、その場で開いて下の行を押し下げる。字下げしてアイコンを添え、一段小さく組む */
   .nav-menu__panel {
     position: static;
     transform: none;
     min-width: 0;
-    padding: 0 0 0 var(--space-4);
     border: none;
     border-radius: 0;
-    box-shadow: none;
     background: transparent;
+    overflow: visible;
   }
 
   .nav-menu__panel a {
-    padding: var(--space-3) 2px;
-    border-radius: 0;
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-6);
+    line-height: 1.6;
+  }
+
+  /* テーマの切り替えはナビの行から間を空けて 1 行で置き(docs/design.md §9.3)、名前を見せてスイッチを右端に寄せる。
+     画面の最下部には貼り付けない(iOS の下端のジェスチャと取り違える。docs/design.md §10.1.2) */
+  .theme-toggle {
+    margin-top: var(--space-5);
+    border-block: 1px solid var(--border);
+  }
+
+  .theme-toggle__button {
+    width: 100%;
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .theme-toggle__label {
+    display: inline;
+    margin-right: auto;
   }
 
   .nav-drawer__scrim {
@@ -710,5 +729,17 @@ main.container--flush > .flash {
 
   body.nav-drawer-open {
     overflow: hidden;
+  }
+}
+
+/* 767px 以下: 左右の余白を本文の帯(.band__inner)と同じ 16px に詰め、サイト名の左端とハンバーガーの三本線の右端を
+   本文の端に揃える */
+@media (max-width: 767px) {
+  .site-header {
+    --header-gutter: var(--space-4);
+  }
+
+  .site-header__inner {
+    gap: var(--space-2);
   }
 }
