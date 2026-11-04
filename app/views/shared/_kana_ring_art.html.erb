@@ -15,8 +15,9 @@
   <%# 弧ラベルのベースライン半径。文字の高さ(大文字だけなので級数の 0.7 倍)を足しても
       viewBox(200)の内側に収まる値にしてあるので、枠を広げずに済む %>
   <% arc_radius = 90 %>
-  <%# 折れ線の全長と円の中心を CSS 変数で渡す。ホーム最上部の印だけが、これを使って
-      「ナ」から「ス」へ 1 本ずつ描き足し、外周の英字を中心のまわりに回す(components.css) %>
+  <%# 折れ線の全長と円の中心を CSS 変数で渡す。ホーム最上部の印は、これを使って
+      「ナ」から「ス」へ 1 本ずつ描き足し、外周の英字を中心のまわりに回す(components.css)。
+      ほかの円環は、触れたときに始点からなぞり直すのに全長だけを使う(motion.css) %>
   <figure class="ring-art <%= local_assigns[:modifier] %>"
           style="--ring-length: <%= KanaRing.stroke_length(reading) %>; --ring-center: <%= KanaRing::CENTER %>px">
     <svg class="ring-art__svg" role="img"

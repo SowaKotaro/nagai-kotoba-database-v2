@@ -105,6 +105,11 @@
   --masthead-width: 640px;
 
   --transition: 160ms ease;
+  /* 遊びの動き(motion.css。docs/design.md §4)。SANKOU! と同じく、触れたものだけが短く小さく動く。
+     --nudge は進む・沈むときの距離で、管理画面は 0 にして止める(admin.css) */
+  --motion: 200ms ease;
+  --motion-line: 300ms ease;
+  --nudge: 3px;
 
   color-scheme: light;
 

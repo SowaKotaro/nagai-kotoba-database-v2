@@ -137,7 +137,8 @@
     <% @recent_words.each do |word| %>
       <%= link_to word_path(word), class: "home-column__item" do %>
         <span class="home-column__body">
-          <span class="home-column__word"><%= word.surface %></span>
+          <%# 語を inline の span に入れるのは、hover で引く下線(motion.css)を折れた字に沿わせるため。下の欄も同じ %>
+          <span class="home-column__word"><span class="home-column__word-text"><%= word.surface %></span></span>
           <span class="home-column__reading"><%= word.primary_sense&.reading %></span>
         </span>
         <span class="home-column__meta"><%= l(word.annotated_at.to_date, format: :short) %></span>
@@ -158,7 +159,7 @@
       <%= link_to word_path(word), class: "home-column__item" do %>
         <span class="home-column__rank"><%= index + 1 %></span>
         <span class="home-column__body">
-          <span class="home-column__word"><%= word.surface %></span>
+          <span class="home-column__word"><span class="home-column__word-text"><%= word.surface %></span></span>
           <span class="home-column__reading"><%= word.primary_sense&.reading %></span>
         </span>
         <%# 文字数はこの欄の主題なので、数だけを大きく立てる。単位はランキングの同じ板(読みが長い言葉)から引く %>

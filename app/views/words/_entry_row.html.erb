@@ -9,7 +9,8 @@
 <%# 1行 = 自己完結した見出し語エントリなので article(SEO/LLMO のセマンティクス) %>
 <article class="entry-row">
   <div class="entry-row__head">
-    <%= link_to word.surface, word_path(word), class: "entry-row__surface" %>
+    <%# 語は inline の span に入れる。hover で引く下線(motion.css)を、行の中で折れた字に沿わせるため %>
+    <%= link_to word_path(word), class: "entry-row__surface" do %><span class="entry-row__surface-text"><%= word.surface %></span><% end %>
     <%# 同じ読みの語義が複数あっても、読みは 1 回だけ出す(語義ごとの読みは詳細で見る) %>
     <p class="entry-row__reading"><%= word.ordered_senses.map(&:reading).uniq.join("、") %></p>
   </div>

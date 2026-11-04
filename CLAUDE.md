@@ -61,7 +61,8 @@
 - 色はトークンだけで、アクセントカラーを持たない（赤／緑は「エラー／達成」のときだけ。多色は統計 §1 のワードクラウドだけ。管理画面だけ 2 色）。
 - 太字を使わない（`font-weight` 400、`b` / `strong` だけ 500）。書体は `--font-sans`・`--font-mono`・`--font-display` の 3 つだけ。
 - 区画は面の色＋1px の罫＋余白で示し、影を使わない。並んだ要素どうしの罫は `border` ではなく `gap: 1px` の隙間で作る。
-- 動きはホーム最上部の印だけ。図版は実データから描く線画 2 種だけ（写真の枠を置かない。単語一覧の 0 件の札の溶けた顔は、アイコンを図の大きさで置く例外。design.md §5.0）。
+- 動くのはマウスで触れたものだけで、短く・小さく・1 度だけ（型は design.md §4 の 6 つ。足すときもまずそのどれかに当てる）。
+  触れなくても動くのはホーム最上部の印だけ。図版は実データから描く線画 2 種だけ（写真の枠を置かない。単語一覧の 0 件の札の溶けた顔は、アイコンを図の大きさで置く例外。design.md §5.0）。
 - 淡さの下限（文字は白地 4.5:1、面と罫は白との差 ΔRGB 19）を割らない。**色を薄くしたら必ず実測する**。
 - 管理画面は「しずか」を引き継がない。HTML は公開側と共有し、`body.is-admin` の下で `admin.css` が上書きする（design.md §10）。
 
@@ -181,7 +182,7 @@
 | `app/helpers/` | ビューに渡す値・属性・data ハッシュ | `word_requests_helper.rb` |
 | `app/views/` | ERB。公開側の共通部品は `shared/`、管理画面の共通部品は `admin/shared/` | `shared/_genre_path` |
 | `app/javascript/controllers/` | Stimulus（importmap）。共有の関数は `support/`。Plotly は意図してピンせず、Sprockets で配信する（地図は overview §12） | `decision_list_controller.js` |
-| `app/assets/stylesheets/` | 手書き CSS。tokens → base → layout → components → annotate・candidates・admin の順に読み、**管理用の CSS も全ページで読む** | `tokens.css` |
+| `app/assets/stylesheets/` | 手書き CSS。tokens → base → layout → components → motion → annotate・candidates・admin の順に読み、**管理用の CSS も全ページで読む** | `tokens.css` |
 | `config/locales/ja.yml` | 表示文言 | — |
 | `config/routes.rb` | ルートの正（画面の役割は overview §5） | — |
 | `config/linguistic_features_glossary.yml` | 言語学的特徴の用語解説（seed のマスタ名と 1 : 1） | — |

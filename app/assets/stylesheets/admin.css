@@ -86,6 +86,28 @@
   padding-bottom: var(--space-6);
 }
 
+/* ── 遊びの動きを止める ─────────────────────────────────────
+   公開側の遊びの動き(motion.css。矢印が進む・サイト名が沈む・下線が伸びる)は作業画面には要らないので、
+   距離と時間を 0 にして、触れても動かさない(下線は伸ばさずにそのまま出る)。
+   ボタンとページ送りも墨に反転させず、面が沈むだけにする(作業中に何度も押すので、画面が明滅して見える) */
+.is-admin {
+  --nudge: 0px;
+  --motion: 0s;
+  --motion-line: 0s;
+}
+
+.is-admin .btn:hover,
+.is-admin .pagination a:hover {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.is-admin .btn--primary:hover {
+  background: var(--text-muted);
+  border-color: var(--text-muted);
+  color: var(--bg);
+}
+
 /* ── 入口のカード(ダッシュボード・タグ管理) ───────────────────
    カードの境目は 1px の罫で割る(components.css。2026-09-07 オーナー指摘「グリッドの境界が見えない」への対応を、
    2026-09-26 に 1 枚のパネルを割る組みへ改めた)。

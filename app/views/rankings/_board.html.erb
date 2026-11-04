@@ -15,7 +15,8 @@
         <%# 同率の語は 1 つの組にまとまるので、順位は組ごとに 1 つだけ出る。1 位だけを塗るなどの差は付けない %>
         <span class="rank-row__no"><%= group[:rank] %></span>
         <span class="rank-row__main">
-          <%= link_to representative[:surface], word_path(representative[:id]), class: "rank-row__surface" %>
+          <%# 語を inline の span に入れるのは、hover で引く下線(motion.css)を折れた字に沿わせるため %>
+          <%= link_to word_path(representative[:id]), class: "rank-row__surface" do %><span class="rank-row__surface-text"><%= representative[:surface] %></span><% end %>
           <span class="rank-row__reading"><%= representative[:readings].join("、") %></span>
         </span>
         <%# 指標値はこの板の主題そのものの数なので、数だけを大きく太く立てる %>

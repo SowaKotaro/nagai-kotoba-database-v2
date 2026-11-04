@@ -408,10 +408,9 @@ main.container--flush > .flash {
   width: fit-content;
 }
 
+/* hover で文字を墨にして、下線を左から引く(motion.css) */
 .site-footer__nav a:hover {
   color: var(--text);
-  text-decoration: underline;
-  text-decoration-color: var(--border-strong);
 }
 
 /* 奥付の最下段。細罫で切って、標識とコピーライトだけを置く */

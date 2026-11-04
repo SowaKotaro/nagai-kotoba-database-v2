@@ -623,7 +623,7 @@ a.chip:hover {
 
 /* 一覧の行に添える小さいパンくず。一覧の主役はあくまで見出し語なので、詳細と同じ
    文法のまま級数・色を落として静かに添える。末端も色差だけで立て、
-   hover したときだけ本文色(--text)と下線を出す(押せることは失わない)。 */
+   hover したときだけ本文色(--text)にして下線を引く(押せることは失わない。下線は motion.css)。 */
 .genre-path--sm {
   gap: 5px;
   font-size: 12px;
@@ -643,7 +643,6 @@ a.chip:hover {
 .genre-path--sm a:hover,
 .genre-path--sm a.genre-path__current:hover {
   color: var(--text);
-  text-decoration: underline;
 }
 
 .genre-path--sm .genre-path__sep {
@@ -1550,12 +1549,15 @@ a.tag:hover .genre-hub__count {
   letter-spacing: inherit;
   color: var(--text);
   cursor: pointer;
-  transition: background var(--transition), border-color var(--transition);
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
 
-.hero-search__submit:hover {
-  background: var(--bg-soft);
-  border-color: var(--text);
+/* hover はボタン(.btn)と同じく墨に反転する */
+@media (hover: hover) {
+  .hero-search__submit:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
 }
 
 /* 検索バーの下の探し方の入口。SANKOU! のトップのカテゴリボタンにならい、墨の枠のボタン(.btn)に
@@ -1649,10 +1651,6 @@ a.tag:hover .genre-hub__count {
 .search-ways__options a {
   color: var(--text);
   text-decoration: none;
-}
-
-.search-ways__options a:hover {
-  text-decoration: underline;
 }
 
 .search-ways__more {
@@ -2933,11 +2931,6 @@ html:has(.search-actions) {
   overflow-wrap: anywhere;
 }
 
-.home-featured__word:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--border-strong);
-}
-
 .home-featured__reading {
   margin: var(--space-2) 0 0;
   font-size: 13px;
@@ -2985,7 +2978,9 @@ html:has(.search-actions) {
   background: var(--bg-soft);
 }
 
+/* 名前は字の幅にする(hover で引く下線を字に沿わせる。motion.css) */
 .home-figures__label {
+  align-self: flex-start;
   font-size: 12px;
   color: var(--text-subtle);
 }
@@ -3560,13 +3555,19 @@ html:has(.search-actions) {
   font-size: 14px;
   color: var(--text);
   text-decoration: none;
-  transition: background-color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
 }
 
+/* hover はボタン(.btn)と同じく墨に反転する */
 .pagination a:hover {
-  background: var(--bg-soft);
-  border-color: var(--text);
   text-decoration: none;
+}
+
+@media (hover: hover) {
+  .pagination a:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
 }
 
 /* 前へ・状態・次へは、どれも途中で折らない(縮むと「前／へ」「ペー／ジ」と折れる) */
@@ -3622,8 +3623,10 @@ html:has(.search-actions) {
   text-decoration: underline;
 }
 
-/* --- ボタン: 白地の丸いピル。hover では背景だけをわずかに変える。
-   塗りは主要 CTA のみで、色は持たせず文字色のベタにする。 --- */
+/* --- ボタン: 白地に墨の枠。hover では墨に反転する(SANKOU! のボタンと同じ。docs/design.md §4)。
+   塗りは主要 CTA のみで、色は持たせず文字色のベタにする。主要 CTA は hover で白に反転する。
+   選ぶための切替(aria-pressed。ランキングの板)は選んでいる 1 つだけを墨で塗るので、hover では面が沈むだけにする。
+   反転はマウスの端末だけ(タッチでは押した印が残り、選択の印に見える) --- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -3644,10 +3647,20 @@ html:has(.search-actions) {
 }
 
 .btn:hover {
-  background: var(--bg-soft);
-  border-color: var(--text);
-  color: var(--text);
   text-decoration: none;
+}
+
+@media (hover: hover) {
+  .btn:hover {
+    background: var(--text);
+    border-color: var(--text);
+    color: var(--bg);
+  }
+
+  .btn[aria-pressed="false"]:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+  }
 }
 
 .btn--primary {
@@ -3656,10 +3669,12 @@ html:has(.search-actions) {
   color: var(--bg);
 }
 
-.btn--primary:hover {
-  background: var(--text-muted);
-  border-color: var(--text-muted);
-  color: var(--bg);
+@media (hover: hover) {
+  .btn--primary:hover {
+    background: var(--surface);
+    border-color: var(--text);
+    color: var(--text);
+  }
 }
 
 /* 一覧のツールバーなど、行に紛れさせたい小さなボタン */
