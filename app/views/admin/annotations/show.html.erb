@@ -21,6 +21,10 @@
       <%= render "admin/annotations/queue_filter", path_for: ->(query) { admin_annotations_path(query) } %>
     <% end %>
 
+    <%# 広い画面では、左に見出し語と提案(追従)、右に入力の札の 2 カラム(annotate.css)。
+        スマホ幅では、語を開くたびにここ(見出し語)を画面の上端に合わせる(queue_nav_controller.js) %>
+    <div class="ann-layout" data-queue-nav-target="heading">
+    <div class="ann-side">
     <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.annotations.eyebrow") %></span></p>
     <h1 class="ann-word"><%= @word.surface %></h1>
     <p class="ann-word-meta">
@@ -33,9 +37,10 @@
 
     <%# Claude の提案(Issue 38)。反映はリンク(GET)で行い、保存＝承認は下のフォームのみ %>
     <%= render "proposal", proposal: @proposal, word: @word if @proposal %>
+    </div>
 
     <%# publish-guard(Issue 68): 未完了のまま「保存して次へ」で公開しようとしたら確認を挟む %>
-    <%= form_with model: @word, url: admin_annotation_path(@word), method: :patch,
+    <%= form_with model: @word, url: admin_annotation_path(@word), method: :patch, class: "ann-main",
                   data: { queue_nav_target: "form", controller: "publish-guard",
                           action: "submit->publish-guard#guard",
                           publish_guard_message_value: t("admin.annotations.publish_incomplete_confirm") } do |form| %>
@@ -72,5 +77,6 @@
         <%= form.submit t("admin.annotations.save_next"), class: "btn btn--primary" %>
       </div>
     <% end %>
+    </div>
   </div>
 <% end %>

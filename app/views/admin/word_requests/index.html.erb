@@ -1,28 +1,37 @@
 <% content_for :title, t("admin.word_requests.title") %>
 
-<h1 class="page-title"><%= t("admin.word_requests.title") %></h1>
-<p class="field-hint"><%= t(".lead") %></p>
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.word_requests.title") %></h1>
+  <p class="page-lead"><%= t(".lead") %></p>
+</header>
 
-<nav class="admin-status-tabs" aria-label="<%= t(".status_label") %>">
-  <% [ [ nil, t(".status_all") ], *WordRequestItem.statuses.keys.map { |status|
-         [ status, t("admin.word_requests.statuses.#{status}") ] } ].each do |status, label| %>
-    <%= link_to label, admin_requests_path({ status: status, ip: @ip_address }.compact),
-          class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
-  <% end %>
-</nav>
-
-<% if @ip_address %>
-  <p class="admin-words-count">
-    <%= t(".ip_filtered", ip: @ip_address) %>
-    <%= link_to t(".ip_filter_reset"), admin_requests_path(status: @status) %>
-  </p>
-<% end %>
-
-<p class="admin-words-count"><%= t(".total", count: number_with_delimiter(@total_count)) %></p>
-
+<div class="panel-shelf">
 <% if @items.any? %>
   <%= render "bulk_actions" %>
+<% end %>
 
+<%# 表の札。頭に件数(IP で絞っているときはその旨)と、状態のタブを置く %>
+<section class="panel">
+  <div class="panel__head">
+    <div>
+      <p class="admin-words-count"><%= t(".total", count: number_with_delimiter(@total_count)) %></p>
+      <% if @ip_address %>
+        <p class="admin-requests-ip-filter">
+          <%= t(".ip_filtered", ip: @ip_address) %>
+          <%= link_to t(".ip_filter_reset"), admin_requests_path(status: @status) %>
+        </p>
+      <% end %>
+    </div>
+    <nav class="admin-status-tabs" aria-label="<%= t(".status_label") %>">
+      <% [ [ nil, t(".status_all") ], *WordRequestItem.statuses.keys.map { |status|
+             [ status, t("admin.word_requests.statuses.#{status}") ] } ].each do |status, label| %>
+        <%= link_to label, admin_requests_path({ status: status, ip: @ip_address }.compact),
+              class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
+      <% end %>
+    </nav>
+  </div>
+
+<% if @items.any? %>
   <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
   <div class="table-scroll" data-controller="check-all">
     <table class="data-table admin-requests-table">
@@ -87,7 +96,12 @@
       </tbody>
     </table>
   </div>
+<% else %>
+  <p class="empty-note panel__body"><%= t(".empty") %></p>
+<% end %>
+</section>
 
+<% if @items.any? %>
   <nav class="pagination">
     <%# 絞り込み条件を保持したままページ送りする %>
     <% base = request.query_parameters.except("page") %>
@@ -101,6 +115,5 @@
       <%= link_to t("words.pagination.next"), admin_requests_path(base.merge(page: @page + 1)) %>
     <% end %>
   </nav>
-<% else %>
-  <p class="empty-note"><%= t(".empty") %></p>
 <% end %>
+</div>

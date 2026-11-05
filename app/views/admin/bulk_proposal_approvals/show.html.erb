@@ -1,14 +1,16 @@
 <% content_for :title, t("admin.bulk_proposal_approvals.title") %>
 
-<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
-<h1 class="page-title"><%= t("admin.bulk_proposal_approvals.title") %></h1>
-
-<p class="proposal-lead"><%= t("admin.bulk_proposal_approvals.lead") %></p>
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.bulk_proposal_approvals.title") %></h1>
+  <p class="page-lead"><%= t("admin.bulk_proposal_approvals.lead") %></p>
+</header>
 
 <% if @approval.count.positive? %>
-  <p class="proposal-limit__count"><%= t("admin.bulk_proposal_approvals.count", count: @approval.count) %></p>
-
   <%# 一括対象の一覧。表示はすべて提案 payload の文字列(マスタ問い合わせを増やさない) %>
+  <section class="panel">
+  <div class="panel__head">
+    <p class="admin-words-count"><%= t("admin.bulk_proposal_approvals.count", count: @approval.count) %></p>
+  </div>
   <table class="bulk-approval">
     <thead>
       <tr>
@@ -34,6 +36,7 @@
       <% end %>
     </tbody>
   </table>
+  </section>
 
   <%= form_with url: admin_bulk_proposal_approval_path, method: :post do %>
     <div class="proposal-actions">

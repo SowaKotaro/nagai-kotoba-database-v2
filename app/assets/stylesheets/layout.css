@@ -304,52 +304,58 @@ main.container--flush > .flash {
   }
 }
 
-/* --- 管理画面の共通サブナビ(Issue 35) --- */
-/* 下罫は border ではなく背景として引く。横スクロールする内側の箱の中から、
-   現在地の下線(admin.css)をこの罫にぴったり重ねて描くため(border だと箱の外に出て重ならない) */
+/* --- 管理画面の共通サブナビ(Issue 35) ---
+   公開側のヘッダーのナビと同じ札の組み(14px・墨の文字・高さ 34px・角 4px。現在地は墨のベタ。§5.1)を、ヘッダーの下の帯に並べる。
+   幅と左右の余白は、ヘッダー・本文と同じ(admin.css の --frame-width・--admin-gutter)。
+   狭幅では折り返さず、帯の中で横に送る */
 .admin-nav {
-  background: linear-gradient(var(--border), var(--border)) bottom / 100% 1px no-repeat;
+  border-bottom: 1px solid var(--border);
 }
 
-/* 帯そのものは上下の余白を持たず、各リンクが帯の全高を占める。
-   文字の上下の余白はリンク側で同じ厚みにして、帯の中央に置く */
 .admin-nav__inner {
   max-width: var(--frame-width);
   margin: 0 auto;
-  padding: 0 var(--space-5);
+  padding: var(--space-2) var(--admin-gutter);
   display: flex;
-  align-items: stretch;
-  gap: var(--space-5);
+  align-items: center;
+  gap: var(--space-1);
   overflow-x: auto;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-/* 下の 2px は現在地の下線の場所。そのぶん下の余白を薄くして、文字を上下の中央に置く */
 .admin-nav__link {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-3) 0 calc(var(--space-3) - 2px);
-  border-bottom: 2px solid transparent;
-  text-decoration: none;
-  color: var(--text-muted);
-}
-
-.admin-nav__link:hover,
-.admin-nav__link[aria-current="page"] {
+  gap: var(--space-1);
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
   color: var(--text);
+  line-height: 22px;
+  text-decoration: none;
+  transition: background-color var(--transition), color var(--transition);
 }
 
-/* 未着手件数のバッジ(Issue 75) */
+@media (hover: hover) {
+  .admin-nav__link:hover {
+    background: var(--bg-soft);
+  }
+}
+
+/* 現在地は墨のベタ(ヘッダーのナビと同じ印。hover でもベタのまま) */
+.admin-nav__link[aria-current="page"] {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* 未着手件数のバッジ(Issue 75)。墨のベタの上では地の色に反転する */
 .admin-nav__badge {
   display: inline-block;
-  margin-left: 6px;
   padding: 0 7px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-tint);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
   font-size: 11px;
-  line-height: 1.7;
-  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 /* --- フッター(奥付) ------------------------------------------------

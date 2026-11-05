@@ -2,6 +2,7 @@
       lead: t(".lead", status: candidate_status_label(@candidate.status)) %>
 
 <%# 確認の画面では、この frame が行の「語」の部分に入る(直したあと・取りやめたあとに戻る先) %>
+<div class="panel cand-detail-panel">
 <%= turbo_frame_tag dom_id(@candidate, :word), class: "cand-row__word cand-detail__word" do %>
   <%= render "admin/candidates/word", candidate: @candidate, matches: @matches, root: @candidate.expansions.exists? %>
 <% end %>
@@ -28,5 +29,6 @@
     <dd><%= l((@candidate.status_changed_at || @candidate.updated_at).to_date, format: :short) %></dd>
   </div>
 </dl>
+</div>
 
 <p><%= link_to t(".back"), admin_candidates_list_path(q: @candidate.surface) %></p>

@@ -2,6 +2,8 @@
     入力欄は1語コンソールと同じ部分テンプレートを使い(compact: true で用語解説などを省く)、
     名前だけ deck[<語id>][...] に束ねる。 %>
 <article class="deck-card" data-deck-target="card" data-index="<%= index %>">
+  <div class="ann-layout">
+  <div class="ann-side">
   <p class="ann-eyebrow">
     <span class="no">NO. <%= word.id %></span>
     <span class="deck-card__count"><%= index + 1 %> / <%= total %></span>
@@ -44,10 +46,12 @@
       </div>
     </details>
   <% end %>
+  </div>
 
   <%# 語ごとの入力。fields_for に "deck[<id>]" を渡し、名前を語単位に束ねる %>
+  <div class="ann-main">
   <%= fields_for "deck[#{word.id}]", word do |form| %>
-    <div class="ann-surface">
+    <div class="panel ann-surface">
       <label class="ann-surface__label" for="deck_<%= word.id %>_surface"><%= t("admin.annotations.surface") %></label>
       <%= form.text_area :surface, rows: 1, class: "ann-surface__input", id: "deck_#{word.id}_surface" %>
     </div>
@@ -66,4 +70,6 @@
       </button>
     </div>
   <% end %>
+  </div>
+  </div>
 </article>

@@ -13,7 +13,7 @@
 <% inline_add_labels = inline_add_labels_json %>
 <%# 削除印(_destroy)の付いた語義は、描き直したときも隠したままにする
     (サーバ側で組み直す create_master などで、消したはずの語義が戻って見えないように) %>
-<div class="ann-sense js-sense" data-index="<%= form.index %>"
+<div class="panel ann-sense js-sense" data-index="<%= form.index %>"
      style="<%= "display:none" if sense.marked_for_destruction? %>"
      data-controller="sense-completeness"
      data-action="input->sense-completeness#check change->sense-completeness#check
@@ -28,6 +28,8 @@
     <button type="button" class="ann-sense__del" data-action="sense-cloner#remove"><%= t("admin.annotations.remove_sense") %></button>
   </div>
 
+  <%# 項目の行は 1px の隙間で仕切る(annotate.css の .ann-sense__rows) %>
+  <div class="ann-sense__rows">
   <%# 読み %>
   <div class="ann-row">
     <div class="ann-row__label"><%= t("admin.annotations.reading") %></div>
@@ -238,5 +240,6 @@
       </template>
       <button type="button" class="ann-addrow" data-action="nested-form#add"><%= t("admin.annotations.add_variant") %></button>
     </div>
+  </div>
   </div>
 </div>

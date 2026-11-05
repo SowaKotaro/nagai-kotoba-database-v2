@@ -1,13 +1,13 @@
 <% content_for :title, t("admin.annotation_proposals.export_features.title") %>
 
-<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
-<h1 class="page-title"><%= t("admin.annotation_proposals.export_features.title") %></h1>
-
-<p class="proposal-lead"><%= t("admin.annotation_proposals.export_features.lead") %></p>
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.annotation_proposals.export_features.title") %></h1>
+  <p class="page-lead"><%= t("admin.annotation_proposals.export_features.lead") %></p>
+</header>
 
 <%# 対象は「公開済み・特徴0件・未調査」の語義。既定は語種に日本語を含むものだけに絞る
     (連濁・熟字訓などは和語・漢語で起きる現象のため) %>
-<%= form_with url: export_features_admin_annotation_proposals_path, method: :get, class: "proposal-limit" do %>
+<%= form_with url: export_features_admin_annotation_proposals_path, method: :get, class: "panel proposal-limit" do %>
   <%= render "admin/annotation_proposals/export_limit", from_id: @from_id, to_id: @to_id, limit: @limit %>
 
   <label class="check-chip">

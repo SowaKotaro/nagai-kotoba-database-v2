@@ -1,8 +1,11 @@
 <%# 選択した語への一括操作(Issue 75)。フォームはテーブルの外に置き、行のチェックボックスは
     form 属性でこのフォームに紐づける(一括適用パネル Issue 37 と同じ作法)。
     行ごとにフォームを置くと選択用フォームと入れ子になってしまうため、操作はここに集約する。 %>
-<div class="bulk-requests">
-  <%= form_with url: bulk_admin_requests_path, method: :post, id: "bulk-request-form" do %>
+<section class="panel bulk-requests">
+  <div class="panel__head">
+    <h2 class="panel__title"><%= t(".title") %></h2>
+  </div>
+  <%= form_with url: bulk_admin_requests_path, method: :post, id: "bulk-request-form", class: "panel__body" do %>
     <%# 操作後も絞り込み・ページ位置を保つ %>
     <% { status: @status, ip: @ip_address, page: (@page if @page > 1) }.compact.each do |key, value| %>
       <%= hidden_field_tag key, value %>
@@ -35,4 +38,4 @@
     </div>
     <p class="bulk-requests__hint"><%= t(".hint", limit: Admin::WordRequestsController::BULK_HANDOFF_LIMIT) %></p>
   <% end %>
-</div>
+</section>

@@ -48,6 +48,34 @@ class AdminAnnotationConsoleTest < ApplicationSystemTestCase
     assert_nil @word.annotated_at
   end
 
+  # アノテーションの大半は「提案を全部読む → 保存して次へ」で、スマホからも流す(docs/design.md §10.1.2)。
+  # 下端のバーがフォームの中で sticky だと見出し語と提案を通り過ぎるまで現れず、開くたびにページ先頭へ戻ると
+  # ヘッダーと管理ナビの分だけ提案が押し出されていた。開いた時点で、見出し語が画面の上端にあり、提案の札が
+  # 下端のバーに隠れずに全部見え、保存ボタンは iOS の下端ジェスチャを避けて右端にあることを確かめる。
+  test "スマホ幅では、開いた時点で見出し語・提案の全体・保存して次へが 1 画面に収まり、保存は右端に置かれる" do
+    with_window_size(402, 874) do
+      visit admin_annotation_path(@word)
+      assert_selector ".ann-proposal"
+      assert_selector ".ann-actionbar .btn--primary"
+
+      layout = page.evaluate_script(<<~JS)
+        (() => {
+          const rect = (selector) => document.querySelector(selector).getBoundingClientRect();
+          const bar = rect(".ann-actionbar");
+          const save = rect(".ann-actionbar .btn--primary");
+          const padding = parseFloat(getComputedStyle(document.querySelector(".ann-actionbar")).paddingRight);
+          return { viewport: window.innerHeight, headingTop: rect(".ann-eyebrow").top, proposalBottom: rect(".ann-proposal").bottom,
+                   barTop: bar.top, saveBottom: save.bottom, saveRight: save.right, barInnerRight: bar.right - 1 - padding };
+        })()
+      JS
+
+      assert_in_delta 12, layout["headingTop"], 2, "見出し語が画面の上端に合っていない"
+      assert_operator layout["proposalBottom"], :<=, layout["barTop"], "提案の札が下端のバーに隠れている"
+      assert_operator layout["saveBottom"], :<=, layout["viewport"], "開いた時点で保存ボタンが画面の外にある"
+      assert_in_delta layout["barInnerRight"], layout["saveRight"], 1, "保存ボタンがバーの右端に無い"
+    end
+  end
+
   # 最低限のアノテーション項目(読み・語種・ジャンル・品詞・エンティティ)が揃うと
   # 語義カードの枠が完了(is-complete)になる。保存できるかどうかとは無関係の目印。
   test "最低限の項目が揃うと語義カードが完了表示になり、提案の小分類が未登録でもピッカーは大・中まで開く" do

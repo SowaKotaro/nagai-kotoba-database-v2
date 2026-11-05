@@ -76,16 +76,6 @@
   color: var(--text);
 }
 
-.page-eyebrow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-2);
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
 /* 単語詳細の見出しの下のメタ(記録番号・文字種)。値が長いと 2 つめが下の行へ回る */
 .page-title-meta {
   display: flex;
@@ -2787,6 +2777,25 @@ html:has(.search-actions) {
   border-bottom: 1px solid var(--text);
 }
 
+/* 畳める札(<details class="panel">)の頭。見出しの行は .panel__head と同じ組みで、開いたときだけ墨の罫で中身と分ける。
+   既定の三角マーカーは消す(管理画面の 5 か所: 調査 JSON の反映・語の追加・保留の語・タグの追加と統合) */
+.panel__summary {
+  padding: var(--space-3) var(--space-5);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  list-style: none;
+}
+
+.panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel[open] > .panel__summary {
+  border-bottom: 1px solid var(--text);
+}
+
 /* 見出しの頭にアイコンを添える札(ランキング・統計・探し方のページ)もあるので、アイコンと文字を中央で揃えて並べる */
 .panel__title {
   display: inline-flex;
@@ -3060,10 +3069,10 @@ html:has(.search-actions) {
   }
 }
 
-/* --- 管理画面の入口カード(ダッシュボード・タグ管理): 1px の罫で割った 1 枚のパネル ---
-   カードどうしの罫は border ではなく gap: 1px の隙間で見せる(親を罫の色で塗り、各カードを面の色で塗る)。
+/* --- 管理画面の入口カード(ダッシュボード・調査データ・タグ管理): 札の中を 1px の隙間で割ったカードの棚 ---
+   札(.panel)の中に置く。カードどうしの罫は border ではなく gap: 1px の隙間で見せる(親を罫の色で塗り、各カードを面の色で塗る)。
    grid ではなく折り返す flex で並べる: 枚数が列数で割り切れなくても、最終段のカードが伸びて段を埋めるので、
-   空きに罫の色が面になって覗かない(タグ管理は 5 枚) */
+   空きに罫の色が面になって覗かない。基準の幅 280px は、1440px の画面で 4 枚ずつ(7 枚なら 4 + 3)になる値 */
 .admin-dash-grid {
   display: flex;
   flex-wrap: wrap;
@@ -3071,20 +3080,28 @@ html:has(.search-actions) {
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--border);
   background: var(--border);
+}
+
+/* タグ管理の入口は 5 枚なので、1440px の画面で 1 段に並ぶ幅の基準にする */
+.admin-dash-grid--compact .admin-card {
+  flex-basis: 220px;
 }
 
 /* カードの中に別のリンク(まとめて注釈)を置くことがあるので、カードそのものは <a> にしない。
    見出しのリンクの ::after をカード一面に広げて、どこを押しても入れるようにする */
 .admin-card {
   position: relative;
-  flex: 1 1 240px;
+  flex: 1 1 280px;
   display: flex;
   flex-direction: column;
   padding: var(--space-5);
   background: var(--surface);
-  transition: background var(--transition);
+  transition: background-color var(--transition);
+}
+
+.admin-card:hover {
+  background: var(--bg-soft);
 }
 
 .admin-card__link {
@@ -3113,27 +3130,34 @@ html:has(.search-actions) {
 }
 
 .admin-card__icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .admin-card__title {
   font-size: 17px;
-  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
 }
 
-/* 右上の矢印で「入口」であることを示す。色は hover で変える(admin.css) */
+/* 右上の矢印で「入口」であることを示す。hover で墨に濃くなる */
 .admin-card__arrow {
   position: absolute;
   top: var(--space-5);
   right: var(--space-5);
   color: var(--text-subtle);
+  transition: color var(--transition);
+}
+
+.admin-card:hover .admin-card__arrow {
+  color: var(--text);
 }
 
 .admin-card__desc {
   margin: var(--space-2) 0 0;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--text-muted);
 }
 
@@ -3150,55 +3174,176 @@ html:has(.search-actions) {
   color: var(--text-subtle);
 }
 
+/* 手を付けていない件数が残っているカードだけ、下端の一言を墨の 800 で立てる(色は使わない) */
+.admin-card__meta--pending {
+  font-weight: 800;
+  color: var(--text);
+}
+
 /* 一面に広げた見出しのリンクより手前に出して、こちらを押せるようにする */
 .admin-card__sublink {
   position: relative;
   z-index: 1;
 }
 
-/* --- 単語の修正の一覧(Issue 36・108): 検索 + 注釈状態タブ + テーブル --- */
-.admin-words-toolbar {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  margin: var(--space-5) 0 var(--space-3);
+/* --- ダッシュボードの収録状況: 4 つの数と注釈の進捗を、札の中で 1px の隙間で割る ---
+   数は立てる数(--font-display の 800。docs/design.md §2)。ラベルは上に小さく置く。 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--border);
 }
 
-/* 検索は細枠の箱 + 虫眼鏡 */
-.admin-words-search {
-  display: inline-flex;
+.stats-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+}
+
+.stats-grid__item dt {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.stats-grid__item dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-grid__unit {
+  margin-left: var(--space-1);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+/* 未注釈が残っているときだけ、数に墨の下線を引いて目に留める(色は使わない。単位には引かない) */
+.stats-grid__item--pending dd {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+}
+
+.stats-grid__unit {
+  display: inline-block;
+}
+
+/* 注釈の進捗。札の全幅を 1 行で使う(ラベル・帯・%) */
+.stats-grid__item--progress {
+  grid-column: 1 / -1;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--border-strong);
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+}
+
+.stats-grid__item--progress dd {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* 帯。満ちた部分は墨、残りは沈めた面にして、墨の長さで「どこまで満ちたか」を読ませる */
+.admin-meter {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+}
+
+.admin-meter::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--meter, 0%);
+  background: var(--text);
+}
+
+/* % の桁が変わっても帯の長さが揺れないよう、幅を 4 桁ぶん取って右に寄せる */
+.admin-meter__value {
+  flex: none;
+  min-width: 4ch;
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-grid__item dd {
+    font-size: 32px;
+  }
+
+  .admin-card {
+    flex-basis: 240px;
+  }
+}
+
+/* --- 単語の修正の一覧(Issue 36・108): 検索と絞り込みの札(頭に注釈状態のタブ) + まとめての札 + 表の札 --- */
+/* 札の頭の見出しの横に置くので、見出しとタブが収まらない幅では、タブが次の行へ回る */
+.admin-words-toolbar .panel__head {
+  flex-wrap: wrap;
+}
+
+/* 検索の箱は、押せる部品と同じ墨の枠 + 虫眼鏡(.list-filter と同じ組み) */
+.admin-words-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-2) 0 14px;
+  border: 1px solid var(--text);
   border-radius: var(--radius);
   background: var(--surface);
 }
 
 .admin-words-search:focus-within {
-  border-color: var(--text);
-  box-shadow: 0 0 0 3px var(--bg-tint);
+  outline: 1px solid var(--text);
 }
 
-.admin-words-search__input {
+.admin-words-search .admin-words-search__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
   border: none;
+  border-radius: 0;
   background: transparent;
   font-size: 14px;
-  padding: 6px 2px;
-  width: 16em;
 }
 
-.admin-words-search__input:focus {
+.admin-words-search .admin-words-search__input:focus {
   outline: none;
 }
 
 .admin-words-search__submit {
+  display: inline-flex;
+  align-items: center;
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 6px 4px;
+  padding: 6px;
   color: var(--text-muted);
 }
 
@@ -3206,97 +3351,100 @@ html:has(.search-actions) {
   color: var(--text);
 }
 
-/* 検索とタグ絞り込みを縦に積む(タグは語義のジャンル・品詞・エンティティ・語種) */
+/* 検索とタグ絞り込みを縦に積む(タグは語義のジャンル・品詞・エンティティ・語種・特徴) */
 .admin-words-filter {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-4);
 }
 
+/* 絞り込みの欄は、幅に合わせて折り返しながら等分に広がる(広い画面では 1 行に並ぶ) */
 .admin-words-tag-filters {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  align-items: end;
+  gap: var(--space-3) var(--space-4);
 }
 
 .admin-words-tag-filter {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .admin-words-tag-filter__label {
-  font-size: 12px;
-  color: var(--text-subtle);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-/* input は type まで書く。後ろのフォームの共通規則(input[type="text"])と詳細度が並ぶと、余白で負けて背が高くなる */
 .admin-words-tag-filter select,
 .admin-words-tag-filter input[type="text"] {
-  font-size: 13px;
-  padding: 4px 8px;
-  max-width: 14em;
-}
-
-/* 特徴の該当部分(文字列)の入力欄。数文字なので、セレクトより短くする */
-.admin-words-tag-filter input[type="text"] {
-  width: 8em;
+  width: 100%;
+  max-width: none;
 }
 
 .admin-words-tag-filter__reset {
   font-size: 13px;
-  color: var(--text-muted);
-  align-self: flex-end;
-  padding-bottom: 5px;
+  padding-bottom: 10px;
 }
 
-.admin-words-tag-filter__reset:hover {
-  color: var(--text);
-}
-
+/* 注釈状態のタブ。選択の切り替えなので、選んでいるものは墨のベタ(.chip・ランキングの切替と同じ印) */
 .admin-status-tabs {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .admin-status-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
   text-decoration: none;
-  color: var(--text-muted);
-  font-size: 14px;
-  border-bottom: 2px solid transparent;
-  padding: var(--space-2) 2px;
+  white-space: nowrap;
+  transition: background-color var(--transition), color var(--transition);
 }
 
-.admin-status-tabs__tab:hover {
-  color: var(--text);
+@media (hover: hover) {
+  .admin-status-tabs__tab:hover {
+    background: var(--bg-soft);
+  }
 }
 
 .admin-status-tabs__tab[aria-current="page"] {
-  color: var(--text);
-  font-weight: 400;
-  border-bottom-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
 }
 
+/* 表の札の頭に置く件数 */
 .admin-words-count {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* 収録リクエストの表の札の頭で、件数の下に出す「この IP だけ表示中」の一言 */
+.admin-requests-ip-filter {
+  margin: var(--space-1) 0 0;
   font-size: 13px;
-  color: var(--text-subtle);
-  margin-bottom: var(--space-3);
+  color: var(--text-muted);
 }
 
 /* まとめて付ける(Issue 37)・まとめて外す(Issue 108)。2 つのパネルが同じ部品を使う。
-   2 つは 1 つの枠に収めて 1px の隙間(罫の色が覗く)で割り、見出しの行は沈めた面の帯にする。
+   2 つは 1 つの札(.panel)に収めて 1px の隙間(罫の色が覗く)で割り、見出しの行は沈めた面の帯にする。
    開閉はキャレットの向きで示す(ジャンルの折り畳み .genre-fold と同じ)。中身はコンソールの ann-row/ann-chip を流用 */
 .bulk-panels {
   display: flex;
   flex-direction: column;
   gap: 1px;
   background: var(--border);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: var(--space-5);
 }
 
 .bulk-annotation {
@@ -3310,6 +3458,11 @@ html:has(.search-actions) {
 .bulk-annotation > :not(summary) {
   margin-left: var(--space-5);
   margin-right: var(--space-5);
+}
+
+/* 項目の行は、ヒントと同じ左端から始める(コンソールの行は札の左右の余白を自分で持つので、ここでは外す) */
+.bulk-annotation .ann-row {
+  padding-inline: 0;
 }
 
 .bulk-annotation__summary {
@@ -3403,20 +3556,21 @@ html:has(.search-actions) {
   cursor: pointer;
 }
 
-/* Claude Code 連携(Issue 38): 書き出し/取り込み画面 */
+/* Claude Code 連携(Issue 38): 書き出し/取り込み画面。どの部品も札(.panel)に収める */
 .proposal-lead {
+  max-width: 46em;
+  margin: 0 0 var(--space-4);
   font-size: 14px;
   color: var(--text-muted);
-  max-width: 46em;
-  margin: var(--space-3) 0 var(--space-4);
 }
 
+/* 書き出しの範囲と件数の行。札の中身と同じ余白を取る */
 .proposal-limit {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  padding: var(--space-4) var(--space-5);
 }
 
 .proposal-limit__range-sep {
@@ -3426,11 +3580,11 @@ html:has(.search-actions) {
 
 .proposal-limit__label {
   font-size: 13px;
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 .proposal-limit__input {
-  width: 5em;
+  width: 6em;
   font-size: 14px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -3441,12 +3595,9 @@ html:has(.search-actions) {
   color: var(--text-subtle);
 }
 
+/* コピー欄の札の頭: 左に案内、右にコピーのボタン */
 .proposal-json__bar {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  align-items: center;
 }
 
 .proposal-json__hint {
@@ -3454,22 +3605,25 @@ html:has(.search-actions) {
   color: var(--text-muted);
 }
 
-/* JSON は等幅・淡い面のコードブロック */
+/* JSON は等幅・沈めた面のコードブロック。札の中に敷くので、枠も角も持たない */
 .proposal-json__area {
+  display: block;
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
+  border: 0;
+  border-radius: 0;
+  padding: var(--space-4) var(--space-5);
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.7;
   background: var(--bg-soft);
 }
 
+/* 札の足: 送信ボタンを右端に置き、墨の罫で入力と分ける */
 .proposal-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--text);
 }
 
 .proposal-next {
@@ -3482,9 +3636,17 @@ html:has(.search-actions) {
   white-space: nowrap;
 }
 
-/* 狭幅でも列を潰さない(.table-scroll の中で横スクロールさせる) */
+/* 狭幅でも列を潰さない(.table-scroll の中で横スクロールさせる)。表層形と読みは、折り返しすぎない幅を下限にする */
 .admin-words-table {
-  min-width: 640px;
+  min-width: 760px;
+}
+
+.admin-words-table td:nth-child(2) {
+  min-width: 10em;
+}
+
+.admin-words-table td:nth-child(3) {
+  min-width: 14em;
 }
 
 /* 行アクションの背が一番高いので、それに合わせて全セルを中央に揃える */
@@ -3523,11 +3685,25 @@ html:has(.search-actions) {
   padding-left: var(--space-5);
 }
 
-/* 状態の文字。色(未対応・保留・完了)は admin.css が持つ。この表は管理画面にしか無い */
+/* 状態の文字。色は使わず、墨の濃さと太さで段を作る(未対応 = 手を付けるもの = 墨の 800、保留 = 本文より弱く、完了 = 最も弱く)。
+   行の hover は --bg-soft の面で、緑・橙の文字はその上で AA を割るので、状態に色は当てない。この表は管理画面にしか無い */
 .admin-words-table__annotated,
 .admin-words-table__unannotated,
 .admin-words-table__on-hold {
   font-size: 13px;
+}
+
+.admin-words-table__unannotated {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.admin-words-table__on-hold {
+  color: var(--text-muted);
+}
+
+.admin-words-table__annotated {
+  color: var(--text-subtle);
 }
 
 /* --- ページネーション --- */
@@ -3596,12 +3772,20 @@ html:has(.search-actions) {
   overflow-x: auto;
 }
 
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* 見出し行は沈めた面にして、札の頭と同じ墨の罫で本文と分ける(どこまでが見出しかを罫だけに頼らない) */
 .data-table thead th {
   font-size: 13px;
-  color: var(--text-subtle);
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg-soft);
   text-align: left;
-  padding: var(--space-2) var(--space-3) var(--space-3) 0;
-  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) var(--space-3) var(--space-3) 0;
+  border-bottom: 1px solid var(--text);
 }
 
 .data-table td {
@@ -3610,6 +3794,21 @@ html:has(.search-actions) {
   font-size: 14px;
   vertical-align: baseline;
   font-variant-numeric: tabular-nums;
+}
+
+/* 札の中の表は左右の余白を札の頭の見出しと揃え、最後の行の下罫は札の枠に任せる */
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-left: var(--space-5);
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  padding-right: var(--space-5);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .data-table tbody tr:hover {
@@ -3759,22 +3958,6 @@ textarea {
   font-size: 13px;
   color: var(--text-muted);
   margin-bottom: var(--space-2);
-}
-
-/* フォームのまとまり: 細罫の角丸パネル */
-.fieldset-card {
-  border: none;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-5);
-  margin: 0 0 var(--space-5);
-}
-
-.fieldset-card legend {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
-  padding: 0 var(--space-2);
 }
 
 /* 入力欄に添える畳んだヘルプ(searches/_field_help)。開くと中身を見出しのキャレットの真下から左罫で吊り、
@@ -3972,11 +4155,8 @@ textarea {
   font-size: 14px;
 }
 
-/* 一括登録の結果サマリ */
+/* 一括登録の結果サマリ(札 .panel の中身。余白は札が持つ) */
 .bulk-result {
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
 }
 
@@ -4021,7 +4201,8 @@ textarea {
   color: var(--danger);
 }
 
-/* --- 一括登録のフェーズ表示(入力→読み→重複) --- */
+/* --- 一括登録のフェーズ表示(入力→読み→重複) ---
+   番号は順位の角(.home-column__rank)と同じ、墨の 1px の枠の小さな角。現在は墨のベタ(文字は反転)、完了は沈めた面 */
 .steps {
   list-style: none;
   display: flex;
@@ -4035,7 +4216,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-subtle);
 }
 
@@ -4048,22 +4229,24 @@ textarea {
   margin-left: var(--space-2);
 }
 
-/* 番号は 1px 枠の丸。現在は本文色(--text)のベタ(文字は反転)、完了は淡い面(--bg-soft)。 */
 .steps__no {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border: 1px solid currentColor;
-  border-radius: 50%;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .steps__item.is-current {
   color: var(--text);
-  font-weight: 400;
+  font-weight: 800;
 }
 
 .steps__item.is-current .steps__no {
@@ -4078,15 +4261,13 @@ textarea {
 
 .steps__item.is-done .steps__no {
   background: var(--bg-soft);
-  border-color: var(--border-strong);
+  border-color: var(--text-muted);
   color: var(--text-muted);
 }
 
-/* --- 一括登録の読み確認テーブル(細罫の表 + 赤の警告) --- */
+/* --- 一括登録の読み確認テーブル(札 .panel に収めた細罫の表 + 赤の警告) --- */
 .bulk-review {
   overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   margin-bottom: var(--space-5);
 }
 
@@ -4108,11 +4289,11 @@ textarea {
 }
 
 .bulk-review__table thead th {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
   background: var(--bg-soft);
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--text);
 }
 
 .bulk-review__table tbody tr:last-child td {
@@ -4177,19 +4358,9 @@ textarea {
   display: none;
 }
 
-/* --- step2: 調査 JSON の反映パネル --- */
+/* --- step2: 調査 JSON の反映パネル(畳める札。頭は .panel__summary) --- */
 .bulk-research {
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
-}
-
-.bulk-research__summary {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-muted);
-  cursor: pointer;
 }
 
 .bulk-research .bulk-input {
@@ -4427,61 +4598,20 @@ textarea {
   margin-top: var(--space-1);
 }
 
-/* 追加パネル(details)。統合パネルと同じトーンに揃える */
-.tag-add {
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-5);
-}
-.tag-add__summary {
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-.tag-add[open] .tag-add__summary {
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
-  display: block;
-  padding-bottom: var(--space-2);
-}
-.tag-add__hint {
+/* 追加・統合のパネル(畳める札。頭は .panel__summary、中身は .panel__body) */
+.tag-add__hint,
+.tag-merge__hint {
+  max-width: 46em;
+  margin: 0 0 var(--space-3);
   font-size: 13px;
   color: var(--text-muted);
-  margin: var(--space-2) 0 var(--space-3);
-  max-width: 46em;
-}
-.tag-add__form .field {
-  margin-bottom: var(--space-3);
-  max-width: 24em;
 }
 
-/* 統合パネル(details)。一括適用パネルと同じトーンに揃える */
-.tag-merge {
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-5);
+.tag-add__form .field {
+  max-width: 24em;
+  margin-bottom: var(--space-3);
 }
-.tag-merge__summary {
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-.tag-merge[open] .tag-merge__summary {
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
-  display: block;
-  padding-bottom: var(--space-2);
-}
-.tag-merge__hint {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: var(--space-2) 0 var(--space-3);
-  max-width: 46em;
-}
+
 .tag-merge__pair {
   display: flex;
   align-items: flex-end;
@@ -4489,6 +4619,7 @@ textarea {
   gap: var(--space-3);
   margin-bottom: var(--space-3);
 }
+
 .tag-merge__arrow {
   font-size: 18px;
   line-height: 2.2;
@@ -4540,17 +4671,16 @@ textarea {
   margin-left: 6px;
   padding: 0 6px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   font-size: 11px;
   color: var(--text-subtle);
   vertical-align: 1px;
 }
-/* seed管理タグのリネーム時警告。細罫パネル + 左罫で注意を示す(Issue 49) */
+/* seed管理タグのリネーム時警告。赤の枠と文字で注意を示す(背景は塗らない。Issue 49) */
 .seed-warning {
-  margin: 12px 0 20px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--danger);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger);
   border-radius: var(--radius);
   font-size: 13px;
   line-height: 1.7;
@@ -6212,7 +6342,7 @@ a.entity-treemap__cell:hover {
   margin-left: var(--space-2);
   padding: 0 6px;
   border: 1px solid currentcolor;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   font-size: 11px;
   color: var(--success);
   white-space: nowrap;
@@ -6275,10 +6405,10 @@ a.entity-treemap__cell:hover {
   white-space: nowrap;
 }
 
-/* 未着手だけ本文色(--text)で残して残件を目立たせる。処理済みの3状態は --text-subtle に沈める */
+/* 未着手だけ墨の 800 で残して残件を目立たせる。処理済みの3状態は --text-subtle に沈める */
 .admin-requests-table__status--pending {
   color: var(--text);
-  font-weight: 400;
+  font-weight: 800;
 }
 
 .admin-requests-table__status--accepted,
@@ -6293,14 +6423,7 @@ a.entity-treemap__cell:hover {
   white-space: normal;
 }
 
-/* 一括操作パネル */
-.bulk-requests {
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-5);
-}
-
+/* 一括操作パネル(札。中身の余白は .panel__body が持つ) */
 .bulk-requests__fields {
   display: flex;
   gap: var(--space-4);
@@ -6319,9 +6442,8 @@ a.entity-treemap__cell:hover {
 }
 
 .bulk-requests__label {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-subtle);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .bulk-requests__hint {

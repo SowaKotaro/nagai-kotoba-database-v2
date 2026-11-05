@@ -1,7 +1,8 @@
 <%= render "admin/candidates/header", current: "all",
       title: t("admin.word_candidates.stages.all"), lead: t(".lead") %>
 
-<%# 状態で絞り込む(流れの順)。件数を添える %>
+<%# 状態で絞り込む(流れの順。件数を添える)と、表層形の検索。ひとつの札に収める %>
+<div class="panel cand-filters">
 <nav class="cand-status-tabs" aria-label="<%= t(".filter_label") %>">
   <%= link_to admin_candidates_list_path(q: @query.presence), class: "cand-status-tabs__tab", "aria-current": (@status.nil? ? "page" : nil) do %>
     <%= t(".filter_all") %><span class="cand-status-tabs__count"><%= number_with_delimiter(candidate_status_counts.values.sum) %></span>
@@ -20,16 +21,11 @@
   <%= form.text_field :q, value: @query, placeholder: t(".search_placeholder"), class: "cand-search__input" %>
   <%= form.button t(".search"), type: "submit", class: "btn btn--sm", name: nil %>
 <% end %>
+</div>
 
 <% if @candidates.empty? %>
   <p class="cand-empty"><%= t(".empty") %></p>
 <% else %>
-  <p class="cand-list-count">
-    <%= t(".total", count: number_with_delimiter(@total_count)) %>
-    <% if @total_count > @candidates.size %>
-      <span class="cand-list-count__limit"><%= t(".limited", count: number_with_delimiter(@candidates.size)) %></span>
-    <% end %>
-  </p>
 
   <%# 選んだ語をまとめて移す。フォームは表の外に置き、行の checkbox と下端のバーの移すボタンは form 属性で結び付ける %>
   <%= form_with url: admin_candidates_list_path, method: :patch, id: "cand-move" do %>
@@ -39,6 +35,15 @@
 
   <%# 行のどこを押しても選べる(Shift+クリック・選択の列をなぞって範囲)。選んだ語は下端のバーで移す(row-select) %>
   <%= tag.div data: candidate_list_select_data do %>
+    <section class="panel">
+    <div class="panel__head">
+      <p class="cand-list-count">
+        <%= t(".total", count: number_with_delimiter(@total_count)) %>
+        <% if @total_count > @candidates.size %>
+          <span class="cand-list-count__limit"><%= t(".limited", count: number_with_delimiter(@candidates.size)) %></span>
+        <% end %>
+      </p>
+    </div>
     <div class="table-scroll">
       <table class="data-table cand-table">
         <thead>
@@ -78,6 +83,7 @@
         </tbody>
       </table>
     </div>
+    </section>
 
     <%# 下端に貼り付くバー。選んでいないときは案内と「すべて選ぶ」、選んでいるときは語数と移すボタン。
         JS が無いときは移すボタンだけを出す(「選んだ語を」+ ボタン。checkbox を選んで送れる) %>

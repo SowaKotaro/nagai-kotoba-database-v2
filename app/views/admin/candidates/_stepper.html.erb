@@ -4,7 +4,7 @@
     表記の段は /notation の結果を確かめる語があれば、その数を出す。右端に保留とすべての語への導線。
     current は開いている画面(段のキー。「すべての語」は "all")。段に属さない画面は nil。 %>
 <nav class="cand-steps" aria-label="<%= t("admin.word_candidates.stages.label") %>">
-  <ol class="cand-steps__list">
+  <ol class="panel cand-steps__list">
     <% WordCandidate::STAGES.each_value.with_index(1) do |stage, number| %>
       <% count = candidate_stage_count(stage) %>
       <li class="cand-steps__item">

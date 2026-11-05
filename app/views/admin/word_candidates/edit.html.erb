@@ -3,7 +3,7 @@
 
 <%# 確認の画面では、この frame が行の「語」の部分に入る(一覧のほかの行の選択は保ったまま)。
     保存・取りやめるとどちらも 1語の画面(show)の同じ frame に戻る %>
-<%= turbo_frame_tag dom_id(@candidate, :word), class: "cand-row__word" do %>
+<%= turbo_frame_tag dom_id(@candidate, :word), class: "panel cand-row__word cand-edit-panel" do %>
   <%= form_with model: @candidate, url: admin_word_candidate_path(@candidate), class: "cand-edit" do |form| %>
     <% if @candidate.errors.any? %>
       <ul class="form-errors">

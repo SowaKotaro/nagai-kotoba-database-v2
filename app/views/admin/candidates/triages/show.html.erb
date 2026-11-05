@@ -1,8 +1,8 @@
 <%= render "admin/candidates/header", current: @stage.key, title: candidate_stage_name(@stage), lead: t(".lead") %>
 
 <%# 追加(貼り付け)。仕分ける語が無いとき・貼った内容を出し直すときは開いておき、それ以外は畳んで一覧を先に見せる %>
-<details class="cand-intake" <%= "open" if @review.empty? || !@intake.text.nil? %>>
-  <summary class="cand-intake__summary"><%= t(".intake.summary") %></summary>
+<details class="panel cand-intake" <%= "open" if @review.empty? || !@intake.text.nil? %>>
+  <summary class="panel__summary cand-intake__summary"><%= t(".intake.summary") %></summary>
   <%= form_with model: @intake, url: admin_candidates_triage_path, method: :post, scope: :word_candidate_intake,
         class: "cand-intake__form", data: { controller: "submit-shortcut", action: "keydown->submit-shortcut#submit" } do |form| %>
     <%= form.label :text, t(".intake.label"), class: "visually-hidden" %>
@@ -32,8 +32,8 @@
 
     <% unless @held.empty? %>
       <%# 保留(あとで決める)にした語。既定は保留のままなので、開かずに確定しても動かない %>
-      <details class="cand-held" id="held" <%= "open" if @review.empty? || params[:held].present? %>>
-        <summary class="cand-held__summary"><%= t(".held", count: @held.size) %></summary>
+      <details class="panel cand-held" id="held" <%= "open" if @review.empty? || params[:held].present? %>>
+        <summary class="panel__summary cand-held__summary"><%= t(".held", count: @held.size) %></summary>
         <%= render "admin/candidates/review", review: @held, form: "cand-decisions" %>
       </details>
     <% end %>

@@ -1,89 +1,95 @@
 /*
  * 管理画面（/admin 配下）だけに効かせる上書き。
  *
- * 公開側のデザインシステム「しずか」は**読み物**のための設計で、広い字間(0.08em)と
- * 行間(1.9)・角丸・多めの transition を持つ。管理画面は**作業画面**であり、
- * 見る人はオーナー1人なので、そのトーンを引き継ぐ必要がない(2026-09-06 オーナー指示)。
+ * 2026-11-05 オーナー指示「公開ページと同じように管理者ページもデザインしてほしい」で、公開側のデザインシステム
+ * 「しずか」（docs/design.md）に揃えた。地・墨・書体・太さ・字間・札（墨の枠）・角丸・罫はすべて公開側と同じトークンと部品で、
+ * ここで上書きするのは「作業画面として違うところ」だけに絞っている:
+ *   1. 幅 … 公開側は広告を載せる余白のために 800px の 1 カラムに絞るが、管理画面には広告を載せないので 1440px まで広げる
+ *   2. 帯と余白 … ヘッダーの帯と本文の上余白を少し詰める
+ *   3. 遊びの動き … 作業中に何度も触れるので、触れても動かさない（ボタンも墨に反転させない）
+ *   4. 破壊的な操作 … 赤（--danger）で分ける
  *
- * 狙いは 2 つだけ:
- *   1. 認知負荷を下げる … 文字と罫を濃くし、字間・行間を詰めて、視線の移動量を減らす
- *   2. レンダリング負荷を下げる … 「高速アノテーション」が主題なので、影・大きな角丸・SVG など
- *      毎回の描画で払うものを減らす(transition は全称セレクタでは潰さない。下の「レンダリング負荷」)
- *
- * ページ構成・レイアウト・HTML は公開側と共有したまま、body の .is-admin の下で上書きする。
- * 公開側のコンポーネント定義は変えず、管理画面のための上書き(トークン、一部のコンポーネントの見た目、
- * 管理画面専用の 2 色 --admin-accent / --admin-warn)はこのファイルに集める。
- * 管理画面はダークに対応していない(docs/design.md §9.4)。ここの上書きはライトの値で、テーマを問わず効く。
+ * ページ構成・HTML は公開側と共有したまま、body の .is-admin の下で上書きする。
+ * 管理画面専用の色（青・橙）と、読ませないための字間 0・行間 1.5・角 3px は 2026-11-05 にやめた（docs/design.md §10）。
+ * 管理画面もダークに対応する（トークンをそのまま使うので、テーマの切り替えに追従する）。
  */
 
 .is-admin {
-  /* ── 字組み ───────────────────────────────────────────────
-     読ませるためではなく、拾わせるための組み。字間を殺し、行間を詰める */
-  --tracking: 0;
+  /* ── 幅 ───────────────────────────────────────────────────
+     公開側のヘッダー・奥付の幅(--frame-width。1040px)と本文の幅(--content-width。800px)を、ともに広げる。
+     画面いっぱいまで広げると目の移動が長くて疲れるので(2026-11-05 オーナー指摘)、上限を 1440px に置き、
+     それより広い画面では左右に地を残す */
+  --frame-width: 1440px;
+  --content-width: 1440px;
 
-  /* ── 色 ───────────────────────────────────────────────────
-     公開側は「静けさ」を優先して淡いが、作業画面ではコントラストがそのまま速さになる。
-     弱い文字ほど濃くする(--text-subtle と --text-muted を --text に寄せる) */
-  --text-muted: #414850;
-  --text-subtle: #4a515a;
+  /* 左右の余白。ヘッダー・共通ナビ・本文・奥付で同じ値を使い、サイト名の左端と本文の左端を揃える。
+     広い画面では 40px、1023px 以下は 24px、767px 以下は 16px */
+  --admin-gutter: var(--space-6);
 
-  /* 罫は「どこで区切れているか」を一目で取れる濃さまで上げる */
-  --border: #c4cad3;
-  --border-strong: #98a1ad;
-
-  /* ── 形 ───────────────────────────────────────────────────
-     角丸は輪郭を曖昧にするぶん、形の判別に一手間かかる。ほぼ直角にする。
-     ピル(999px)も四角へ。描画コストも下がる */
-  --radius: 3px;
-  --radius-lg: 4px;
-  --radius-pill: 3px;
-  /* --radius-sm(4px)は上書きしていないので、管理画面では --radius(3px)より大きい(揃えるかは見送り中) */
-
-  /* ── 色のメリハリ ─────────────────────────────────────────
-     公開側は無彩色で通すが、管理画面では**色が最短の手がかり**になる
-     (2026-09-07 オーナー指摘「色のメリハリもないので、各コンテンツや数字、文章を認識しにくい」)。
-     増やすのは 2 色だけ: 操作の色(青)と、要対応を示す色(橙)。
-     状態の意味を持つ --danger / --success は公開側と共通のものをそのまま使う。 */
-  --admin-accent: #1d4ed8;   /* 押せるもの・アイコン */
-  --admin-warn: #b45309;     /* 未対応・要判断の件数 */
-
-  line-height: 1.5;
+  /* 行間は公開側(1.9)より詰める。表や入力の並ぶ画面で、1 画面に載る行数を稼ぐため */
+  line-height: 1.7;
 }
 
-/* 見出し・本文の行送りも詰める(base.css の 1.75〜1.9 を上書き) */
+/* 見出し・本文の行送りも詰める(base.css の 1.75 を上書き) */
 .is-admin h1,
 .is-admin h2,
 .is-admin h3,
 .is-admin h4 {
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-/* ── レンダリング負荷 ───────────────────────────────────────
-   **全称セレクタ(.is-admin *)で transition を潰す案は計測して取りやめた**(2026-09-06)。
-   スタイル再計算のたびに全要素へマッチするぶん、かえって重くなる
-   (強制レイアウト30回: 全称セレクタあり 255.7ms / なし 175.1ms を実測。別の計測では、なし 156.4ms。
-   値は違うが、どちらもなしの方が軽い。docs/design.md §10.2)。
-   transition はそもそも hover したときだけ走るので、常時のコストではない。
+@media (max-width: 1023px) {
+  .is-admin {
+    --admin-gutter: var(--space-5);
+  }
+}
 
-   効くのは「毎回の描画で払っているもの」を減らすことのほう:
-   影(合成レイヤ。公開側も 2026-11-04 に使うのをやめた)・大きな角丸・SVG の描画・要らない要素そのもの。 */
+@media (max-width: 767px) {
+  .is-admin {
+    --admin-gutter: var(--space-4);
+  }
+}
 
-/* ── 帯と余白を詰める ───────────────────────────────────────
-   作業の主役は下の本文なので、ヘッダーは帯を低くしてサイト名を小さくする(ナビとログアウトは作業中に押すので残す)。
-   帯は変数で低くするので、狭幅のドロワーの頭と「検索」のプルダウンの吊り下げ位置も同じだけ上がる(layout.css) */
+/* ── 帯と余白 ───────────────────────────────────────────────
+   ヘッダーは公開側と同じ組み(サイト名 20px・ナビの札)のまま、上下の余白だけ 16px → 12px に詰める。
+   余白は変数なので、狭幅のドロワーの頭と「検索」のプルダウンの吊り下げ位置も同じだけ上がる(layout.css)。
+   左右は本文と同じ値にして、サイト名の左端と本文の左端を揃える */
 .is-admin .site-header {
-  --header-padding-block: var(--space-2);
+  --header-padding-block: var(--space-3);
+  --header-gutter: var(--admin-gutter);
 }
 
-.is-admin .site-brand,
-.is-admin .nav-drawer__title {
-  font-size: 14px;
-}
-
-/* 本文の上下余白も詰める(公開側は「疎でよい」が、作業画面では1画面の情報量が価値) */
+/* 本文の上余白は 24px(公開側は 64px)。スマホでは 12px まで詰める。アノテーションは 1 画面に見出し語・提案・保存のバーを
+   収めたいので、ナビの下で 40px を空けると、それだけで提案の行が 2 行押し出される(2026-11-05 オーナー指摘) */
 .is-admin main.container {
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-6);
+  padding: var(--space-5) var(--admin-gutter) var(--space-7);
+}
+
+@media (max-width: 767px) {
+  .is-admin main.container {
+    padding-top: var(--space-3);
+  }
+}
+
+/* ページの頭(タイトルと章の罫)。公開側の上下の余白(上 8px・下 24px・罫の下 40px)は読み物のためのもので、
+   作業画面では 1 画面に載る量を稼ぎたいので詰める */
+.is-admin .page-header {
+  padding: 0 0 var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.is-admin .page-header .page-title {
+  margin-top: 0;
+}
+
+/* 奥付の左右も本文に揃える(560px 以下で左右が 16px に詰まるのは公開側と同じ。ここでは 767px 以下で本文と一緒に詰める) */
+.is-admin .site-footer__inner,
+.is-admin .site-footer__bottom-inner {
+  padding-inline: var(--admin-gutter);
+}
+
+.is-admin .site-footer {
+  margin-top: var(--space-7);
 }
 
 /* ── 遊びの動きを止める ─────────────────────────────────────
@@ -109,155 +115,13 @@
   color: var(--bg);
 }
 
-/* ── 入口のカード(ダッシュボード・タグ管理) ───────────────────
-   カードの境目は 1px の罫で割る(components.css。2026-09-07 オーナー指摘「グリッドの境界が見えない」への対応を、
-   2026-09-26 に 1 枚のパネルを割る組みへ改めた)。
-   押せるものの印はアクセント色: アイコンは常に、右上の矢印は hover のときに。
-   hover の面はアクセントをごく薄く混ぜた色にする(--bg-soft だと、要対応の色の文字が 4.2:1 で AA を割る) */
-.is-admin .admin-card:hover {
-  background: color-mix(in srgb, var(--admin-accent) 6%, var(--surface));
-}
-
-.is-admin .admin-card__icon,
-.is-admin .admin-card:hover .admin-card__arrow {
-  color: var(--admin-accent);
-}
-
-/* 手を付けていない件数が残っているカードだけ、下端の一言を「要対応」の色にする */
-.is-admin .admin-card__meta--pending {
-  color: var(--admin-warn);
-}
-
-/* ── 数字を主役にする ───────────────────────────────────────
-   ラベルと数字が同じ級数・同じ濃さだと、拾うのに一手間かかる。
-   ラベルは小さく薄く、数字は大きく濃く、上下に積んで対にする。
-   4 つの数は作業のカードと同じく 1px の罫で割った 1 枚のパネルに収め、最下段に注釈の進捗を置く */
-.is-admin .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  margin: 0;
-  border: 1px solid var(--border);
-  background: var(--border);
-}
-
-.is-admin .stats-grid__item {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-5);
-  background: var(--surface);
-}
-
-.is-admin .stats-grid__item dt {
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
-/* 1 つずつ置く大きな数字は比例幅の数字で組む(等幅の数字は桁を縦に揃えるときだけ。大きいと字間が間延びする) */
-.is-admin .stats-grid__item dd {
-  font-size: 30px;
-  line-height: 1.2;
-  font-variant-numeric: normal;
-  color: var(--text);
-}
-
-.is-admin .stats-grid__unit {
-  margin-left: var(--space-1);
-  font-size: 13px;
-  color: var(--text-subtle);
-}
-
-/* 未注釈が残っているときだけ、数字を「要対応」の色にする */
-.is-admin .stats-grid__item--pending dd {
-  color: var(--admin-warn);
-}
-
-/* 注釈の進捗。パネルの全幅を 1 行で使う(ラベル・帯・%) */
-.is-admin .stats-grid__item--progress {
-  grid-column: 1 / -1;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-4);
-  padding-block: var(--space-3);
-}
-
-.is-admin .stats-grid__item--progress dd {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-/* 帯。満ちた部分はアクセント、残りは同じ色相の淡い段にして、同じ色の濃淡で「どこまで満ちたか」を読ませる */
-.is-admin .admin-meter {
-  position: relative;
-  flex: 1;
-  height: 6px;
-  overflow: hidden;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--admin-accent) 16%, var(--surface));
-}
-
-.is-admin .admin-meter::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--meter, 0%);
-  background: var(--admin-accent);
-}
-
-/* % の桁が変わっても帯の長さが揺れないよう、幅を 4 桁ぶん取って右に寄せる */
-.is-admin .admin-meter__value {
-  flex: none;
-  min-width: 4ch;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 767px) {
-  .is-admin .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* 区画の見出し(「作業」など)。本文と同じ濃さだと段が読めない */
-.is-admin .section-label {
-  color: var(--text-subtle);
-  font-size: 12px;
-}
-
-/* ── 表の見出し行を面で押さえる ─────────────────────────────
-   どこまでが見出しでどこからがデータかを、罫だけでなく面でも示す */
-.is-admin .data-table thead th {
-  background: var(--bg-soft);
-  color: var(--text);
-}
-
-/* ── 状態を色で分ける ───────────────────────────────────────
-   注釈の状態は 3 値(未対応 / 保留 / 完了)。文字だけだと読み取りに一手間かかるので、
-   **意味を持つ色**を当てる。色を足すのは状態と操作だけで、装飾には使わない。
-   この表の状態の色はここだけが持つ(components.css は級数だけ) */
-.is-admin .admin-words-table__unannotated {
-  color: var(--admin-warn);
-}
-
-.is-admin .admin-words-table__on-hold {
-  color: var(--text-muted);
-}
-
-.is-admin .admin-words-table__annotated {
-  color: var(--success);
-}
-
-/* ── 破壊的な操作を色で分ける ───────────────────────────────
-   行末の「annot.」と「del.」は同じ見た目なので、押し間違えると戻せない側だけ色を変える */
+/* ── 破壊的な操作を赤で分ける ───────────────────────────────
+   行末の「annot.」と「del.」は同じ見た目なので、押し間違えると戻せない側だけ色を変える。
+   赤は公開側でも「エラー・削除」だけに使う色(--danger)で、管理画面専用の色ではない */
 .is-admin .btn[data-turbo-confirm],
 .is-admin form[data-turbo-confirm] .btn {
   color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+  border-color: var(--danger);
 }
 
 .is-admin .btn[data-turbo-confirm]:hover,
@@ -265,7 +129,7 @@
   background: color-mix(in srgb, var(--danger) 8%, var(--surface));
 }
 
-/* 主ボタンは地が濃いので、文字だけ赤にすると 2.7:1 で読めない。地を赤で塗り、文字は反転色にする
+/* 主ボタンは地が濃いので、文字だけ赤にすると読めない。地を赤で塗り、文字は反転色にする
    (実測: ライト 4.84:1・ダーク 5.90:1。hover は文字色を 15% 混ぜて 5.71:1・6.67:1) */
 .is-admin .btn--primary[data-turbo-confirm],
 .is-admin form[data-turbo-confirm] .btn--primary {
@@ -280,22 +144,30 @@
   border-color: color-mix(in srgb, var(--danger) 85%, var(--text));
 }
 
-/* ── 押せるものを青で示す ───────────────────────────────────
-   管理画面のリンクは「読み物の中のリンク」ではなく操作の入口なので、下線ではなく色で示す */
-.is-admin main a:not(.btn):not(.admin-card__link):not(.tag):not(.chip):not(.genre-path a) {
-  color: var(--admin-accent);
-  text-decoration: none;
+/* ── 札の並び ───────────────────────────────────────────────
+   ページの直下や、フォームの直下に札を続けて置くとき、札どうしの間は 24px(公開側の札の棚 .panel-shelf と同じ)。
+   札の棚の中は grid の gap が空けるので、重ねて空けない */
+.is-admin .panel:not(:last-child) {
+  margin-bottom: var(--space-5);
 }
 
-.is-admin main a:not(.btn):not(.admin-card__link):hover {
-  text-decoration: underline;
+.is-admin .panel-shelf > .panel,
+.is-admin .cand-steps-local > .panel {
+  margin-bottom: 0;
 }
 
-/* ── 現在地をはっきりさせる ─────────────────────────────────
-   状態タブ・管理ナビの選択中は、下線だけでなく色でも示す。
-   管理ナビの下線は帯の下罫にぴったり重なる(layout.css) */
-.is-admin .admin-status-tabs a[aria-current],
-.is-admin .admin-nav__link[aria-current="page"] {
-  color: var(--admin-accent);
-  border-color: var(--admin-accent);
+/* 札の外に置く送信の行・ページ送りの上の余白 */
+.is-admin .pagination {
+  margin-top: var(--space-2);
+}
+
+/* ── フラッシュ ─────────────────────────────────────────────
+   操作のたびに出るので、下の余白は 24px(公開側は 40px)。通知(notice)は札と同じ墨の枠で輪郭を持たせる
+   (白い面は地との差が小さく、枠が無いと箱として読めない)。警告(alert)は公開側と同じ赤の枠 */
+.is-admin .flash {
+  margin-bottom: var(--space-5);
+}
+
+.is-admin .flash--notice {
+  border: 1px solid var(--text);
 }

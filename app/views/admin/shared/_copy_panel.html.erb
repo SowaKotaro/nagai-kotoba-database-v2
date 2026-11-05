@@ -3,10 +3,10 @@
     「コピー」「コピーしました」の文言は admin.shared.copy_panel の 1 組だけを使う
     (登録予定単語の書き出し admin/candidates/_export も同じ文言を借りる)。
     name は textarea の name と id(テストが固定している) -%>
-<div class="proposal-json" data-controller="clipboard"
+<div class="panel proposal-json" data-controller="clipboard"
      data-clipboard-text-value="<%= text %>"
      data-clipboard-copied-label-value="<%= t("admin.shared.copy_panel.copied") %>">
-  <div class="proposal-json__bar">
+  <div class="panel__head proposal-json__bar">
     <span class="proposal-json__hint"><%= hint %></span>
     <button type="button" class="btn btn--sm" data-action="clipboard#copy">
       <span data-clipboard-target="label"><%= t("admin.shared.copy_panel.copy") %></span>

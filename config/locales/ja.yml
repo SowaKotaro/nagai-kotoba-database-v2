@@ -513,6 +513,7 @@ ja:
         meta_referer: "リファラー"
         meta_ua: "ブラウザ"
       bulk_actions:
+        title: "選択した語への操作"
         status_label: "状態を変える"
         status_blank: "変えない"
         memo_label: "メモ"
@@ -735,7 +736,6 @@ ja:
           moved: "%{count} 語を「%{status}」にしました。"
     dashboard:
       title: "管理コンソール"
-      eyebrow: "オーナー用"
       stats:
         label: "収録状況"
         words: "総単語数"
@@ -773,7 +773,6 @@ ja:
       deck: "まとめて注釈"
     tags:
       title: "タグ管理"
-      eyebrow: "マスタの統括"
       lead: "タグ（マスタ）の名前を変えると、そのタグを付けている全データに反映されます。"
       count: "%{count} 件"
       kinds:
@@ -920,6 +919,7 @@ ja:
       senses_legend: "語義"
       senses_count: "語義数"
       index:
+        filter_title: "検索と絞り込み"
         q_label: "表層形・読み・別表記で検索"
         q_placeholder: "表層形・読みで検索"
         search: "検索"
@@ -946,7 +946,6 @@ ja:
         edit_title: "修正"
         empty: "該当する単語がありません。"
     annotation_proposals:
-      eyebrow: "Claude Code 連携"
       proposed_queue: "提案ありの語をアノテーション"
       imported: "%{saved} 件の提案を取り込みました。"
       imported_with_unknown: "%{saved} 件の提案を取り込みました。存在しない word_id は無視しました: %{unknown}"

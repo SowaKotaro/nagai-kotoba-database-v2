@@ -1,9 +1,9 @@
 /* =====================================================================
  登録予定単語(管理者専用): 仕分け → 拡張 → 表記 → 登録待ち。docs/design.md §10 準拠。
- 作業画面なので「拾わせる」組み。色は状態と操作にだけ使う:
-   処理の色 … 拡張 = --admin-accent / 保留 = --admin-warn / 除外 = --danger / 採用 = 色なし(淡い面)
+ 公開側と同じ札(墨の 1px の枠・角 8px)と墨のチップで組む。色は持たず、処理は墨の濃さで分ける:
+   処理の塗り … 拡張 = 墨のベタ / 採用 = 淡い面(--bg-tint) / 保留 = 一段薄い墨(--text-muted) / 除外 = 赤(--danger。削除に当たる処理)
  数百行を上から流し見て、例外の行(保留・除外)だけが行の左の線で浮くようにする。拡張は upload した語の
- 既定で大半の行が選ぶので線を持たず、処理の選択の塗りだけで示す(左端が青の縦帯になって例外が埋もれないように)。
+ 既定で大半の行が選ぶので線を持たず、処理の選択の塗りだけで示す(左端が墨の縦帯になって例外が埋もれないように)。
  並んだ要素どうしの罫は gap: 1px の隙間で見せる(親を罫の色で塗り、子を面の色で塗る)。
  ===================================================================== */
 
@@ -20,7 +20,6 @@
   padding: 0;
   list-style: none;
   background: var(--border);
-  border: 1px solid var(--border);
 }
 
 .cand-steps__item {
@@ -28,24 +27,33 @@
   background: var(--surface);
 }
 
-/* 段そのものがリンク。上端の罫で現在地を示す(管理ナビと同じくアクセント色) */
+/* 段そのものがリンク。現在地は墨のベタ(ナビ・ボタンの選択と同じ印) */
 .cand-steps__link {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  padding: var(--space-2) var(--space-3) var(--space-3);
-  border-top: 3px solid transparent;
+  padding: var(--space-3) var(--space-4);
+  text-decoration: none;
+  transition: background-color var(--transition), color var(--transition);
 }
 
 .cand-steps__link:hover {
   background: var(--bg-soft);
 }
 
+.cand-steps__link[aria-current="page"],
+.cand-steps__link[aria-current="page"] .cand-steps__no,
+.cand-steps__link[aria-current="page"] .cand-steps__count,
+.cand-steps__link[aria-current="page"] .cand-steps__unit,
+.cand-steps__link[aria-current="page"] .cand-steps__hint,
+.cand-steps__link[aria-current="page"] .cand-steps__todo {
+  color: var(--bg);
+}
+
 .cand-steps__link[aria-current="page"] {
-  border-top-color: var(--admin-accent);
-  background: var(--bg-tint);
+  background: var(--text);
 }
 
 .cand-steps__head {
@@ -62,10 +70,13 @@
 
 .cand-steps__name {
   font-size: 14px;
+  font-weight: 800;
 }
 
 .cand-steps__count {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.2;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -73,7 +84,9 @@
 
 .cand-steps__unit {
   margin-left: 2px;
+  font-family: var(--font-sans);
   font-size: 12px;
+  font-weight: 400;
   color: var(--text-subtle);
 }
 
@@ -90,10 +103,11 @@
   overflow-wrap: anywhere;
 }
 
-/* ブラウザで確かめる語が待っている(表記の確認待ち) */
+/* ブラウザで確かめる語が待っている(表記の確認待ち)。墨の 800 で立てる */
 .cand-steps__todo {
   font-size: 12px;
-  color: var(--admin-warn);
+  font-weight: 800;
+  color: var(--text);
 }
 
 .cand-steps__aside {
@@ -105,22 +119,7 @@
 }
 
 .cand-steps__aside a[aria-current="page"] {
-  color: var(--text);
-}
-
-/* --- 各画面の頭 --- */
-.cand-head {
-  margin-bottom: var(--space-4);
-}
-
-.cand-head .page-title {
-  margin-bottom: var(--space-1);
-}
-
-.cand-head__lead {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-muted);
+  font-weight: 800;
 }
 
 .cand-empty {
@@ -131,23 +130,10 @@
 /* --- 追加(貼り付け)。畳めば1行 --- */
 .cand-intake {
   margin-bottom: var(--space-5);
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.cand-intake__summary {
-  padding: var(--space-2) var(--space-3);
-  font-size: 14px;
-  color: var(--admin-accent);
-  cursor: pointer;
-}
-
-.cand-intake[open] .cand-intake__summary {
-  border-bottom: 1px solid var(--border);
 }
 
 .cand-intake__form {
-  padding: var(--space-3);
+  padding: var(--space-4) var(--space-5);
 }
 
 .cand-intake__text,
@@ -167,15 +153,11 @@
   list-style: none;
 }
 
-.cand-step {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-}
-
+/* 手順は札(.panel)。確かめる段だけは、中の一覧が札なので見出しだけを置く(--review) */
 .cand-step__title {
   margin: 0 0 var(--space-3);
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 0.06em;
 }
 
 .cand-step__hint {
@@ -212,9 +194,7 @@
 
 /* 書き出し: コピーのボタンが主役。中身は必要なときだけ開く */
 .cand-export {
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  min-width: 0;
 }
 
 .cand-export__bar {
@@ -251,7 +231,7 @@
 .cand-export__how code,
 .cand-import__label code {
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--bg-soft);
   color: var(--text);
   font-family: var(--font-mono);
@@ -312,7 +292,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+}
+
+/* 帯の札は一覧の札に近づける(admin.css の札の間 24px より詰める) */
+.is-admin .cand-toolbar {
+  margin-bottom: var(--space-3);
 }
 
 .cand-filter {
@@ -321,14 +307,15 @@
   gap: var(--space-1);
 }
 
+/* 絞り込みは選択の切り替えなので、選んでいるものを墨のベタで示す(.chip と同じ墨の枠・角 4px) */
 .cand-filter__chip {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
   min-height: 30px;
   padding: 4px var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text-muted);
   font: inherit;
@@ -337,13 +324,17 @@
 }
 
 .cand-filter__chip:hover {
+  background: var(--bg-soft);
   color: var(--text);
 }
 
 .cand-filter__chip[aria-pressed="true"] {
-  border-color: var(--text);
-  background: var(--bg-soft);
-  color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+}
+
+.cand-filter__chip[aria-pressed="true"] .cand-filter__count {
+  color: inherit;
 }
 
 .cand-filter__count {
@@ -366,7 +357,7 @@
 .cand-choice__key {
   padding: 0 4px;
   border: 1px solid var(--border-strong);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text-muted);
   font-family: var(--font-mono);
@@ -389,10 +380,6 @@
   background: var(--border);
 }
 
-.cand-list {
-  border: 1px solid var(--border);
-}
-
 /* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す */
 .cand-family[hidden],
 .cand-row[hidden] {
@@ -406,7 +393,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px var(--space-3);
-  padding: 6px var(--space-3);
+  padding: 6px var(--space-4);
   background: var(--bg-soft);
 }
 
@@ -438,13 +425,14 @@
 }
 
 .cand-family__action:hover {
-  border-color: var(--text-subtle);
+  border-color: var(--text);
   color: var(--text);
 }
 
 .cand-family__action[aria-pressed="true"] {
-  border-color: var(--admin-accent);
-  color: var(--admin-accent);
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
 }
 
 .cand-family__note {
@@ -478,7 +466,7 @@
 }
 
 .cand-row[data-decision="hold"] {
-  border-left-color: var(--admin-warn);
+  border-left-color: var(--text-muted);
 }
 
 .cand-row[data-decision="reject"] {
@@ -490,15 +478,15 @@
   text-decoration: line-through;
 }
 
-/* 選んでいる行(row-select)。表の hover の面(--bg-soft)と見分けられるよう、アクセント色を薄く混ぜた面にする */
+/* 選んでいる行(row-select)。表の hover の面(--bg-soft)と見分けられるよう、選択の面(--bg-tint)にする */
 .cand-row[data-selected="true"],
 .cand-table tbody tr[data-selected="true"] {
-  background: color-mix(in srgb, var(--admin-accent) 14%, var(--surface));
+  background: var(--bg-tint);
 }
 
 /* キーボードで今いる行(処理のラジオにフォーカスがある行)。選んでいる行の面と重ならないよう、枠で示す */
 .cand-row:has(.cand-choice input:focus-visible) {
-  outline: 2px solid var(--admin-accent);
+  outline: 2px solid var(--text-muted);
   outline-offset: -2px;
 }
 
@@ -540,34 +528,34 @@
 .row-check__box {
   width: 20px;
   height: 20px;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 3px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   background: var(--surface);
 }
 
 .row-check:hover .row-check__box {
-  border-color: var(--admin-accent);
+  background: var(--bg-soft);
 }
 
 .row-check input:checked + .row-check__box {
-  border-color: var(--admin-accent);
-  background: var(--admin-accent);
+  border-color: var(--text);
+  background: var(--text);
 }
 
-/* 印(チェック)は枠線を傾けて描く(画像を持たない)。塗りの上なので白 */
+/* 印(チェック)は枠線を傾けて描く(画像を持たない)。塗りの上なので地の色 */
 .row-check input:checked + .row-check__box::after {
   content: "";
   display: block;
   width: 6px;
   height: 11px;
   margin: 1px auto 0;
-  border: solid #fff;
+  border: solid var(--bg);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .row-check input:focus-visible + .row-check__box {
-  outline: 2px solid var(--admin-accent);
+  outline: 2px solid var(--text-muted);
   outline-offset: 2px;
 }
 
@@ -597,8 +585,8 @@
 
 .cand-word__tag {
   padding: 0 5px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
@@ -626,9 +614,11 @@
   color: var(--text-muted);
 }
 
+/* 要確認(照合で一致した相手・立項スコアが低い)は、色ではなく墨の 800 で立てる */
 .cand-word__match,
 .cand-word__score.is-doubtful {
-  color: var(--admin-warn);
+  font-weight: 800;
+  color: var(--text);
 }
 
 /* メモは2行で切る(全文は title で出る) */
@@ -704,22 +694,22 @@
 }
 
 .cand-choice__option--expand input:checked + .cand-choice__label {
-  background: var(--admin-accent);
-  color: #fff;
+  background: var(--text);
+  color: var(--bg);
 }
 
 .cand-choice__option--hold input:checked + .cand-choice__label {
-  background: var(--admin-warn);
-  color: #fff;
+  background: var(--text-muted);
+  color: var(--bg);
 }
 
 .cand-choice__option--reject input:checked + .cand-choice__label {
   background: var(--danger);
-  color: #fff;
+  color: var(--bg);
 }
 
 .cand-choice__option input:focus-visible + .cand-choice__label {
-  outline: 2px solid var(--admin-accent);
+  outline: 2px solid var(--text-muted);
   outline-offset: -3px;
 }
 
@@ -746,30 +736,25 @@
   color: inherit;
 }
 
-/* 保留(あとで決める)の語。既定は畳む */
+/* 保留(あとで決める)の語。既定は畳む。畳める札(頭は .panel__summary) */
 .cand-held {
   margin-top: var(--space-4);
 }
 
-.cand-held__summary {
-  padding: var(--space-2) 0;
-  font-size: 14px;
-  color: var(--admin-warn);
-  cursor: pointer;
-}
-
 /* 下端に貼り付くバー: 処理ごとの語数と確定ボタン */
+/* 画面の下端に貼り付く札(墨の枠・白い面。1 語コンソールのアクションバーと同じ組み) */
 .cand-bar {
   position: sticky;
-  bottom: 0;
+  bottom: var(--space-3);
   z-index: 5;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-4);
-  margin-top: var(--space-3);
-  padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -786,17 +771,15 @@
 
 .cand-bar__num {
   margin-left: 4px;
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
-.cand-bar__count--expand .cand-bar__num {
-  color: var(--admin-accent);
-}
-
 .cand-bar__count--hold .cand-bar__num {
-  color: var(--admin-warn);
+  color: var(--text-muted);
 }
 
 .cand-bar__count--reject .cand-bar__num {
@@ -840,24 +823,20 @@
   gap: var(--space-1);
 }
 
-.cand-bar__action--expand {
-  color: var(--admin-accent);
-}
-
 .cand-bar__action--hold {
-  color: var(--admin-warn);
+  color: var(--text-muted);
 }
 
 .cand-bar__action--reject {
   color: var(--danger);
 }
 
-/* 文字だけのボタン(すべて選ぶ・選択を外す)。押せるものなのでアクセント色 */
+/* 文字だけのボタン(すべて選ぶ・選択を外す)。リンクと同じ墨の下線 */
 .cand-link-button {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--admin-accent);
+  color: var(--text);
   font: inherit;
   font-size: 13px;
   text-decoration: underline;
@@ -943,49 +922,77 @@
 }
 
 /* --- すべての語 --- */
+/* 状態の絞り込みと検索を収めた札 */
+.cand-filters {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* 状態のタブ。選んでいるものは墨のベタ(単語の修正の注釈状態のタブと同じ) */
 .cand-status-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px var(--space-4);
-  margin-bottom: var(--space-3);
+  gap: var(--space-1);
   font-size: 13px;
 }
 
 .cand-status-tabs__tab {
-  padding: 4px 0;
-  border-bottom: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
   white-space: nowrap;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+@media (hover: hover) {
+  .cand-status-tabs__tab:hover {
+    background: var(--bg-soft);
+  }
 }
 
 .cand-status-tabs__tab[aria-current="page"] {
-  border-bottom-color: var(--admin-accent);
+  background: var(--text);
+  color: var(--bg);
 }
 
 .cand-status-tabs__count {
-  margin-left: 4px;
   color: var(--text-subtle);
   font-variant-numeric: tabular-nums;
+}
+
+.cand-status-tabs__tab[aria-current="page"] .cand-status-tabs__count {
+  color: inherit;
 }
 
 .cand-search {
   display: flex;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
 }
 
 .cand-search__input {
   flex: 1;
 }
 
+/* 表の札の頭に置く件数 */
 .cand-list-count {
-  margin: 0 0 var(--space-2);
-  font-size: 13px;
-  color: var(--text-subtle);
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
 }
 
 .cand-list-count__limit {
   margin-left: var(--space-2);
-  color: var(--admin-warn);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .cand-table {
@@ -1029,7 +1036,7 @@
   color: var(--text-muted);
 }
 
-/* 状態の文字。色は意味を持つものだけ(保留 = 要対応 / 登録待ち・登録済み = 達成 / 除外 = 沈める)。
+/* 状態の文字。色は意味を持つものだけ(登録待ち・登録済み = 達成 / 保留 = 墨の 800 / 除外 = 沈める)。
    ビューは status を補間して --<status> を付けるが、前処理中の 4 値(--triage・--expanding・--notating・
    --notated)は既定の見た目に任せるので規則を持たない */
 .cand-status {
@@ -1038,7 +1045,8 @@
 }
 
 .cand-status--held {
-  color: var(--admin-warn);
+  font-weight: 800;
+  color: var(--text);
 }
 
 .cand-status--ready,
@@ -1052,19 +1060,24 @@
 }
 
 /* --- 1語の画面 --- */
+/* 1 語の画面は 1 枚の札(.cand-detail-panel)に、語・手がかり・メタを積む */
 .cand-detail__word {
-  margin-bottom: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
 }
 
 .cand-detail {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: 4px var(--space-4);
-  margin: 0 0 var(--space-5);
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
   font-size: 14px;
+}
+
+/* 1 語の手直しは、札の中身(frame)に余白を取る */
+.cand-edit-panel {
+  padding: var(--space-5);
 }
 
 .cand-detail__item {
@@ -1087,7 +1100,7 @@
   }
 
   .cand-steps__count {
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .cand-steps__hint,
