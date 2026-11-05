@@ -12,8 +12,11 @@ class ShareCardTypesetterTest < ActiveSupport::TestCase
     assert_equal [ [ "天上天下唯我独尊" ], 64 ], layout_of("天上天下唯我独尊")
     # 全角 10 字 + 字間 9 つ = 10.27em → 606 / 10.27 = 59.0px
     assert_equal [ [ "好きこそ物の上手なれ" ], 59 ], layout_of("好きこそ物の上手なれ")
-    # 半角の英字は実測の字幅で見積もるので、同じ字数の全角より大きく組める
+    # 半角の英字は実測の字幅で見積もるので、同じ字数の全角より大きく組める。
+    # 太字(Bold)は欧文の字幅が広いぶん小さく組み、全角は太さによらず 1em で見積もる
     assert_operator fit("abcdefghij").font_size, :>, fit("あいうえおかきくけこ").font_size
+    assert_equal [ 58, 55 ], [ fit("abcdefghij" * 2).font_size, fit("abcdefghij" * 2, bold: true).font_size ]
+    assert_equal fit("あいうえおかきくけこ").font_size, fit("あいうえおかきくけこ", bold: true).font_size
 
     # 1 行で最小級数を割る長さになったら 2 行に割る(全角 10 字までは 1 行、11 字からは 2 行)
     assert_equal 1, fit("あ" * 10).lines.size
@@ -52,8 +55,8 @@ class ShareCardTypesetterTest < ActiveSupport::TestCase
 
   private
 
-  def fit(text)
-    ShareCardTypesetter.new(text, width: 606, tracking: 0.03).fit(STEPS)
+  def fit(text, bold: false)
+    ShareCardTypesetter.new(text, width: 606, tracking: 0.03, bold:).fit(STEPS)
   end
 
   def layout_of(text)

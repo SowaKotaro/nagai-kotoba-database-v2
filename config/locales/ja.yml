@@ -122,8 +122,6 @@ ja:
       # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
       reading_characters: "READING / %{count} CHARACTERS"
   shared:
-    radial_art:
-      aria: "%{labels} を円の上に並べ、多いものほど外へ伸ばして結んだ図"
     feature_glossary:
       examples_separator: "　／　"
     kana_heat_grid:
@@ -1429,10 +1427,8 @@ ja:
       title: "ジャンルから探す"
       description: "収録している日本語の長い言葉を、大・中・小のジャンル階層から辿れます。各分類の公開件数つき。"
       lead:
-        - ["%{count} の分類を、", "大・中・小の", "階層を", "たどって", "探せます。"]
+        - ["大・中・小の", "ジャンルの", "階層を", "たどって", "探せます。"]
         - ["数字は", "その", "ジャンルに", "含まれる", "公開語義の", "数です。"]
-      # レールの数(公開語をもつ分類の数)の単位
-      count_unit: "分類"
       # 大分類の折り畳みを収めた札の見出し
       panel_title: "大分類"
       whole: "%{name} 全体を見る"

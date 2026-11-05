@@ -120,7 +120,7 @@
 - 背景・現状: 2026-09-17 の改善調査(A-2)より。`vendor/javascript/plotly.min.js` は **生 4.56MB / gzip 1.33MB** で、サイトのスタイル全部の 42 倍・自前 JS 全部の 60 倍。用途は `/stats` の「ジャンル別の語義数」サンバーストと連動する積み上げ棒だけ(`stats/_genre_sunburst.html.erb:5`・`genre_sunburst_controller.js:63`)で、配色も `--chart` の濃淡 10 段のみ。遅延読み込みはしているが、統計ページを開いた人は必ず 1.33MB を取る。design.md §6 の「重い JS を足さない」と食い違う。
 - 内容:
   - [ ] **自前 SVG で今と同じ掘り下げ(`maxdepth: 2`)ができるかを小さく試作して見せる**
-  - [ ] サンバーストをインライン SVG で描く(土台は `RadialChart`・`KanaRing` の円弧計算。扇1枚 = 1パス)。掘り下げは Stimulus のクリックハンドラ
+  - [ ] サンバーストをインライン SVG で描く(土台は `KanaRing` の円弧計算。扇1枚 = 1パス)。掘り下げは Stimulus のクリックハンドラ
   - [ ] 連動する積み上げ棒は `div` の幅% で描く
   - [ ] 数値はホバーではなく直書きする(design.md §6「ホバーでしか得られない情報を作らない」)
   - [ ] 置き換え後に `vendor/javascript/plotly.min.js` を削除する（importmap には pin しておらず、`app/assets/config/manifest.js` の `link_tree` で Sprockets から配信している）

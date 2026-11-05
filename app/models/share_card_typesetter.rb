@@ -1,9 +1,10 @@
 # 共有カード(WordShareCard)の文字を行に割り、枠の幅に収まる級数を選ぶ値オブジェクト。
 #
 # rsvg-convert は SVG の文字を折り返さないので、行の割り方と級数はこちらで決めて渡す。
-# 字幅は本番で焼くときの書体 Noto Sans CJK JP(Regular)の送り幅で見積もる:
-# 全角(かな・漢字・全角記号)は 1em、半角の英数字・記号は ASCII_ADVANCES(実フォントから採寸)、
-# 半角カナは 0.5em。librsvg の字間(letter-spacing)は字と字のあいだにだけ効く(実測)。
+# 字幅は本番で焼くときの書体 Noto Sans CJK JP(Regular と Bold)の送り幅で見積もる:
+# 全角(かな・漢字・全角記号)は太さによらず 1em、半角の英数字・記号は ASCII_ADVANCES / BOLD_ASCII_ADVANCES
+# (実フォントから採寸。Bold の欧文は Regular より 1 割弱広い)、半角カナは 0.5em。
+# librsvg の字間(letter-spacing)は字と字のあいだにだけ効き、font-feature-settings(palt)は効かない(どちらも実測)。
 # 字幅は Noto Sans CJK JP の実測なので、ほかの日本語書体で焼くと組みがずれうる
 # (ShareCardRenderer.japanese_font_installed? は、何か日本語の書体があるかしか見ない)。
 # ワードクラウド(MorphemeCloud#char_width)にも別の見積もりがある(描画系が違うので表は分けている)。
@@ -39,6 +40,15 @@ class ShareCardTypesetter
     606, 563, 618, 510, 620, 554, 325, 564, 607, 275, 275, 552, 284, 926, 610, 606, # ` a-o
     620, 620, 388, 468, 377, 607, 521, 802, 498, 521, 475, 338, 270, 338, 555       # p-z { | } ~
   ].freeze
+  # 同じ範囲の Noto Sans CJK JP Bold の実測値(bold: true で組むときに使う)。
+  BOLD_ASCII_ADVANCES = [
+    227, 370, 574, 590, 590, 963, 740, 325, 378, 378, 507, 590, 325, 370, 325, 387,  # 空白 ! " # $ % & ' ( ) * + , - . /
+    590, 590, 590, 590, 590, 590, 590, 590, 590, 590, 325, 325, 590, 590, 590, 514,  # 0-9 : ; < = > ?
+    1007, 641, 681, 656, 714, 615, 585, 717, 757, 330, 568, 686, 578, 853, 749, 770, # @ A-O
+    667, 770, 682, 624, 625, 748, 619, 915, 627, 580, 613, 378, 387, 378, 590, 567,  # P-Z [ \ ] ^ _
+    626, 591, 644, 527, 644, 581, 372, 597, 640, 304, 306, 604, 315, 964, 641, 626,  # ` a-o
+    644, 644, 436, 495, 421, 637, 576, 863, 562, 574, 511, 378, 296, 378, 590        # p-z { | } ~
+  ].freeze
   HALFWIDTH_KANA_ADVANCE = 0.5
   # アクセント付きの欧文字(Latin-1 補助・拡張)。和文書体の中では半角のプロポーショナルなので平均値で見積もる。
   LATIN_EXTENDED_ADVANCE = 0.6
@@ -57,9 +67,12 @@ class ShareCardTypesetter
   # 制御文字(改行・タブは squish が空白に寄せたあと)。SVG の XML として不正になるので取り除く。
   CONTROL_CHARS = /[\x00-\x1F\x7F]/
 
-  def initialize(text, width:, tracking:)
+  # bold: 太字(Bold)で焼く文字か。欧文の字幅の表を切り替える。
+  def initialize(text, width:, tracking:, bold: false)
     @width = width
     @tracking = tracking
+    @bold = bold
+    @ascii_advances = bold ? BOLD_ASCII_ADVANCES : ASCII_ADVANCES
     @chars = []
     @glued = Set.new # この位置の字の前では割らない(WORD_JOINER があった所)
     text.to_s.squish.gsub(CONTROL_CHARS, "").each_grapheme_cluster do |cluster|
@@ -200,7 +213,7 @@ class ShareCardTypesetter
 
   def advance(char)
     code = char.ord
-    if code.between?(0x20, 0x7E) then ASCII_ADVANCES[code - 0x20] / 1000.0
+    if code.between?(0x20, 0x7E) then @ascii_advances[code - 0x20] / 1000.0
     elsif code.between?(0xFF61, 0xFF9F) then HALFWIDTH_KANA_ADVANCE
     elsif code.between?(0x80, 0x24F) then LATIN_EXTENDED_ADVANCE
     else 1.0
@@ -217,6 +230,6 @@ class ShareCardTypesetter
   # 先頭 count 字に「…」を付けた組み手。WORD_JOINER の位置は引き継ぐ。
   def truncated(count)
     kept = @chars.first(count).each_with_index.map { |char, index| @glued.include?(index) ? WORD_JOINER + char : char }
-    self.class.new("#{kept.join.rstrip}#{ELLIPSIS}", width: @width, tracking: @tracking)
+    self.class.new("#{kept.join.rstrip}#{ELLIPSIS}", width: @width, tracking: @tracking, bold: @bold)
   end
 end

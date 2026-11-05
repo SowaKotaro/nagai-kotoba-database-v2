@@ -8,6 +8,10 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     get words_path
     assert_response :success
 
+    # ページの頭のレールには、この面の件数だけを単位つきで立てる
+    assert_select ".page-header--count .page-header__rail > .page-header__count",
+                  text: "#{ActiveSupport::NumberHelper.number_to_delimited(Word.annotated.count)}#{I18n.t("words.index.count_unit")}"
+
     assert_select "article.entry-row"
     # 見出し語(surface)が詳細へのリンク
     assert_select "a.entry-row__surface[href=?]", word_path(words(:abc_murder)), text: words(:abc_murder).surface

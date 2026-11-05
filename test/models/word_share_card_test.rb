@@ -31,8 +31,8 @@ class WordShareCardTest < ActiveSupport::TestCase
   # リファクタリング(大規模改修)のあいだ、カードの入力(代表語義・円環の点・標識・テンプレート)に触れても
   # 版が変わらないことを確かめるための値。意匠を意図して変えたときは、ここを新しい値に更新する。
   test "フィクスチャの語の版は、いまの値のまま" do
-    assert_equal "ba4090a8b4c0c919", WordShareCard.new(words(:abc_murder)).digest
-    assert_equal "081b6da5155bc686", WordShareCard.new(words(:curry)).digest
+    assert_equal "2099a6904cbf6f52", WordShareCard.new(words(:abc_murder)).digest
+    assert_equal "eacdc64127ad0ce7", WordShareCard.new(words(:curry)).digest
   end
 
   test "語義(読み)の無い語は描けない" do
