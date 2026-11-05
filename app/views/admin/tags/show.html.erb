@@ -1,16 +1,18 @@
 <% content_for :title, @kind.label %>
 
-<div class="page-eyebrow"><span><%= link_to t("admin.tags.title"), admin_tags_path %></span></div>
-<h1 class="page-title"><%= @kind.label %></h1>
-<p class="section-label"><%= t("admin.tags.show_lead") %></p>
+<header class="page-header">
+  <h1 class="page-title"><%= @kind.label %></h1>
+  <p class="page-lead"><%= t("admin.tags.show_lead") %></p>
+</header>
 <% if @kind.seed_managed_kind? %>
   <p class="field-hint"><%= t("admin.tags.seed_note") %></p>
 <% end %>
 
 <% if @kind.creatable? %>
   <%# 新規追加: 名前だけの単純マスタなので、この1パネルで完結させる。 %>
-  <details class="tag-add" <%= "open" if @new_record&.errors&.any? %>>
-    <summary class="tag-add__summary"><%= t("admin.tags.add.summary", kind: @kind.label) %></summary>
+  <details class="panel tag-add" <%= "open" if @new_record&.errors&.any? %>>
+    <summary class="panel__summary"><%= t("admin.tags.add.summary", kind: @kind.label) %></summary>
+    <div class="panel__body">
     <p class="tag-add__hint"><%= t("admin.tags.add.hint") %></p>
 
     <% if @new_record&.errors&.any? %>
@@ -28,14 +30,16 @@
       </div>
       <%= form.submit t("admin.tags.add.submit"), class: "btn btn--primary" %>
     <% end %>
+    </div>
   </details>
 <% end %>
 
 <% if @records.any? %>
   <%# 統合: source を付けている全データを target に付け替えて source を削除する。
       ジャンルは同じ階層同士でのみ統合できる。 %>
-  <details class="tag-merge">
-    <summary class="tag-merge__summary"><%= t("admin.tags.merge.summary") %></summary>
+  <details class="panel tag-merge">
+    <summary class="panel__summary"><%= t("admin.tags.merge.summary") %></summary>
+    <div class="panel__body">
     <p class="tag-merge__hint"><%= t("admin.tags.merge.hint#{'_genre' if @kind.hierarchical?}") %></p>
 
     <%= form_with url: admin_merge_tags_path(@kind.key), method: :post, class: "tag-merge__form",
@@ -57,9 +61,11 @@
       </div>
       <%= submit_tag t("admin.tags.merge.submit"), class: "btn" %>
     <% end %>
+    </div>
   </details>
 
   <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
+  <section class="panel">
   <div class="table-scroll">
   <table class="data-table tag-table">
     <thead>
@@ -101,6 +107,7 @@
     </tbody>
   </table>
   </div>
+  </section>
 <% else %>
   <p class="empty-note"><%= t("admin.tags.empty") %></p>
 <% end %>

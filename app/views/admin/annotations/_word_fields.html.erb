@@ -14,7 +14,7 @@
 <% end %>
 
 <%# 表層形の訂正。変更すると保存時に文字種も再生成される %>
-<div class="ann-surface">
+<div class="panel ann-surface">
   <label class="ann-surface__label" for="word_surface"><%= t("admin.annotations.surface") %></label>
   <%= form.text_area :surface, rows: 1, class: "ann-surface__input", id: "word_surface" %>
   <span class="ann-surface__note"><%= t("admin.annotations.surface_note") %></span>

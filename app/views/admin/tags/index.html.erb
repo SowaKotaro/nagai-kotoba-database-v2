@@ -1,11 +1,13 @@
 <% content_for :title, t("admin.tags.title") %>
 
-<div class="page-eyebrow"><span><%= t("admin.tags.eyebrow") %></span></div>
-<h1 class="page-title"><%= t("admin.tags.title") %></h1>
-<p class="section-label"><%= t("admin.tags.lead") %></p>
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.tags.title") %></h1>
+  <p class="page-lead"><%= t("admin.tags.lead") %></p>
+</header>
 
-<%# 種別ごとの入口。カードの組みはダッシュボードと共通(components.css の .admin-card) %>
-<ul class="admin-dash-grid">
+<%# 種別ごとの入口。カードの組みはダッシュボードと共通(components.css の .admin-card)。5 枚が 1 段に並ぶ幅の基準(compact) %>
+<section class="panel">
+<ul class="admin-dash-grid admin-dash-grid--compact">
   <% @kinds.each do |kind| %>
     <li class="admin-card">
       <%= link_to admin_tag_kind_path(kind.key), class: "admin-card__link" do %>
@@ -17,3 +19,4 @@
     </li>
   <% end %>
 </ul>
+</section>

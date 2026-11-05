@@ -1,299 +1,1295 @@
 /* =====================================================================
- アノテーション・コンソール(管理者専用)。docs/design.md 準拠。
- 本編と同じ器(白い面・細罫・角丸)のまま、
- 1画面で多くを捌けるよう級数と余白だけを詰めた高密度レイアウト。
- このファイルの色は無彩色のトークンと --bg-tint(選択中の淡い面)、状態の --success / --danger だけ。
- 管理画面の青(--admin-accent)は admin.css がリンクやボタンに付ける。
- チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
- ===================================================================== */
+   アノテーション・コンソール(管理者専用)。docs/design.md §10 準拠。
+   公開側と同じ札(墨の 1px の枠・角 8px の白い面)・チップ(墨の枠・角 4px)・ボタンで組み、
+   広い画面では「左に見出し語と提案(追従)、右に入力の札」の 2 カラムにする(幅の上限は 1440px。admin.css)。
+   このファイルの色は無彩色のトークンと --bg-tint(選択中の淡い面)、状態の --success / --danger だけ。
+   チップ選択は極力 JS レス(隠し input + :has() で状態表現)。
+   ===================================================================== */
 
 /* スマホ・タブレットでのダブルタップ拡大を無効化し、連続タップでサクサク
- アノテーションを流せるようにする。ピンチ操作での拡大は残す(アクセシビリティ配慮)。 */
-.ann { position: relative; touch-action: manipulation; }
-
-/* 上部ステータス */
-.ann-bar {
- display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
- border-bottom: 1px solid var(--border);
- padding-bottom: var(--space-2); margin-bottom: var(--space-4);
+   アノテーションを流せるようにする。ピンチ操作での拡大は残す(アクセシビリティ配慮)。 */
+.ann {
+  position: relative;
+  touch-action: manipulation;
 }
-.ann-bar__counter { font-size: 13px; color: var(--text-muted); }
-.ann-bar__counter b { color: var(--text); font-weight: 400; }
-.ann-bar__counter .rest { color: var(--text); }
-.ann-bar__legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-subtle); }
-.ann-bar__legend key { font-family: var(--font-mono); color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 1px 5px; margin-right: 6px; }
 
-/* 提案キューの絞り込み・並べ替え(Issue 67)。小さなリンク、選択中は本文色(--text) */
-.ann-queue-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; margin-bottom: var(--space-4); }
-.ann-queue-filter__label { color: var(--text-subtle); }
-.ann-queue-filter__link { color: var(--text-muted); text-decoration: none; }
-.ann-queue-filter__link:hover { color: var(--text); text-decoration: underline; }
-.ann-queue-filter__link.is-on { color: var(--text); font-weight: 400; }
-.ann-queue-filter__sep { color: var(--border-strong); }
+/* --- 2 カラム(1 語コンソール・単語の修正・デッキの 1 枚) ---------------------
+   左(.ann-side)は見出し語・メタ・Claude の提案。右(.ann-main)は入力の札。
+   左は画面に貼り付ける(右の入力が長くても、見出し語と提案が見えたまま入力できる)。
+   1023px 以下(design.md §7 の切り替えの 1 つ)は縦に積む */
+.ann-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, min(30%, 420px)) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
 
-/* 対象語 */
-.ann-eyebrow { font-size: 12px; color: var(--text-subtle); display: flex; gap: 12px; align-items: center; }
-.ann-eyebrow .no { font-family: var(--font-mono); color: var(--text-muted); }
-.ann-word { font-weight: 400; font-size: clamp(24px, 4vw, 34px); line-height: 1.3; margin: var(--space-1) 0 2px; overflow-wrap: anywhere; }
-.ann-word-meta { font-size: 12px; color: var(--text-subtle); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: baseline; }
-/* 1語の再調査用 JSON へ(Claude Code の /reannotation に渡す) */
-.ann-word-meta__reresearch { margin-left: auto; color: var(--text); text-decoration: none; }
-.ann-word-meta__reresearch:hover { text-decoration: underline; }
+.ann-side {
+  position: sticky;
+  top: var(--space-5);
+  min-width: 0;
+  max-height: calc(100dvh - var(--space-6));
+  overflow-y: auto;
+}
 
-/* 用語解説(Issue 39)。特徴選択の脇に置く控えめな開閉パネル(hover 限定にしない)。
-   一覧の中身と高さは公開側と共有の .feature-glossary(components.css)が持ち、ここでは枠だけ足す */
-.ann-glossary { margin-bottom: var(--space-2); }
-.ann-glossary__summary { cursor: pointer; font-size: 12px; color: var(--text-subtle); padding: 2px 0; }
-.ann-glossary__summary:hover { color: var(--text); }
-.ann-glossary[open] .ann-glossary__summary { color: var(--text); }
-.ann-glossary__list { margin: var(--space-2) 0 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); padding: var(--space-3); }
+.ann-main {
+  min-width: 0;
+}
 
-/* Claude の提案パネル(Issue 38)。左の太い罫(3px の --text)で「機械の下書き」であることを示す */
-.ann-proposal { border: 1px solid var(--border); border-left: 3px solid var(--text); border-radius: var(--radius); background: var(--bg-soft); padding: var(--space-3) var(--space-4); margin-top: var(--space-4); }
-.ann-proposal__head { display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-2); }
-.ann-proposal__head .spacer { flex: 1; }
-.ann-proposal__title { font-size: 12px; font-weight: 400; color: var(--text); }
-.ann-proposal__confidence { font-size: 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--text-muted); }
-.ann-proposal__confidence--low { color: var(--danger); border-color: var(--danger); }
-/* 反映済み/見送りの状態バッジ(注釈済みの語を見直しているとき)。--applied(反映済み)は基本の
-   .ann-proposal__status(--success)のままなので規則を持たない。
+/* 縦に積む幅では、下端のバー(.ann-actionbar。保存して次へ)を、ページを開いた時点から画面の下端に出す。
+   sticky の要素は親の箱の外へは出られないので、バーがフォーム(.ann-main)の中にある限り、上の見出し語と提案を
+   スクロールで通り過ぎてフォームが画面に入るまで現れない。アノテーションの 9 割は「提案を読む → 保存して次へ」で、
+   毎回スクロールを挟むと速度が落ちる(2026-11-05 オーナー指摘。スマホからも流す)。
+   そこでフォームの箱を消し(display: contents。送信・Stimulus は DOM のままなので変わらない)、バーの親を
+   ページの頭から始まる .ann-layout にする。grid の項目の sticky は自分の行の中でしか動かないので、ここは flex の縦積みにする */
+@media (max-width: 1023px) {
+  .ann-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .ann-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    margin-bottom: var(--space-5);
+  }
+
+  .ann-main {
+    display: contents;
+  }
+
+  /* 開いたとき(語を送るたび)に、ページ先頭ではなく見出し語を画面の上端に合わせる合図。
+     queue_nav_controller.js が読む(切り替え幅を JS に写さないため、ここで持つ) */
+  .ann {
+    --queue-nav-scroll: heading;
+  }
+
+  /* 見出し語の上は 12px だけ空ける。html の scroll-padding-top(24px。base.css)に足されるので、差を引いておく */
+  .ann-layout {
+    scroll-margin-top: calc(var(--space-3) - var(--space-5));
+  }
+}
+
+/* --- 上部ステータス(残り件数・キー操作の凡例・デッキへ) --- */
+.ann-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--text-muted);
+}
+
+.ann-bar__counter {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.ann-bar__counter .rest {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ann-bar__legend {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ann-bar__legend key {
+  margin-right: 6px;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* --- 提案キューの絞り込み・並べ替え(Issue 67)。選んでいるものは墨の 800 --- */
+.ann-queue-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+  font-size: 13px;
+}
+
+.ann-queue-filter__label {
+  color: var(--text-subtle);
+}
+
+.ann-queue-filter__link {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.ann-queue-filter__link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.ann-queue-filter__link.is-on {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.ann-queue-filter__sep {
+  color: var(--border-strong);
+}
+
+/* --- 対象語 --- */
+.ann-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ann-eyebrow .no {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.ann-word {
+  margin: var(--space-1) 0 0;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.ann-word-meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+/* 1 語の再調査用 JSON へ(Claude Code の /reannotation に渡す) */
+.ann-word-meta__reresearch {
+  margin-left: auto;
+  color: var(--text);
+}
+
+/* --- 用語解説(Issue 39)。特徴選択の脇に置く控えめな開閉パネル(hover 限定にしない)。
+   一覧の中身と高さは公開側と共有の .feature-glossary(components.css)が持ち、ここでは枠だけ足す --- */
+.ann-glossary {
+  margin-bottom: var(--space-2);
+}
+
+.ann-glossary__summary {
+  padding: 2px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.ann-glossary__summary:hover,
+.ann-glossary[open] .ann-glossary__summary {
+  color: var(--text);
+}
+
+.ann-glossary__list {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+
+/* --- Claude の提案パネル(Issue 38) ---
+   「機械の下書き」であることは、札の面を一段沈めた --bg-soft にして示す(白い札は人が確定する入力) */
+.ann-proposal {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+
+.ann-proposal__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.ann-proposal__head .spacer {
+  flex: 1;
+}
+
+.ann-proposal__title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+/* 確信度・立項スコア・状態のバッジは、タグと同じ墨の枠の小さな角 */
+.ann-proposal__confidence,
+.ann-proposal__entry,
+.ann-proposal__status {
+  padding: 0 8px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ann-proposal__confidence--low,
+.ann-proposal__entry--concern {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* 反映済み/見送りの状態バッジ(注釈済みの語を見直しているとき)。--applied(反映済み)は達成なので緑。
    確信度の修飾子(.ann-proposal__confidence--*)は提案 JSON の値をそのまま補間していて、規則があるのは
    --low だけ。--high・--medium と想定外の値は既定の見た目になる(取り込み側は値域を検証しない) */
-.ann-proposal__status { font-size: 11px; border: 1px solid var(--success); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--success); }
-.ann-proposal__status--dismissed { color: var(--text-subtle); border-color: var(--border-strong); }
-/* 立項スコア(Issue 39)。3以下は赤でオーナー判断を促す */
-.ann-proposal__entry { font-size: 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 1px 8px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.ann-proposal__entry--concern { color: var(--danger); border-color: var(--danger); }
-.ann-proposal__notes--entry { color: var(--danger); }
+.ann-proposal__status {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.ann-proposal__status--dismissed {
+  color: var(--text-subtle);
+  border-color: var(--border-strong);
+}
+
+.ann-proposal__notes--entry {
+  color: var(--danger);
+}
+
 /* 複数語義(同音異義語・Issue 41)。語義ごとに細罫で区切り、小さく語義番号を打つ */
-.ann-proposal__senses-note { font-size: 12px; color: var(--text-muted); margin: 0 0 var(--space-2); }
-.ann-proposal__sense { border-top: 1px solid var(--border); padding-top: var(--space-2); margin-top: var(--space-2); }
-.ann-proposal__sense:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
-.ann-proposal__sense-no { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted); margin-bottom: 4px; }
-.ann-proposal__grid { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; margin: 0; }
-.ann-proposal__grid dt { font-size: 12px; color: var(--text-subtle); padding-top: 3px; }
-.ann-proposal__grid dd { margin: 0; font-size: 14px; }
-.ann-proposal__grid .sep { color: var(--text-subtle); margin: 0 4px; }
-.ann-proposal__new { font-size: 11px; color: var(--text); border: 1px solid var(--text); border-radius: var(--radius-pill); padding: 0 8px; margin-left: 6px; }
+.ann-proposal__senses-note {
+  margin: 0 0 var(--space-2);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.ann-proposal__sense {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-strong);
+}
+
+.ann-proposal__sense:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ann-proposal__sense-no {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.ann-proposal__grid {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+
+.ann-proposal__grid dt {
+  padding-top: 3px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ann-proposal__grid dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ann-proposal__grid .sep {
+  margin: 0 4px;
+  color: var(--text-subtle);
+}
+
+.ann-proposal__new {
+  margin-left: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text);
+}
+
 /* 新設候補のワンタップ作成ボタン(Issue 66)。バッジと同じ見た目で、hover で塗る */
-.ann-proposal__new-form { display: inline; margin: 0; }
+.ann-proposal__new-form {
+  display: inline;
+  margin: 0;
+}
+
 /* デッキでは input[type=submit] で描く(フォームを入れ子にできないため)。
    ボタン要素と同じ見た目になるよう、書体と字間は本文から継がせる */
-.ann-proposal__new--btn { background: transparent; cursor: pointer; line-height: 1.6; font-family: inherit; letter-spacing: inherit; }
-.ann-proposal__new--btn:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
-/* 提案パネルの特徴(該当部分つき)。1件ずつ縦に積み、該当部分は小さく添える */
-.ann-proposal__feature { display: block; margin: 2px 0; }
-.ann-proposal__feature b { font-weight: 400; }
-.ann-proposal__feature-target { font-size: 12px; color: var(--text-subtle); margin-left: 8px; }
-.ann-proposal__notes { font-size: 13px; color: var(--text-muted); margin: var(--space-2) 0 0; }
+.ann-proposal__new--btn {
+  background: var(--surface);
+  cursor: pointer;
+  line-height: 1.6;
+  font-family: inherit;
+  letter-spacing: inherit;
+}
 
-/* スティッキー引き継ぎ(Issue 37)。アクションバー左端の小さなトグル */
-.ann-sticky { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); cursor: pointer; }
-.ann-sticky:has(.ann-sticky__input:checked) { color: var(--text); }
+.ann-proposal__new--btn:hover {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
 
-/* 表層形の訂正(Issue 36: 編集画面をコンソールへ統合)。誤字直し用の控えめな1行 */
-.ann-surface { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: var(--space-3) 0 0; }
-.ann-surface__label { font-size: 12px; color: var(--text-subtle); }
-/* 表層形は textarea。長い語(例: 50字超)も折り返して全文が見えるよう全幅・自動高 */
+/* 提案パネルの特徴(該当部分つき)。1 件ずつ縦に積み、該当部分は小さく添える */
+.ann-proposal__feature {
+  display: block;
+  margin: 2px 0;
+}
+
+.ann-proposal__feature-target {
+  margin-left: var(--space-2);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ann-proposal__notes {
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* --- スマホ幅で「提案を読む → 保存して次へ」を 1 画面に収める ---
+   アノテーションの 9 割は、提案を全部読んで保存するだけ。iPhone 17(402×874)の Safari で、ステータスバーと
+   下端に浮かぶアドレスバーを除いた約 720px に、上部ステータス・見出し語・提案の札・下端のバー(106px)を収めたい。
+   読む面(提案の値)の字の大きさは保ったまま、行の間と札の内側の余白、ラベルの折り返しを詰める
+   (実測は docs/design.md §10.1.2)。開いたときの位置は queue_nav_controller.js の scrollToHeading */
+@media (max-width: 560px) {
+  /* 上部ステータスと絞り込みの下の余白(16px)は詰めない。開くと見出し語の 12px 上が画面の上端になるので、
+     詰めるとその上の行の端が画面の上端に切れて覗く */
+  .ann-bar {
+    padding-bottom: var(--space-2);
+  }
+
+  .ann-queue-filter {
+    row-gap: 2px;
+  }
+
+  .ann-word-meta {
+    margin: var(--space-1) 0 var(--space-3);
+  }
+
+  .ann-proposal {
+    padding: var(--space-3);
+  }
+
+  .ann-proposal__head {
+    margin-bottom: var(--space-2);
+  }
+
+  /* ラベルの列は最長のラベル(エンティティ)の幅にする。固定の 76px では折り返して 1 行増える */
+  .ann-proposal__grid {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 2px var(--space-3);
+  }
+
+  .ann-proposal__grid dt {
+    white-space: nowrap;
+  }
+
+  .ann-proposal__grid dd {
+    line-height: 1.6;
+  }
+
+  .ann-proposal__notes {
+    margin-top: var(--space-2);
+    line-height: 1.6;
+  }
+}
+
+/* --- スティッキー引き継ぎ(Issue 37)。アクションバー左端の小さなトグル --- */
+.ann-sticky {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ann-sticky:has(.ann-sticky__input:checked) {
+  color: var(--text);
+  font-weight: 800;
+}
+
+/* --- 表層形の訂正(Issue 36)。誤字直し用の札(札の頭に当たるラベルと、全幅の入力) --- */
+.ann-surface {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-5) var(--space-4);
+}
+
+.ann-surface__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* 表層形は textarea。長い語(例: 50 字超)も折り返して全文が見えるよう全幅・自動高 */
 .ann-surface__input {
- flex: 1 1 100%; width: 100%; box-sizing: border-box;
- font-weight: 400; font-size: 16px; line-height: 1.5;
- padding: 6px 10px; margin: 0; resize: none; field-sizing: content;
- min-height: 2em; white-space: pre-wrap; overflow-wrap: anywhere;
+  flex: 1 1 100%;
+  width: 100%;
+  min-height: 2em;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
+  field-sizing: content;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
-.ann-surface__note { font-size: 12px; color: var(--text-subtle); }
 
-/* 語義パネル */
-.ann-sense { border-radius: var(--radius-lg); background: var(--surface); padding: var(--space-4) var(--space-5) var(--space-5); margin-top: var(--space-5); }
+.ann-surface__note {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* --- 語義の札(.panel。札どうしの間は admin.css が空ける) ---
+   頭(番号と「この語義を削除」)を墨の罫で中身と分け、中身の行は 1px の隙間で仕切る(docs/design.md §3) */
 /* 最低限の項目(読み・語種・ジャンル・品詞・エンティティ)が揃った語義。
- 保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
- 番号のバッジを緑のベタにする(.ann-sense は枠を持たない)。 */
-.ann-sense.is-complete .ann-sense__stamp { background: var(--success); color: var(--bg); }
-.ann-sense__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-3); }
-.ann-sense__stamp { background: var(--bg-soft); color: var(--text-muted); border-radius: var(--radius-pill); font-size: 12px; font-weight: 400; padding: 3px 12px; }
-.ann-sense__del { font-size: 12px; color: var(--text-subtle); background: transparent; border: 0; cursor: pointer; padding: 6px 8px; }
-.ann-sense__del:hover { color: var(--danger); }
+   保存の可否とは無関係な、注釈が行き届いたことの目印(sense-completeness)。
+   達成の印として、番号のバッジを緑のベタにする */
+.ann-sense.is-complete .ann-sense__stamp {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--bg);
+}
 
-/* ラベル列 + 値列 */
-.ann-row { display: grid; grid-template-columns: 92px 1fr; gap: 4px 18px; align-items: start; padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
-.ann-row:last-child { border-bottom: 0; }
-.ann-row__label { font-size: 12px; color: var(--text-subtle); padding-top: 8px; }
+.ann-sense__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--text);
+}
 
-/* 読みも textarea。長い読み(例: 70字超)を折り返して全文表示 */
+.ann-sense__stamp {
+  padding: 0 12px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.9;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.ann-sense__del {
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text-subtle);
+  cursor: pointer;
+}
+
+.ann-sense__del:hover {
+  color: var(--danger);
+}
+
+.ann-sense__rows {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+/* --- ラベル列 + 値列 --- */
+.ann-row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  align-items: start;
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface);
+}
+
+.ann-row__label {
+  padding-top: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+/* 読みも textarea。長い読み(例: 70 字超)を折り返して全文表示 */
 .ann-reading {
- width: 100%; box-sizing: border-box; display: block;
- font-size: 16px; line-height: 1.5;
- padding: 6px 10px; margin: 0; resize: none; field-sizing: content;
- min-height: 2em; white-space: pre-wrap; overflow-wrap: anywhere;
+  display: block;
+  width: 100%;
+  min-height: 2em;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
+  field-sizing: content;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
-.ann-derived { display: flex; gap: 14px; flex-wrap: wrap; margin-top: var(--space-2); font-size: 12px; color: var(--text-subtle); }
-.ann-derived b { font-family: var(--font-mono); color: var(--text); font-weight: 400; }
 
-/* チップ(隠し input + :has)。見た目用のクラスだが、JS も参照する: .ann-chip は genre_picker_controller.js が
-   作って探し、.ann-chip__input は inline_add_controller.js が探す。改名するなら JS も直す */
-.ann-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.ann-derived {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ann-derived b {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--text);
+}
+
+/* --- チップ(隠し input + :has)。公開側のチップ(.check-chip__face)と同じ、墨の枠・角 4px・選択は墨のベタ。
+   見た目用のクラスだが、JS も参照する: .ann-chip は genre_picker_controller.js が作って探し、
+   .ann-chip__input は inline_add_controller.js が探す。改名するなら JS も直す --- */
+.ann-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
 .ann-chip {
- position: relative; display: inline-flex; align-items: center; gap: 6px;
- border-radius: var(--radius-pill);
- color: var(--text-muted); background: var(--surface); border: 1px solid var(--border-strong);
- font-family: inherit; font-size: 13.5px; line-height: 1.3;
- padding: 6px 14px; min-height: 32px; cursor: pointer; user-select: none;
- transition: background var(--transition), color var(--transition), border-color var(--transition);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 14px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
 }
-.ann-chip:hover { background: var(--bg-soft); border-color: var(--text-subtle); color: var(--text); }
+
+.ann-chip:hover {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
 /* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
- (単語の修正の一覧の「まとめて外す」で、選択した語に共通しない特徴のチップを隠す) */
-.ann-chip[hidden] { display: none; }
-.ann-chip__input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
-.ann-chip:has(.ann-chip__input:checked) { background: var(--text); border-color: var(--text); color: var(--bg); }
-.ann-chip:has(input[type="radio"].ann-chip__input:checked)::before { content: "\25CF"; font-size: 8px; color: currentColor; }
-.ann-chip:has(.ann-chip__input:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
+   (単語の修正の一覧の「まとめて外す」で、選択した語に共通しない特徴のチップを隠す) */
+.ann-chip[hidden] {
+  display: none;
+}
+
+.ann-chip__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.ann-chip:has(.ann-chip__input:checked) {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+.ann-chip:has(input[type="radio"].ann-chip__input:checked)::before {
+  content: "\25CF";
+  font-size: 8px;
+  color: currentColor;
+}
+
+.ann-chip:has(.ann-chip__input:focus-visible) {
+  outline: 2px solid var(--text-muted);
+  outline-offset: 2px;
+}
+
 /* ジャンルのボタン型チップ(JS で is-on を付与) */
-.ann-chip.is-on { background: var(--text); border-color: var(--text); color: var(--bg); }
+.ann-chip.is-on {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
 
-/* その場追加。.ann-add(と __btn・__input・__msg)は genre_picker_controller.js が作り、.ann-add__msg は
-   inline_add_controller.js も作って探す(見た目用のクラスを JS も参照する。改名するなら JS も直す) */
-.ann-add { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ann-add__btn { font-size: 12px; color: var(--text-muted); background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; min-height: 32px; }
-.ann-add__btn:hover { border-color: var(--text); color: var(--text); }
-.ann-add__input { width: 9em; font-size: 14px; padding: 4px 8px; }
+/* --- その場追加。.ann-add(と __btn・__input・__msg)は genre_picker_controller.js が作り、.ann-add__msg は
+   inline_add_controller.js も作って探す(見た目用のクラスを JS も参照する。改名するなら JS も直す) --- */
+.ann-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 選べるチップではなく「足す」ボタンなので、枠は淡くして墨の枠のチップと見分ける */
+.ann-add__btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ann-add__btn:hover {
+  border-color: var(--text);
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.ann-add__input {
+  width: 9em;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
 /* その場追加の結果(失敗の理由 / 既存を選んだ旨)。黙って何も起きないのが一番困るので必ず出す */
-.ann-add__msg { font-size: 12px; line-height: 1.6; color: var(--text-subtle); max-width: 26em; }
-.ann-add__msg.is-error { color: var(--danger); }
+.ann-add__msg {
+  max-width: 26em;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-subtle);
+}
 
-/* ジャンル 段階表示 */
-.ann-genre__current { font-size: 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.ann-genre__current .sep { color: var(--text-subtle); }
-.ann-genre__change { font-size: 12px; color: var(--text); background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
-.ann-genre__level { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 5px 0; }
+.ann-add__msg.is-error {
+  color: var(--danger);
+}
+
+/* --- ジャンル 段階表示 --- */
+.ann-genre__current {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.ann-genre__current .sep {
+  color: var(--text-subtle);
+}
+
+.ann-genre__change {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  cursor: pointer;
+}
+
+.ann-genre__level {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: 5px 0;
+}
+
 /* display 指定はクラス側が UA の [hidden]{display:none} に勝つので、明示的に打ち消す
- (ジャンルが確定済みの語では大・中・小の選択肢を出さず、「変更」で選び直しに入る) */
-.ann-genre__level[hidden] { display: none; }
-.ann-genre__tag { font-size: 12px; color: var(--text-subtle); min-width: 1.4em; }
-.ann-genre__level .ann-chips { flex: 1; }
+   (ジャンルが確定済みの語では大・中・小の選択肢を出さず、「変更」で選び直しに入る) */
+.ann-genre__level[hidden] {
+  display: none;
+}
 
-/* 特徴: 範囲タップ */
-.ann-feature { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4) var(--space-4); margin-bottom: var(--space-3); }
-.ann-feature__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
-.ann-feature__head .t { font-size: 12px; color: var(--text-subtle); }
-.ann-strip-label { font-size: 12px; color: var(--text-subtle); margin: var(--space-3) 0 var(--space-1); }
-.ann-strip { display: flex; flex-wrap: wrap; gap: 3px; }
-.ann-cell { font-family: inherit; font-size: 15px; line-height: 1; text-align: center; min-width: 1.6em; padding: 9px 5px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; transition: background var(--transition), color var(--transition), border-color var(--transition); }
-.ann-strip--reading .ann-cell { font-size: 14px; }
-.ann-cell:hover { border-color: var(--text); color: var(--text); }
-.ann-cell.is-sel { background: var(--text); color: var(--bg); border-color: var(--text); }
-.ann-cell.is-start { background: var(--bg-tint); color: var(--text); border-color: var(--text); }
-.ann-feature__result { font-size: 12px; color: var(--text-muted); margin-top: var(--space-2); }
+.ann-genre__tag {
+  min-width: 1.4em;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
 
-/* 別表記(行追加・テキスト) */
-.ann-subrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px solid var(--border); }
-.ann-subrow input { flex: 1 1 8em; min-width: 6em; }
-.ann-subrow .ann-remove { font-size: 15px; line-height: 1; color: var(--text-subtle); background: transparent; border: 0; cursor: pointer; padding: 6px; }
-.ann-subrow .ann-remove:hover { color: var(--danger); }
+.ann-genre__level .ann-chips {
+  flex: 1;
+}
 
-.ann-addrow { align-self: flex-start; margin-top: var(--space-2); font-size: 13px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 6px 14px; cursor: pointer; min-height: 32px; }
-.ann-addrow:hover { background: var(--bg-soft); border-color: var(--text-subtle); }
+/* --- 特徴: 範囲タップ(札の中の部品なので、墨ではなく淡い罫で束ねる) --- */
+.ann-feature {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.ann-feature__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.ann-feature__head .t {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.ann-strip-label {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ann-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.ann-cell {
+  min-width: 1.6em;
+  padding: 9px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.ann-strip--reading .ann-cell {
+  font-size: 14px;
+}
+
+.ann-cell:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.ann-cell.is-sel {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.ann-cell.is-start {
+  background: var(--bg-tint);
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.ann-feature__result {
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* --- 別表記(行追加・テキスト) --- */
+.ann-subrow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ann-subrow input {
+  flex: 1 1 8em;
+  min-width: 6em;
+}
+
+.ann-subrow .ann-remove {
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-subtle);
+  cursor: pointer;
+}
+
+.ann-subrow .ann-remove:hover {
+  color: var(--danger);
+}
+
+/* 行や特徴を足すボタン。ボタン(.btn--sm)と同じ墨の枠 */
+.ann-addrow {
+  align-self: flex-start;
+  min-height: 32px;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.ann-addrow:hover {
+  background: var(--bg-soft);
+}
 
 /* 「特徴なしで確定」(Issue 76)。特徴を足す導線より控えめに、下に添える */
-.ann-features__review { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); }
-.ann-features__review-hint { font-size: 12px; color: var(--text-subtle); }
-
-/* 語義を追加 */
-.ann-add-sense { display: block; width: 100%; margin-top: var(--space-5); font-size: 13px; background: transparent; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: var(--space-3); cursor: pointer; }
-.ann-add-sense:hover { background: var(--bg-soft); border-color: var(--text); color: var(--text); }
-.ann-add-sense small { display: block; font-size: 11px; color: var(--text-subtle); margin-top: 3px; }
-
-/* 最下部アクションバー */
-.ann-actionbar { position: sticky; bottom: 0; z-index: 4; background: var(--bg); border-top: 1px solid var(--border); padding: var(--space-3) 0; margin-top: var(--space-5); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-.ann-actionbar .spacer { flex: 1; }
-/* 主ボタン(保存)は行が折り返しても必ず右端に置く。スマホでは項目が2〜3行に折り返し、
-   何もしないと画面下端の中ほどに保存ボタンが来る。iOS の画面下端ジェスチャ
-   (Apple Intelligence の呼び出し)と重なって押しづらいため、右端へ寄せる。
-   1行に収まるときは .spacer が余白を吸い切るので、この auto は効かない(見た目は不変) */
-.ann-actionbar .btn--primary { margin-left: auto; }
-.ann-actionbar .kbd { font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle); margin-left: 6px; }
-.ann-actionbar .btn--primary .kbd { color: var(--bg); opacity: 0.75; }
-
-/* 完了画面 */
-.ann-done { padding: var(--space-6) 0; }
-.ann-done__lead { font-weight: 400; font-size: clamp(20px, 3vw, 26px); }
-
-@media (max-width: 560px) {
- .ann-row { grid-template-columns: 1fr; gap: 6px; }
- .ann-row__label { padding-top: 0; }
- .ann-bar__legend { display: none; }
+.ann-features__review {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
 }
 
-/* 提案の一括承認プレビュー表(Issue 65) */
-.bulk-approval { width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 13px; }
-.bulk-approval th { text-align: left; font-size: 12px; color: var(--text-muted); font-weight: 400; border-bottom: 1px solid var(--border-strong); padding: 6px 10px; white-space: nowrap; }
-.bulk-approval td { border-bottom: 1px solid var(--border); padding: 8px 10px; vertical-align: top; }
-.bulk-approval__no { font-family: var(--font-mono); font-size: 12px; color: var(--text-subtle); white-space: nowrap; }
-.bulk-approval__word { font-size: 14px; font-weight: 400; }
-.bulk-approval__word a { color: var(--text); text-decoration: none; }
-.bulk-approval__word a:hover { color: var(--text); text-decoration: underline; }
-.bulk-approval__genre { font-size: 12px; color: var(--text-muted); }
+.ann-features__review-hint {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* --- 語義を追加 --- */
+.ann-add-sense {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color var(--transition), border-color var(--transition);
+}
+
+.ann-add-sense:hover {
+  background: var(--bg-soft);
+  border-color: var(--text);
+}
+
+.ann-add-sense small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+/* --- 最下部アクションバー ---
+   画面の下端に貼り付く札(墨の枠・白い面)。流れる入力を隠して、いつでも押せる。影は付けない */
+.ann-actionbar {
+  position: sticky;
+  bottom: var(--space-3);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.ann-actionbar .spacer {
+  flex: 1;
+}
+
+/* 主ボタン(保存)は行が折り返しても必ず右端に置く。スマホでは項目が 2〜3 行に折り返し、
+   何もしないと画面下端の中ほどに保存ボタンが来る。iOS の画面下端ジェスチャ
+   (Apple Intelligence の呼び出し)と重なって押しづらいため、右端へ寄せる。
+   1 行に収まるときは .spacer が余白を吸い切るので、この auto は効かない(見た目は不変) */
+.ann-actionbar .btn--primary {
+  margin-left: auto;
+}
+
+/* スマホ幅では、バーがページを開いた時点から画面の下端に居座る(上の 1023px 以下の規則)ので、高さを 2 段に収める。
+   既定の余白のままだと 3 段(170px。390px 幅の画面の 2 割)に折り返して、読む面を削る。
+   ボタンの文字と左右の余白を .btn--sm と同じだけ詰め、高さ(40px)は押しやすさのために残す。
+   バーの内側の余白を 8px にし、折り返す幅では役目の無い .spacer(1 行のときに右へ寄せる隙間)を外すと、
+   375px 幅(iPhone SE)でも 1 段目に「引き継ぐ・戻る・スキップ」が収まる(実測: 中身 325px に対して 319px) */
+@media (max-width: 560px) {
+  .ann-actionbar {
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+
+  .ann-actionbar .btn {
+    padding-inline: var(--space-3);
+    font-size: 13px;
+  }
+
+  .ann-actionbar .spacer {
+    display: none;
+  }
+}
+
+.ann-actionbar .kbd {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.ann-actionbar .btn--primary .kbd {
+  color: var(--bg);
+  opacity: 0.75;
+}
+
+/* --- 完了画面 --- */
+.ann-done {
+  padding: var(--space-6) 0;
+}
+
+.ann-done__lead {
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .ann-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding-inline: var(--space-4);
+  }
+
+  .ann-row__label {
+    padding-top: 0;
+  }
+
+  .ann-sense__head {
+    padding-left: var(--space-4);
+  }
+
+  .ann-surface {
+    padding-inline: var(--space-4);
+  }
+
+  .ann-bar__legend {
+    display: none;
+  }
+}
+
+/* --- 提案の一括承認プレビュー表(Issue 65)。札(.panel)に収めた表。見出しの行は .data-table と同じ --- */
+.bulk-approval {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.bulk-approval th {
+  padding: var(--space-3) var(--space-3) var(--space-3) 0;
+  border-bottom: 1px solid var(--text);
+  background: var(--bg-soft);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.bulk-approval td {
+  padding: var(--space-3) var(--space-3) var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.bulk-approval th:first-child,
+.bulk-approval td:first-child {
+  padding-left: var(--space-5);
+}
+
+.bulk-approval th:last-child,
+.bulk-approval td:last-child {
+  padding-right: var(--space-5);
+}
+
+.bulk-approval tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.bulk-approval__no {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.bulk-approval__word {
+  font-size: 15px;
+}
+
+.bulk-approval__word a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.bulk-approval__word a:hover {
+  text-decoration: underline;
+}
+
+.bulk-approval__genre {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 @media (max-width: 700px) {
- .bulk-approval, .bulk-approval tbody, .bulk-approval tr, .bulk-approval td { display: block; }
- .bulk-approval thead { display: none; }
- .bulk-approval tr { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 4px; margin-bottom: var(--space-2); }
- .bulk-approval td { border: 0; padding: 3px 8px; }
+  .bulk-approval,
+  .bulk-approval tbody,
+  .bulk-approval tr,
+  .bulk-approval td {
+    display: block;
+  }
+
+  .bulk-approval thead {
+    display: none;
+  }
+
+  .bulk-approval tr {
+    padding: var(--space-2) var(--space-1);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bulk-approval td {
+    padding: 3px var(--space-4);
+    border: 0;
+  }
+
+  .bulk-approval th:first-child,
+  .bulk-approval td:first-child,
+  .bulk-approval th:last-child,
+  .bulk-approval td:last-child {
+    padding-inline: var(--space-4);
+  }
 }
 
 /* =====================================================================
- アノテーション・デッキ(まとめてアノテーション)
- 10件を横一列に並べ、スマホは横スワイプ(scroll-snap)、PC は矢印/ドット/←→キーで送る。
- 見た目は1語コンソールの部品(ann-*)をそのまま使い、ここは並べ方と現在地の表示だけ。
- ===================================================================== */
-.deck { position: relative; touch-action: manipulation; }
-.deck .ann-bar .spacer { flex: 1; }
-.deck-bar__link { font-size: 12px; color: var(--text); text-decoration: none; }
-.deck-bar__link:hover { text-decoration: underline; }
+   アノテーション・デッキ(まとめてアノテーション)
+   10 件を横一列に並べ、スマホは横スワイプ(scroll-snap)、PC は矢印/ドット/←→キーで送る。
+   見た目は 1 語コンソールの部品(ann-*)をそのまま使い、ここは並べ方と現在地の表示だけ。
+   ===================================================================== */
+.deck {
+  position: relative;
+  touch-action: manipulation;
+}
+
+.deck .ann-bar .spacer {
+  flex: 1;
+}
+
+.deck-bar__link {
+  font-size: 13px;
+  color: var(--text);
+}
 
 /* カード送り(現在地・ドット・矢印) */
-.deck-nav { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-2) 0 var(--space-3); border-bottom: 1px solid var(--border); }
-.deck-nav__arrow { font-size: 13px; line-height: 1; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); min-width: 40px; height: 32px; cursor: pointer; }
-.deck-nav__arrow:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--text-subtle); }
-.deck-nav__arrow:disabled { border-color: var(--border); color: var(--text-subtle); cursor: default; }
-.deck-nav__position { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.deck-nav__dots { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-/* ドット = 何枚目か。完了(全語義が is-complete)は緑のベタ、表示中は --bg-tint の淡い面と濃い枠 */
-.deck-dot { font-size: 11px; line-height: 1; min-width: 26px; height: 26px; padding: 0; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text-subtle); cursor: pointer; }
-.deck-dot:hover { border-color: var(--text-subtle); color: var(--text); }
-.deck-dot.is-done { background: var(--success); border-color: var(--success); color: var(--bg); }
-.deck-dot.is-on { background: var(--bg-tint); border-color: var(--text); color: var(--text); font-weight: 400; }
-.deck-dot.is-on.is-done { background: var(--success); color: var(--bg); border-color: var(--text); }
+.deck-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
 
-.deck-lead { font-size: 13px; line-height: 1.8; color: var(--text-muted); margin: 0 0 var(--space-3); }
-.deck-glossary { margin: var(--space-3) 0 0; }
+.deck-nav__arrow {
+  min-width: 40px;
+  height: 32px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.deck-nav__arrow:hover:not(:disabled) {
+  background: var(--bg-soft);
+}
+
+.deck-nav__arrow:disabled {
+  border-color: var(--border-strong);
+  color: var(--text-subtle);
+  cursor: default;
+}
+
+.deck-nav__position {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-nav__dots {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* ドット = 何枚目か。完了(全語義が is-complete)は達成の緑のベタ、表示中は --bg-tint の淡い面と墨の枠 */
+.deck-dot {
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-subtle);
+  cursor: pointer;
+}
+
+.deck-dot:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.deck-dot.is-done {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--bg);
+}
+
+.deck-dot.is-on {
+  background: var(--bg-tint);
+  border-color: var(--text);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.deck-dot.is-on.is-done {
+  background: var(--success);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.deck-lead {
+  margin: 0 0 var(--space-3);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.deck-glossary {
+  margin: var(--space-3) 0 0;
+}
 
 /* カードの並び。トラックだけが横スクロールし、ページ本体は横に流れない。
- カードは高さを揃えない(align-items: flex-start)ので、トラックの縦スクロールは出ず、
- 長いカードはページごと縦にスクロールする。 */
+   カードは高さを揃えない(align-items: flex-start)ので、トラックの縦スクロールは出ず、
+   長いカードはページごと縦にスクロールする。 */
 .deck-track {
- position: relative; display: flex; align-items: flex-start; gap: var(--space-6);
- overflow-x: auto; overscroll-behavior-x: contain;
- scroll-snap-type: x mandatory; scrollbar-width: none;
- padding: var(--space-4) 0 var(--space-2);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: var(--space-4) 0 var(--space-2);
 }
-.deck-track::-webkit-scrollbar { display: none; }
-.deck-card { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
-/* 見出し語は1語コンソールより一段小さく(カード内で完結させるため) */
-.deck-card .ann-word { font-size: clamp(21px, 3.4vw, 28px); }
-.deck-card__count { margin-left: auto; color: var(--text-muted); }
 
-/* 提案の要約(既定は畳む)。反映は読み込み時に済んでいるので、ここは根拠の確認用 */
-.deck-proposal { margin-top: var(--space-3); }
-.deck-proposal__summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; padding: 4px 0; }
-.deck-proposal__summary:hover .deck-proposal__title { text-decoration: underline; }
-.deck-proposal__title { font-size: 12px; font-weight: 400; color: var(--text); }
-.deck-proposal .ann-proposal { margin-top: var(--space-2); }
+.deck-track::-webkit-scrollbar {
+  display: none;
+}
 
-/* まとめ保存バーの進捗(n / m 完了)。全部そろったら緑にする */
-.deck-progress { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.deck.is-all-complete .deck-progress { color: var(--success); font-weight: 400; }
+.deck-card {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+/* 見出し語は 1 語コンソールより一段小さく(カード内で完結させるため) */
+.deck-card .ann-word {
+  font-size: clamp(21px, 2.6vw, 26px);
+}
+
+.deck-card__count {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+/* 提案の要約(既定は開く)。反映は読み込み時に済んでいるので、ここは根拠の確認用 */
+.deck-proposal {
+  margin-bottom: var(--space-4);
+}
+
+.deck-proposal__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.deck-proposal__summary:hover .deck-proposal__title {
+  text-decoration: underline;
+}
+
+.deck-proposal__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.deck-proposal .ann-proposal {
+  margin: var(--space-2) 0 0;
+}
+
+/* まとめ保存バーの進捗(n / m 完了)。全部そろったら達成の緑にする */
+.deck-progress {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck.is-all-complete .deck-progress {
+  color: var(--success);
+  font-weight: 800;
+}
 
 @media (max-width: 560px) {
- .deck-track { gap: var(--space-5); }
- .deck-nav__dots { order: 3; flex-basis: 100%; }
+  .deck-track {
+    gap: var(--space-5);
+  }
+
+  .deck-nav__dots {
+    order: 3;
+    flex-basis: 100%;
+  }
 }

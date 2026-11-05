@@ -1,7 +1,7 @@
 <%# 確認の一覧(仕分け・表記の確認で共用)。upload した順に並べ、同じ元の語から増えた語は系統として括る。
     系統の見出しの「この系統を選ぶ」は、その系統の見えている行をまとめて選ぶ(data-row-group。処理は下端のバーで)。
     元の語が一覧に無い系統(分割して不要にした語など)は、見出しに元の語のメモを出す。 %>
-<div class="cand-list">
+<div class="panel cand-list">
   <% review.groups.each do |group| %>
     <% if group.family? %>
       <section class="cand-family" data-row-group aria-label="<%= t("admin.word_candidates.family.label", root: group.root.surface) %>">

@@ -4,12 +4,19 @@
   <p class="cand-empty"><%= t(".empty") %></p>
 <% else %>
   <ol class="cand-steps-local">
-    <li class="cand-step">
-      <h2 class="cand-step__title"><%= t(".reading_title") %></h2>
-      <%= render "admin/candidates/export", export: @export, empty: nil %>
+    <li class="panel cand-step">
+      <div class="panel__head">
+        <h2 class="panel__title"><%= t(".reading_title") %></h2>
+      </div>
+      <div class="panel__body">
+        <%= render "admin/candidates/export", export: @export, empty: nil %>
+      </div>
     </li>
-    <li class="cand-step">
-      <h2 class="cand-step__title"><%= t(".register_title") %></h2>
+    <li class="panel cand-step">
+      <div class="panel__head">
+        <h2 class="panel__title"><%= t(".register_title") %></h2>
+      </div>
+      <div class="panel__body">
       <%# 一括登録の step1(箇条書き)を飛ばし、読みの確認(step2)を直接開く。渡す本文は /reading への書き出しと同じ(表層形の箇条書き)。
           step2 は送信に対して画面を描画する(リダイレクトしない)ので Turbo を切る(一括登録の各段と同じ) %>
       <%= form_with url: readings_admin_words_path, method: :post, scope: :bulk_word_registration,
@@ -20,11 +27,15 @@
         <% end %>
         <p class="cand-import__after"><%= t(".register_hint") %></p>
       <% end %>
+      </div>
     </li>
   </ol>
 
-  <section class="cand-ready">
-    <h2 class="cand-step__title"><%= t(".list_title") %></h2>
+  <section class="panel cand-ready">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t(".list_title") %></h2>
+    </div>
+    <div class="panel__body">
     <p class="cand-step__hint"><%= t(".list_hint_html", link: link_to(t(".list_link"), admin_candidates_list_path(status: @export.status))) %></p>
     <ol class="cand-ready__list">
       <% @export.candidates.each do |candidate| %>
@@ -36,5 +47,6 @@
         </li>
       <% end %>
     </ol>
+    </div>
   </section>
 <% end %>

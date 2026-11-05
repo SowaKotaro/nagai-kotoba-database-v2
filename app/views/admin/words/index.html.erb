@@ -1,12 +1,26 @@
 <% content_for :title, t("admin.words.title") %>
 
-<h1 class="page-title"><%= t("admin.words.title") %></h1>
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.words.title") %></h1>
+</header>
 
 <%# 検索(表層形・読みの部分一致)+タグ絞り込みと、注釈状態のタブ。
     タグのセレクトは選択で即送信(auto-submit)。同質な語群をまとめて付け替える・外すための入口になる
     (例: ジャンル「ことわざ」×品詞「普通名詞」→ 連語へ。「サンショウウオ」×特徴「ゴママヨ」×該当部分「ウウ」→ 外す)。 %>
-<div class="admin-words-toolbar">
-  <%= form_with url: admin_words_path, method: :get, class: "admin-words-filter",
+<div class="panel-shelf">
+<section class="panel admin-words-toolbar">
+  <div class="panel__head">
+    <h2 class="panel__title"><%= icon "funnel" %><%= t("admin.words.index.filter_title") %></h2>
+    <nav class="admin-status-tabs" aria-label="<%= t("admin.words.index.status_label") %>">
+      <%# タブは絞り込みの定義(Admin::WordsController::STATUS_FILTERS)から組む。文言のキーは状態名から annotation_ を除いたもの %>
+      <% [ nil, *Admin::WordsController::STATUS_FILTERS ].each do |status| %>
+        <% label = status ? t("admin.words.index.status_#{status.delete_prefix("annotation_")}") : t("admin.words.index.status_all") %>
+        <%= link_to label, admin_words_path({ q: @query.presence, status: status }.merge(@tag_filters).compact),
+              class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
+      <% end %>
+    </nav>
+  </div>
+  <%= form_with url: admin_words_path, method: :get, class: "admin-words-filter panel__body",
         data: { controller: "auto-submit" } do %>
     <% if @status %><%= hidden_field_tag :status, @status %><% end %>
     <div class="admin-words-search">
@@ -66,24 +80,17 @@
       <noscript><%= submit_tag t("admin.words.index.search"), class: "btn btn--sm" %></noscript>
     </div>
   <% end %>
-
-  <nav class="admin-status-tabs" aria-label="<%= t("admin.words.index.status_label") %>">
-    <%# タブは絞り込みの定義(Admin::WordsController::STATUS_FILTERS)から組む。文言のキーは状態名から annotation_ を除いたもの %>
-    <% [ nil, *Admin::WordsController::STATUS_FILTERS ].each do |status| %>
-      <% label = status ? t("admin.words.index.status_#{status.delete_prefix("annotation_")}") : t("admin.words.index.status_all") %>
-      <%= link_to label, admin_words_path({ q: @query.presence, status: status }.merge(@tag_filters).compact),
-            class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
-    <% end %>
-  </nav>
-</div>
-
-<p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@total_count)) %></p>
+</section>
 
 <% if @words.any? %>
   <%= render "bulk_form", list_params: word_list_params, word_origins: @word_origins, parts_of_speech: @parts_of_speech,
              entity_types: @entity_types, linguistic_features: @linguistic_features, large_genres: @large_genres,
              feature_filter: @tag_filters.slice(:linguistic_feature_id, :feature_target) %>
 
+  <section class="panel">
+  <div class="panel__head">
+    <p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@total_count)) %></p>
+  </div>
   <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
   <div class="table-scroll" data-controller="check-all">
   <table class="data-table admin-words-table">
@@ -149,6 +156,7 @@
     </tbody>
   </table>
   </div>
+  </section>
 
   <nav class="pagination">
     <%# 検索・絞り込み条件を保持したままページ送りする %>
@@ -166,3 +174,4 @@
 <% else %>
   <p class="empty-note"><%= t("admin.words.index.empty") %></p>
 <% end %>
+</div>

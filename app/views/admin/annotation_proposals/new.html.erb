@@ -1,11 +1,11 @@
 <% content_for :title, t("admin.annotation_proposals.new.title") %>
 
-<div class="page-eyebrow"><span><%= t("admin.annotation_proposals.eyebrow") %></span></div>
-<h1 class="page-title"><%= t("admin.annotation_proposals.new.title") %></h1>
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.annotation_proposals.new.title") %></h1>
+  <p class="page-lead"><%= t("admin.annotation_proposals.new.lead") %></p>
+</header>
 
-<p class="proposal-lead"><%= t("admin.annotation_proposals.new.lead") %></p>
-
-<%= form_with url: admin_annotation_proposals_path, method: :post do %>
+<%= form_with url: admin_annotation_proposals_path, method: :post, class: "panel" do %>
   <%= text_area_tag :proposals_json, params[:proposals_json], rows: 14, class: "proposal-json__area",
         placeholder: t("admin.annotation_proposals.new.placeholder") %>
   <div class="proposal-actions">

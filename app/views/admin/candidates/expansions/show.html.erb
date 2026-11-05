@@ -1,8 +1,11 @@
 <%= render "admin/candidates/header", current: @stage.key, title: candidate_stage_name(@stage), lead: t(".lead") %>
 
 <ol class="cand-steps-local">
-  <li class="cand-step">
-    <h2 class="cand-step__title"><%= t(".export_title") %></h2>
+  <li class="panel cand-step">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t(".export_title") %></h2>
+    </div>
+    <div class="panel__body">
     <% if @export.total_count.positive? %>
       <%# 一度に渡す語数(拡張待ちの先頭から)。変えたら書き出し直す %>
       <%= form_with url: admin_candidates_expansion_path, method: :get, class: "cand-limit" do |form| %>
@@ -15,11 +18,16 @@
       <% end %>
     <% end %>
     <%= render "admin/candidates/export", export: @export, empty: t(".export_empty") %>
+    </div>
   </li>
-  <li class="cand-step">
-    <h2 class="cand-step__title"><%= t(".import_title") %></h2>
+  <li class="panel cand-step">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t(".import_title") %></h2>
+    </div>
+    <div class="panel__body">
     <%# 読めない JSON で出し直すときに語数を保つよう、送り先に limit を載せる %>
     <%= render "admin/candidates/import_form", url: import_admin_candidates_expansion_path(limit: @limit),
           output: @export.target[:output], after: t(".import_after") %>
+    </div>
   </li>
 </ol>

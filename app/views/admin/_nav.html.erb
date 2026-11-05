@@ -1,6 +1,6 @@
 <%# 管理画面の共通サブナビ(Issue 35)。全管理ページからダッシュボード・各作業へ戻れる導線を常設する。
     作業の並びは admin_sections が正(ダッシュボードのカードと同じ順)。
-    現在地は aria-current="page"(管理画面ではアクセント色の文字と 2px の下線。admin.css)。
+    現在地は aria-current="page"(墨のベタ。layout.css の .admin-nav__link)。
     公開サイトへはヘッダーのサイト名から戻れるので、ここには置かない(2026-09-26 オーナー指示) %>
 <nav class="admin-nav" aria-label="<%= t("admin.nav.aria") %>">
   <div class="admin-nav__inner">

@@ -7,8 +7,8 @@
  * 順序には意味がある: 同じ特異度の規則は後に書いたほうが勝つので、admin は最後に置いて上書きし、
  * annotate はフォーム部品の級数を components より後で上げる。並べ替えると見た目が変わる。
  * 置き場所の実態: layout.css にも部品(nav-menu・theme-toggle・flash・admin-nav)があり、
- * components.css にも管理画面の部品がある。candidates.css は admin.css だけが定義する
- * --admin-accent / --admin-warn を使う(管理画面の外では未定義)。
+ * components.css にも管理画面の部品がある。管理画面も公開側と同じトークンと部品で組むので、
+ * annotate・candidates・admin は管理画面専用の色や変数を持たない(docs/design.md §10)。
  * require_tree は使わない(アルファベット順で順序が壊れるため)。
  *
  *= require tokens

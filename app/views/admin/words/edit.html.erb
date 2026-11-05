@@ -2,6 +2,8 @@
 <%# 1語の修正(Issue 108)。注釈フォームの部品はコンソールと共有し(admin/annotations/_word_fields)、
     コンソールの公開前の確認(publish-guard)・キュー・提案・引き継ぎは持たない。保存しても注釈状態は変わらない %>
 <div class="ann">
+  <div class="ann-layout">
+  <div class="ann-side">
   <p class="ann-eyebrow"><span class="no">NO. <%= @word.id %></span><span><%= t("admin.words.edit.eyebrow") %></span></p>
   <h1 class="ann-word"><%= @word.surface %></h1>
   <p class="ann-word-meta">
@@ -15,8 +17,9 @@
       <%= link_to t("admin.words.edit.to_console"), admin_annotation_path(@word) %>
     <% end %>
   </p>
+  </div>
 
-  <%= form_with model: @word, url: admin_word_path(@word), method: :patch do |form| %>
+  <%= form_with model: @word, url: admin_word_path(@word), method: :patch, class: "ann-main" do |form| %>
     <%# 保存後に、来たときの一覧(検索・絞り込み・ページ)へ戻る %>
     <% word_list_params.each do |key, value| %>
       <%= hidden_field_tag key, value, id: nil %>
@@ -29,4 +32,5 @@
       <%= form.submit t("admin.words.edit.save"), class: "btn btn--primary" %>
     </div>
   <% end %>
+  </div>
 </div>

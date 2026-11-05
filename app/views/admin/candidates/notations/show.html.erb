@@ -1,16 +1,25 @@
 <%= render "admin/candidates/header", current: @stage.key, title: candidate_stage_name(@stage), lead: t(".lead") %>
 
 <ol class="cand-steps-local">
-  <li class="cand-step">
-    <h2 class="cand-step__title"><%= t(".export_title") %></h2>
-    <%= render "admin/candidates/export", export: @export, empty: t(".export_empty") %>
+  <li class="panel cand-step">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t(".export_title") %></h2>
+    </div>
+    <div class="panel__body">
+      <%= render "admin/candidates/export", export: @export, empty: t(".export_empty") %>
+    </div>
   </li>
-  <li class="cand-step">
-    <h2 class="cand-step__title"><%= t(".import_title") %></h2>
-    <%= render "admin/candidates/import_form", url: import_admin_candidates_notation_path,
-          output: @export.target[:output], after: t(".import_after") %>
+  <li class="panel cand-step">
+    <div class="panel__head">
+      <h2 class="panel__title"><%= t(".import_title") %></h2>
+    </div>
+    <div class="panel__body">
+      <%= render "admin/candidates/import_form", url: import_admin_candidates_notation_path,
+            output: @export.target[:output], after: t(".import_after") %>
+    </div>
   </li>
-  <li class="cand-step" id="review">
+  <%# 確かめる段は、一覧そのものが札(.cand-list)なので、外側は札にせず見出しだけを置く %>
+  <li class="cand-step cand-step--review" id="review">
     <h2 class="cand-step__title"><%= t(".review_title") %></h2>
     <% if @review.empty? %>
       <p class="cand-empty"><%= t(".review_empty") %></p>
