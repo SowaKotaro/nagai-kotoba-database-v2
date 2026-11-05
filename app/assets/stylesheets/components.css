@@ -1,6 +1,6 @@
 /* UI 部品(docs/design.md §5)。
-   手本は「しずかなインターネット」。太字を使わず、差は「大きさ」と「文字の濃さ」だけ。
-   囲いは細罫より「淡いグレーの面 + 大きな角丸」を優先し、間は思い切って空ける。 */
+   手本は SANKOU!(地・墨・太さ・枠)と「しずかなインターネット」(余白)。太さは 400 と 800 の 2 段で、
+   区画は白い札を墨の 1px・角 8px で囲み(.panel。docs/design.md §3)、札の中は細罫で仕切って、間は思い切って空ける。 */
 
 /* --- アイコン(Phosphor Light をインライン SVG。currentColor でトークン連動) --- */
 .icon {
@@ -167,9 +167,8 @@
   border-color: var(--text);
 }
 
-/* ページの頭と中身を分ける「章の罫」。罫に文字色(--text-muted)を使うのは、docs/design.md §3 に
-   列挙した場所だけで、ここはその 1 つ。
-   手本が淡い縦罫と濃い横罫の二層を持つのに倣う(濃さは --text-muted まで。黒にはしない) */
+/* ページの頭と中身を分ける「章の罫」。罫に --text-muted を使うのは、docs/design.md §3 のとおりここだけ
+   (罫は細罫・章の罫・墨の三層で持つ。輪郭を持たせる墨の線とは役割が違うので、墨にはしない) */
 .page-header:not(.page-header--rail) {
   border-bottom: 1px solid var(--text-muted);
 }
@@ -510,7 +509,7 @@
   color: var(--text-subtle);
 }
 
-/* 特徴名は白地の丸タグ(検索リンク)。hover でわずかに色づく */
+/* 特徴名は .tag と同じ形のチップ(検索リンク)。hover で枠ごと淡い面に替わる */
 .chip {
   display: inline-block;
   border: 1px solid var(--text);
@@ -650,7 +649,7 @@ a.chip:hover {
   color: var(--text-subtle);
 }
 
-/* 品詞・エンティティタイプなどのタグ(検索リンク)。白地の丸タグ */
+/* 品詞・エンティティタイプなどのタグ(検索リンク)。白に墨の 1px・角 4px */
 .tag {
   display: inline-block;
   border: 1px solid var(--text);
@@ -2764,7 +2763,7 @@ html:has(.search-actions) {
   fill: var(--text-muted);
 }
 
-/* --- 札(ホームの棚と単語一覧) -----------------------------------------------
+/* --- 札(公開側の区画の単位。docs/design.md §3) ---------------------------------
    看板の検索バー・ボタンと同じ墨の枠(1px・角 8px)の白い札。頭の見出し帯を墨の罫で中身と仕切る。
    英字の標識(アイブロウ)は置かない(2026-11-03 オーナー判断。ホームの棚の組みは layout.css の .home-shelf、
    docs/design.md §5.2・§5.3) */
@@ -2946,7 +2945,7 @@ html:has(.search-actions) {
   color: var(--text-muted);
 }
 
-/* その語の関連データ(ジャンルのパンくず + 丸タグ)。本文から離して、
+/* その語の関連データ(ジャンルのパンくず + タグ)。本文から離して、
    「ここから絞り込める」ひとかたまりとして置く(docs/design.md §5.5) */
 .home-featured__data {
   margin-top: var(--space-5);
