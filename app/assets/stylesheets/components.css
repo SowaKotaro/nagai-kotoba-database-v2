@@ -3722,7 +3722,8 @@ select:focus {
 /* iOS Safari は select/input を独自のグラデーション付きスタイルで描くため、
    ネイティブの見た目を切って細枠に戻す。
    矢印も一緒に消えるので、caret-down(Phosphor Light)を data URI の背景で描き直す。
-   data URI では CSS 変数を参照できないので、両テーマで見える中間のグレーを直に持つ。 */
+   data URI では CSS 変数を参照できないので、両テーマで見える中間の灰を直に持つ
+   (値はライトの --chart と同じ #8F8682。入力の白の上で 3.6:1、ダークの入力の面の上で 4.5:1)。 */
 input[type="text"],
 input[type="password"],
 input[type="number"],
@@ -3734,7 +3735,7 @@ select {
 }
 
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%236e7781'%3E%3Cpath d='M212.24,100.24l-80,80a6,6,0,0,1-8.48,0l-80-80a6,6,0,0,1,8.48-8.48L128,167.51l75.76-75.75a6,6,0,0,1,8.48,8.48Z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%238f8682'%3E%3Cpath d='M212.24,100.24l-80,80a6,6,0,0,1-8.48,0l-80-80a6,6,0,0,1,8.48-8.48L128,167.51l75.76-75.75a6,6,0,0,1,8.48,8.48Z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 10px;
