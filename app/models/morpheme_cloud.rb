@@ -55,8 +55,9 @@ class MorphemeCloud
   FULL_ROW = (1 << COLUMNS) - 1
 
   # 本文と同じ字間(tokens.css の --tracking)。幅の見積もりに入れないと、
-  # 密に詰めたときに字が隣へはみ出す。
-  TRACKING = 0.03
+  # 密に詰めたときに字が隣へはみ出す。表示では和文が palt で詰まる(base.css の body)が、
+  # 詰まり方は書体で違うので見積もりには入れない(かなは見積もりより狭く出て、はみ出さない側に振れる)。
+  TRACKING = 0.08
 
   # 字面が上下へ伸びる量(級数に対する比)。**語ごとに変える**のが要点で、
   # 一律 1.08 で確保していた頃は、欧文だけの語(「NTT」「DS」)が実際の 1.5 倍の高さを
@@ -218,7 +219,8 @@ class MorphemeCloud
   # 大きい順に置いていく(先に置いた大きい語の隙間へ、あとの小さい語が入り込む)。
   # 最頻の1語だけは中心に据え、残りはばらばらに散らす(オーナー指示 2026-09-10)。
   def pack(boxes, height)
-    total_rows = (height / CELL.to_f).ceil
+    # 紙の内側に収まる行だけを使う(高さが升目の倍数でないとき、切り上げると最後の行が紙の下端からはみ出す)
+    total_rows = (height / CELL.to_f).floor
     rows = Array.new(total_rows, 0) # 各行の占有状況をビットで持つ
     random = Random.new(SEED)
 
