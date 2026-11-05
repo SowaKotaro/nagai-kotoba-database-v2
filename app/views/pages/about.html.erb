@@ -6,7 +6,7 @@
 
 <%# 英字の標識(ABOUT・収録語数)は置かない。トップ・一覧と同じく見出しは日本語だけにし、収録語数は
     単語一覧のレールの件数と同じ墨の 800 で立てる。図は置かない(docs/design.md §5.6.1・§5.7) %>
-<header class="page-header page-header--rail">
+<header class="page-header page-header--rail page-header--count">
   <div class="page-header__main">
     <h1 class="page-title"><%= t("layouts.brand") %></h1>
     <p class="page-lead"><%= phrased_sentences(t("pages.about.lead")) %></p>

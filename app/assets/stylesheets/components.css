@@ -199,7 +199,7 @@
   gap: var(--space-5);
 }
 
-/* レールの数(単語一覧は件数、単語詳細は読みの文字数)。トップの数字と同じく墨の 800 で立て、単位を小さく添える
+/* レールの数(単語一覧は件数、単語詳細は読みの文字数、About は収録語数)。トップの数字と同じく墨の 800 で立て、単位を小さく添える
    (docs/design.md §5.3・§5.4) */
 .page-header__count {
   margin: 0;
@@ -207,8 +207,8 @@
   color: var(--text-muted);
 }
 
-/* 40px は、4 桁の件数(「9,999」。数字は等幅)と単位が、レールの幅(160px から左の余白と罫を引いた幅)に 1 行で収まる大きさ。
-   44px では単位だけが下の行へ落ちた。5 桁になったら単位は下の行へ回る(読みの文字数は 2 桁なので収まる) */
+/* 40px は単語詳細のレール(幅 160px。線画と並ぶ)の大きさ。読みの文字数は 2 桁なので、単位まで 1 行に収まる。
+   数だけのレールは、下の .page-header--count で大きくする */
 .page-header__count-value {
   margin-right: var(--space-1);
   font-family: var(--font-display);
@@ -217,6 +217,22 @@
   line-height: 1;
   color: var(--text);
   font-variant-numeric: tabular-nums;
+}
+
+/* 数だけのレール(単語一覧の件数・About の収録語数)。線画を持たないので、数を大きく立てて面の主題にし
+   (2026-11-05 オーナー指示「登録語数やヒットした語数をきちんと主張させる」)、列の幅は数の幅に合わせる。
+   単位は数から離さない(幅 160px の列のままだと、4 桁の件数で単位「語」だけが次の行へ落ちた)。
+   1023px 以下の 1 列への切り替え(下の @media)より前に置く */
+.page-header--count {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.page-header--count .page-header__count {
+  white-space: nowrap;
+}
+
+.page-header--count .page-header__count-value {
+  font-size: 56px;
 }
 
 /* レールの中の線画は左揃えにする(数字と頭を合わせる) */
