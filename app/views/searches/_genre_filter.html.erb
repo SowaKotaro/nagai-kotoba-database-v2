@@ -17,7 +17,7 @@
     <% cache [ :search_genre_filter, Genre.all.cache_key_with_version, ActiveSupport::Digest.hexdigest(counts.sort_by { |id, _| id.to_i }.to_s), selected.sort ] do %>
       <% larges = genres_with_published(nil, genres_by_parent, counts) %>
       <% large_counts = larges.to_h { |genre| [ genre.id, genre_published_count(genre, genres_by_parent, counts) ] } %>
-      <%# 横棒の幅は /genres と同じ写像(最小〜最大を 20〜100% に写す。RadialChart.percent) %>
+      <%# 横棒の幅は /genres と同じ写像(最小〜最大を 20〜100% に写す。BarWidth) %>
       <% count_min, count_max = large_counts.values.minmax %>
       <% larges.each do |large| %>
         <% mediums = genres_with_published(large.id, genres_by_parent, counts) %>
@@ -30,7 +30,7 @@
             <span class="genre-fold__count" data-fold-count-target="count"
                   <%= "hidden" if selected_count.zero? %>><%= selected_count if selected_count.positive? %></span>
             <span class="genre-hub__bar" aria-hidden="true"
-                  style="--w: <%= RadialChart.percent(large_counts[large.id], count_min, count_max) %>%"></span>
+                  style="--w: <%= BarWidth.call(large_counts[large.id], count_min, count_max) %>%"></span>
             <span class="genre-hub__count mono"><%= large_counts[large.id] %></span>
           </summary>
           <div class="genre-fold__body">

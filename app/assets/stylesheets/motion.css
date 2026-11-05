@@ -122,10 +122,9 @@
    描き終えるまでの時間は 図の幅 ÷ 200 × 1.6 秒(今日の一語の 200px で 1.6 秒、レールの 104px で約 0.8 秒。
    Chrome・WebKit で実測)。線の太さを保つ指定(non-scaling-stroke)があると、viewBox の単位で渡した破線が
    画面の上の長さで数えられ、小さい図ほど早く線の端に届くため。小さい図ほど短く済むので、そのままにしている。
-   ホームの印は読み込みのときに描くので対象にしない(印の animation を hover で上書きすると、離したときに最初から描き直す)。
-   放射図(.radial-art)も .ring-art の見た目を借りているが、線の全長を持たないので対象にしない */
+   ホームの印は読み込みのときに描くので対象にしない(印の animation を hover で上書きすると、離したときに最初から描き直す) */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .ring-art:not(.ring-art--mark, .radial-art):hover .ring-art__stroke {
+  .ring-art:not(.ring-art--mark):hover .ring-art__stroke {
     stroke-dasharray: var(--ring-length);
     animation: ring-trace 1600ms linear;
   }

@@ -2766,19 +2766,6 @@ html:has(.search-actions) {
   }
 }
 
-/* --- 放射図(RadialChart): 並んだ数値を、円の上の一筆書きにする -------------
-   五十音円環とまったく同じ円・同じ線の濃さで描く。サイトの図を「円」ひとつの
-   家族に収めるための約束で、塗りは持たせない(docs/design.md §5.9) */
-.radial-art__spokes line {
-  stroke: var(--border);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.radial-art__node {
-  fill: var(--text-muted);
-}
-
 /* --- 札(公開側の区画の単位。docs/design.md §3) ---------------------------------
    看板の検索バー・ボタンと同じ墨の枠(1px・角 8px)の白い札。頭の見出し帯を墨の罫で中身と仕切る。
    英字の標識(アイブロウ)は置かない(2026-11-03 オーナー判断。ホームの棚の組みは layout.css の .home-shelf、
