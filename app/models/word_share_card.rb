@@ -20,8 +20,13 @@ class WordShareCard
   # 本体の文字の左端と、行が伸びてよい幅(柱と額から 44px ずつ空ける)。
   TEXT_LEFT = 474
   TEXT_WIDTH = 606
-  # 字間(em)。本文と同じ --tracking。標識は .label-en と同じ 0.04em。
-  TRACKING = 0.03
+  # 字間(em)。サイトは和文を palt で詰めてから開ける(見出し 0.06em・本文 0.08em。docs/design.md §2)が、
+  # librsvg では palt を掛けられない(ShareCardTypesetter の冒頭)。値だけを移すとかなが 1 字ごとに 0.1em ほど開いて見えるので、
+  # 詰めずに組んでもサイトと同じ幅になる字間にする(2026-11-05 に公開語の表層形と読みで、
+  # 「palt＋サイトの字間」と同じ幅になる字間を語ごとに求めた中央値。表層形は Bold で測った)。
+  # 標識は .label-en と同じ 0.04em(欧文は palt で詰まらない)。
+  SURFACE_TRACKING = 0.0
+  READING_TRACKING = -0.03
   LABEL_TRACKING = 0.04
   LABEL_FONT_SIZE = 19
 
@@ -93,9 +98,9 @@ class WordShareCard
   # --- 本体の文字 ---
 
   def surface_font_size = surface_layout.font_size
-  def surface_tracking = (surface_font_size * TRACKING).round(2)
+  def surface_tracking = (surface_font_size * SURFACE_TRACKING).round(2)
   def reading_font_size = reading_layout.font_size
-  def reading_tracking = (reading_font_size * TRACKING).round(2)
+  def reading_tracking = (reading_font_size * READING_TRACKING).round(2)
   def label_tracking = (LABEL_FONT_SIZE * LABEL_TRACKING).round(2)
 
   def surface_lines = vertical_layout.fetch(:surface)
@@ -118,7 +123,8 @@ class WordShareCard
   private
 
   def surface_layout
-    @surface_layout ||= ShareCardTypesetter.new(surface, width: TEXT_WIDTH, tracking: TRACKING).fit(SURFACE_STEPS)
+    @surface_layout ||= ShareCardTypesetter.new(surface, width: TEXT_WIDTH, tracking: SURFACE_TRACKING, bold: true)
+                                           .fit(SURFACE_STEPS)
   end
 
   # 読みの後ろに文字数を添える。標識の 2 行目(READING / N CHARACTERS)と同じ数を日本語側にも置く
@@ -128,7 +134,7 @@ class WordShareCard
     @reading_layout ||= begin
       length = I18n.t("words.share_card.reading_length", count: reading_length)
       text = ([ reading ] + length.chars).join(ShareCardTypesetter::WORD_JOINER)
-      ShareCardTypesetter.new(text, width: TEXT_WIDTH, tracking: TRACKING).fit(READING_STEPS)
+      ShareCardTypesetter.new(text, width: TEXT_WIDTH, tracking: READING_TRACKING).fit(READING_STEPS)
     end
   end
 

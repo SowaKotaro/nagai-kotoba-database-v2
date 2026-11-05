@@ -2,15 +2,15 @@
 <!-- ファビコン。サイト名の読み「ナガイコトバノデータベース」を五十音の円環で一筆書きにした図で、
      ホーム最上部の印と同じ KanaRing の座標を使う。
      座標は KanaRing.path("ナガイコトバノデータベース") の出力(viewBox 200)。
-     単体ファイルなので色はトークンと同値をリテラルで持つ(text #232A31 / dark-text #E3E7EA)。
+     単体ファイルなので色はトークンと同値をリテラルで持つ(地は --text #2F2725、ダークは --dark-text #F2EEEC)。
      ブラウザのタブがライトでもダークでも沈まないよう、地と線を prefers-color-scheme で入れ替える。 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <style>
-    .plate { fill: #232A31; }
+    .plate { fill: #2F2725; }
     .mark  { stroke: #FFFFFF; }
     @media (prefers-color-scheme: dark) {
-      .plate { fill: #E3E7EA; }
-      .mark  { stroke: #232A31; }
+      .plate { fill: #F2EEEC; }
+      .mark  { stroke: #2F2725; }
     }
   </style>
   <rect class="plate" width="200" height="200"/>
