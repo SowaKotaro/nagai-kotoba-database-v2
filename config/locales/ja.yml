@@ -129,6 +129,8 @@ ja:
 
   layouts:
     brand: "長い言葉のデータベース"
+    # サイト名に触れている間、1 字目のあとに伸びて出る伸ばし棒(motion.css の 3)
+    brand_stretch_mark: "ー"
     skip_to_main: "本文へ移動"
     search_placeholder: "単語を検索"
     search_submit: "検索"
