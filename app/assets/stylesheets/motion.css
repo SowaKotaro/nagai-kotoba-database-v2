@@ -1,6 +1,7 @@
 /*
  * 遊びの動き(docs/design.md §4)。SANKOU! にならい、マウスで触れたものだけが、短く・小さく・1 度だけ動く。
  * 読み込みやスクロールで動くもの、止まらずに動き続けるものは足さない(動き続けるのはホームの印の外周だけ。§5.9)。
+ * 例外はサイト名(3)で、触れている間だけ上限まで伸び続け、離すと揺れて止まる。
  *
  * 守ること:
  *   - hover で動くものは、hover できる端末(hover: hover)だけで動かす。タッチでは押した印が残り、選択の印に見える。
@@ -88,15 +89,86 @@
   }
 }
 
-/* --- 3. サイト名が沈む ---------------------------------------------------------------------
-   ヘッダーのサイト名は、触れると 3px 沈む(SANKOU! のロゴと同じ)。transform なので帯の高さは変わらない */
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .site-brand {
-    transition: transform var(--motion);
-  }
+/* --- 3. サイト名が伸びる ---------------------------------------------------------------------
+   ヘッダーのサイト名は、触れている間「長」のあとに伸ばし棒(ー)が伸び続けて「長ーーーい」になり、
+   離すとゴムのようにパツンと戻って、縮みすぎた勢いで 2〜3 回ぷるぷる揺れて止まる(2026-11-05 オーナー指示)。
+   遊びの動きのうち、これだけは触れている間ずっと動き続ける(上限があり、近づくほど伸びが鈍って止まる。design.md §4)。
 
+   伸び具合は 1 つの数 --brand-stretch(0 = ふだん、1 = 伸ばし棒 1 字ぶん)で持ち、字の送り・棒の長さ・
+   名前の縦の伸び縮みをすべてここから作る。@property で数として登録しているので、変数そのものを補間でき、
+   途中で離しても触れ直しても、その時点の長さから続く。
+     - 伸びる: 上限(--brand-stretch-max 字)へ --motion-stretch かけて向かい、上限に近づくほど鈍る(ease-out)。
+     - 戻る: 減衰するばねの曲線(linear())で戻る。前半は加速して 0 に着き(パツン)、そのあと行き過ぎて揺れる。
+       揺れの幅は離したときの長さに比例する(長く伸ばすほど大きく揺れる)。曲線は、時間 t(0〜1)の最初の 12% を
+       (t / 0.12)² で 0 に着き、そのあと 1 + 0.19·e^(−3.8s)·sin(6πs)·√(1 − s) で揺れる形
+       (s = (t − 0.12) / 0.88)を 61 点で写したもの。
+     - 縦: 伸びている間は細り(1 字ぶんで 2%)、縮みすぎたときは縦に膨らむ(ゴムの体積が保たれる見え方)。
+       支点は左下なので、字の下端(帯の中の位置)は動かない。
+   字の送りは 1 字ぶん = 1em + 字間 0.04em(layout.css の .site-brand)。伸ばし棒は 1 字目の擬似要素で、
+   1 字目の右端(= 2 字目の左端)から右へ引き伸ばす。ヘッダーの高さや並びは変えない(すべて transform)。
+   @property か linear() を持たない古いブラウザでは、伸びた形へすぐ切り替わるか、揺れずに戻る。
+   管理画面は上限を 0 にして止める(admin.css) */
+@property --brand-stretch {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.site-brand {
+  transform-origin: left bottom;
+  transform: scaleY(calc(1 - 0.02 * max(var(--brand-stretch), 0) - 0.25 * min(var(--brand-stretch), 0)));
+}
+
+.site-brand__char {
+  display: inline-block;
+}
+
+.site-brand__char:not(:first-child) {
+  transform: translateX(calc(var(--brand-stretch) * 1.04em));
+}
+
+.site-brand__char:first-child {
+  position: relative;
+}
+
+/* 伸ばし棒は palt と字間を外して全角 1 字(1em)の箱に戻し、字の送りと同じ 1.04em × 伸び具合 に引き伸ばす。
+   palt で詰めた棒をそのまま伸ばすと、詰めた分だけ「い」の手前に隙間が開き、伸びるほど広がる(WebKit で実測)。
+   全角に戻すと、棒の前後の余白が同じだけ伸びるので、「長」と「い」から等しく離れる */
+.site-brand__char:first-child::after {
+  content: attr(data-stretch-mark);
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 1em;
+  font-feature-settings: normal;
+  letter-spacing: 0;
+  text-align: center;
+  transform-origin: left center;
+  transform: scaleX(max(var(--brand-stretch) * 1.04, 0)); /* 縮みすぎて負になっても、棒は裏返さずに消すだけ */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-brand {
+    transition: --brand-stretch var(--motion-spring) linear(
+      0.000 0.0%, 0.019 1.7%, 0.077 3.3%, 0.174 5.0%, 0.309 6.7%, 0.482 8.3%,
+      0.694 10.0%, 0.945 11.7%, 1.050 13.3%, 1.098 15.0%, 1.127 16.7%, 1.136 18.3%,
+      1.127 20.0%, 1.104 21.7%, 1.071 23.3%, 1.035 25.0%, 1.000 26.7%, 0.970 28.3%,
+      0.949 30.0%, 0.937 31.7%, 0.935 33.3%, 0.941 35.0%, 0.953 36.7%, 0.969 38.3%,
+      0.987 40.0%, 1.003 41.7%, 1.016 43.3%, 1.026 45.0%, 1.030 46.7%, 1.030 48.3%,
+      1.027 50.0%, 1.020 51.7%, 1.013 53.3%, 1.005 55.0%, 0.997 56.7%, 0.992 58.3%,
+      0.988 60.0%, 0.986 61.7%, 0.987 63.3%, 0.989 65.0%, 0.992 66.7%, 0.995 68.3%,
+      0.999 70.0%, 1.002 71.7%, 1.004 73.3%, 1.005 75.0%, 1.006 76.7%, 1.005 78.3%,
+      1.004 80.0%, 1.003 81.7%, 1.002 83.3%, 1.000 85.0%, 0.999 86.7%, 0.998 88.3%,
+      0.998 90.0%, 0.998 91.7%, 0.998 93.3%, 0.999 95.0%, 0.999 96.7%, 1.000 98.3%,
+      1.000 100.0%
+    );
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .site-brand:hover {
-    transform: translateY(var(--nudge));
+    --brand-stretch: var(--brand-stretch-max);
+    transition: --brand-stretch var(--motion-stretch) cubic-bezier(0.12, 0.75, 0.3, 1);
   }
 }
 

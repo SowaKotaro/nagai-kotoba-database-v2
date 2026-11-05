@@ -6,8 +6,13 @@
         data-nav-drawer-open-label-value="<%= t("layouts.menu_open") %>"
         data-nav-drawer-close-label-value="<%= t("layouts.menu_close") %>">
   <div class="site-header__inner">
-    <%# 左はサイト名だけ。円環のブランドマークと 3 行の英字は 2026-11-04 に外した(docs/design.md §5.1) %>
-    <%= link_to t("layouts.brand"), root_path, class: "site-brand" %>
+    <%# 左はサイト名だけ。円環のブランドマークと 3 行の英字は 2026-11-04 に外した(docs/design.md §5.1)。
+        触れている間は「長」のあとに伸ばし棒が伸び、離すとぷるんと戻る(motion.css の 3)。「い」から後ろを送るために
+        1 字ずつ包み、伸ばし棒は 1 字目の擬似要素で描く(本文の文字にしないので、コピーや検索エンジンには出ない)。
+        読み上げは aria-label で名前ひとつにまとめる。字のあいだに空白を挟まないよう、1 つの式で組む %>
+    <%= link_to safe_join(t("layouts.brand").each_char.with_index.map { |char, index|
+          tag.span(char, class: "site-brand__char", data: index.zero? ? { stretch_mark: t("layouts.brand_stretch_mark") } : {})
+        }), root_path, class: "site-brand", aria: { label: t("layouts.brand") } %>
 
     <button type="button" class="nav-toggle" aria-label="<%= t("layouts.menu_open") %>" aria-expanded="false"
             data-nav-drawer-target="button" data-action="nav-drawer#toggle">

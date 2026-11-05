@@ -106,10 +106,14 @@
 
   --transition: 160ms ease;
   /* 遊びの動き(motion.css。docs/design.md §4)。SANKOU! と同じく、触れたものだけが短く小さく動く。
-     --nudge は進む・沈むときの距離で、管理画面は 0 にして止める(admin.css) */
+     --nudge は進むときの距離で、管理画面は 0 にして止める(admin.css) */
   --motion: 200ms ease;
   --motion-line: 300ms ease;
   --nudge: 3px;
+  /* サイト名の伸び(motion.css の 3)。上限は伸ばし棒の字数で、触れてから伸びきるまでの時間と、離してから揺れ終わるまでの時間 */
+  --brand-stretch-max: 3;
+  --motion-stretch: 3s;
+  --motion-spring: 900ms;
 
   color-scheme: light;
 
