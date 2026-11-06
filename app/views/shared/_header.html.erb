@@ -1,8 +1,17 @@
 <%# グローバルヘッダー(docs/design.md §5.1)。サイト名 + ナビ(現在地表示)。
     キーワード検索はヘッダーに常設せず、トップページのヒーロー中央に置く(検索を主役にするため)。
-    900px 以下ではナビをハンバーガーで開閉するドロワーに格納する(nav-drawer コントローラ)。 %>
-<header class="site-header" data-controller="nav-drawer"
-        data-action="keydown.esc@window->nav-drawer#close turbo:before-cache@document->nav-drawer#close"
+    900px 以下ではナビをハンバーガーで開閉するドロワーに格納する(nav-drawer コントローラ)。
+    ページを下へ送ると流れ去るヘッダーを、上へ少し戻したときに降ろす(header-reveal)のは公開側だけ。
+    管理画面は、画面ごとに貼り付く自前の部品(アノテーションの側面・下端のバー)を持つので外す(docs/design.md §10) %>
+<% reveal = !admin_page? %>
+<%# header-reveal が受ける合図: ドロワーが開いている間は出したままにし(hold)、閉じたら手放す(release)。
+    フォーカスが入ったら出す(reveal)。Turbo のキャッシュの直前に出入りの状態を畳み(reset)、ページが切り替わって
+    スクロール位置が飛んだあとは基準を取り直す(sync) %>
+<% reveal_actions = %w[nav-drawer:open->header-reveal#hold nav-drawer:close->header-reveal#release
+                       focusin->header-reveal#reveal turbo:before-cache@document->header-reveal#reset
+                       turbo:load@document->header-reveal#sync] %>
+<header class="site-header" data-controller="nav-drawer<%= " header-reveal" if reveal %>"
+        data-action="keydown.esc@window->nav-drawer#close turbo:before-cache@document->nav-drawer#close<%= " #{reveal_actions.join(" ")}" if reveal %>"
         data-nav-drawer-open-label-value="<%= t("layouts.menu_open") %>"
         data-nav-drawer-close-label-value="<%= t("layouts.menu_close") %>">
   <div class="site-header__inner">
@@ -14,8 +23,10 @@
           tag.span(char, class: "site-brand__char", data: index.zero? ? { stretch_mark: t("layouts.brand_stretch_mark") } : {})
         }), root_path, class: "site-brand", aria: { label: t("layouts.brand") } %>
 
+    <%# 三本線は開くと × になり(layout.css)、ドロワーとスクリムの手前に出て、そのまま閉じるボタンになる。
+        ドロワーの頭には閉じるボタンを別に持たない(同じ位置に 2 つ重ねず、同じ 1 つが形を変える) %>
     <button type="button" class="nav-toggle" aria-label="<%= t("layouts.menu_open") %>" aria-expanded="false"
-            data-nav-drawer-target="button" data-action="nav-drawer#toggle">
+            aria-controls="site-drawer" data-nav-drawer-target="button" data-action="nav-drawer#toggle">
       <span class="nav-toggle__bars" aria-hidden="true">
         <span class="nav-toggle__bar"></span>
         <span class="nav-toggle__bar"></span>
@@ -23,15 +34,11 @@
       </span>
     </button>
 
-    <div class="site-header__right" data-nav-drawer-target="panel">
-      <%# ドロワーの頭(狭幅だけ。広い幅では出さない)。ヘッダーと同じ高さに組んで下に墨の罫を引き、
-          閉じるボタンをハンバーガーと同じ位置に置く(docs/design.md §5.1) %>
+    <div class="site-header__right" id="site-drawer" data-nav-drawer-target="panel">
+      <%# ドロワーの頭(狭幅だけ。広い幅では出さない)。ヘッダーと同じ高さに組んで下に墨の罫を引く。
+          右端はハンバーガー(× になっている)が手前に重なる(docs/design.md §5.1) %>
       <div class="nav-drawer__head">
         <span class="nav-drawer__title"><%= t("layouts.menu_title") %></span>
-        <button type="button" class="nav-drawer__close" aria-label="<%= t("layouts.menu_close") %>"
-                data-nav-drawer-target="close" data-action="nav-drawer#close">
-          <%= icon "x" %>
-        </button>
       </div>
 
       <nav class="site-nav">
@@ -55,11 +62,14 @@
           <div class="nav-menu__panel" id="nav-menu-search" hidden
                data-nav-menu-target="panel" aria-labelledby="nav-menu-search-trigger">
             <%# 各項目に小さなアイコンを添える(ジャンル=タグ / エンティティ=立方体 / 言語学的特徴=ペン先 / 索引=50音表 / 詳細検索=絞り込み) %>
-            <% ways.each do |way| %>
-              <%= link_to way[:path], class: ("is-current" if request.path == way[:path]) do %>
-                <%= icon way[:icon] %><span><%= way[:label] %></span>
+            <%# 行の包み(.nav-menu__list)は、狭幅のドロワーで高さを 0 から伸ばして畳むための器(layout.css) %>
+            <div class="nav-menu__list">
+              <% ways.each do |way| %>
+                <%= link_to way[:path], class: ("is-current" if request.path == way[:path]) do %>
+                  <%= icon way[:icon] %><span><%= way[:label] %></span>
+                <% end %>
               <% end %>
-            <% end %>
+            </div>
           </div>
         </div>
 

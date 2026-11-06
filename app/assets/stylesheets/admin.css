@@ -103,6 +103,21 @@
   --brand-stretch-max: 0;
 }
 
+/* ドロワーの遊び(行が順に寄って出る動きと、三本線の × や開閉の印の行き過ぎ)も止める。
+   開閉そのものの滑り・スクリムの薄れ・プルダウンの伸び縮みは、作業の道具なので残す */
+.is-admin {
+  --motion-pop: 160ms ease;
+}
+
+.is-admin .site-header__right.is-entering .site-nav > a,
+.is-admin .site-header__right.is-entering .nav-menu__trigger,
+.is-admin .site-header__right.is-entering .nav-menu__panel a,
+.is-admin .site-header__right.is-entering .site-nav form button,
+.is-admin .site-header__right.is-entering .theme-toggle__button,
+.is-admin .nav-menu__panel.is-entering .nav-menu__list > a {
+  animation: none;
+}
+
 .is-admin .btn:hover,
 .is-admin .pagination a:hover {
   background: var(--bg-soft);

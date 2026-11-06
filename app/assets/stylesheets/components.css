@@ -1631,6 +1631,28 @@ a.tag:hover .genre-hub__count {
   display: none;
 }
 
+/* 開閉の動き。ヘッダーの「検索」のプルダウンと同じ(layout.css の .nav-menu__panel): 開くときは上辺から下へ向けて現れながら 8px 降り、
+   閉じるときは短く上へ畳む。hidden の display の切り替えを遅らせて(allow-discrete)、閉じる動きを最後まで見せる。動きを減らす設定では切り替えるだけ */
+@media (prefers-reduced-motion: no-preference) {
+  .search-ways__panel {
+    clip-path: inset(0 0 0 0);
+    transition: clip-path var(--motion-open), translate var(--motion-open), display var(--motion-open) allow-discrete;
+  }
+
+  .search-ways__panel[hidden] {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 -8px;
+    transition: clip-path var(--motion-close), translate var(--motion-close), display var(--motion-close) allow-discrete;
+  }
+
+  @starting-style {
+    .search-ways__panel {
+      clip-path: inset(0 0 100% 0);
+      translate: 0 -8px;
+    }
+  }
+}
+
 /* 見出しと閉じるボタンは、狭い幅のシートだけが持つ */
 .search-ways__panel-head {
   display: none;
@@ -1756,6 +1778,44 @@ a.tag:hover .genre-hub__count {
     inset: 0;
     z-index: 39;
     background: var(--scrim);
+  }
+
+  /* シートは画面の下からせり上がり(開くときは出だしが速く、閉じるときは短く下へ抜ける)、スクリムは薄れて出入りする */
+  @media (prefers-reduced-motion: no-preference) {
+    .search-ways__panel {
+      clip-path: none;
+      translate: 0 0;
+      transition: translate var(--motion-open), display var(--motion-open) allow-discrete;
+    }
+
+    .search-ways__panel[hidden] {
+      clip-path: none;
+      translate: 0 100%;
+      transition: translate var(--motion-close), display var(--motion-close) allow-discrete;
+    }
+
+    @starting-style {
+      .search-ways__panel {
+        clip-path: none;
+        translate: 0 100%;
+      }
+    }
+
+    .search-ways__scrim {
+      opacity: 0;
+      transition: opacity var(--motion-close), display var(--motion-close) allow-discrete;
+    }
+
+    .search-ways:has(.search-ways__panel:not([hidden])) .search-ways__scrim {
+      opacity: 1;
+      transition: opacity var(--motion-open), display var(--motion-open) allow-discrete;
+    }
+
+    @starting-style {
+      .search-ways:has(.search-ways__panel:not([hidden])) .search-ways__scrim {
+        opacity: 0;
+      }
+    }
   }
 }
 

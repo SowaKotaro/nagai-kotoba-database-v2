@@ -12,6 +12,9 @@
 html {
   scroll-padding-top: var(--space-5);
   -webkit-text-size-adjust: 100%;
+  /* ダブルタップでのズームを無効にする(2 本指のズームは残す)。ドロワーの折り畳みなど、続けて押す部品で
+     指が 2 度当たるたびに画面が拡大していた(2026-11-06 オーナー指示。アプリ全体)。祖先の値との積になるので、html に 1 つ置けば全体に効く */
+  touch-action: manipulation;
 }
 
 /* 地は SANKOU! と同じ #FAFAFA(--bg)。一覧の行・ボタン・入力は一段明るい白(--surface)で載せる。
