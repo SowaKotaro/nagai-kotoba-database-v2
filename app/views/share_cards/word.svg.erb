@@ -1,26 +1,37 @@
 <%# 単語の共有カード(og:image)。寸法と文字の組みは WordShareCard が決め、ShareCardRenderer が
-    rsvg-convert で PNG に焼く。体裁は既定カード(public/og-default.png)と同じ格子で、
-    地と墨・表層形だけ太字・アクセント色なし(docs/design.md §5.1)。
+    rsvg-convert で PNG に焼く。体裁は既定カード(public/og-default.png)と同じ作り(長い言葉の壁の上に、
+    白の面＋墨の枠＋角の札を置く)で、地と墨・表層形と文字数だけ太字・アクセント色なし(docs/design.md §5.1)。
     色はライトのトークンと同値をリテラルで持つ(画像は見る人のテーマに追従できないので、地の 1 枚に決める)。
-    書体は本番サーバに入れる Noto Sans CJK JP(fonts-noto-cjk。太さは Regular と Bold だけ)と DejaVu Sans Mono(fonts-dejavu-core)。
+    書体は本番サーバに入れる Noto Sans CJK JP(fonts-noto-cjk。太さは Regular と Bold だけ)。
     文字は 1 行ずつ別の text にする(tspan を並べると、あいだの改行が空白として描かれて行頭がずれる) %>
 <% grid = WordShareCard %>
 <% sans = "Noto Sans CJK JP, Noto Sans JP, sans-serif" %>
-<% mono = "DejaVu Sans Mono, Liberation Mono, monospace" %>
 <svg xmlns="http://www.w3.org/2000/svg" width="<%= grid::WIDTH %>" height="<%= grid::HEIGHT %>" viewBox="0 0 <%= grid::WIDTH %> <%= grid::HEIGHT %>">
   <rect width="<%= grid::WIDTH %>" height="<%= grid::HEIGHT %>" fill="#fafafa"/>
 
-  <%# 格子(--border)。横罫は画像の端まで、縦罫(額の左右と柱)は区画の全高に通す。本体の罫は読みと標識を分ける %>
-  <g fill="#e4e3e0">
-    <rect x="0" y="<%= grid::FRAME_TOP %>" width="<%= grid::WIDTH %>" height="1"/>
-    <rect x="0" y="<%= grid::FRAME_BOTTOM %>" width="<%= grid::WIDTH %>" height="1"/>
-    <% [ grid::FRAME_LEFT, grid::PILLAR, grid::FRAME_RIGHT ].each do |x| %>
-    <rect x="<%= x %>" y="<%= grid::FRAME_TOP %>" width="1" height="<%= grid::FRAME_BOTTOM - grid::FRAME_TOP %>"/>
+  <%# 背景の壁: 公開している長い言葉を淡い墨(--border-strong を地に 50% で溶かした色)で何行も流す。
+      前の札に隠れない縁だけが見える。語と並べ方は既定カードと同じ(ShareCardWall) %>
+  <g font-family="<%= sans %>" font-size="<%= card.wall.font_size %>" font-weight="bold" fill="<%= card.wall.fill %>">
+    <% card.wall.items.each do |item| %>
+    <text x="<%= item.x %>" y="<%= item.y %>"><%= item.text %></text>
     <% end %>
-    <rect x="<%= grid::TEXT_LEFT %>" y="<%= card.rule_y %>" width="<%= grid::FRAME_RIGHT - grid::TEXT_LEFT %>" height="1"/>
   </g>
 
-  <%# 左の袖: 読みを五十音の円環で一筆書きにした図。補助の円は --border-strong、線は --text-subtle、始点は --text-muted %>
+  <%# 札(--surface の面＋--text の枠＋角)。画像は縮小されて表示されるので、サイトの 1px・角 8px を 2px・角 12px に太らせてある
+      (既定カードの BORDER_WIDTH・RADIUS と同じ)。SVG の枠は線の中心に引かれるので、外周が FRAME_* に収まるよう半分だけ内へ寄せる。
+      札の中は、袖と本体を分ける柱と、読みと説明を分ける罫だけを細罫(--border)で引く %>
+  <rect x="<%= grid::FRAME_LEFT + 1 %>" y="<%= grid::FRAME_TOP + 1 %>"
+        width="<%= grid::FRAME_RIGHT - grid::FRAME_LEFT - 2 %>" height="<%= grid::FRAME_BOTTOM - grid::FRAME_TOP - 2 %>"
+        rx="<%= grid::FRAME_RADIUS - 1 %>" fill="#ffffff" stroke="#2f2725" stroke-width="2"/>
+  <g fill="#e4e3e0">
+    <rect x="<%= grid::PILLAR %>" y="<%= grid::FRAME_TOP + 2 %>" width="1" height="<%= grid::FRAME_BOTTOM - grid::FRAME_TOP - 4 %>"/>
+    <% if card.rule_y %>
+    <rect x="<%= grid::TEXT_LEFT %>" y="<%= card.rule_y %>" width="<%= grid::TEXT_WIDTH %>" height="1"/>
+    <% end %>
+  </g>
+
+  <%# 左の袖: 読みを五十音の円環で一筆書きにした図(補助の円は --border-strong、線は --text-subtle、始点は --text-muted)と、
+      その下に文字数(数は --text の太字、単位「字」は --text-muted) %>
   <circle cx="<%= grid::RING_CENTER_X %>" cy="<%= grid::RING_CENTER_Y %>" r="<%= card.ring_radius %>"
           fill="none" stroke="#bcb6b3" stroke-width="1.4"/>
   <% if card.ring_points.size > 1 %>
@@ -30,8 +41,13 @@
   <% if (start = card.ring_points.first) %>
   <circle cx="<%= start[0] %>" cy="<%= start[1] %>" r="<%= card.ring_start_radius %>" fill="#5c4e4a"/>
   <% end %>
+  <text x="<%= card.number_x %>" y="<%= grid::NUMBER_BASELINE %>" font-family="<%= sans %>" font-size="<%= grid::NUMBER_FONT_SIZE %>"
+        font-weight="bold" fill="#2f2725"><%= card.number_text %></text>
+  <text x="<%= card.unit_x %>" y="<%= grid::NUMBER_BASELINE %>" font-family="<%= sans %>" font-size="<%= grid::NUMBER_UNIT_FONT_SIZE %>"
+        fill="#5c4e4a"><%= card.unit_text %></text>
 
-  <%# 右の本体: 表層形(--text の太字。Bold は本番の書体が持ついちばん太い字) → 読みと文字数(--text-muted) → 罫 → 標識(--text-subtle の等幅) %>
+  <%# 右の本体: 表層形(--text の太字。Bold は本番の書体が持ついちばん太い字) → 読み(--text-muted) → 罫 → 説明(--text-muted)
+      → ジャンルと品詞の札(白の面＋--text の 2px の枠。字は --text) %>
   <% card.surface_lines.each do |line| %>
   <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= sans %>" font-size="<%= card.surface_font_size %>" font-weight="bold"
         letter-spacing="<%= card.surface_tracking %>" fill="#2f2725"><%= line.text %></text>
@@ -40,8 +56,14 @@
   <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= sans %>" font-size="<%= card.reading_font_size %>"
         letter-spacing="<%= card.reading_tracking %>" fill="#5c4e4a"><%= line.text %></text>
   <% end %>
-  <% card.label_lines.each do |line| %>
-  <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= mono %>" font-size="<%= grid::LABEL_FONT_SIZE %>"
-        letter-spacing="<%= card.label_tracking %>" fill="#6a605c"><%= line.text %></text>
+  <% card.meaning_lines.each do |line| %>
+  <text x="<%= grid::TEXT_LEFT %>" y="<%= line.y %>" font-family="<%= sans %>" font-size="<%= card.meaning_font_size %>"
+        letter-spacing="<%= card.meaning_tracking %>" fill="#5c4e4a"><%= line.text %></text>
+  <% end %>
+  <% card.chips.each do |chip| %>
+  <rect x="<%= chip.x + 1 %>" y="<%= chip.y + 1 %>" width="<%= chip.width - 2 %>" height="<%= grid::CHIP_HEIGHT - 2 %>"
+        rx="<%= grid::CHIP_RADIUS - 1 %>" fill="#ffffff" stroke="#2f2725" stroke-width="2"/>
+  <text x="<%= chip.text_x %>" y="<%= chip.text_y %>" font-family="<%= sans %>" font-size="<%= grid::CHIP_FONT_SIZE %>"
+        fill="#2f2725"><%= chip.text %></text>
   <% end %>
 </svg>

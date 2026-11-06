@@ -22,6 +22,10 @@ class ShareCardTypesetterTest < ActiveSupport::TestCase
     assert_equal 1, fit("あ" * 10).lines.size
     assert_equal 2, fit("あ" * 11).lines.size
 
+    # 1 行に置いたときの幅(em)。全角は 1em、太字の数字は 0.59em(字間は字と字のあいだだけ)
+    assert_in_delta 1.18, ShareCardTypesetter.new("21", width: 1, tracking: 0, bold: true).width_em, 0.001
+    assert_in_delta 3.2, ShareCardTypesetter.new("あいう", width: 1, tracking: 0.1).width_em, 0.001
+
     # 割りやすい所(助詞の後・「・」の後・空白・開き括弧の前)があれば、そこで割る
     assert_equal [ "長い言葉の", "データベース" ], fit("長い言葉のデータベース").lines
     assert_equal [ "ノヴァ・スコシア・ダック・", "トーリング・レトリーバー" ],
