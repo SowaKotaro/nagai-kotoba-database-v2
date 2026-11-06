@@ -187,13 +187,14 @@
 | `config/locales/ja.yml` | 表示文言 | — |
 | `config/routes.rb` | ルートの正（画面の役割は overview §5） | — |
 | `config/linguistic_features_glossary.yml` | 言語学的特徴の用語解説（seed のマスタ名と 1 : 1） | — |
+| `config/share_card_wall.json` | 共有カードの背景「長い言葉の壁」の語と並べ方（既定カード `script/og_default.py` と単語カード `ShareCardWall` が共有） | `share_card_wall.rb` |
 | `db/schema.rb`・`db/migrate/` | スキーマの正と、その変更 | `20260924100000_create_word_candidates.rb`（as_ci の明示） |
 | `db/seeds.rb` | 管理者とマスタを冪等に投入する（名前の正は `SeedCatalog`） | — |
 | `db/morpheme_frequencies.json` | 統計 §1 のワードクラウドの事前集計（ローカルの `bin/rails stats:morphemes` で作ってコミットする） | — |
 | `lib/tasks/` | backfill（派生値の再生成と検証）・stats（形態素頻度）・dev_samples（開発用のダミー） | `backfill.rake` |
 | `test/` | models・controllers・integration・system・services・helpers・tasks・assets。共通のヘルパは `test_helper.rb` と `test_helpers/`（`sign_in_as`） | `test_helper.rb`・`application_system_test_case.rb` |
 | `.claude/skills/`・`.claude/commands/`・`research/` | 調査スキル（ローカルの Claude Code）と、その入出力 | `research/README.md` |
-| `script/og_default.py`・`tools/claude-ai-skill/build.sh` | 既定の共有カード `public/og-default.png` の生成、claude.ai 用のスキル束の生成 | — |
+| `script/og_default.py`・`script/favicon.py`・`tools/claude-ai-skill/build.sh` | 既定の共有カード `public/og-default.png` の生成、favicon 3 点（`icon.svg`・`favicon.ico`・`apple-touch-icon.png`）の生成、claude.ai 用のスキル束の生成 | — |
 | `docs/` | 仕様（索引は overview の冒頭）。`docs/history/` は記録で、現行の仕様ではない | — |
 
 ## 4. 合格判定コマンド（コミット前に必ず実行すること）

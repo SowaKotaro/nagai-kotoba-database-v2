@@ -119,8 +119,6 @@ ja:
     en:
       site: "NAGAI KOTOBA DATABASE"
       est: "EST. 2026 / JAPAN"
-      # 単語の共有カード(og:image)の標識 2 行目。読みの文字数(日本語側にも同じ数を置く)
-      reading_characters: "READING / %{count} CHARACTERS"
   shared:
     feature_glossary:
       examples_separator: "　／　"
@@ -403,7 +401,6 @@ ja:
         none_html: '「<span class="shiritori__char">%{char}</span>」から始まる言葉は、まだ収録されていません。'
     # 単語ごとの共有カード(og:image。WordShareCard)
     share_card:
-      reading_length: "（%{count}文字）"
       alt: "「%{surface}」（読み %{reading}）の共有カード"
     lead:
       base: "「%{surface}」は、読み「%{reading}」（%{metrics}）の日本語の長い言葉。"

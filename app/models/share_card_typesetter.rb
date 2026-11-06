@@ -81,6 +81,9 @@ class ShareCardTypesetter
     @prefix_advances = @chars.each_with_object([ 0.0 ]) { |char, sums| sums << sums.last + advance(char) }
   end
 
+  # 1 行に置いたときの幅(em)。字間を含む。級数を掛ければ px になる(数字や札の幅を測るときに使う)。
+  def width_em = line_em(0, @chars.size)
+
   # 収まる組みを返す。どの候補にも収まらなければ、最後の候補の最小級数で収まるまで
   # 末尾を落として「…」を付ける。
   def fit(steps)
