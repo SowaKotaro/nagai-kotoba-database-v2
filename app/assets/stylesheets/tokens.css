@@ -114,6 +114,17 @@
   --brand-stretch-max: 3;
   --motion-stretch: 3s;
   --motion-spring: 900ms;
+  /* タップで開閉する部品の動き(layout.css のドロワー・「検索」のプルダウン・ヘッダーの出入り。docs/design.md §4)。
+     開くときは出だしが速く着地がやわらかい曲線(280ms)、閉じるときは短く加速して抜ける(180ms)。
+     --motion-pop は終わりに少し行き過ぎて戻る曲線で、三本線が × になる動きと開閉の印(∨)の半回転が使う。管理画面は止める(admin.css) */
+  --motion-open: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-close: 180ms cubic-bezier(0.4, 0, 1, 1);
+  --motion-pop: 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 行が順に出る動き(ドロワーを開いた直後と「検索」を開いた直後。layout.css の nav-row-in)。文字が透かさずに現れ、
+     右から --motion-row-shift を、終わりに少し行き過ぎて戻りながら寄る。1 行ずつ --motion-row-step ずつ遅らせる */
+  --motion-row: 380ms cubic-bezier(0.25, 1.35, 0.5, 1);
+  --motion-row-step: 45ms;
+  --motion-row-shift: 28px;
 
   color-scheme: light;
 

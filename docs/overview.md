@@ -251,7 +251,8 @@ bin/rails server
 
 | 画面 | コントローラ |
 |---|---|
-| 共通（ヘッダー） | `nav_menu`（「検索」のプルダウン）・`nav_drawer`（狭幅のドロワー）・`theme`（ダークモード） |
+| 共通（ヘッダー） | `nav_menu`（「検索」のプルダウン）・`nav_drawer`（狭幅のドロワー）・`header_reveal`（上へ戻したときにヘッダーを降ろす。公開側だけ）・`theme`（ダークモード） |
+| ホーム | `nav_menu`（探し方の入口の選択肢。ヘッダーの「検索」と同じ）・`swipe_dismiss`（狭幅の下からのシートを、下へのスワイプで閉じる） |
 | 単語の一覧・詳細 | `auto_submit`（並び替えを選んだら送る。管理の一覧でも使う）・`clipboard`（URL のコピー。管理画面の書き出しでも使う） |
 | 詳細検索 | `fold_count`（畳んだ区画・ジャンルの見出しの選択数）・`range_slider`（読みの文字数）・`char_type`・`char_type_toggle`（文字種） |
 | ランキング・統計・索引 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（Plotly）・`vowel_graph`（母音のつながり） |

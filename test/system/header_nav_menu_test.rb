@@ -9,6 +9,9 @@ class HeaderNavMenuTest < ApplicationSystemTestCase
     assert_no_selector ".nav-menu__panel a", text: I18n.t("layouts.nav.advanced_search")
 
     open_nav_menu
+    # 開いた直後の間だけ、配下の行が上から順に出る(行の動きは .is-entering の下で走る。少しして外れる)
+    assert_selector ".nav-menu__panel.is-entering"
+    assert_no_selector ".nav-menu__panel.is-entering"
     find("body").send_keys(:escape)
     assert_nav_menu_closed
 

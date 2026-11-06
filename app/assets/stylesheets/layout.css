@@ -1,17 +1,44 @@
 /* ページ骨格(docs/design.md §5.1)。
-   手本にならい、ヘッダーは罫も影も持たず、追従もしない。
+   ヘッダーは影を持たず、常時は貼り付かない(上へ少し戻したときだけ降りる。下の「下へ送ると流れ去り」を参照)。
    ページは「大きな余白の中に、狭いカラムがひとつ」だけ置かれる。 */
 
 /* --- グローバルヘッダー --- */
 /* ヘッダーは帯を持たず、地(--bg)の上にブランドとナビだけを置き、下に墨の罫 1 本を引いて本文と分ける
    (SANKOU! がナビの区切りに引く罫と同じ。フッターの上の罫と対になる。2026-11-03 オーナー指示) */
 .site-header {
-  /* 帯の余白(左右と上下)。ドロワーの頭(閉じるボタンをハンバーガーに重ねる)と、「検索」のプルダウンを
+  /* 帯の余白(左右と上下)。ドロワーの頭(ハンバーガーの × と同じ高さに組む)と、「検索」のプルダウンを
      吊り下げる位置も同じ値で組むので、変数 1 つずつで持つ(狭い幅と管理画面はこの変数を上書きする) */
   --header-gutter: var(--space-5);
   --header-padding-block: var(--space-4);
-  background: transparent;
+  background: var(--bg);
   border-bottom: 1px solid var(--text);
+}
+
+/* 下へ送ると流れ去り、上へ少し戻すと上端から降りてくる(header-reveal コントローラ。docs/design.md §5.1)。
+   JS が data-header-reveal を付けたときだけ働く(付かなければ、従来どおり流れ去るだけ)。
+   position: sticky の top を「ヘッダーの高さぶん上」にしておくと、ページの頭では流れる位置のまま(場所を取ったまま)、
+   流れ去ったあとはちょうど画面の外で留まる。.is-revealed で top を 0 にすると、その位置から降りてきて貼り付く。
+   隠れる側へ戻すのは、閉じる側の短い曲線(--motion-close)。出てくる側は開く側の曲線(--motion-open)。
+   transform は使わない(変形した祖先の中では、position: fixed のドロワーが画面ではなくヘッダーを基準に置かれてしまう)。
+   重ねる順は 30: 降りたヘッダーは、ページの中のプルダウン(z-index 25)より手前に出て、画面の下から開くシート(40)の奥に回る */
+.site-header[data-header-reveal] {
+  position: sticky;
+  top: calc(var(--header-height) * -1);
+  z-index: 30;
+}
+
+.site-header[data-header-reveal].is-revealed {
+  top: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-header[data-header-reveal] {
+    transition: top var(--motion-close);
+  }
+
+  .site-header[data-header-reveal].is-revealed {
+    transition: top var(--motion-open);
+  }
 }
 
 /* ヘッダーだけは本文より少し広く取り、ブランドとナビが1行に収まるようにする */
@@ -54,10 +81,12 @@
   flex-wrap: wrap;
 }
 
-/* ハンバーガー(900px 以下だけ表示)。開いている間はスクリムとドロワーの下に隠れ、同じ位置にドロワーの閉じるボタンが来るので、
-   三本線は × に変形させない。線は閉じるボタンの × と同じ墨 */
+/* ハンバーガー(900px 以下だけ表示)。開くと三本線が × に変わり(下の aria-expanded の規則)、スクリムとドロワーの手前に出て、
+   そのまま閉じるボタンになる(2026-11-06 オーナー指示。2026-11-04 に外した変形を、動きを付けて戻した)。線は墨 */
 .nav-toggle {
   display: none;
+  position: relative;
+  z-index: 21; /* ドロワー(20)とスクリム(19)の手前。ヘッダーの中での順 */
   border: none;
   background: none;
   padding: 12px;
@@ -84,6 +113,28 @@
 .nav-toggle__bar:nth-child(1) { top: 0; }
 .nav-toggle__bar:nth-child(2) { top: 5px; }
 .nav-toggle__bar:nth-child(3) { top: 10px; }
+
+/* 開くと、上と下の線が真ん中へ寄って ±45° に倒れ、真ん中の線は縮んで消える(× の腕は線を 0.86 に詰めて、
+   Phosphor の × と同じ 11px 四方に収める)。終わりに少し行き過ぎて戻る(--motion-pop)。動きを減らす設定では切り替えるだけ */
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
+  transform: translateY(5px) rotate(45deg) scaleX(0.86);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(2) {
+  transform: scaleX(0);
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
+  transform: translateY(-5px) rotate(-45deg) scaleX(0.86);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 真ん中の線は行き過ぎで裏返らないよう、透明にするほうを先に済ませる */
+  .nav-toggle__bar {
+    transition: transform var(--motion-pop), opacity 100ms ease;
+  }
+}
 
 /* ドロワーの頭とスクリムは狭幅だけで使う */
 .nav-drawer__head,
@@ -136,15 +187,21 @@
 .nav-menu__trigger .nav-menu__caret {
   width: 1em;
   height: 1em;
-  transition: transform 0.15s ease;
 }
 
 .nav-menu__trigger[aria-expanded="true"] .nav-menu__caret {
   transform: rotate(180deg);
 }
 
+/* 半回転は、終わりに少し行き過ぎて戻る(--motion-pop)。動きを減らす設定では切り替えるだけ */
+@media (prefers-reduced-motion: no-preference) {
+  .nav-menu__trigger .nav-menu__caret {
+    transition: transform var(--motion-pop);
+  }
+}
+
 /* 墨の枠の札を、ヘッダーの下の罫から吊り下げる(上辺を罫に重ねるので、上の角は丸めない)。影は落とさない。
-   top は開くボタンの下端から帯の下の余白のぶん下 = ヘッダーの罫の位置。行は 1px の隙間で仕切る(docs/design.md §3) */
+   top は開くボタンの下端から帯の下の余白のぶん下 = ヘッダーの罫の位置。行(.nav-menu__list)は 1px の隙間で仕切る(docs/design.md §3) */
 .nav-menu__panel {
   position: absolute;
   top: calc(100% + var(--header-padding-block));
@@ -152,17 +209,62 @@
   transform: translateX(-50%);
   z-index: 25;
   min-width: 12rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  background: var(--border);
   border: 1px solid var(--text);
   border-radius: 0 0 var(--radius) var(--radius);
   overflow: hidden;
 }
 
+.nav-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+}
+
 .nav-menu__panel[hidden] {
   display: none;
+}
+
+/* 開いた直後の行は、ドロワーを開いた直後と同じ動きで、上から順に出る(順番は行の並び --item。nav-menu が開くたびに
+   .is-entering を付け、少しして外す。開いたままの「検索」をドロワーごと開き直すときは、ドロワー側の規則が中の行も順に出す)。
+   動かすのは行の文字だけ(行の面は動かさない。行の隙間の罫が透けるため)。動きを減らす設定では出さない */
+.nav-menu__list > :nth-child(2) { --item: 1; }
+.nav-menu__list > :nth-child(3) { --item: 2; }
+.nav-menu__list > :nth-child(4) { --item: 3; }
+.nav-menu__list > :nth-child(5) { --item: 4; }
+.nav-menu__list > :nth-child(6) { --item: 5; }
+.nav-menu__list > :nth-child(7) { --item: 6; }
+.nav-menu__list > :nth-child(8) { --item: 7; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-menu__panel.is-entering .nav-menu__list > a {
+    animation: nav-row-in var(--motion-row) backwards, nav-row-pop 1ms steps(1, end) backwards;
+    animation-delay: calc(80ms + var(--item, 0) * var(--motion-row-step));
+  }
+}
+
+/* 開閉の動き: 罫から札が吊り下がる。開くときは上辺から下へ向けて現れながら 8px 降り(280ms)、
+   閉じるときは短く上へ畳む(180ms)。hidden 属性の display の切り替えを遅らせて(allow-discrete)、閉じる動きを最後まで見せる。
+   開く瞬間の出発点は @starting-style。translate は transform(横の中央寄せ)と別の組みなので、重ならない。
+   対応していないブラウザでは、従来どおり切り替わるだけ。狭幅のドロワーの中では高さの伸び縮みに替わる(下の 900px 以下) */
+@media (prefers-reduced-motion: no-preference) {
+  .nav-menu__panel {
+    clip-path: inset(0 0 0 0); /* none のままだと、形のある clip-path とは補間できない */
+    transition: clip-path var(--motion-open), translate var(--motion-open), display var(--motion-open) allow-discrete;
+  }
+
+  .nav-menu__panel[hidden] {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 -8px;
+    transition: clip-path var(--motion-close), translate var(--motion-close), display var(--motion-close) allow-discrete;
+  }
+
+  @starting-style {
+    .nav-menu__panel {
+      clip-path: inset(0 0 100% 0);
+      translate: 0 -8px;
+    }
+  }
 }
 
 .nav-menu__panel a {
@@ -573,7 +675,8 @@ main.container--flush > .flash {
   /* --- ドロワー ---
      札と同じ白い面に、左端の墨の罫 1 本で輪郭を持たせる(影は落とさない。下はスクリムで沈める)。
      閉じている間は visibility でも隠し、画面の外へ退いたナビとスイッチに Tab で入らないようにする。
-     隠すのはスライドし終わってから(閉じるときだけ visibility の切り替えを 0.2s 遅らせる)。
+     visibility は滑っている間は見えたままで、終わりに隠れる(visible と hidden のあいだは、途中がずっと visible になる補間)ので、
+     遅らせる指定は要らない。
      高さは見えている画面の高さ(100dvh)。100vh だと iOS のツールバーの裏に下の行が潜る */
   .site-header__right {
     position: fixed;
@@ -592,7 +695,6 @@ main.container--flush > .flash {
     gap: 0;
     transform: translateX(100%);
     visibility: hidden;
-    transition: transform 0.2s ease, visibility 0s linear 0.2s;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -600,40 +702,56 @@ main.container--flush > .flash {
   .site-header__right.is-open {
     transform: translateX(0);
     visibility: visible;
-    transition: transform 0.2s ease, visibility 0s;
+  }
+
+  /* 開く動き(2026-11-06 オーナー指示「ドロワーそのものの動きも少し工夫して」): 右から滑り込み(出だしが速く、着地がやわらかい)、
+     下のページを沈めるスクリムが薄れて出て、ナビの行とテーマの切り替えが、上から順に出る。
+     閉じるときは短く抜けるだけで、行は動かさない。動きを減らす設定では、切り替えるだけ */
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header__right {
+      transition: transform var(--motion-close), visibility var(--motion-close);
+    }
+
+    .site-header__right.is-open {
+      transition: transform var(--motion-open), visibility var(--motion-open);
+    }
+
+    /* 行の出方(2026-11-06 オーナー指示「ふわんと現れるより、パリッとした印象が欲しい」「早すぎて目で追えない。動きももう少し」): 文字は透かさずに、
+       順番が来た瞬間に現れて(steps で一気に切り替える。途中の薄い文字は出さない)、右から 28px を、終わりに少し行き過ぎて戻りながら寄る
+       (380ms)。上から 45ms ずつ遅らせる(値は tokens.css の --motion-row・--motion-row-step・--motion-row-shift)。
+       「検索」を開いた直後の行(下の .nav-menu__panel.is-entering)も、同じ動き。
+       順番(--row)と、動かす間の印(.is-entering)は nav-drawer が開くたびに付ける: 畳んだ「検索」の中の行が見えているかで、行の数が変わるため。
+       「検索」を自分で開閉したときは動かさない(高さの伸び縮みだけ)ので、開いた直後の間だけの印にしている。
+       動かすのは行の文字だけで、面は動かさない(行の面ごと透かすと、行の隙間に使っている罫の灰色が、出る前の行の位置に透けて見える)。
+       ナビの行のホバーの色の移り(transition)とは別の組みで、重ならない */
+    .site-header__right.is-entering .site-nav > a,
+    .site-header__right.is-entering .nav-menu__trigger,
+    .site-header__right.is-entering .nav-menu__panel a,
+    .site-header__right.is-entering .site-nav form button {
+      animation: nav-row-in var(--motion-row) backwards, nav-row-pop 1ms steps(1, end) backwards;
+      animation-delay: calc(120ms + var(--row, 0) * var(--motion-row-step));
+    }
+
+    /* テーマの切り替えは、文字を寄せると右端のスイッチを押し出すので、現れるだけにする */
+    .site-header__right.is-entering .theme-toggle__button {
+      animation: nav-row-pop 1ms steps(1, end) backwards;
+      animation-delay: calc(120ms + var(--row, 0) * var(--motion-row-step));
+    }
   }
 
   .site-header__right > * {
     flex: none;
   }
 
-  /* 頭はヘッダーと同じ上下の余白とボタンの高さで組み(帯と同じ高さになる)、下にヘッダーと同じ墨の罫を引く。
+  /* 頭はヘッダーと同じ上下の余白とハンバーガーの高さ(36px)で組み(帯と同じ高さになる)、下にヘッダーと同じ墨の罫を引く。
      開いた画面では、スクリムの下のヘッダーの罫とこの罫が同じ高さで横につながる。
-     右の余白もヘッダーと同じにして、閉じるボタンをハンバーガーと同じ位置に置く */
+     右端には、手前に重なる × のハンバーガーが来る(閉じるボタンは別に持たない)ので、頭は見出しだけを置いて高さを守る */
   .nav-drawer__head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
+    min-height: calc(var(--header-padding-block) * 2 + 36px + 1px);
     padding: var(--header-padding-block) var(--header-gutter) var(--header-padding-block) var(--space-4);
     border-bottom: 1px solid var(--text);
-  }
-
-  /* 閉じるボタンはハンバーガーと同じ箱(42×36。右の余白へ 12px はみ出す)で、× の中心を三本線の中心に重ねる。
-     × の線(Phosphor Light)は 22px で約 1px になり、三本線と同じ太さに揃う */
-  .nav-drawer__close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 36px;
-    margin-right: -12px;
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--text);
-    font-size: 22px;
-    cursor: pointer;
   }
 
   /* 行は 1px の隙間で仕切って積み(docs/design.md §3)、並びの終わりにも罫を 1 本引いて閉じる。
@@ -680,18 +798,62 @@ main.container--flush > .flash {
   .nav-menu {
     display: flex;
     flex-direction: column;
-    gap: 1px;
   }
 
-  /* 「検索」の配下は吊り下げず、その場で開いて下の行を押し下げる。字下げしてアイコンを添え、一段小さく組む */
+  /* 「検索」の配下は吊り下げず、その場で開いて下の行を押し下げる。字下げしてアイコンを添え、一段小さく組む。
+     開閉は高さの伸び縮み: 行数が決まっていない高さは補間できないので、パネルを grid にして、行の包み(.nav-menu__list)を入れた
+     1 行の高さを 0fr ↔ 1fr で動かし、はみ出した分はパネルが切る(overflow: hidden)。畳んでいる間も(hidden の display を遅らせて)
+     閉じる動きの終わりまで組んでおく。広い幅の吊り下げの動き(clip-path と translate)は、ここで打ち消す。
+     包みを行に合わせて縮めず(align-self: start)、パネルの高さで切るのは、WebKit(2026-11 時点の Safari 18 相当)が
+     0 < fr < 1 の行を、パネルの高さの fr 倍の、さらに fr 倍に縮めるため(0.5fr で包みが 1/4 になり、パネルとの差が灰色の帯に見えた) */
   .nav-menu__panel {
     position: static;
     transform: none;
+    translate: none;
+    clip-path: none;
     min-width: 0;
     border: none;
     border-radius: 0;
     background: transparent;
-    overflow: visible;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+
+  .nav-menu__panel[hidden] {
+    display: none;
+    clip-path: none;
+    translate: none;
+    grid-template-rows: 0fr;
+  }
+
+  /* 包みの上に 1px の隙間を持たせる(行どうしの隙間と同じ。.site-nav の罫の色が透ける)。隙間は包みの中の余白なので、畳むと一緒に消える */
+  .nav-menu__list {
+    min-height: 0;
+    align-self: start;
+    background: transparent;
+  }
+
+  .nav-menu__list > :first-child {
+    margin-top: 1px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .nav-menu__panel {
+      transition: grid-template-rows var(--motion-open), display var(--motion-open) allow-discrete;
+    }
+
+    .nav-menu__panel[hidden] {
+      transition: grid-template-rows var(--motion-close), display var(--motion-close) allow-discrete;
+    }
+
+    @starting-style {
+      .nav-menu__panel {
+        grid-template-rows: 0fr;
+        clip-path: none;
+        translate: none;
+      }
+    }
   }
 
   .nav-menu__panel a {
@@ -721,15 +883,30 @@ main.container--flush > .flash {
     margin-right: auto;
   }
 
+  /* スクリムは薄れて出入りする。閉じている間は visibility で隠して、押せないようにする(display で切ると薄れられない) */
   .nav-drawer__scrim {
+    display: block;
     position: fixed;
     inset: 0;
     z-index: 19;
     background: var(--scrim);
+    opacity: 0;
+    visibility: hidden;
   }
 
   .nav-drawer__scrim.is-open {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .nav-drawer__scrim {
+      transition: opacity var(--motion-close), visibility var(--motion-close);
+    }
+
+    .nav-drawer__scrim.is-open {
+      transition: opacity var(--motion-open), visibility var(--motion-open);
+    }
   }
 
   body.nav-drawer-open {
@@ -746,5 +923,20 @@ main.container--flush > .flash {
 
   .site-header__inner {
     gap: var(--space-2);
+  }
+}
+
+/* 行の文字が、右から寄る(ドロワーを開いた直後と、「検索」を開いた直後。終わりの形は行の本来の形)。
+   行は flex の箱なので、text-indent は文字を包む無名の箱に効く(アイコンは動かない) */
+@keyframes nav-row-in {
+  from {
+    text-indent: var(--motion-row-shift);
+  }
+}
+
+/* 順番が来るまで文字を消しておき(animation-fill-mode: backwards)、来た瞬間に切り替える。呼ぶ側が steps(1, end) で渡す */
+@keyframes nav-row-pop {
+  from {
+    color: transparent;
   }
 }

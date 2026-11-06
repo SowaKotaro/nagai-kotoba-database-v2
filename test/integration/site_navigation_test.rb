@@ -35,5 +35,12 @@ class SiteNavigationTest < ActionDispatch::IntegrationTest
 
     assert_select "body > a.skip-link:first-child[href='#main']", text: I18n.t("layouts.skip_to_main")
     assert_select "main#main[tabindex='-1']"
+
+    # 上へ戻したときにヘッダーを降ろす(header-reveal)のは公開側だけ。管理画面は、画面ごとに貼り付く自前の部品を持つので付けない
+    assert_select "header.site-header[data-controller~='header-reveal']"
+    sign_in_as(admins(:one))
+    get admin_root_path
+    assert_select "header.site-header[data-controller~='nav-drawer']"
+    assert_select "header.site-header[data-controller~='header-reveal']", false
   end
 end
