@@ -23,6 +23,7 @@
 | `/reading` | `inputs/reading.txt` | `outputs/reading.json` |
 | `/annotation` | `inputs/annotation.json` | `outputs/annotation.json` |
 | `/reannotation` | （会話に貼る再調査用JSON。無ければ `inputs/reannotation.json`） | チャットに提案JSON（＋`outputs/reannotation.json`） |
+| `/features` | `inputs/features.json` | `outputs/features.json` |
 
 いずれも引数で入力パスを渡せば、上の既定パス以外も読める。
 
@@ -83,6 +84,10 @@
    選択肢で聞かれるので選ぶと、その項目だけを調べ直した提案JSONがチャットに返る。それを
    「提案 JSON の取り込み」に貼ると下書きが上書きされ、コンソールで承認し直せる。
    スマートフォンの Claude アプリからも同じ流れで回せる。
+6. **特徴の点検（特徴の新設・基準の見直しのあと）**: 管理画面「調査データ」→「言語学的特徴の点検」で、点検する特徴
+   （例: 方言）を選んで公開済みの語を書き出し、`inputs/features.json` に保存して `/features`。足す・外すの変更が
+   `outputs/features.json` に返るので、同じ画面の「点検結果の取り込み」に貼り、1 行ずつ確かめて選んだ行だけを適用する。
+   提案キューは通らず、意味・ジャンル・注釈状態には触れない。手順の正はスキル（`.claude/skills/word-feature-audit/SKILL.md`）。
 
 判断基準のうち、収録範囲・立項の4原則と立項スコア・表記・読み・知名度・人物語の分類・確信度は
 [`docs/annotation-guidelines.md`](../docs/annotation-guidelines.md) が正。語種・ジャンル・エンティティ・

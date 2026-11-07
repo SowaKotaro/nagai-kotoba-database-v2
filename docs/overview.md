@@ -111,8 +111,9 @@
 | `/admin/words/new` | **一括登録（3ステップ）**: 入力（箇条書き）→ 読み → 重複チェック → 登録 |
 | `/admin/annotations` | **アノテーション・コンソール**（1 語集中キュー。保存して次へ）。1 語の再調査用の書き出しは `/admin/annotations/:id/reresearch` |
 | `/admin/annotation_deck` | **アノテーション・デッキ**（複数語をまとめて開き、1 回の送信で保存。既定の語数は `Admin::AnnotationDecksController::DEFAULT_SIZE`） |
-| `/admin/research` | **調査データ**。Claude Code 連携の各画面（下の 2 行と提案キュー `/admin/annotations?proposed=1`）への入口 |
+| `/admin/research` | **調査データ**。Claude Code 連携の各画面（下の 3 行と提案キュー `/admin/annotations?proposed=1`）への入口 |
 | `/admin/annotation_proposals/export`・`/export_features`・`/new` | Claude Code 連携。調査用データの書き出し（語・言語学的特徴）と、提案 JSON の取り込み |
+| `/admin/feature_audit` | **言語学的特徴の点検**。公開済みの語と付いている特徴の書き出し（`/features` に渡す）と、点検結果（足す・外す）を 1 行ずつ確かめて選んだ行だけを適用する（提案キューは通らない） |
 | `/admin/bulk_proposal_approval` | 厳格ゲートを満たす提案の一括承認（プレビュー → 承認・公開） |
 | `/admin/tags` | **タグ統括管理**。マスタ（種別は `TagKind::MODELS`）の一覧・リネーム・削除・統合 |
 | `/admin/requests` | 公開側から届いた収録リクエストの確認・一括処理 |
@@ -320,7 +321,8 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
 | JS のコントローラ・イベント・DOM の約束事 | §12（中身の正は各ファイルの冒頭コメント） |
 | 調査の流れ（スキル → 管理画面） | [`research/README.md`](../research/README.md) |
 | 提案 JSON のキー | `AnnotationProposal` の定数（`SENSE_KEYS`・`META_KEYS`・`PAYLOAD_KEYS`）。schema.json と各 SKILL.md はその写し |
-| 書き出す調査 JSON の形 | 各書き出しクラス（`AnnotationResearchExport`・`FeatureResearchExport`・`ReannotationExport`）の `as_json` |
+| 書き出す調査 JSON の形 | 各書き出しクラス（`AnnotationResearchExport`・`FeatureResearchExport`・`FeatureAuditExport`・`ReannotationExport`）の `as_json` |
+| 特徴の点検結果（足す・外す）の JSON のキー | `FeatureAuditImport`（`word-feature-audit` の SKILL.md はその写し） |
 | マスタ名（大分類・中分類・品詞・語種・言語学的特徴） | `SeedCatalog`（[`genres.md`](genres.md) はその写し） |
 | マスタ名（小分類・エンティティ種別） | DB（調査用の書き出しの `masters` が現況） |
 | 言語学的特徴の定義 | `config/linguistic_features_glossary.yml`（注釈スキルの対応表はその写し） |

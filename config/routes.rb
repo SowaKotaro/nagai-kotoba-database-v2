@@ -110,6 +110,12 @@ Rails.application.routes.draw do
       # 提案の取り込みは通常の new/create と共用する(特徴だけの提案でも他項目は書き換わらない)。
       get :export_features, on: :collection
     end
+    # 言語学的特徴の点検(Issue 109): 公開済みの語の書き出し(show)→ 点検結果を貼って足す・外すの行を確認(preview)
+    # → 選んだ行だけを適用(apply)。提案キューは通さない。
+    resource :feature_audit, only: :show do
+      post :preview
+      post :apply
+    end
     # 提案の一括承認(Issue 65): 厳格ゲートを満たす提案をプレビュー(show)→ まとめて承認・公開(create)。
     resource :bulk_proposal_approval, only: %i[show create]
     # アノテーション・デッキ(まとめてアノテーション)。キューの先頭から既定の枚数(DEFAULT_SIZE)を

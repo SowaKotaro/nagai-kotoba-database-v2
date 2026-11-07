@@ -5,12 +5,12 @@ require "test_helper"
 class Admin::ResearchControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in_as(admins(:one)) }
 
-  test "書き出し・特徴の再調査・取り込み・提案キューへ、作業の順に件数つきで案内する" do
+  test "書き出し・特徴の再調査・特徴の点検・取り込み・提案キューへ、作業の順に件数つきで案内する" do
     get admin_research_path
     assert_response :success
 
     assert_equal [ export_admin_annotation_proposals_path, export_features_admin_annotation_proposals_path,
-                   new_admin_annotation_proposal_path, admin_annotations_path(proposed: 1) ],
+                   admin_feature_audit_path, new_admin_annotation_proposal_path, admin_annotations_path(proposed: 1) ],
                  css_select(".admin-card__link").map { |link| link["href"] }
     assert_select ".admin-card a.admin-card__sublink[href=?]", admin_bulk_proposal_approval_path
     # フィクスチャでは、未注釈 3 語のうち提案があるのは haruhi だけ

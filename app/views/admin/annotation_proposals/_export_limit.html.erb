@@ -1,6 +1,6 @@
-<%# locals: (from_id:, to_id:, limit:) -%>
-<%# 書き出しの語ID範囲と件数の欄(提案の書き出しと特徴の書き出しが共有する)。
-    件数の上限はサーバと同じ Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT -%>
+<%# locals: (from_id:, to_id:, limit:, max: Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT) -%>
+<%# 書き出しの語ID範囲と件数の欄(提案の書き出し・特徴の書き出し・特徴の点検が共有する)。
+    件数の上限 max はサーバと同じ値を渡す(既定は Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT) -%>
 <label for="export_from_id" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.range_label") %></label>
 <%= number_field_tag :from_id, from_id, id: "export_from_id", min: 1,
       placeholder: t("admin.annotation_proposals.export.from_placeholder"), class: "proposal-limit__input" %>
@@ -9,4 +9,4 @@
       placeholder: t("admin.annotation_proposals.export.to_placeholder"), class: "proposal-limit__input" %>
 
 <label for="export_limit" class="proposal-limit__label"><%= t("admin.annotation_proposals.export.limit_label") %></label>
-<%= number_field_tag :limit, limit, id: "export_limit", min: 1, max: Admin::AnnotationProposalsController::EXPORT_MAX_LIMIT, class: "proposal-limit__input" %>
+<%= number_field_tag :limit, limit, id: "export_limit", min: 1, max: max, class: "proposal-limit__input" %>

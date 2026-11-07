@@ -1,0 +1,51 @@
+<% content_for :title, t("admin.feature_audits.title") %>
+
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.feature_audits.title") %></h1>
+  <p class="page-lead"><%= t("admin.feature_audits.lead") %></p>
+</header>
+
+<%# 1. 書き出す。点検する特徴を選ぶ(選ばなければ全特徴を点検する)。範囲と件数で分けて書き出せる -%>
+<%= form_with url: admin_feature_audit_path, method: :get, class: "panel proposal-limit" do %>
+  <span class="proposal-limit__label" id="feature_audit_features"><%= t("admin.feature_audits.features_label") %></span>
+  <div class="check-chips" role="group" aria-labelledby="feature_audit_features">
+    <% @linguistic_features.each do |feature| %>
+      <label class="check-chip">
+        <%= check_box_tag "features[]", feature.name, @export.feature_names.include?(feature.name), id: nil, class: "visually-hidden" %>
+        <span class="check-chip__face"><%= feature.name %></span>
+      </label>
+    <% end %>
+  </div>
+
+  <%= render "admin/annotation_proposals/export_limit", from_id: @from_id, to_id: @to_id, limit: @limit,
+             max: Admin::FeatureAuditsController::EXPORT_MAX_LIMIT %>
+
+  <%= submit_tag t("admin.annotation_proposals.export.reload"), class: "btn btn--sm" %>
+  <span class="proposal-limit__count">
+    <%= t("admin.feature_audits.count", count: @word_count, published: @published_count) %>
+  </span>
+<% end %>
+
+<% if @word_count.positive? %>
+  <%= render "admin/shared/copy_panel", text: @export.to_json, hint: t("admin.feature_audits.hint"),
+        name: :export_json, rows: 14 %>
+  <p class="proposal-next">
+    <%= link_to t("admin.feature_audits.download"),
+          admin_feature_audit_path(format: :json, features: @export.feature_names,
+                                   from_id: @from_id, to_id: @to_id, limit: @limit) %>
+  </p>
+<% else %>
+  <p class="empty-note"><%= t("admin.feature_audits.empty") %></p>
+<% end %>
+
+<%# 2. 点検結果を貼る。次の画面で足す・外すの行を確かめてから適用する(ここでは保存しない) -%>
+<%= form_with url: preview_admin_feature_audit_path, method: :post, class: "panel" do %>
+  <div class="panel__head">
+    <h2 class="panel__title"><%= t("admin.feature_audits.import_heading") %></h2>
+  </div>
+  <%= text_area_tag :result_json, @result_json, rows: 10, class: "proposal-json__area",
+        placeholder: t("admin.feature_audits.placeholder") %>
+  <div class="proposal-actions">
+    <%= submit_tag t("admin.feature_audits.preview"), class: "btn btn--primary" %>
+  </div>
+<% end %>

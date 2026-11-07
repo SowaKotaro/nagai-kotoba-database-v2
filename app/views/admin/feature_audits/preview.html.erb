@@ -1,0 +1,71 @@
+<% content_for :title, t("admin.feature_audits.preview_title") %>
+
+<header class="page-header">
+  <h1 class="page-title"><%= t("admin.feature_audits.preview_title") %></h1>
+  <p class="page-lead"><%= t("admin.feature_audits.preview_lead") %></p>
+</header>
+
+<% applicable = @rows.count(&:applicable?) %>
+<%# 貼った JSON をそのまま送り返し、適用の直前に読み直して検証し直す(FeatureAuditImport)。
+    選ぶのは行の番号(JSON の changes の並び)だけ -%>
+<%= form_with url: apply_admin_feature_audit_path, method: :post do %>
+  <%= hidden_field_tag :result_json, @result_json, id: nil %>
+
+  <section class="panel">
+  <div class="panel__head">
+    <p class="admin-words-count"><%= t("admin.feature_audits.rows_count", count: @rows.size, applicable: applicable) %></p>
+  </div>
+  <% if @rows.any? %>
+    <%# 表の見た目は提案の一括承認の一覧(.bulk-approval)と同じ -%>
+    <table class="bulk-approval feature-audit">
+      <thead>
+        <tr>
+          <th class="bulk-approval__no"><%= t("admin.feature_audits.columns.apply") %></th>
+          <th><%= t("admin.feature_audits.columns.action") %></th>
+          <th><%= t("admin.annotations.eyebrow") %></th>
+          <th><%= t("admin.feature_audits.columns.feature") %></th>
+          <th><%= t("admin.feature_audits.columns.target") %></th>
+          <th><%= t("admin.feature_audits.columns.reason") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @rows.each do |row| %>
+          <tr>
+            <td class="bulk-approval__no">
+              <label>
+                <%= check_box_tag "selected[]", row.index, row.applicable?, id: nil, disabled: !row.applicable? %>
+                <span class="visually-hidden"><%= t("admin.feature_audits.select_row", number: row.index + 1) %></span>
+              </label>
+            </td>
+            <td><%= t("admin.feature_audits.actions.#{row.add? ? "add" : "remove"}") %></td>
+            <td class="bulk-approval__word">
+              <% if row.word %>
+                <%= link_to row.word.surface, edit_admin_word_path(row.word), data: { turbo_frame: "_top" } %>
+              <% else %>
+                <%= t("admin.feature_audits.unknown_word") %>
+              <% end %>
+            </td>
+            <td><%= row.name %></td>
+            <td><%= row.target %><% if row.target_reading.present? %><%= t("admin.feature_audits.target_sep") %><%= row.target_reading %><% end %></td>
+            <td>
+              <% if row.problem %>
+                <strong><%= t("admin.feature_audits.problems.#{row.problem}") %></strong>
+              <% else %>
+                <%= row.reason %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+  </section>
+
+  <div class="proposal-actions">
+    <% if applicable.positive? %>
+      <%= submit_tag t("admin.feature_audits.apply"), class: "btn btn--primary",
+            data: { turbo_confirm: t("admin.feature_audits.confirm") } %>
+    <% end %>
+    <%= link_to t("admin.feature_audits.back"), admin_feature_audit_path, class: "btn btn--sm" %>
+  </div>
+<% end %>

@@ -976,6 +976,50 @@ ja:
         next_step: "取り込んだら:"
         to_console: "提案ありの語からアノテーションを始める"
         to_bulk_approval: "条件を満たす提案をまとめて承認する"
+    # 言語学的特徴の点検(Issue 109)
+    feature_audits:
+      title: "言語学的特徴の点検"
+      lead: "特徴を新設したときや判定の基準を見直したときに、公開済みの語すべてを見直すための画面です。公開済みの語と、いま付いている特徴を書き出し（意味やジャンルは載せません）、Claude Code の /features（word-feature-audit スキル）に渡すと、足す・外すの変更の一覧が返ります。返ってきた結果を下に貼ると、適用する前に 1 行ずつ確かめられます。"
+      features_label: "点検する特徴（選ばなければすべて）"
+      count: "%{count} 語（公開済み %{published} 語）"
+      hint: "この JSON を research/inputs/features.json に保存して、Claude Code で /features を実行してください。"
+      download: "JSON ファイルとして保存する"
+      empty: "書き出す語がありません（範囲に公開済みの語がありません）。"
+      import_heading: "点検結果の取り込み"
+      placeholder: '{ "version": "1", "task": "linguistic_features_audit", "changes": [ { "action": "add", "word_id": 1, "sense_id": 1, "name": "方言", "target": "…", "target_reading": "…", "reason": "…" } ] }'
+      preview: "変更を確かめる"
+      parse_error: "JSON を読み取れませんでした。word-feature-audit スキルの出力形式（{\"version\":\"1\",\"changes\":[…]}）を確認してください。"
+      preview_title: "点検結果の確認"
+      preview_lead: "適用するのはチェックした行だけです。チェックを外した行は適用しません。問題のある行は選べません。適用は特徴を足す・外すだけで、注釈状態・意味・ジャンルなどには触れません。"
+      rows_count: "%{count} 行（適用できる行 %{applicable}）"
+      columns:
+        apply: "適用"
+        action: "変更"
+        feature: "特徴"
+        target: "該当部分"
+        reason: "理由"
+      actions:
+        add: "足す"
+        remove: "外す"
+      select_row: "%{number} 行目を適用する"
+      unknown_word: "（語が見つかりません）"
+      target_sep: " ／ "
+      problems:
+        unknown_action: "action は add か remove にしてください"
+        sense_not_found: "語義が見つかりません（word_id と sense_id が合いません）"
+        unknown_feature: "特徴のマスタにない名前です"
+        missing_target: "該当部分（表記）がありません"
+        missing_target_reading: "該当部分（読み）がありません"
+        target_not_in_surface: "該当部分が表層形にありません"
+        target_reading_not_in_reading: "該当部分の読みが語義の読みにありません"
+        already_attached: "すでに付いています"
+        not_attached: "この特徴・該当部分は付いていません"
+        duplicate: "同じ変更が上にもあります"
+      apply: "チェックした行を適用する"
+      confirm: "チェックした行を適用します。公開中の語の特徴が変わります。よろしいですか？"
+      applied: "特徴を %{added} 件足し、%{removed} 件外しました（%{words} 語）。"
+      failed: "適用に失敗したため取り消しました（%{message}）。"
+      back: "書き出しに戻る"
     bulk_proposal_approvals:
       title: "提案の一括承認"
       lead: "確信度が高く（確信 高）・立項スコアが十分（4以上）で、ジャンル小分類・エンティティ・品詞・語種・特徴のすべてが既存マスタで解決でき、新設マスタを含まない単一語義の提案だけを、まとめて承認して公開します。条件を1つでも欠く提案はここには出ないので、コンソールで1語ずつ確認してください。"
@@ -1038,6 +1082,9 @@ ja:
       export_features:
         desc: "公開済みで言語的特徴が付いていない語義を書き出します。"
         meta: "未調査 %{count} 語義（日本語を含む語）"
+      feature_audit:
+        desc: "公開済みの語すべてを、選んだ特徴の目で見直します。特徴の新設や基準の見直しのあとに使います（/features に渡す）。"
+        meta: "公開済み %{count} 語"
       import:
         desc: "スキルが返した提案 JSON を貼り付け、下書きとして保存します。"
         meta: "下書きとして保存"
