@@ -21,6 +21,11 @@
              desc: t("admin.research.export_features.desc"),
              meta: t("admin.research.export_features.meta", count: @features_unreviewed_count) %>
   <%= render "admin/shared/section_card",
+             path: admin_feature_audit_path, icon: "binoculars",
+             title: t("admin.feature_audits.title"),
+             desc: t("admin.research.feature_audit.desc"),
+             meta: t("admin.research.feature_audit.meta", count: @published_count) %>
+  <%= render "admin/shared/section_card",
              path: new_admin_annotation_proposal_path, icon: "flow_arrow",
              title: t("admin.annotation_proposals.new.title"),
              desc: t("admin.research.import.desc"),
