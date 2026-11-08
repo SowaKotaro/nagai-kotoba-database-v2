@@ -27,7 +27,8 @@ class Admin::FeatureAuditsControllerTest < ActionDispatch::IntegrationTest
     exported = JSON.parse(css_select("textarea#export_json").first.text)
     assert_equal [ "連濁" ], exported["features_to_check"]
     assert_equal [ @word.id ], exported["words"].map { |word| word["word_id"] }
-    assert_select "form[action=?] textarea[name=result_json]", preview_admin_feature_audit_path
+    # 確認の画面は 200 で描くので、Turbo を通すと応答が捨てられて画面が変わらない
+    assert_select "form[action=?][data-turbo=false] textarea[name=result_json]", preview_admin_feature_audit_path
 
     get admin_feature_audit_path(format: :json, from_id: @word.id, to_id: @word.id)
     assert_response :success
