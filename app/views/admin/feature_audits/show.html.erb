@@ -39,7 +39,8 @@
 <% end %>
 
 <%# 2. 点検結果を貼る。次の画面で足す・外すの行を確かめてから適用する(ここでは保存しない) -%>
-<%= form_with url: preview_admin_feature_audit_path, method: :post, class: "panel" do %>
+<%# preview は 200 で一覧を描いて返す。Turbo はフォームの POST に転送か 4xx/5xx を求めて 200 の応答を捨てるので、切る(一括登録の step1 と同じ) %>
+<%= form_with url: preview_admin_feature_audit_path, method: :post, class: "panel", data: { turbo: false } do %>
   <div class="panel__head">
     <h2 class="panel__title"><%= t("admin.feature_audits.import_heading") %></h2>
   </div>
