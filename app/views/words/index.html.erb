@@ -134,8 +134,8 @@
     </div>
 
     <div class="entry-list">
-      <%# query は「別表記だけが一致した」注記の判定に使う(Issue 72) %>
-      <%= render partial: "words/entry_row", collection: @words, as: :word, locals: { query: @search.q } %>
+      <%# highlight は検索条件に当たった箇所のハイライトと、「別表記だけが一致した」注記(Issue 72)に使う %>
+      <%= render partial: "words/entry_row", collection: @words, as: :word, locals: { highlight: @search_highlight } %>
     </div>
   </div>
 

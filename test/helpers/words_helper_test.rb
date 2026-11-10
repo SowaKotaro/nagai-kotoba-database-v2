@@ -78,9 +78,11 @@ class WordsHelperTest < ActionView::TestCase
     word
   end
 
-  # かなの畳み込み(T0-18): NFKC をかけないので半角カナと合成濁点は残る。欧字は小文字にする。
-  test "キーワード突き合わせの畳み込みは、ひらがなをカタカナへ寄せ、欧字を小文字にするだけ" do
-    expected = [ 0xFF76, 0xFF9E, 0xFF77, 0xFF9E, 0x30AB, 0x3099, 0x30F4, 0x30F5, 0x30F6 ].pack("U*") + "abc"
-    assert_equal expected, fold_for_keyword_match(KANA_FOLD_SAMPLE + "ABC")
+  test "検索に当たった箇所を mark で囲み、重なった箇所は濃くし、ほかの字はエスケープしたまま残す" do
+    assert_equal "A<b>C", search_highlighted("A<b>C", [])
+    assert_equal "A<b>C", search_highlighted("A<b>C", nil)
+    spans = [ SearchHighlight::Span.new(range: 0...2, deep: false), SearchHighlight::Span.new(range: 3...5, deep: true) ]
+    assert_equal %(<mark class="search-hit">A&lt;</mark>b<mark class="search-hit search-hit--deep">&gt;C</mark>),
+                 search_highlighted("A<b>C", spans)
   end
 end

@@ -54,6 +54,9 @@
 - **統計 §7 の母音遷移グラフ**: 拍位置を固定して `vowel_pattern` の部分文字列と突き合わせる
   （`WordSense.vowel_transition_at`）。位置を問わない押韻検索とは別の条件。
 - **リズム検索**（`/search` の「リズムパターン」）: `rhythm_pattern` そのものへの部分一致。
+- **単語一覧のハイライト**（`SearchHighlight`）: リズム検索・押韻検索・母音遷移で当たった箇所を、読みの字へ戻して囲む。
+  `RhythmPattern.segments` が、ローマ字の片ごとに「それを生んだ読みの字の位置」を返す（`call` は片をつなげたもの）。
+  片の切り方は上の変換手順そのもの（拗音は 2 字で 1 片、促音は重ねた子音の 1 片、長音符は直前の母音の 1 片）。
 
 `rhythm_pattern` の規則を変えると `vowel_pattern` も全件変わるので、
 変更後は `bin/rails backfill:reading_metrics` で焼き直すこと。

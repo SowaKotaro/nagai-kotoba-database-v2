@@ -1,7 +1,7 @@
 require "test_helper"
 
 # 配色トークンの下限(CLAUDE.md / docs/design.md §6・§9)を tokens.css の値から確かめる。
-#   - 文字は最も弱い --text-subtle でも、載りうる面の上で 4.5:1(WCAG AA)
+#   - 文字は最も弱い --text-subtle でも、載りうる面の上で 4.5:1(WCAG AA。検索に当たった箇所の面 --highlight も含む)
 #   - 選択中の面(--bg-tint)は、置かれる面(--surface)と ΔRGB 19 以上離す
 # 色を変えたら実測する、という作法の取りこぼしを防ぐ(2026-09-23 まで、ダークの --bg-tint は --surface との差が 7 しかなかった)。
 class DesignTokensTest < ActiveSupport::TestCase
@@ -9,7 +9,7 @@ class DesignTokensTest < ActiveSupport::TestCase
 
   { "ライト" => "--", "ダーク" => "--dark-" }.each do |theme, prefix|
     test "#{theme}: --text-subtle はどの面の上でも 4.5:1 を満たす" do
-      %w[surface bg bg-soft bg-tint].each do |face|
+      %w[surface bg bg-soft bg-tint highlight highlight-deep].each do |face|
         ratio = contrast(token("#{prefix}text-subtle"), token("#{prefix}#{face}"))
         assert_operator ratio, :>=, 4.5, "#{theme}の --#{face} の上で #{ratio.round(2)}:1"
       end

@@ -4,15 +4,18 @@
     (600px 以下は 1 列に縦積み。組み方の正は components.css の .entry-row)。
     品詞は一覧では出さない(語の見分けに効かないわりに幅を食うため。詳細と検索には残す)。
     行全体は詳細へのリンク(surface をストレッチ)。ジャンル・タグは各ファセットの
-    単語一覧(絞り込み)への実リンクなので、行リンクの上に載せる。local: word %>
+    単語一覧(絞り込み)への実リンクなので、行リンクの上に載せる。
+    local: word / highlight(検索条件に当たった箇所。SearchHighlight。単語一覧からのみ渡る。関連語・しりとりの行は nil) %>
 <% primary = word.primary_sense %>
+<% highlight = local_assigns[:highlight] %>
 <%# 1行 = 自己完結した見出し語エントリなので article(SEO/LLMO のセマンティクス) %>
 <article class="entry-row">
   <div class="entry-row__head">
     <%# 語は inline の span に入れる。hover で引く下線(motion.css)を、行の中で折れた字に沿わせるため %>
-    <%= link_to word_path(word), class: "entry-row__surface" do %><span class="entry-row__surface-text"><%= word.surface %></span><% end %>
+    <%= link_to word_path(word), class: "entry-row__surface" do %><span class="entry-row__surface-text"><%= search_highlighted(word.surface, highlight&.surface(word)) %></span><% end %>
     <%# 同じ読みの語義が複数あっても、読みは 1 回だけ出す(語義ごとの読みは詳細で見る) %>
-    <p class="entry-row__reading"><%= word.ordered_senses.map(&:reading).uniq.join("、") %></p>
+    <% readings = word.ordered_senses.map(&:reading).uniq %>
+    <p class="entry-row__reading"><%= safe_join(readings.map { |reading| search_highlighted(reading, highlight&.reading(word, reading)) }, "、") %></p>
   </div>
 
   <div class="entry-row__data">
@@ -34,9 +37,8 @@
     <%= icon "arrow_right", "entry-row__go" %>
   </div>
 
-  <%# キーワード検索で別表記だけが当たった行は、なぜ出たのかを一言添える(Issue 72)。
-      query は単語一覧(検索結果)からのみ渡る。関連語・しりとりの行には出ない %>
-  <% matched_variants(word, local_assigns[:query]).each do |variant| %>
+  <%# キーワード検索で別表記だけが当たった行は、なぜ出たのかを一言添える(Issue 72)。関連語・しりとりの行には出ない %>
+  <% (highlight&.matched_variants(word) || []).each do |variant| %>
     <p class="entry-row__match"><%= t("words.index.variant_match", surface: variant.surface) %></p>
   <% end %>
 </article>

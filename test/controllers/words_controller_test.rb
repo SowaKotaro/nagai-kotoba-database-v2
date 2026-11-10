@@ -56,10 +56,21 @@ class WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
     assert_select "p.entry-row__match", text: I18n.t("words.index.variant_match", surface: variant.surface)
 
-    # 表層形・読みが直接一致した行には注記を出さない
+    # 表層形・読みが直接一致した行には注記を出さず、当たった箇所を囲む(範囲の求め方は SearchHighlight のテスト)
     get words_path(q: "カレー")
     assert_select "a.entry-row__surface[href=?]", word_path(words(:curry))
     assert_select "p.entry-row__match", count: 0
+    assert_select ".entry-row__surface-text mark.search-hit", text: "カレー"
+    assert_select ".entry-row__reading mark.search-hit", text: "カレー"
+
+    # 正規表現と言語学的特徴も、当たった箇所・該当部分を囲む。条件の無い一覧は囲まない
+    get words_path(regexp: "ライス$")
+    assert_select ".entry-row__surface-text mark.search-hit", text: "ライス"
+    get words_path(linguistic_feature_id: linguistic_features(:rendaku).id)
+    assert_select ".entry-row__surface-text mark.search-hit", text: "殺人"
+    assert_select ".entry-row__reading mark.search-hit", text: "さつじん"
+    get words_path
+    assert_select "mark.search-hit", count: 0
   end
 
   test "0件のときは絞り込みの有無で案内を出し分ける" do
