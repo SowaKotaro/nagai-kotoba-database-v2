@@ -1423,6 +1423,20 @@ a.tag:hover .genre-hub__count {
   overflow-wrap: anywhere;
 }
 
+/* 検索条件に当たった箇所(SearchHighlight)。蛍光ペンと同じ黄の面(--highlight)で示し、字は太らせず色も変えない。
+   2 つ以上の条件が重なって当たった字は、重ね塗りのように一段濃い黄(--highlight-deep)にする。
+   面は下端の 1px を空けて塗る: 見出し語の hover の下線(motion.css。親の span の背景に引く)を、面で隠さないため。
+   余白は付けない(語の途中を囲むので、字の間が開くと語が割れて見える) */
+.search-hit {
+  color: inherit;
+  background: linear-gradient(var(--highlight), var(--highlight)) no-repeat 0 0 / 100% calc(100% - 1px);
+  border-radius: 2px;
+}
+
+.search-hit--deep {
+  background-image: linear-gradient(var(--highlight-deep), var(--highlight-deep));
+}
+
 /* 「別表記〈◯◯〉で一致」。検索結果に出た理由の注記なので、細い縦罫で脇に添える。
    行の下に全幅で敷きたいので、グリッドの全列にまたがらせる */
 .entry-row__match {

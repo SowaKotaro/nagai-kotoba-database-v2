@@ -21,7 +21,11 @@ class WordsController < ApplicationController
     flash.now[:alert] = t("searches.regexp_error.#{@search.regexp_error}") if @search.regexp_error
 
     respond_to do |format|
-      format.html { load_paginated_words }
+      format.html do
+        load_paginated_words
+        # 検索条件に当たった箇所のハイライト(JSON には出さない)
+        @search_highlight = SearchHighlight.new(@search, @words)
+      end
       format.json { load_paginated_words }
       format.atom do
         @words = feed_words
@@ -94,9 +98,11 @@ class WordsController < ApplicationController
   # 一覧の1行(words/_entry_row)が使う関連。ジャンルは大→中→小のパンくずを出すので
   # 祖先まで先読みする。キーワード検索のときだけ、
   # 「別表記だけが一致した」注記(Issue 72)の判定で参照する別表記も先読みする。
+  # 言語学的特徴で絞り込んだときは、該当部分のハイライト(SearchHighlight)で参照する特徴の行も先読みする。
   def entry_row_preloads
     preloads = [ :entity_type, { genre: { parent: :parent } } ]
     preloads << :word_sense_variants if @search.q.present?
+    preloads << :word_sense_features if @search.linguistic_feature_id.present?
     preloads
   end
 

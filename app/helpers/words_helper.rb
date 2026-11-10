@@ -94,21 +94,18 @@ module WordsHelper
     end
   end
 
-  # キーワード検索の結果行で「別表記だけが一致した」ことを示すための、一致した別表記(Issue 72)。
-  # 表層形・読みが直接一致している語は、なぜ出たのかが自明なので空を返す(注記を出さない)。
-  # 突き合わせは MySQL の照合順序(utf8mb4_0900_as_ci)に寄せて、ひらがな⇔カタカナと
-  # 大文字小文字だけを畳む(清濁は畳まない)。畳み方が DB と完全一致しない場合でも、
-  # 注記が出ないだけで検索結果自体は変わらない。
-  def matched_variants(word, query)
-    needle = fold_for_keyword_match(query)
-    return [] if needle.blank?
-    return [] if fold_for_keyword_match(word.surface).include?(needle)
-    return [] if word.word_senses.any? { |sense| fold_for_keyword_match(sense.reading).include?(needle) }
+  # text のうち spans(SearchHighlight が求めた、検索条件に当たった箇所)を <mark> で囲む。無ければ text のまま。
+  # 2 つ以上の条件が重なって当たった箇所(deep)は、濃く囲む印のクラスを足す。
+  def search_highlighted(text, spans)
+    return text if spans.blank?
 
-    word.word_senses.flat_map(&:word_sense_variants).select do |variant|
-      fold_for_keyword_match(variant.surface).include?(needle) ||
-        fold_for_keyword_match(variant.reading).include?(needle)
-    end.uniq(&:surface)
+    cursor = 0
+    pieces = spans.flat_map do |span|
+      before = text[cursor...span.range.begin]
+      cursor = span.range.end
+      [ before, tag.mark(text[span.range], class: [ "search-hit", ("search-hit--deep" if span.deep) ]) ]
+    end
+    safe_join(pieces << text[cursor..])
   end
 
   # 「シャッフルする」ボタンの遷移先。現在の絞り込みは保ったまま、シャッフルの一覧へ渡す。
@@ -153,13 +150,6 @@ module WordsHelper
   end
 
   private
-
-  # キーワード突き合わせ用の畳み込み。ひらがな→カタカナ(KanaFold)と、欧字の大文字小文字だけを吸収する。
-  # NFKC は掛けない(今の振る舞い。T0-18 で固定)。DB の検索(as_ci)は全角と半角のカナを同一視するので、
-  # 半角カナを含むキーワードでは、検索で当たっても「別表記だけが一致した」の判定がずれうる。
-  def fold_for_keyword_match(text)
-    KanaFold.to_katakana(text.to_s.strip, nfkc: false).downcase
-  end
 
   # 読みの文字数・モーラ数。モーラ数は未算出のことがある。
   def sense_metrics(sense)

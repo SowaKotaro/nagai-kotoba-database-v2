@@ -14,6 +14,12 @@
   --bg: #fafafa;          /* 地(body の背景)。操作バー・反転文字の色・color-mix の下地・モバイルのブラウザ UI の色も兼ねる */
   --bg-soft: #ebe9e7;     /* 一段沈めた面(hover・説明のカードなど。地との差 ΔRGB 19) */
   --bg-tint: #e6e3e0;     /* 選択中・ハイライトの面。--bg-soft より一段濃くして分ける(地との差 ΔRGB 26) */
+  /* 検索に当たった箇所の面(単語一覧の mark.search-hit だけ)。サイトは無彩色が原則で、ワードクラウドと並ぶ例外
+     (2026-11-10 オーナー指示「黄色の方がユーザーも見慣れている」。docs/design.md §1)。
+     --text-subtle を載せて 5.4:1、--surface・--bg-soft(行の hover)との差 ΔRGB 95・71 */
+  --highlight: #fff3a0;
+  /* 2 つ以上の条件が重なって当たった字(重ね塗り)。--text-subtle を載せて 4.7:1、--highlight との差 ΔRGB 54 */
+  --highlight-deep: #fbe36a;
   --surface: #ffffff;     /* 地より一段明るい白。一覧の行・ボタン・タグ・入力・狭幅のナビのドロワーの塗り(SANKOU! の札と入力欄と同じ白) */
 
   /* ── 文字 ─────────────────────────────────────────────────────────
@@ -135,6 +141,11 @@
   /* 選択中の面は --dark-surface より明るい側に置く(暗い側だと面の上で沈む)。
      --dark-surface との差 ΔRGB 22・--dark-text-subtle を載せて 5.0:1 */
   --dark-bg-tint: #3c3533;
+  /* 当たった箇所の面。暗い黄土にして --dark-text-subtle を載せて 5.3:1(明るい黄にすると読みの淡い字が載らない)。
+     --dark-surface との差 ΔRGB 23。重なった字は明るくすると淡い字が載らないので、明るさを保ったまま琥珀へ寄せて
+     濃さを出す(--dark-text-subtle で 4.5:1、--dark-highlight との差 ΔRGB 23) */
+  --dark-highlight: #3d320c;
+  --dark-highlight-deep: #543800;
   --dark-surface: #262120;
   --dark-text: #f2eeec;
   --dark-text-muted: #c8bebb;
@@ -165,6 +176,8 @@
     --bg: var(--dark-bg);
     --bg-soft: var(--dark-bg-soft);
     --bg-tint: var(--dark-bg-tint);
+    --highlight: var(--dark-highlight);
+    --highlight-deep: var(--dark-highlight-deep);
     --surface: var(--dark-surface);
     --text: var(--dark-text);
     --text-muted: var(--dark-text-muted);
@@ -191,6 +204,8 @@
   --bg: var(--dark-bg);
   --bg-soft: var(--dark-bg-soft);
   --bg-tint: var(--dark-bg-tint);
+  --highlight: var(--dark-highlight);
+  --highlight-deep: var(--dark-highlight-deep);
   --surface: var(--dark-surface);
   --text: var(--dark-text);
   --text-muted: var(--dark-text-muted);

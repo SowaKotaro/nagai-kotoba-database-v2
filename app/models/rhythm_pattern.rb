@@ -59,12 +59,22 @@ class RhythmPattern
   # 促音で重ねる対象となる子音で始まるか。母音始まりには促音を適用しない。
   CONSONANT_HEAD = /\A[bcdfghjklmnpqrstvwyz]/
 
+  # ローマ字の 1 片と、それを生んだ読みの字の位置(KanaFold.to_hiragana で畳んだあとの読みの、字の位置の Range)。
+  # 拗音・外来音は 2 字で 1 片、長音符は直前の母音 1 字の片、促音は重ねた子音 1 字の片になる。
+  # 促音が子音を重ねなかったとき(語末・母音の前・表に無い字の前)は片を作らない。
+  Segment = Data.define(:romaji, :range)
+
   # reading から rhythm_pattern 文字列を生成する。nil は空文字として扱う。
-  def self.call(reading)
+  def self.call(reading) = segments(reading).map(&:romaji).join
+
+  # reading をローマ字の片に分ける(つなげると call の結果になる)。検索のハイライト(SearchHighlight)が、
+  # ローマ字・母音の並びで当たった箇所を読みの字へ戻すのに使う。
+  def self.segments(reading)
     # 変換表をひらがな 1 本にするため、カタカナ語もひらがなへ寄せてから処理する(半角カナ・合成濁点も畳む)。
     chars = KanaFold.to_hiragana(reading).chars
     result = +""
-    pending_sokuon = false
+    segments = []
+    sokuon_at = nil
     index = 0
 
     while index < chars.length
@@ -72,13 +82,14 @@ class RhythmPattern
 
       if char == CHOUON
         # 長音符は直前の母音を繰り返す(母音が無ければ無視)。
-        result << last_vowel(result).to_s
+        segments << Segment.new(last_vowel(result).to_s, index...(index + 1))
+        result << segments.last.romaji
         index += 1
         next
       end
 
       if char == SOKUON
-        pending_sokuon = true
+        sokuon_at = index
         index += 1
         next
       end
@@ -86,26 +97,33 @@ class RhythmPattern
       pair = chars[index, 2].join
       if chars[index + 1] && TABLE.key?(pair)
         romaji = TABLE[pair]
-        index += 2
+        length = 2
       elsif TABLE.key?(char)
         romaji = TABLE[char]
-        index += 1
+        length = 1
       else
         # 変換表に無い文字(記号など)はそのまま通す。促音フラグは持ち越さない。
+        segments << Segment.new(char, index...(index + 1))
         result << char
-        pending_sokuon = false
+        sokuon_at = nil
         index += 1
         next
       end
 
-      if pending_sokuon
-        romaji = apply_sokuon(romaji)
-        pending_sokuon = false
+      if sokuon_at
+        doubled = apply_sokuon(romaji)
+        if doubled.length > romaji.length
+          segments << Segment.new(doubled[0, doubled.length - romaji.length], sokuon_at...(sokuon_at + 1))
+          result << segments.last.romaji
+        end
+        sokuon_at = nil
       end
+      segments << Segment.new(romaji, index...(index + length))
       result << romaji
+      index += length
     end
 
-    result
+    segments
   end
 
   # これまでの出力の末尾側から最初に見つかる母音を返す。

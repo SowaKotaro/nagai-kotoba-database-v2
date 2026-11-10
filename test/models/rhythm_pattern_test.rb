@@ -54,4 +54,18 @@ class RhythmPatternTest < ActiveSupport::TestCase
     # かなの畳み込み(T0-18): NFKC で畳んでからローマ字にする。ゕ・ゖ はローマ字にならずそのまま残る。
     assert_equal "gagigavu" + [ 0x3095, 0x3096 ].pack("U*"), RhythmPattern.call(KANA_FOLD_SAMPLE)
   end
+
+  test "ローマ字の片は、つなげると call の結果になり、それぞれ元の読みの字の位置を持つ" do
+    pieces = ->(reading) { RhythmPattern.segments(reading).map { |segment| [ segment.romaji, segment.range ] } }
+
+    # 拗音は 2 字で 1 片、促音は重ねた子音の 1 片(ch の前は t)、長音符は直前の母音の 1 片
+    assert_equal [ [ "ma", 0...1 ], [ "t", 1...2 ], [ "cha", 2...4 ], [ "a", 4...5 ] ], pieces.call("まっちゃー")
+    # 促音が子音を重ねないとき(語末・母音の前)は片を作らない。表に無い字はそのまま 1 片
+    assert_equal [ [ "a", 0...1 ], [ "a", 2...3 ], [ "・", 3...4 ] ], pieces.call("あっあ・っ")
+    assert_equal [], pieces.call(nil)
+
+    %w[とうきょうとっきょきょかきょく ガッコウスイセンガタセンバツ ﾗｰﾒﾝ].each do |reading|
+      assert_equal RhythmPattern.call(reading), RhythmPattern.segments(reading).map(&:romaji).join
+    end
+  end
 end

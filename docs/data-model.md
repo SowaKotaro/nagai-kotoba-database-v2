@@ -233,7 +233,7 @@ sitemap の版は動かない。
 | `WordCandidate.matching`（すべての語の検索） | LIKE も as_ci で比べる（かなの種類・大文字小文字を問わない） |
 | `Admin::WordRequestsController#registered_surfaces_for` | 収録済みの語を as_ci で集める。ただしビューは、集めた表層形（収録語の表記）とリクエストの表記を Ruby で完全一致で比べるので、かなの種類だけが違うリクエストには「収録済み」の印が付かない（既知の不具合。refactoring の台帳の受付箱 2026-10-07） |
 | `WordRequestDuplicateCheck` | 照合キーを `KanaFold.to_katakana` で畳み、as_ci に寄せて Ruby で比べる（清濁は畳まない） |
-| `WordsHelper#matched_variants`（別表記だけが一致した印） | ひらがな⇔カタカナと大文字小文字だけを畳む。DB の as_ci は全角・半角のカナも同一視するので、半角カナのキーワードでは印がずれうる（検索結果は変わらない） |
+| `KeywordMatch`（単語一覧の検索のハイライトと、別表記だけが一致した印。`SearchHighlight`） | as_ci に寄せて 1 字ずつ畳む（かなの種類・小書きと並字・全角半角・大文字小文字。清濁は畳まない）。1 字が 2 字以上に開く字（㌔ など）と合成濁点は畳まないので、そこでは囲みや印がずれうる（検索結果は変わらない）。正規表現の囲みは Ruby で真似ず、MySQL の `REGEXP_REPLACE` に当たった箇所を求めさせる |
 | `InlineMasterCreatable`（マスタのその場追加） | マスタ名の一意制約（ai_ci）で衝突したとき、清濁・かなの種類・大文字小文字だけが違う既存の名前を、理由として返す |
 
 ### prefix インデックス
