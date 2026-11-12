@@ -7,31 +7,15 @@
 # 出力: 「判定<TAB>表層形<TAB>読み<TAB>文字数<TAB>MeCabの読み<TAB>MeCabの文字数」（TSV）。
 #   判定: OK（10文字以上）／短い（10文字未満）／要確認（MeCab と数え方が 10文字の境界をまたぐ）／読みなし
 #
-# 数え方はアプリと同じにする: 読みの正規化は ReadingExtractor（カタカナと長音符だけを残す）、
-# 文字数は word_senses.reading_length（char_length）と同じく1文字ずつ数え、基準値は
-# WordSense::MIN_READING_LENGTH を使う。ここで独自に数え方を定義しない。
+# 判定の規則はアプリの ReadingLengthCheck が持つ（調査の自動実行と同じ判定）。ここで独自に数え方を定義しない。
 # mecab が無い環境でも止めない（MeCab 欄が空になり、判定はスキルの読みだけで行う）。
 
-min_length = WordSense::MIN_READING_LENGTH
-extractor = ReadingExtractor.new
-# 正規化の規則は ReadingExtractor#normalize が持つ。ここで定義を複製しない。
-normalize = ->(reading) { extractor.normalize(reading) }
+LABELS = { ok: "OK", short: "短い", uncertain: "要確認", missing: "読みなし" }.freeze
 
 rows = $stdin.each_line.map(&:chomp).reject(&:blank?).map { |line| line.split("\t", 2) }
 mecab_readings = ReadingExtractor.call(rows.map(&:first))
 
 rows.each_with_index do |(surface, reading), index|
-  own = normalize.call(reading)
-  mecab = mecab_readings[index]
-  own_length = own&.length
-  mecab_length = mecab&.length
-
-  verdict =
-    if own.nil? then "読みなし"
-    elsif mecab_length && (own_length >= min_length) != (mecab_length >= min_length) then "要確認"
-    elsif own_length >= min_length then "OK"
-    else "短い"
-    end
-
-  puts [ verdict, surface, own, own_length, mecab, mecab_length ].join("\t")
+  check = ReadingLengthCheck.call(reading, mecab_readings[index])
+  puts [ LABELS.fetch(check.verdict), surface, check.reading, check.length, check.mecab_reading, check.mecab_length ].join("\t")
 end

@@ -177,7 +177,7 @@
 |---|---|---|
 | `app/models/` | ActiveRecord と、ほかの Ruby のクラスすべて（冒頭に種別） | 値オブジェクト `char_type_pattern.rb`、集計 `published_sense_counts.rb`、取り込み `word_candidate_notation_import.rb` |
 | `app/models/concerns/` | 複数のモデルが include する振る舞い | `refreshes_word_metrics.rb`（代表値の焼き直し）・`tag_master.rb` |
-| `app/services/` | 外部コマンドのラッパー（`reading_extractor` と `morpheme_extractor` は MeCab、`share_card_renderer` は rsvg-convert） | `share_card_renderer.rb` |
+| `app/services/` | 外部コマンドのラッパー（`reading_extractor` と `morpheme_extractor` は MeCab、`share_card_renderer` は rsvg-convert、調査の自動実行の `claude_research_runner` と `llms_full_fetcher`） | `share_card_renderer.rb` |
 | `app/controllers/` | 公開側（`words/` は共有カード）と `admin/`（`Admin::BaseController` を継承） | `words_controller.rb`・`admin/word_candidates_controller.rb` |
 | `app/controllers/concerns/` | 認証 `Authentication`、全件出力の版 `PublishedWordsDigest`、注釈のキュー `Admin::AnnotationQueue` | — |
 | `app/helpers/` | ビューに渡す値・属性・data ハッシュ | `word_requests_helper.rb` |
@@ -191,7 +191,7 @@
 | `db/schema.rb`・`db/migrate/` | スキーマの正と、その変更 | `20260924100000_create_word_candidates.rb`（as_ci の明示） |
 | `db/seeds.rb` | 管理者とマスタを冪等に投入する（名前の正は `SeedCatalog`） | — |
 | `db/morpheme_frequencies.json` | 統計 §1 のワードクラウドの事前集計（ローカルの `bin/rails stats:morphemes` で作ってコミットする） | — |
-| `lib/tasks/` | backfill（派生値の再生成と検証）・stats（形態素頻度）・dev_samples（開発用のダミー） | `backfill.rake` |
+| `lib/tasks/` | backfill（派生値の再生成と検証）・stats（形態素頻度）・dev_samples（開発用のダミー）・research（調査の自動実行。ローカルの cron 用） | `backfill.rake` |
 | `test/` | models・controllers・integration・system・services・helpers・tasks・assets。共通のヘルパは `test_helper.rb` と `test_helpers/`（`sign_in_as`） | `test_helper.rb`・`application_system_test_case.rb` |
 | `.claude/skills/`・`.claude/commands/`・`research/` | 調査スキル（ローカルの Claude Code）と、その入出力 | `research/README.md` |
 | `script/og_default.py`・`script/favicon.py`・`tools/claude-ai-skill/build.sh` | 既定の共有カード `public/og-default.png` の生成、favicon 3 点（`icon.svg`・`favicon.ico`・`apple-touch-icon.png`）の生成、claude.ai 用のスキル束の生成 | — |

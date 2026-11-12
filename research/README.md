@@ -89,6 +89,45 @@
    `outputs/features.json` に返るので、同じ画面の「点検結果の取り込み」に貼り、1 行ずつ確かめて選んだ行だけを適用する。
    提案キューは通らず、意味・ジャンル・注釈状態には触れない。手順の正はスキル（`.claude/skills/word-feature-audit/SKILL.md`）。
 
+## 自動実行（`bin/rails research:auto`。Issue 112）
+
+`inputs/seeds.txt` の種語を、上の 1〜3（拡張 → 表記 → 読み）に人の手を挟まずに通し、一括登録に貼る状態まで進める。
+**ローカルで完結し、本番には書き込まない**（本番の「登録予定単語」の画面も通さない）。一括登録・提案の取り込み・承認は人が行う。
+規則の正は `ResearchPipeline`（起動・期限・種語）と `ResearchRun`（段とふるい）。
+
+```
+seeds.txt ─▶ /expand ─[コード]─▶ /notation ─[コード]─▶ /reading ─[コード]─▶ register.txt ＋ reading.json
+                                                                            │ ここから人
+                                       一括登録 step1 に register.txt、step2 に reading.json → step3 → 登録
+```
+
+- **段の間のふるい（コード）**: 確実なものだけを通し、ほかは却下する。確信度は high だけ、立項スコアは満点だけ、分割案のある語・
+  読みが揺れる語・読みが基準に届かない語（`ReadingLengthCheck`。アプリと同じ数え方）は却下。重複は、表層形を畳んだ完全一致と
+  読みの Levenshtein（一括登録 step3 と同じしきい値）で、公開語の写し・台帳・同じ run の中と照合する（読みの似た兄弟の語も落ちる）。
+- **起動**: cron で動かす。新しい run は前回から 2 日経っていれば始め（日付で比べる）、途中で失敗した run は次の起動で続きから進める。
+  同じ段で 3 回失敗したら止める。起動の時刻を逃しても、次に cron が動いたときに追いつく。
+- **注釈**: 管理画面「調査用データの書き出し」を `auto/inbox/annotation.json` に保存しておくと、次の起動で `/annotation` に回し、
+  `auto/annotation/<日時>/annotation.json` に提案 JSON が出る。それを「提案 JSON の取り込み」に貼る。
+- **自動実行の Claude には Bash を渡さない**（文字数と重複はコードが見る）。公開語の写し（百万字を超える）は Read も禁じ、AI には読ませない。
+
+置き場所はすべて `auto/`（git の外）:
+
+| パス | 中身 |
+| --- | --- |
+| `auto/runs/<日時>/` | run 1 回ぶん。`summary.md`（件数と却下の内訳）・`rejected.tsv`（却下した語と理由）・`register.txt`・`reading.json`・段ごとの入出力 |
+| `auto/ledger.tsv` | 台帳。使った種語と、却下した語・登録用に出した語（次の run の照合の相手。消すと同じ語をまた調べる） |
+| `auto/corpus/llms-full.txt` | 公開語の写し。新しい run の前に、司令塔が公開側から条件付きで取り直す（更新が無ければ転送しない） |
+| `auto/inbox/annotation.json` | 人が置く注釈の書き出し（拾ったら `auto/annotation/<日時>/` へ移す） |
+| `auto/auto.log` | cron の出力 |
+
+一括登録に貼り終えた run は、ディレクトリごと消すか残すかを自由に決めてよい（台帳に記録済み）。
+
+crontab（新しい run は午前 3 時に始めたいので 3 時に起動し、逃したときの追いつき用に 12 時と 20 時にも起動する。期限前なら何もせずに終わる）:
+
+```
+0 3,12,20 * * * cd <リポジトリ> && PATH=<rbenv の shims>:<claude のあるディレクトリ>:/usr/bin:/bin bin/rails research:auto >> research/auto/auto.log 2>&1
+```
+
 判断基準のうち、収録範囲・立項の4原則と立項スコア・表記・読み・知名度・人物語の分類・確信度は
 [`docs/annotation-guidelines.md`](../docs/annotation-guidelines.md) が正。語種・ジャンル・エンティティ・
 言語学的特徴の付け方と意味の文体は注釈スキル（`.claude/skills/word-annotation-research/SKILL.md`）が正で、

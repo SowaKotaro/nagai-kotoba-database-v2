@@ -50,6 +50,8 @@
 /research/.tmp-*
 # /harvest が実行中に書き出す候補の確認用リスト(ファイル名が実行ごとに揺れる)。
 /research/.harvest_*
+# 調査の自動実行(rake research:auto)の run・台帳・公開語の写し・inbox・ログ。ローカルの状態なのでコミットしない。
+/research/auto/
 
 # 過去サイトからcurlで取得した単語データ
 /docs/words.csv

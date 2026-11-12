@@ -55,6 +55,11 @@ class LlmsControllerTest < ActionDispatch::IntegrationTest
     assert_includes curry_block, "#### 語義2"
     # 語義が1つの語には語義見出しを出さない
     assert_not_includes word_block(response.body, words(:abc_murder).surface), "#### 語義"
+
+    # 調査の自動実行の重複照合(ResearchCorpus)が、見出し語と語義ごとの読みを全語ぶん読める
+    entries = ResearchCorpus.parse(response.body)
+    assert_equal Word.annotated.count, entries.size
+    assert_equal [ word_senses(:curry).reading, "カレーライス" ].sort, entries.find { |entry| entry.surface == words(:curry).surface }.readings.sort
   end
 
   private
