@@ -456,11 +456,41 @@
     - [ ] プロジェクトの手元設定 `.claude/settings.local.json`
     - [ ] 収穫の既出リスト `research/harvest-seen.txt`(無いと `/harvest` が提案済みの語をまた出す)。作業中の調査があれば `research/inputs/`・`research/outputs/` も
     - [ ] 毎朝・毎夕の `/harvest` の crontab(中身は `crontab -l` で控える。パスは新しい環境に合わせて直す)
+    - [ ] 調査の自動実行(Issue 112)の台帳 `research/auto/ledger.tsv`(無いと、却下した語・登録用に出した語をまた調べる)と、その crontab。
+          macOS では cron より launchd が勧められるが、cron も動く。ロックは Ruby の `File#flock` なので `flock` コマンドは要らない
   - [ ] (任意)Actions の使用量をさらに減らす: 20 秒ほどで終わる検査 4 本(RuboCop・Brakeman・bundler-audit・importmap audit)を 1 つのジョブにまとめる(177 分 → 45 分ほど)、
         関門になっていない main への push 後の CI を外す(CI の分がほぼ半分になる)。`.github/workflows/ci.yml` を変えるので、内容を説明してから行う
 - 補足: Free プランの private リポジトリではブランチ保護が使えないが、今も main にブランチ保護は無いので変わらない。Actions の成果物の保存枠(Free の private は 500MB)は、
   システムテストが落ちたときのスクリーンショットくらいしか置いていないので問題にならない。
 - 期待効果: 新しく積むコミットやリポジトリの中身から、オーナーの身元とサイトの技術の構成が読み取れなくなる。
+
+## Issue 112: 登録前の調査(/expand → /notation → /reading)の自動実行
+- 種別: feature
+- 状態: 対応中
+- 優先度: P2 ／ Impact: Med ／ Effort: Med
+- 依存: なし
+- 背景・現状: seeds.txt の種語を登録できる状態に持っていくまでに、スキルの入出力のコピー・保存・貼り付けと、段ごとの確認で 9 回ほど手が止まる。
+  アノテーションの確認は苦でないので、**そこに持っていくまでを自動化する**(2026-11-12 オーナーと合意。経緯は会話)。
+- 決めたこと:
+  - **ローカルで完結する**。本番への書き込み(一括登録 step1〜3・提案 JSON の取り込み・承認)は人がブラウザで行う。承認(公開)は自動化しない
+  - 本番の「登録予定単語」の画面は通さない。seeds.txt → `/expand` → `/notation` → `/reading` を司令塔(`bin/rails research:auto`)が通し、
+    一括登録に貼る `register.txt` と `reading.json` を作る。注釈は、人が書き出しを inbox に置いたら `/annotation` に回す
+  - **確実なものだけを流し、ほかは容赦なく却下する**(run の `rejected.tsv` と台帳に理由つきで残す)。確信度は high だけ、立項スコアは満点(5)だけ、
+    分割案のある語・読みが揺れる語は却下。最後はアノテーションで人が目を通すので、品質の低下は承知の上
+  - 読みの文字数と重複の照合は**スキルの外のコード**で行う(自動実行の Claude に Bash を渡さない)。重複は公開側の `llms-full.txt` の写し(司令塔が条件付きで取得し、
+    AI には読ませない)・台帳・同じ run の中と照合する。**読みが似た兄弟の語が落ちるのは許容**。写しに載らない非公開の語と、取得日より後に公開された語は step3 で人が止める
+  - 1 run は種語 5(`/expand` は 1 種語 30 語まで)。新しい run は**隔日**、午前 3 時の cron で始める。起動を逃しても次の cron で期限を見て追いつく。歯止め(未登録の run の上限)は置かない
+  - 入出力は run ごとのディレクトリに置き、上書きしない
+- 内容:
+  - [x] 司令塔 `ResearchPipeline`・run の段とふるい `ResearchRun`・照合 `ResearchDuplicateFilter`・台帳 `ResearchLedger`・公開語の写し `ResearchCorpus`・注釈の回 `ResearchAnnotationBatch`
+  - [x] 読みの文字数の判定を `ReadingLengthCheck` に移す(`/expand` の補助スクリプトと共有)
+  - [x] `claude -p` のラッパー `ClaudeResearchRunner`、llms-full の取得 `LlmsFullFetcher`
+  - [x] 4 つのコマンドに出力先 `--out`、`/expand` に自動実行のモード `--auto`(数えずに語ごとの読みと系統の確信度を JSON に載せる)
+  - [ ] crontab に登録する(リポジトリの外。内容は research/README.md の「自動実行」)
+  - [ ] 最初の数 run の `summary.md` を見て、却下の内訳と 1 run の量・起動の頻度を見直す
+  - [ ] 利用枠の残りを見て起動する方法を調べる(CLI から残量を聞く手段は見つかっていない)
+- 期待効果: 種語を置いておけば、一括登録に貼るだけの状態まで勝手に進む。人の手は一括登録とアノテーションだけになる。
+- 試走(2026-11-12): 種語 5 → `/expand` 50 語 → 一括登録へ 39 語。8 分で通り、5 時間の利用枠のおよそ 25% を使った(定期実行の量として妥当とオーナー判断)。
 
 ## Issue 27: config.hosts 設定と canonical ホストへの 301 統一
 - 種別: improvement

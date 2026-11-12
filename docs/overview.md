@@ -238,6 +238,8 @@ bin/rails server
 - **定期実行**: 候補語を集める `/harvest` を、オーナーのローカルの crontab がヘッドレスの Claude Code で 1 日 2 回動かしている
   （時刻とセットは [`research/README.md`](../research/README.md) の「使う順番」）。**cron の定義はリポジトリの外にある**ので、
   スキルが新しい権限（Bash など）を要るように変わると、黙って失敗する。ログは `research/harvest-cron.log`（git の外）。
+  同じ crontab で、登録前の調査の自動実行 `bin/rails research:auto`（Issue 112）も動かしている。**本番には書き込まない**（一括登録は人が行う）。
+  時刻と置き場所は [`research/README.md`](../research/README.md) の「自動実行」、ログは `research/auto/auto.log`（git の外）。
 - **claude.ai 用のスキル束**: `/reannotation` を claude.ai で使うための束は、`tools/claude-ai-skill/build.sh` が作る派生物。
   元は、再注釈と注釈のスキルの SKILL.md・[`annotation-guidelines.md`](annotation-guidelines.md)・`config/linguistic_features_glossary.yml`・
   注釈スキルの `schema.json` と `example.json`。**どれかを直したら、束を作り直してアップロードし直す**（アップロードはオーナー）。
