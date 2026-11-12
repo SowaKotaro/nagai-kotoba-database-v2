@@ -10,6 +10,7 @@
 | UI を作る・変える | [`design.md`](design.md) |
 | 何を収録するか・表記と読みの決め方 | [`annotation-guidelines.md`](annotation-guidelines.md) |
 | これから作るもの | [`issues.md`](issues.md)（確定事項の記録も同じファイル） |
+| 検索からの流入を増やす計画（SEO） | [`seo-plan.md`](seo-plan.md)（2026-11-11 の調査と計画、2026-11-12 の実測は §12。**まだ実装していない**。着手するものは `issues.md` へ起こす） |
 | これまでに入れたもの | [`history/changelog.md`](history/changelog.md) |
 | 記録の置き場（済んだこと・当時の計測。**現行の仕様ではない**） | [`history/`](history/README.md) |
 | 統計ページの紙面 | [`stats.md`](stats.md) |
