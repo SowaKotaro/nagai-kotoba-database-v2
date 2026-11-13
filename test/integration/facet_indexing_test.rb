@@ -22,17 +22,20 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
       { reading_length: 7 } => [ "読みが7文字の長い言葉", "/words?reading_length=7" ],
       { mora_count: 7 } => [ "7モーラの長い言葉", "/words?mora_count=7" ],
       { linguistic_feature_id: feature.id } => [ "#{feature.name}の長い言葉", "/words?linguistic_feature_id=#{feature.id}" ]
-    }.each do |params, (heading, canonical)|
+    }.map do |params, (heading, canonical)|
       get words_path(params)
       assert_response :success
       assert_select "meta[name=robots]", { count: 0 }, "#{params} が noindex になっている"
       assert_select "h1.page-title", text: heading
       assert_select "title", text: "#{heading} | #{I18n.t('layouts.brand')}"
-      assert_select "meta[name=description][content=?]", I18n.t("words.index.facet_description", label: heading).join
+      # description は面ごとの件数と例語から作る(文の組み立ての規則は WordsHelperTest)
+      description = css_select("meta[name=description]").first["content"]
+      assert_match(/\A#{Regexp.escape(heading)}の一覧（\d+語）。「.+」など。\z/, description)
       assert_select "link[rel=canonical][href=?]", "#{CANONICAL_HOST}#{canonical}"
       # 条件を引き継ぐ /search?... はファセットの数だけ増えるので、「検索条件を編集」はクロールさせない
       assert_select "a.active-facet__edit[rel=nofollow]", count: 1
-    end
+      description
+    end.then { |descriptions| assert_equal descriptions.uniq, descriptions, "面が違うのに同じ description になっている" }
 
     # 複数条件・キーワード・範囲指定・検索フォームは noindex,follow
     # 条件の組み合わせ・キーワード・範囲指定は値の取り方が無限にあり、内容も他の面と重なる。

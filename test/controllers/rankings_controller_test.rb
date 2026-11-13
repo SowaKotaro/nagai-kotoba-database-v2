@@ -17,6 +17,7 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
     get rankings_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("rankings.index.title")
+    assert_select "title", text: "#{I18n.t('rankings.index.meta_title')} | #{I18n.t('layouts.brand')}" # <title> だけは何のページかまで言う
     # リードは文ごとに行を分ける(文節の折り方は WordsControllerTest の 0 件の案内で見る)
     assert_select "p.page-lead .phrase-sentence", count: I18n.t("rankings.index.lead").size
     assert_select "meta[name=robots]", count: 0

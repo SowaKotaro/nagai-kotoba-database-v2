@@ -94,6 +94,26 @@ module WordsHelper
     end
   end
 
+  # ファセット面の meta description に並べる例語の数と、例語ぜんぶ(かぎ括弧つき)の長さの上限。
+  # 説明文は ApplicationHelper#page_description が約 120 字で切るので、見出しと件数を足しても収まる長さに抑える。
+  FACET_EXAMPLE_LIMIT = 3
+  FACET_EXAMPLES_MAX_LENGTH = 60
+
+  # ファセット面の meta description。面ごとの件数と、このページの先頭の語を例に入れる(追加のクエリは引かない)。
+  # 長い語は 1 語で数十字あるので、上限に収まるところまでを並べ、1 語も収まらなければ件数だけの文にする。
+  def facet_meta_description(heading, total_count, words)
+    examples = []
+    words.first(FACET_EXAMPLE_LIMIT).each do |word|
+      example = t("words.index.facet_meta_description.example", surface: word.surface)
+      break if (examples.sum(&:length) + example.length) > FACET_EXAMPLES_MAX_LENGTH
+
+      examples << example
+    end
+    key = examples.any? ? "with_examples" : "without_examples"
+    t("words.index.facet_meta_description.#{key}",
+      label: heading, count: number_with_delimiter(total_count), examples: examples.join)
+  end
+
   # text のうち spans(SearchHighlight が求めた、検索条件に当たった箇所)を <mark> で囲む。無ければ text のまま。
   # 2 つ以上の条件が重なって当たった箇所(deep)は、濃く囲む印のクラスを足す。
   def search_highlighted(text, spans)

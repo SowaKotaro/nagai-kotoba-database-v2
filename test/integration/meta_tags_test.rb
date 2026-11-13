@@ -25,6 +25,9 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     # 素の単語一覧と検索フォームはトップと異なる固有の description を持つ
     get words_path
     assert_select "meta[name=description][content=?]", I18n.t("words.index.description").join
+    # <title> は何の一覧かまで言う文言で、見出しは短いまま
+    assert_select "title", text: "#{I18n.t('words.index.meta_title')} | #{I18n.t('layouts.brand')}"
+    assert_select "h1.page-title", text: I18n.t("words.index.title")
 
     get search_path
     assert_select "meta[name=description][content=?]", I18n.t("searches.description")
@@ -60,5 +63,13 @@ class MetaTagsTest < ActionDispatch::IntegrationTest
     stub_method(ShareCardRenderer, :available?, -> { false }) { get word_path(word) }
     assert_select "meta[property='og:image'][content=?]", "#{CANONICAL_HOST}/og-default.png"
     assert_select "meta[property='og:image:alt'][content=?]", I18n.t("layouts.og_image_alt")
+
+    # 表層形の & や < は、title と description で 1 回だけエスケープする(assert_select は実体参照を 1 回解いて比べる)
+    symbols = create_published_word(surface: "A&B <c>", reading: "エーアンドビーシーシーシー")
+    get word_path(symbols)
+    assert_select "title", text: "A&B <c> | #{I18n.t('layouts.brand')}"
+    assert_select "meta[property='og:title'][content=?]", "A&B <c> | #{I18n.t('layouts.brand')}"
+    assert_select "meta[name=description][content^=?]", "「A&B <c>」は、"
+    assert_not_includes response.body, "&amp;amp;"
   end
 end

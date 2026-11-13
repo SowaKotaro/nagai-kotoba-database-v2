@@ -2,14 +2,22 @@ module ApplicationHelper
   # <title> と og:title に使う共通のページタイトル。
   # ページ側が content_for(:title) を設定していればブランド名と連結する。
   def page_title
-    content_for?(:title) ? "#{content_for(:title)} | #{t('layouts.brand')}" : t("layouts.brand")
+    content_for?(:title) ? "#{unescaped_content_for(:title)} | #{t('layouts.brand')}" : t("layouts.brand")
   end
 
   # meta description / og:description。ページ側の content_for(:description) を優先し、
   # 無ければサイト既定の説明(文節の配列。つないで使う)にフォールバックする。検索スニペット向けに1行・約120字に整える。
   def page_description
-    raw = content_for?(:description) ? content_for(:description) : t("home.index.description").join
-    raw.to_s.squish.truncate(120)
+    raw = content_for?(:description) ? unescaped_content_for(:description) : t("home.index.description").join
+    raw.squish.truncate(120)
+  end
+
+  # content_for に貯めた文字列を、エスケープ前の素の文字列で返す。content_for は値を HTML エスケープして貯めるので、
+  # そのまま連結や切り詰めに使うと、レイアウトの <%= %> でもう一度エスケープされて & が &amp;amp; になる
+  # (語の表層形に & や < があると、title と description に実体参照がそのまま見えてしまう)。
+  # 返す値は html_safe ではないので、出力するときに 1 回だけエスケープされる。
+  def unescaped_content_for(name)
+    CGI.unescapeHTML(content_for(name).to_s)
   end
 
   # canonical と og:url。既定は本番ホスト + 現在のパス(クエリは含めない)。

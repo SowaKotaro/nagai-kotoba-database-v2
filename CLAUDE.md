@@ -194,7 +194,7 @@
 | `lib/tasks/` | backfill（派生値の再生成と検証）・stats（形態素頻度）・dev_samples（開発用のダミー）・research（調査の自動実行。ローカルの cron 用） | `backfill.rake` |
 | `test/` | models・controllers・integration・system・services・helpers・tasks・assets。共通のヘルパは `test_helper.rb` と `test_helpers/`（`sign_in_as`） | `test_helper.rb`・`application_system_test_case.rb` |
 | `.claude/skills/`・`.claude/commands/`・`research/` | 調査スキル（ローカルの Claude Code）と、その入出力 | `research/README.md` |
-| `script/og_default.py`・`script/favicon.py`・`tools/claude-ai-skill/build.sh` | 既定の共有カード `public/og-default.png` の生成、favicon 3 点（`icon.svg`・`favicon.ico`・`apple-touch-icon.png`）の生成、claude.ai 用のスキル束の生成 | — |
+| `script/og_default.py`・`script/favicon.py`・`script/com_redirect_map.py`・`tools/claude-ai-skill/build.sh` | 既定の共有カード `public/og-default.png` の生成、favicon 3 点（`icon.svg`・`favicon.ico`・`apple-touch-icon.png`）の生成、旧 `.com` → `.jp` の 301 の対応表の作り直し（seo-plan §12.6）、claude.ai 用のスキル束の生成 | — |
 | `docs/` | 仕様（索引は overview の冒頭）。`docs/history/` は記録で、現行の仕様ではない | — |
 
 ## 4. 合格判定コマンド（コミット前に必ず実行すること）
