@@ -183,6 +183,37 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_equal [ 100.0, 100.0 ], stats.feature_ranking[:rows].map { |row| row[:bar_percent] }
   end
 
+  # 区画ごとの結論の文に差し込む値(docs/stats.md §2「結論の文」)。文の組み立ては StatsHelperTest で見る。
+  test "区画ごとの結論: 最多・割合・最長をここで決め、同数なら毎回同じものを採る" do
+    findings = @stats.findings
+
+    # フィクスチャの 2 語義は どの軸でも 1 対 1 で並ぶ。同数なら、字の若いほう・値の小さいほうを採る
+    assert_equal({ first_char: "カ", first_count: 1, first_percent: 50.0, last_char: "レ", last_count: 1, last_percent: 50.0 },
+                 findings[:kana])
+    assert_equal({ value: 3, count: 1, percent: 50.0 }, findings[:reading_length])
+    assert_equal({ value: 3, count: 1, percent: 50.0 }, findings[:mora])
+    assert_equal({ length: 7, surface: "ABC殺人事件", count: 1 }, findings[:longest])
+    assert_equal({ first_day: Word.annotated.minimum(:annotated_at).to_date, days: @stats.growth[:days_open], words: 2,
+                   per_day: @stats.growth[:per_day] }, findings[:timeline])
+    # 分類は、集計対象(その分類が付いた語義)に占める割合
+    assert_equal({ name: "文学", count: 1, percent: 100.0 }, findings[:genre])
+    assert_equal({ name: "書籍名", count: 1, percent: 100.0 }, findings[:entity_type])
+    assert_equal [ 1, 50.0 ], findings[:origin].values_at(:count, :percent)
+    assert_equal({ vowel: "a", percent: 100.0 }, findings[:first_vowel]) # さ・カ はどちらもア段
+    assert_equal [ 1, 50.0 ], findings[:head_consonant].values_at(:count, :percent)
+    assert_equal [ :name, :count ], findings[:feature].keys
+
+    # 語が増えると最多が入れ替わる。最長が複数あれば、登録の早い語を名指しして語義数を添える
+    3.times { |i| create_published_word(surface: "結論の語#{i}", reading: "イロハニホヘ#{%w[ト チ リ][i]}") }
+    findings = SiteStatistics.new.findings
+    assert_equal [ "イ", 3, 60.0 ], findings[:kana].values_at(:first_char, :first_count, :first_percent)
+    assert_equal({ value: 7, count: 4, percent: 80.0 }, findings[:reading_length])
+    assert_equal({ length: 7, surface: "ABC殺人事件", count: 4 }, findings[:longest])
+    assert_equal({ vowel: "i", percent: 60.0 }, findings[:first_vowel])
+    # 母音で始まる読みが最多なら、子音は nil(文は「母音で始まる」と言う)
+    assert_equal({ consonant: nil, chars: [ "イ" ], count: 3, percent: 60.0 }, findings[:head_consonant])
+  end
+
   test "公開語が無ければ空の構造を返し、1拍だけなら遷移の層を作らない" do
     Word.annotated.destroy_all
 
@@ -199,6 +230,8 @@ class SiteStatisticsTest < ActiveSupport::TestCase
     assert_empty stats.head_consonants
     assert_empty stats.feature_ranking[:rows]
     assert_equal 0, stats.entity_covered
+    # 結論の文も、どの区画も出さない
+    assert_equal [ nil ], stats.findings.values.uniq
 
     # 母音の遷移: 読みが1拍しか無ければ層が作れないので空にする
     Word.annotated.destroy_all

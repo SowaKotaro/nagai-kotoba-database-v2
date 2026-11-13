@@ -1,0 +1,11 @@
+<%# locals: (sentences:) -%>
+<%# 区画ごとの結論の文。図の下に、行×行の最多の注記と同じ読み物キャプション(.stats-notes。行頭に「※」)で添える(docs/stats.md §2「結論の文」)。
+    sentences は StatsHelper#stats_finding が返す文(該当が無い区画は nil)の配列で、1 つも無ければ何も出さない %>
+<% sentences = sentences.compact %>
+<% if sentences.any? %>
+  <ul class="stats-notes stats-notes--figure">
+    <% sentences.each do |sentence| %>
+      <li><%= sentence %></li>
+    <% end %>
+  </ul>
+<% end %>

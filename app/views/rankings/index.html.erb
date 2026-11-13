@@ -1,5 +1,6 @@
 <% content_for :title, t("rankings.index.meta_title") %>
-<% content_for :description, t("rankings.index.description") %>
+<%# 説明文の頭に、看板の順位表(読みが長い言葉)の 1 位を実データから入れる %>
+<% content_for :description, rankings_meta_description(@boards) %>
 
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("rankings.index.title"), nil ] ] %>

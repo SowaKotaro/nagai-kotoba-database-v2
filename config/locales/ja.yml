@@ -13,6 +13,8 @@ ja:
   date:
     formats:
       short: "%Y.%m.%d"
+      # 文の中に書く日付(統計の結論の文)
+      long: "%Y年%-m月%-d日"
   activemodel:
     errors:
       models:
@@ -1275,6 +1277,9 @@ ja:
       lead:
         - ["収録語を", "色々な", "物差しで", "並べた", "ランキングです。"]
         - ["各ランキングの", "「もっと見る」から", "全順位を", "辿れます。"]
+      # meta description の頭に置く、看板の順位表(読みが長い言葉)の 1 位。板には文を足さない(1 行目と同じ数が並ぶ。docs/design.md §5.5.1)
+      meta_top: "読みがいちばん長い言葉は「%{surface}」（%{value}字）。"
+      meta_top_tied: "読みがいちばん長い言葉は「%{surface}」など%{count}語（%{value}字）。"
       toc_label: "ランキングの目次"
       see_all: "もっと見る"
       empty: "まだ公開されている語がありません。"
@@ -1332,7 +1337,27 @@ ja:
       computed_at: "集計 %{time} 時点"
       empty: "まだ公開されている語がありません。"
       annotated_note: "集計対象は注釈済み %{count} 語義"
-      colophon: "データは CC BY 4.0 ライセンスで利用できます。"
+      # 奥付。クレジットの書き方は About の利用条件と同じ(pages.about.license_credit)
+      colophon: "データは CC BY 4.0 ライセンスで利用できます。引用・転載するときは、クレジット「%{credit}」と集計の時点を添えてください。"
+      # meta description。収録語があるときは実数を入れる(無いときは description)
+      meta_description: "「長い言葉のデータベース」の収録統計（%{date}時点）。収録 %{words} 語、読みの長さは平均 %{average} 文字・最長 %{max} 文字。読みの長さの分布・頭文字と末尾文字・収録の推移・ジャンルや語種の構成を公開しています。"
+      # 区画ごとの結論の文(図の下の「※」の注記)。値は SiteStatistics#findings が決め、StatsHelper#stats_finding が差し込む
+      findings:
+        kana: "頭文字でいちばん多いのは「%{first_char}」で %{first_count} 語義（全体の %{first_percent}%）、末尾文字でいちばん多いのは「%{last_char}」で %{last_count} 語義（%{last_percent}%）です。"
+        reading_length: "いちばん多いのは読みが %{value} 文字の語義で、%{count} 語義（全体の %{percent}%）です。"
+        longest: "いちばん長い読みは %{length} 文字で、「%{surface}」です。"
+        longest_tied: "いちばん長い読みは %{length} 文字で、「%{surface}」など %{count} 語義です。"
+        mora: "いちばん多いのは %{value} モーラの語義で、%{count} 語義（全体の %{percent}%）です。"
+        timeline: "%{first_day}の公開開始から %{days} 日で、%{words} 語を収録しました（1日あたり %{per_day} 語）。"
+        genre: "いちばん多い大分類は「%{name}」で、%{count} 語義（集計対象の %{percent}%）です。"
+        origin: "いちばん多い語種は「%{name}」で、%{count} 語義（集計対象の %{percent}%）です。"
+        entity_type: "いちばん多いエンティティ型は「%{name}」で、%{count} 語義（集計対象の %{percent}%）です。"
+        first_vowel: "読みの 1 拍目の母音でいちばん多いのは%{vowel}で、%{percent}% です。"
+        vowel_transition: "いちばん多い移り方は %{position} 拍目の%{from} → %{to}で、%{count} 語義です。"
+        head_consonant: "読みの第1拍は、子音 %{consonant}（%{chars}）で始まる語義がいちばん多く、%{count} 語義（%{percent}%）です。"
+        head_vowel: "読みの第1拍は、母音（%{chars}）で始まる語義がいちばん多く、%{count} 語義（%{percent}%）です。"
+        feature: "いちばん多く付いている特徴は「%{name}」で、%{count} 件です。"
+        chars_separator: "・"
       wall:
         scale:
           heading: "規模"
@@ -1466,8 +1491,8 @@ ja:
         graph_aria: "拍位置ごとの母音と、隣り合う拍のあいだの母音の移り方"
         graph_filter: "多い遷移だけ"
         graph_link: "この移り方の語を見る"
+        # 最多の移り方は、結論の文(findings.vowel_transition)が言う
         graph_hint:
-          - ["最も", "多いのは ", "%{top_position} 拍目の", "%{top_from} → %{top_to} で ", "%{top_count} 語義です。"]
           - ["下の", "数字は", "語頭からの", "拍位置で、", "後ろの", "拍ほど、", "そこまで", "読みが", "続く", "語義は", "減ります", "（%{last} 拍目まで", "届くのは ", "%{last_count} 語義 = ", "全体の %{last_percent}%）。"]
         graph_node_title: "%{position}拍目の%{vowel}: %{count}語義（%{percent}%）"
         graph_edge_title: "%{position}拍目の%{from} → %{next_position}拍目の%{to}: %{count}語義（%{percent}%）"

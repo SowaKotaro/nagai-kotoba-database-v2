@@ -51,6 +51,37 @@ module StatsHelper
     end
   end
 
+  # ==== 区画ごとの結論の 1 文 ==================================================================
+
+  # 区画の結論の文(docs/stats.md §2「結論の文」)。どれが最多か・何 % かは SiteStatistics#findings が決めてあり、
+  # ここは値の表記(桁区切り・日付・段名・字の並び)を整えて、文(ja.yml の stats.index.findings)に差し込むだけ。
+  # 該当が無い区画は nil。
+  def stats_finding(stats, key)
+    values = stats.findings[key]
+    return nil unless values
+
+    t("stats.index.findings.#{stats_finding_variant(key, values)}",
+      **values.to_h { |name, value| [ name, stats_finding_value(name, value) ] })
+  end
+
+  # /stats の meta description。収録語があれば、集計の日付と数字の壁の数(収録語・読みの平均と最長)を入れる。
+  def stats_meta_description(stats)
+    return t("stats.index.description") if stats.word_count.zero?
+
+    t("stats.index.meta_description", date: l(stats.computed_at.to_date, format: :long),
+                                      words: stats_number(stats.scale[:words]),
+                                      average: stats_number(stats.reading_length[:average]),
+                                      max: stats_number(stats.reading_length[:max]))
+  end
+
+  # 母音のつながりの結論の文。最多の遷移は stats_vowel_graph が edge[:top] に立てた 1 本(件数で採る)。
+  def stats_vowel_transition_finding(graph)
+    top = graph[:edges].find { |edge| edge[:top] }
+    top && t("stats.index.findings.vowel_transition",
+             position: top[:position], from: t("vowel_rows.#{top[:from]}"), to: t("vowel_rows.#{top[:to]}"),
+             count: number_with_delimiter(top[:count]))
+  end
+
   # ==== 統計ページ §3 波形塗りバー ==============================================================
 
   WAVE_BAR_WIDTH = 40
@@ -303,6 +334,24 @@ module StatsHelper
   end
 
   private
+
+  # 同じ区画でも、値によって言い方が変わる文(最長が複数ある・第 1 拍が母音で始まる)。
+  def stats_finding_variant(key, values)
+    case key
+    when :longest then values[:count] > 1 ? :longest_tied : :longest
+    when :head_consonant then values[:consonant] ? :head_consonant : :head_vowel
+    else key
+    end
+  end
+
+  def stats_finding_value(name, value)
+    case value
+    when Numeric then stats_number(value)
+    when Date then l(value, format: :long)
+    when Array then value.join(t("stats.index.findings.chars_separator"))
+    else name == :vowel ? t("vowel_rows.#{value}") : value
+    end
+  end
 
   # 層の x 座標(等間隔)。幅は層の数ぶんだけ伸びる。
   def graph_columns(count)

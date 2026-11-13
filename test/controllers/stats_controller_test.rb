@@ -55,11 +55,22 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     # 段名(ア段〜オ段)は、横スクロールしない左の列に1度だけ
     assert_select "svg.vowel-graph text.vowel-graph__label", count: 0
     assert_select "svg.vowel-graph__rows text.vowel-graph__label", count: 5
-    # 注記: 最多の遷移(件数が同じなら位置と母音の並びで先のもの)と、最後の層まで届く語義の割合
-    # (auiie と aee のうち 5 拍目まで届くのは auiie だけ = 50.0%)
-    assert_select ".stats-hint", text: I18n.t("stats.index.sound.graph_hint",
-                                              top_position: 1, top_from: I18n.t("vowel_rows.a"), top_to: I18n.t("vowel_rows.u"),
-                                              top_count: "1", last: 5, last_count: "1", last_percent: 50.0).join
+    # 注記: 最後の層まで届く語義の割合(auiie と aee のうち 5 拍目まで届くのは auiie だけ = 50.0%)
+    assert_select ".stats-hint", text: I18n.t("stats.index.sound.graph_hint", last: 5, last_count: "1", last_percent: 50.0).join
+
+    # 結論の文は、図の下の「※」の注記に 1 文ずつ(読みの長さの文字数だけは最頻と最長の 2 文。文の組み立ては StatsHelperTest)。
+    # 行×行の最多の注記は表の右に置いたままで、図の下の注記には数えない
+    findings = css_select(".stats-notes--figure li").map { |item| item.text.strip }
+    assert_equal 12, findings.size
+    assert_equal findings.uniq, findings
+    assert_includes findings, I18n.t("stats.index.findings.longest", length: 7, surface: "ABC殺人事件")
+    # 最多の移り方(件数が同じなら位置と母音の並びで先のもの)
+    assert_includes findings, I18n.t("stats.index.findings.vowel_transition",
+                                     position: 1, from: I18n.t("vowel_rows.a"), to: I18n.t("vowel_rows.u"), count: "1")
+    assert_select ".stats-matrix-layout .stats-notes li", count: 1
+    # 説明文は実数から作り、奥付には引用するときのクレジット(About の利用条件と同じ)を添える
+    assert_match(/収録 2 語、読みの長さは平均 5 文字・最長 7 文字。/, css_select("meta[name=description]").first["content"])
+    assert_select ".stats-colophon", text: /#{Regexp.escape(I18n.t("pages.about.license_credit", url: CANONICAL_HOST))}/
 
     # ワードクラウド(Issue 78)は集計ファイルの語をすべて並べ、8色とも使う
     entries = MorphemeFrequencies.entries
@@ -112,6 +123,8 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".empty-note"
     assert_select "svg.wave-chart", count: 0
+    # 説明文は実数を持たない定型文に戻る
+    assert_select "meta[name=description][content=?]", I18n.t("stats.index.description").truncate(120)
   end
 
   test "集計ファイルが無ければワードクラウドの区画ごと出さない" do

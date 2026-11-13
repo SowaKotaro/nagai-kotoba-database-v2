@@ -81,13 +81,8 @@
   </p>
 </div>
 <% last = graph[:layers].last %>
-<%# 最多の遷移。stats_vowel_graph が edge[:top] に真偽で立てた 1 本を探し直す。SiteStatistics の
-    データでは層が 2 つ以上あれば件数が正の遷移が必ずあるので、nil にはならない %>
-<% top = graph[:edges].find { |edge| edge[:top] } %>
 <p class="stats-hint"><%= phrased_sentences(t("stats.index.sound.graph_hint",
-      top_position: top[:position],
-      top_from: t("vowel_rows.#{top[:from]}"),
-      top_to: t("vowel_rows.#{top[:to]}"),
-      top_count: number_with_delimiter(top[:count]),
       last: last[:position], last_count: number_with_delimiter(last[:total]),
       last_percent: last[:reach_percent])) %></p>
+<%# 最多の移り方は、ほかの区画と同じ結論の文で言う(以前は上の注記の 1 文目だった) %>
+<%= render "finding", sentences: [ stats_vowel_transition_finding(graph) ] %>

@@ -83,6 +83,33 @@ class StatsHelperTest < ActionView::TestCase
     ))
   end
 
+  # 結論の文(docs/stats.md §2「結論の文」)。どれが最多かは SiteStatisticsTest で見る。
+  test "結論の文: 値の表記を整えて文に差し込み、値によって言い方を変え、該当が無ければ nil を返す" do
+    stats = Struct.new(:findings)
+    finding = ->(key, values) { stats_finding(stats.new({ key => values }), key) }
+
+    # 数は桁で区切り、割合の .0 は落とす
+    assert_equal "いちばん多いのは読みが 10 文字の語義で、1,234 語義（全体の 26%）です。",
+                 finding.(:reading_length, { value: 10, count: 1234, percent: 26.0 })
+    assert_equal "2026年7月10日の公開開始から 127 日で、1,499 語を収録しました（1日あたり 11.8 語）。",
+                 finding.(:timeline, { first_day: Date.new(2026, 7, 10), days: 127, words: 1499, per_day: 11.8 })
+    assert_equal "読みの 1 拍目の母音でいちばん多いのはア段で、32.3% です。", finding.(:first_vowel, { vowel: "a", percent: 32.3 })
+
+    # 最長が 1 つなら名指しだけ、複数あれば語義数を添える
+    assert_equal "いちばん長い読みは 53 文字で、「長い語」です。", finding.(:longest, { length: 53, surface: "長い語", count: 1 })
+    assert_equal "いちばん長い読みは 53 文字で、「長い語」など 2 語義です。", finding.(:longest, { length: 53, surface: "長い語", count: 2 })
+    # 第 1 拍は、子音で始まるか母音で始まるかで言い方が変わる(「子音でいちばん多いのは母音」と言わない)
+    assert_equal "読みの第1拍は、子音 k（カ・キ）で始まる語義がいちばん多く、30 語義（12.5%）です。",
+                 finding.(:head_consonant, { consonant: "k", chars: %w[カ キ], count: 30, percent: 12.5 })
+    assert_equal "読みの第1拍は、母音（ア・イ）で始まる語義がいちばん多く、30 語義（12.5%）です。",
+                 finding.(:head_consonant, { consonant: nil, chars: %w[ア イ], count: 30, percent: 12.5 })
+
+    assert_nil finding.(:genre, nil)
+
+    # 母音のつながりは、図が最多に立てた 1 本(件数で採る)を言う
+    assert_equal "いちばん多い移り方は 1 拍目のア段 → ア段で、6 語義です。", stats_vowel_transition_finding(two_layer_graph)
+  end
+
   test "母音の遷移の図: 層ごとに5ノード、最多のエッジだけ強調し、キャンバスからはみ出さない" do
     assert_nil stats_vowel_graph(transitions([ { "a" => 3 } ], {}))
     assert_nil stats_vowel_graph({ total: 0, layers: [], edges: [] })

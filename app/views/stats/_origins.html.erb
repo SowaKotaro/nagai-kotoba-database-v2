@@ -30,6 +30,7 @@
         <% end %>
       </div>
     </div>
+    <%= render "finding", sentences: [ stats_finding(@stats, :origin) ] %>
     <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.origins[:covered])) %></p>
   </div>
 <% end %>
@@ -43,6 +44,7 @@
         <%= render "entity_cell", rect: rect %>
       <% end %>
     </div>
+    <%= render "finding", sentences: [ stats_finding(@stats, :entity_type) ] %>
     <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.entity_covered)) %></p>
   </div>
 <% end %>

@@ -26,6 +26,7 @@
       </svg>
     </div>
     <p class="stats-hint"><%= t("stats.index.sound.position_axis") %></p>
+    <%= render "finding", sentences: [ stats_finding(@stats, :first_vowel) ] %>
   </div>
 <% end %>
 
@@ -59,5 +60,6 @@
         </li>
       <% end %>
     </ol>
+    <%= render "finding", sentences: [ stats_finding(@stats, :head_consonant) ] %>
   </div>
 <% end %>
