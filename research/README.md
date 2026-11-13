@@ -106,6 +106,8 @@ seeds.txt ─▶ /expand ─[コード]─▶ /notation ─[コード]─▶ /re
   読みの Levenshtein（一括登録 step3 と同じしきい値）で、公開語の写し・台帳・同じ run の中と照合する（読みの似た兄弟の語も落ちる）。
 - **起動**: cron で動かす。新しい run は前回から 2 日経っていれば始め（日付で比べる）、途中で失敗した run は次の起動で続きから進める。
   同じ段で 3 回失敗したら止める。起動の時刻を逃しても、次に cron が動いたときに追いつく。
+- **手で今すぐ回す**: Claude Code で `/auto`(スキル `research-auto-run`)。中身は `bin/rails research:auto FORCE=1` で、期限前でも新しい run を始める
+  (cron の次の新しい run は、その run の日付から数え直す)。`/auto cron` は FORCE を付けない(cron と同じ)。ロックは cron と共通なので重ならない。
 - **注釈**: 管理画面「調査用データの書き出し」を `auto/inbox/annotation.json` に保存しておくと、次の起動で `/annotation` に回し、
   `auto/annotation/<日時>/annotation.json` に提案 JSON が出る。それを「提案 JSON の取り込み」に貼る。
 - **自動実行の Claude には Bash を渡さない**（文字数と重複はコードが見る）。公開語の写し（百万字を超える）は Read も禁じ、AI には読ませない。

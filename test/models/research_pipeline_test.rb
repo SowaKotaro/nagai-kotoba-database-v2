@@ -41,7 +41,7 @@ class ResearchPipelineTest < ActiveSupport::TestCase
     FileUtils.rm_rf(@dir)
   end
 
-  test "期限が来たら種語を取り出して run を最後まで通し、次の run は INTERVAL_DAYS 日あとに未使用の種語から始める" do
+  test "期限が来たら種語を取り出して run を最後まで通し、次の run は INTERVAL_DAYS 日あとに未使用の種語から始める(force なら期限を見ない)" do
     stub_method(ReadingExtractor, :available?, -> { false }) do
       pipeline.call
       run = runs.sole
@@ -62,11 +62,17 @@ class ResearchPipelineTest < ActiveSupport::TestCase
       pipeline.call
       assert_equal [ SEEDS.last ], runs.last.seeds.map { |seed| seed["surface"] }
 
+      # force なら期限前でも種語を取りに行く(ここでは尽きているので始めない)
+      @output.string = +""
+      pipeline(force: true).call
+      assert_equal 2, runs.size
+      assert_includes @output.string, "未使用の種語が残っていません"
+      assert_not_includes @output.string, "新しい run はまだ始めません"
+
       # 種語が尽きたら始めない
       travel ResearchPipeline::INTERVAL_DAYS.days
       pipeline.call
       assert_equal 2, runs.size
-      assert_includes @output.string, "未使用の種語が残っていません"
     end
   end
 
@@ -124,8 +130,8 @@ class ResearchPipelineTest < ActiveSupport::TestCase
 
   private
 
-  def pipeline(fetcher: FakeFetcher.new(:not_modified))
-    ResearchPipeline.new(root: @dir.join("auto"), seeds_path: @seeds_path, runner: @runner, fetcher:, output: @output)
+  def pipeline(fetcher: FakeFetcher.new(:not_modified), force: false)
+    ResearchPipeline.new(root: @dir.join("auto"), seeds_path: @seeds_path, runner: @runner, fetcher:, output: @output, force:)
   end
 
   def runs = ResearchRun.all(@dir.join("auto/runs"))
