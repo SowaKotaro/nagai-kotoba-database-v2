@@ -95,7 +95,7 @@
 | `/words.json` `/words/:id.json` | 公開 JSON API（CC BY 4.0 表記つき） |
 | `/words.atom` | 新着単語の Atom フィード（注釈済みの新着。件数は `WordsController::FEED_LIMIT`） |
 | `/llms.txt` `/llms-full.txt` | LLM 向けのサイト案内と、全収録データの全文版 |
-| `/sitemap.xml` `/robots.txt` | どちらも動的生成。`Sitemap:` 行は canonical ホストに連動 |
+| `/sitemap.xml` `/sitemap-facets.xml` `/robots.txt` | どれも動的生成。`sitemap.xml` は静的ページと単語詳細、`sitemap-facets.xml` はインデックスさせる単一条件の一覧（`IndexableFacets`）。`Sitemap:` 行は canonical ホストに連動 |
 | `/up` | ヘルスチェック（Rails 標準） |
 
 公開側はダークモードに対応（OS 設定追従 ＋ ヘッダーのトグル）。

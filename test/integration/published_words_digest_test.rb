@@ -1,13 +1,15 @@
 require "test_helper"
 
-# 全件を1レスポンスに書き出す重い出力(sitemap.xml / llms-full.txt)の版(PublishedWordsDigest)。
+# 全件を1レスポンスに書き出す重い出力(sitemap.xml / llms-full.txt)と、ファセット面のサイトマップの版(PublishedWordsDigest)。
 # 版は公開語の最終更新「日」に畳んであり、同じ日のアノテーションでは作り直さない
 # (畳んでいないと保存のたびに全件の再組み立てが走り、その間 Puma が塞がる。docs/history/performance-report.md)。
 class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
   PATHS = %w[/sitemap.xml /llms-full.txt].freeze
+  # 単語詳細を載せない出力(ファセット面のサイトマップ)も、条件付き GET と猶予の宣言は同じ版に従う
+  CONDITIONAL_GET_PATHS = [ *PATHS, "/sitemap-facets.xml" ].freeze
 
   test "版が変わらなければ 304 で、同じ日の語義の保存では版が変わらず、1日の猶予を宣言する" do
-    PATHS.each do |path|
+    CONDITIONAL_GET_PATHS.each do |path|
       get path
       assert_response :success
       etag = response.headers["ETag"]
@@ -25,14 +27,14 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
     travel_to Time.zone.local(2026, 8, 6, 18, 40) do
       word_senses(:murder).update!(meaning: "更新した意味")
 
-      PATHS.each do |path|
+      CONDITIONAL_GET_PATHS.each do |path|
         get path, headers: { "If-None-Match" => etags[path] }
         assert_response :not_modified, "#{path} が同じ日の保存で作り直された"
       end
     end
 
     # 全件出力は Cache-Control で 1 日の猶予を宣言する
-    PATHS.each do |path|
+    CONDITIONAL_GET_PATHS.each do |path|
       get path
       assert_equal "max-age=86400, public", response.headers["Cache-Control"], path
     end
@@ -86,7 +88,7 @@ class PublishedWordsDigestTest < ActionDispatch::IntegrationTest
   def etags_on(time)
     travel_to time do
       Word.update_all(updated_at: Time.current)
-      PATHS.index_with do |path|
+      CONDITIONAL_GET_PATHS.index_with do |path|
         get path
         response.headers["ETag"]
       end
