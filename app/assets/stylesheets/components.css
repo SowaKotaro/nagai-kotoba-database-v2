@@ -1393,7 +1393,7 @@ a.tag:hover .genre-hub__count {
   white-space: nowrap;
 }
 
-/* 文節を持たない、データから組む文(用語解説の定義・語義の意味・単語詳細のリード・About とプライバシーの本文)。
+/* 文節を持たない、データから組む文(用語解説の定義・語義の意味・単語詳細のリード・About とプライバシーの本文・統計の結論の文)。
    Chromium は語句の切れ目で折り(auto-phrase。lang="ja" のときだけ効く)、最後の行に 1〜2 字だけを残さない(pretty)。
    どちらも効かないブラウザ(Safari 18 など)は、これまでどおり字の切れ目で折る。
    文節の配列で組むリード(.phrase-sentence)は、この上に文ごとの balance が乗る */
@@ -1404,7 +1404,8 @@ a.tag:hover .genre-hub__count {
 .prose p,
 .prose li,
 .faq-list__answer,
-.fact-list dd {
+.fact-list dd,
+.stats-notes li {
   word-break: auto-phrase;
   overflow-wrap: anywhere;
   text-wrap: pretty;
@@ -4898,6 +4899,11 @@ textarea {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* 図の下に添える結論の文(stats/_finding)。図とのあいだを空ける。行×行の注記(表の右)には付けない */
+.stats-notes--figure {
+  margin-top: var(--space-4);
 }
 
 .stats-notes li {

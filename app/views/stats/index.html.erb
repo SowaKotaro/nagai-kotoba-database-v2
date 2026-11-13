@@ -1,5 +1,6 @@
 <% content_for :title, t("stats.index.meta_title") %>
-<% content_for :description, t("stats.index.description") %>
+<%# 説明文は、収録語があれば実数から作る(数は数字の壁と同じ集計) %>
+<% content_for :description, stats_meta_description(@stats) %>
 
 <%= render "shared/breadcrumbs",
       items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ t("stats.index.title"), nil ] ] %>
@@ -62,10 +63,12 @@
             <%= render "length_chart", distribution: @stats.reading_length_distribution, param: :reading_length,
                   overflow_param: :reading_length_min,
                   title_key: "stats.index.length_chart.chars_bar_title", aria: t("stats.index.length_chart.chars_aria") %>
+            <%= render "finding", sentences: [ stats_finding(@stats, :reading_length), stats_finding(@stats, :longest) ] %>
           </div>
           <div data-panel-switch-target="panel" data-panel-key="mora" hidden>
             <%= render "length_chart", distribution: @stats.mora_distribution, param: :mora_count,
                   title_key: "stats.index.length_chart.mora_bar_title", aria: t("stats.index.length_chart.mora_aria") %>
+            <%= render "finding", sentences: [ stats_finding(@stats, :mora) ] %>
             <p class="stats-hint"><%= phrased_sentences(t("stats.index.length_chart.mora_hint")) %></p>
           </div>
         </div>
@@ -104,6 +107,7 @@
             </div>
           <% end %>
         </div>
+        <%= render "finding", sentences: [ stats_finding(@stats, :timeline) ] %>
       </div>
     </section>
 
@@ -115,6 +119,7 @@
         <div class="panel__body">
           <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.genre_map.lead")) %></p>
           <%= render "genre_sunburst" %>
+          <%= render "finding", sentences: [ stats_finding(@stats, :genre) ] %>
           <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.genre_map[:covered])) %></p>
         </div>
       </section>
@@ -148,10 +153,11 @@
         <div class="panel__body">
           <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.features.lead")) %></p>
           <%= render "feature_ranking" %>
+          <%= render "finding", sentences: [ stats_finding(@stats, :feature) ] %>
         </div>
       </section>
     <% end %>
   </div>
 <% end %>
 
-<p class="stats-colophon"><%= t("stats.index.colophon") %></p>
+<p class="stats-colophon"><%= t("stats.index.colophon", credit: t("pages.about.license_credit", url: SiteUrl.origin)) %></p>

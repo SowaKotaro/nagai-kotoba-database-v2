@@ -21,6 +21,8 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
     # リードは文ごとに行を分ける(文節の折り方は WordsControllerTest の 0 件の案内で見る)
     assert_select "p.page-lead .phrase-sentence", count: I18n.t("rankings.index.lead").size
     assert_select "meta[name=robots]", count: 0
+    # 説明文の頭に、読みが長い言葉の 1 位を実データから入れる(入れ方の規則は RankingsHelperTest)
+    assert_match(/\A読みがいちばん長い言葉は「順位の母集団9」（14字）。/, css_select("meta[name=description]").first["content"])
 
     expected = WordRanking.all.count { |ranking| ranking.board.any? }
     assert_operator expected, :>, 0

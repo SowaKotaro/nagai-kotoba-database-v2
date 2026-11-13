@@ -7,6 +7,7 @@
         heading: t("stats.index.sound_matrix.first_heading") %>
   <%= render "kana_heatmap", counts: @stats.last_char_counts, param: :last_char,
         heading: t("stats.index.sound_matrix.last_heading") %>
+  <%= render "finding", sentences: [ stats_finding(@stats, :kana) ] %>
 </div>
 
 <%# 行はンを含む11行(列と同じ並び)で、11×11 の正方形にする %>

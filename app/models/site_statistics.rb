@@ -9,7 +9,7 @@
 # 種別: クエリ・集計（読み取りとキャッシュ）。
 class SiteStatistics
   # 集計の構造を変えたらキャッシュに残る旧オブジェクトを踏まないようバージョンを上げる。
-  CACHE_KEY = "site_statistics/v5"
+  CACHE_KEY = "site_statistics/v6"
   CACHE_TTL = 1.day
   # 集計は1万語規模で 0.8 秒かかる。期限切れの直後に複数リクエストが重なると全員が
   # 集計を始めてしまい、Puma(1プロセス・GIL)がその間ずっと塞がる。再計算は1本だけに絞る。
@@ -53,7 +53,7 @@ class SiteStatistics
               :first_char_counts, :last_char_counts,
               :sound_matrix, :reading_length_distribution, :mora_distribution,
               :timeline, :genre_map, :origins, :entity_types, :entity_covered,
-              :vowel_spectrum, :vowel_transitions, :head_consonants, :feature_ranking
+              :vowel_spectrum, :vowel_transitions, :head_consonants, :feature_ranking, :findings
 
   # キャッシュにはこのオブジェクトごと入れるため、初期化時にすべて計算し切る。
   def initialize
@@ -71,7 +71,9 @@ class SiteStatistics
     @growth = build_growth
     @sound_matrix = build_sound_matrix
     @reading_length_distribution = fill_distribution(@reading_length_counts)
-    @mora_distribution = fill_distribution(WordSense.published.group(:mora_count).count)
+    # モーラ数が未算出(nil)の語義は分布に入らない
+    @mora_counts = WordSense.published.group(:mora_count).count.except(nil)
+    @mora_distribution = fill_distribution(@mora_counts)
     @timeline = build_timeline
     @genre_map = build_genre_map
     @origins = build_origins
@@ -82,6 +84,8 @@ class SiteStatistics
     @vowel_transitions = build_vowel_transitions
     @head_consonants = build_head_consonants
     @feature_ranking = build_feature_ranking
+    # ほかの集計を読むので最後に組む
+    @findings = build_findings
   end
 
   def word_count = @word_count
@@ -130,7 +134,7 @@ class SiteStatistics
   # 「収録した日」は annotated_at(注釈完了 = 公開)で数える。created_at は一括登録で下書きを
   # 作った日でしかなく、公開した日とは何日もずれ得るため、公開面の指標には使わない。
   def build_growth
-    first_day = Word.annotated.minimum(:annotated_at)&.to_date
+    first_day = @first_annotated_on = Word.annotated.minimum(:annotated_at)&.to_date
     days_open = first_day ? (Date.current - first_day).to_i + 1 : 0
     {
       this_month: Word.annotated_this_month.count,
@@ -394,6 +398,84 @@ class SiteStatistics
     return nil unless feature
 
     { surface: feature.word_sense.word.surface, target: feature.target, target_start: feature.target_start }
+  end
+
+  # ==== 区画ごとの結論の 1 文(docs/stats.md §2「結論の文」) ==================================
+
+  # 図ごとに「いちばん」を 1 つ決め、文(ja.yml の stats.index.findings)に差し込む値を返す。
+  # どれが最多か・何 % かはここで決め、ビューは数えない。該当が無い区画は nil(文を出さない)。
+  # 同数のときは、値の小さいほう・字の若いほう・図の並びで先のほうを採る(毎回同じ文になるように)。
+  def build_findings
+    {
+      kana: kana_finding,
+      reading_length: mode_finding(@reading_length_counts),
+      longest: longest_finding,
+      mora: mode_finding(@mora_counts),
+      timeline: timeline_finding,
+      genre: top_share_finding(@genre_map[:groups].first, @genre_map[:covered]),
+      origin: top_share_finding(@origins[:categories].first, @origins[:covered]),
+      entity_type: top_share_finding(@entity_types.first, @entity_covered),
+      first_vowel: first_vowel_finding,
+      head_consonant: head_consonant_finding,
+      feature: @feature_ranking[:rows].first&.slice(:name, :count)
+    }
+  end
+
+  # 頭文字と末尾文字のそれぞれで、いちばん多い字(50音表の字)と、全語義に占める割合。
+  def kana_finding
+    first_char, first_count = top_kana(@first_char_counts)
+    last_char, last_count = top_kana(@last_char_counts)
+    return nil unless first_char && last_char
+
+    { first_char: first_char, first_count: first_count, first_percent: percent(first_count, @sense_count),
+      last_char: last_char, last_count: last_count, last_percent: percent(last_count, @sense_count) }
+  end
+
+  def top_kana(counts)
+    counts.select { |char, _| KanaRow.row(char) }.min_by { |char, count| [ -count, char ] }
+  end
+
+  # 分布({ 値 => 語義数 })の最頻値と、その語義数・分布の全体に占める割合。
+  def mode_finding(counts)
+    value = mode_from_counts(counts)
+    value && { value: value, count: counts[value], percent: percent(counts[value], counts.values.sum) }
+  end
+
+  # 読みがいちばん長い語義。同じ長さが複数あれば、登録の早い語を名指しして語義数を添える。
+  def longest_finding
+    length = @reading_length[:max]
+    return nil unless length
+
+    sense = WordSense.published.where(reading_length: length).includes(:word).order(:id).first
+    { length: length, surface: sense.word.surface, count: @reading_length_counts[length] }
+  end
+
+  # 公開を始めた日からの歩み(数は数字の壁の「分類と歩み」と同じ)。
+  def timeline_finding
+    return nil unless @first_annotated_on
+
+    { first_day: @first_annotated_on, days: @growth[:days_open], words: @word_count, per_day: @growth[:per_day] }
+  end
+
+  # 件数の多い順に並んだ集計の先頭(top)と、集計対象(covered)に占める割合。
+  def top_share_finding(top, covered)
+    top && { name: top[:name], count: top[:count], percent: percent(top[:count], covered) }
+  end
+
+  # 読みの 1 拍目でいちばん多い母音(VOWELS のキー)と、その割合。
+  def first_vowel_finding
+    first = @vowel_spectrum[:positions].first
+    return nil unless first
+
+    vowel, count = VOWELS.map { |key| [ key, first[:counts][key].to_i ] }.max_by(&:last)
+    { vowel: vowel, percent: percent(count, first[:total]) }
+  end
+
+  # 読みの第 1 拍でいちばん多い子音(母音始まりは consonant が nil)と、子音を数えた語義に占める割合。
+  def head_consonant_finding
+    top = @head_consonants.first
+    top && { consonant: top[:consonant], chars: top[:chars], count: top[:count],
+             percent: percent(top[:count], @head_consonants.sum { |group| group[:count] }) }
   end
 
   # ==== 共通 ========================================================================
