@@ -25,4 +25,39 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     published = Word.annotated.order(:id).map { |word| "#{CANONICAL_HOST}/words/#{word.id}" }
     assert_equal static + published, locs
   end
+
+  # ファセット面のサイトマップ(docs/seo-plan.md §5 C-2)。どの面を載せるかの規則は IndexableFacetsTest で見る。
+  test "sitemap-facets.xml は、インデックスさせる単一条件の一覧だけを canonical と同じ URL で並べる" do
+    genre = genres(:small_novel)
+    IndexableFacets::SITEMAP_MIN_COUNT.times do |i|
+      create_published_word(surface: "面に載る語#{i}", reading: "ツチノコハッケンタイ#{%w[ア イ ウ][i]}", genre: genre)
+    end
+    create_published_word(surface: "薄い面の語", reading: "ヌ" * 31)
+
+    get "/sitemap-facets.xml"
+    assert_response :success
+    assert_match %r{application/xml|text/xml}, response.media_type
+    xml = Nokogiri::XML(response.body).remove_namespaces!
+    locs = xml.css("url > loc").map(&:text)
+
+    expected = IndexableFacets.for_sitemap.map { |facet| "#{CANONICAL_HOST}#{words_path(facet.key => facet.value)}" }
+    assert_equal expected, locs
+    assert_includes locs, "#{CANONICAL_HOST}/words?first_char=%E3%83%84"
+    assert_includes locs, "#{CANONICAL_HOST}/words?genre_id=#{genre.id}"
+    assert_includes locs, "#{CANONICAL_HOST}/words?reading_length=11"
+    # 語義が下限に届かない面は載せない(インデックスの可否は変えない)
+    assert_not_includes locs, "#{CANONICAL_HOST}/words?reading_length=31"
+    # 面の更新日時は正確に出せないので lastmod を付けない。条件の組み合わせ・並び替え・ページ送り・単語詳細も載せない
+    assert_empty xml.css("lastmod")
+    assert locs.all? { |loc| loc.match?(%r{\A#{Regexp.escape(CANONICAL_HOST)}/words\?[a-z_]+=[^&]+\z}) }
+
+    # 載せた URL はどれも、開くとインデックス可(noindex なし)で、canonical が自身を指す
+    # (サイトマップとページの宣言が食い違うと、Google はサイトマップの側を信用しなくなる)
+    locs.each do |loc|
+      get loc.delete_prefix(CANONICAL_HOST)
+      assert_response :success, "#{loc} が開けない"
+      assert_select "meta[name=robots]", { count: 0 }, "#{loc} が noindex になっている"
+      assert_select "link[rel=canonical][href=?]", loc
+    end
+  end
 end

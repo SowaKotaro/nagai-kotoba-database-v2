@@ -119,7 +119,7 @@ YaroslavlAI の投稿は「無料の Semrush と併用する」の一言だけ�
 | title | 固有で説明的に。「Home」のような曖昧な語を避ける。サイト名は末尾に | 単語詳細・ファセット面は固有。**ハブに「索引」「ランキング」だけのものがある** | あり（§5 B-5） |
 | ファセット（絞り込み） | インデックスさせるなら、区切りは `&`、順序は一定、0 件や意味の無い組み合わせは 404 | 単一の条件だけを許可し、実在しない id は 404、0 件は noindex | 適合。**語義が 1〜2 件の薄い面が 3 分の 1** ある（§5 C-3） |
 | ページ送り | ページごとに固有の URL。1 ページ目を canonical にしない | 2 ページ目以降は自身が canonical で noindex,follow | 適合 |
-| サイトマップ | 1 ファイル 50MB・50,000 URL まで。lastmod は正確なときだけ。priority と changefreq は見ない。Search Console ではサイトマップごとに登録状況を追える | 1 ファイルに 2,579 URL（静的 10、単語 2,569）。**ファセット面は載せていない** | あり（§5 C-2） |
+| サイトマップ | 1 ファイル 50MB・50,000 URL まで。lastmod は正確なときだけ。priority と changefreq は見ない。Search Console ではサイトマップごとに登録状況を追える | 1 ファイルに 2,579 URL（静的 10、単語 2,569）。ファセット面は 2026-11-13 に別ファイル `sitemap-facets.xml` で足した | 済（§5 C-2） |
 | スパムポリシー | 価値の無いページの大量生成（scaled content abuse）と、検索語ごとの入口ページ（doorway）は違反 | 該当なし | 無し。新しい面を増やす案は、この線で採否を決める |
 | FAQ のリッチリザルト | 2026-05-07 から表示されなくなり、2026-06-15 に文書が削除された | About に FAQPage がある | 害は無いので残す。足さない |
 | サイトリンク検索ボックス | 2024-11-21 に終了。`WebSite` はサイト名の決定に引き続き使われる | `WebSite` ＋ `SearchAction` がある | 残す |
@@ -152,7 +152,8 @@ YaroslavlAI の投稿は「無料の Semrush と併用する」の一言だけ�
 | 実在しないマスタ id は 404 | `WordSenseSearch#unknown_master_ids?`（`WordsController#index`） |
 | 条件を引き継ぐ `/search?...` とシャッフルへのリンクは nofollow | `app/views/words/index.html.erb` |
 | robots.txt（`/admin` と `/session` だけを Disallow。理由は本文のコメント） | `RobotsController` |
-| sitemap（静的 10 ページ ＋ 公開語の全部。ファセット面は無い） | `SitemapsController`・`app/views/sitemaps/show.xml.builder` |
+| sitemap（静的 10 ページ ＋ 公開語の全部） | `SitemapsController#show`・`app/views/sitemaps/show.xml.builder` |
+| ファセット面の sitemap（インデックスを許可した単一の条件のうち、公開語義が `IndexableFacets::SITEMAP_MIN_COUNT` 件以上の面。2026-11-13 追加） | `IndexableFacets`・`SitemapsController#facets`・`app/views/sitemaps/facets.xml.builder` |
 | 構造化データ（`WebSite`・`Organization`・単語の `DefinedTerm`・パンくず・About の `FAQPage`） | `StructuredDataHelper` |
 
 過去に 2 度、URL が際限なく増えるクロール事故を起こしている（シャッフルのシード、実在しない id。changelog の Issue 80・81）。
@@ -180,6 +181,7 @@ YaroslavlAI の投稿は「無料の Semrush と併用する」の一言だけ�
 - **798 面の meta description とページ頭のリードは、見出し以外が同じ定型文**（`config/locales/ja.yml` の `words.index.facet_description`）。
   件数も例語も入っていない。
 - 798 面は sitemap に載っていない。Google がどれだけ登録しているかは分からない（§5 C-1）。
+  → 2026-11-13 に `sitemap-facets.xml` を足した（§5 C-2）。Search Console に送ると、ファセット面だけの登録数が出る。
 
 ### 4.4 ページの型ごとの見え方
 
@@ -278,7 +280,7 @@ A-1 の検索語に「読み方」「意味」がどれだけ出ているかを�
 Search Console のページのインデックス登録のレポートで、`/words?` を含む URL が「登録済み」「クロール済み - インデックス未登録」「検出 - インデックス未登録」の
 どこに何件あるかを見る。C-2・C-3 の判断は、この結果を待つ。
 
-**C-2. ファセット面のサイトマップを別ファイルで出す（中。判断点 3）。**
+**C-2. ファセット面のサイトマップを別ファイルで出す（中。判断点 3）。** → **2026-11-13 に実装した**（`/sitemap-facets.xml`。下の「実装の記録」）。
 798 面を載せた 2 つ目のサイトマップ（たとえば `/sitemap-facets.xml`）を足し、robots.txt に `Sitemap:` の行を 1 つ足して、Search Console に送る。
 
 - ねらいは 2 つ。Google に「登録してほしい面」を伝えることと、**Search Console でファセット面だけの登録状況を追えるようにすること**
@@ -299,6 +301,18 @@ Search Console のページのインデックス登録のレポートで、`/wor
 
 推奨は、**C-1 の結果を見てから**。薄い面が「クロール済み - インデックス未登録」に並んでいるだけなら害は小さいので 3、
 薄い面のせいで厚い面のクロールが遅れている様子があれば 2。B-2 を入れた特徴の面は、語が少なくても解説があるので、しきい値から外せる。
+
+**C-2・C-3 の実装の記録（2026-11-13）。** C-1 の内訳（ファセット面の登録数）が取れないまま、推奨どおりに入れた。内訳はこのサイトマップを Search Console に送れば出るので、C-1 の代わりにもなる。
+
+- C-3 は選択肢 3 にした。**インデックスの規則は変えていない**（1 件以上なら index のまま）。サイトマップに載せるのは、公開語義が
+  `IndexableFacets::SITEMAP_MIN_COUNT` 件以上の面だけ。しきい値は、この節が「薄い」と呼んだ 1〜2 件を外す値にした。
+  選択肢 2（しきい値未満を noindex）へ進むかは、サイトマップごとの登録数を見てから決める。
+- 面の列挙は `IndexableFacets` に 1 か所。種類は `WordSenseSearch::INDEXABLE_FACET_KEYS`、件数は `PublishedSenseCounts`（索引のページと同じ集計）、
+  文字の面は索引の 50音表の字だけ。条件の組み合わせ・並び替え・ページ送りは載せない。
+- 載せた URL が、開くとインデックス可で canonical が自身を指すことは、結合テスト（`SitemapsControllerTest`）が載せた URL の全部について確かめる。
+- 開発 DB（公開 1,499 語）で数えると、面は 654、そのうち載るのは 400。面の一覧は、ハブとホームのリンクから集めた単一条件の URL と過不足なく一致した
+  （`IndexableFacets.all` と、`/genres`・`/entity_types`・`/linguistic_features`・`/browse`・ホームの `a[href^="/words?"]` の突き合わせ）。
+- **オーナーの作業**: Search Console の「サイトマップ」で `sitemap-facets.xml` を送る（robots.txt に書いただけでは、サイトマップごとの集計が出ない）。
 
 **C-4. ページ送りと内部リンクは現状のままでよい。** Google の案内に適合している（§3・§4.4）。定例の点検（§6.3）で崩れていないかだけ見る。
 
@@ -427,8 +441,8 @@ Day-One Page の考え方（§2.1）を、このサイトの形に直す。新�
 | # | 判断すること | 推奨 | 判断に要る材料 |
 |---|---|---|---|
 | 1 | Bing Webmaster Tools に登録するか（確定事項 33 の見直し。A-3） | 登録する。PC のシェアが Google と並び、Search Console からのインポートなら手数が小さい | — |
-| 2 | 語義が 1〜2 件の薄い面の扱い（C-3） | C-1 の結果を見てから。迷うなら 3（規則は変えず、サイトマップにだけしきい値） | C-1 |
-| 3 | ファセット面のサイトマップを足すか。新しい公開 URL の名前（C-2） | 足す。別ファイルにする | C-1 |
+| 2 | 語義が 1〜2 件の薄い面の扱い（C-3） | **2026-11-13 に 3 で実装**（規則は変えず、サイトマップにだけしきい値）。2（noindex）へ進むかは、サイトマップごとの登録数を見てから | `sitemap-facets.xml` の登録数 |
+| 3 | ファセット面のサイトマップを足すか。新しい公開 URL の名前（C-2） | **2026-11-13 に実装**（`/sitemap-facets.xml`） | — |
 | 4 | 単語詳細の title に読み・「読み方」を入れるか（B-3） | 検索語を見てから | A-1 |
 | 5 | `alternateName` に何を入れるか（B-4） | 入れる。予備としてドメイン名も候補に並べる | — |
 | 6 | ハブの title の文言（B-5） | 変える（title 要素だけ） | — |
@@ -448,6 +462,8 @@ Day-One Page の考え方（§2.1）を、このサイトの形に直す。新�
 **2026-11-13 の追記。** 第 1 段（B-1・B-5・B-4）は、基準を待たずに同じ日に入れた（オーナーの都合で、実装を 2026-11-17 までに済ませるため）。
 `.com` の 301 と同時なので、どれが効いたかは分けて測れない。入った内容は changelog の「番号を持たない改善」。
 B-5 は素の一覧と 6 つのハブの `<title>`、B-4 の `alternateName` は「長い言葉データベース」とドメイン名（文言は ja.yml の `layouts.brand_alternate_names`。オーナーが変えてよい）。
+
+**2026-11-13 の追記（2）。** 第 2 段のうち C-2・C-3 も同じ日に入れた（§5 C の「実装の記録」）。C-1 の内訳は、このサイトマップを Search Console に送ると出る。
 
 1. **第 0 段（コード不要）**: A-1 基準の取得、A-2 生成 AI の設定の確認、C-1 ファセット面の登録状況、判断点 1（Bing）。ここまでで §8 の表が埋まり、以下の順番を確定できる。
 2. **第 1 段（小さな PR を 1 本ずつ）**: B-1 ファセット面の説明文、B-5 ハブの title、B-4 `alternateName`。互いに切り口が違うので、続けて入れてよい。

@@ -302,7 +302,7 @@ utf8mb4 のインデックスキー長制限（3072 バイト）に収めるた�
 - **最大 1 日残る（表層形・読み・意味を含む）**: `llms-full.txt` と `sitemap.xml`。版（`PublishedWordsDigest`）が
   「公開語の最終更新日」なので、語が減っても版が変わらない。`Cache-Control` でも 1 日の猶予を宣言している。
   /rankings（`WordRanking`）と /stats（`SiteStatistics`）も 1 日キャッシュで、表層形と読みを含む。
-- **数だけ残る**: About の収録語数（`AboutStatistics`。1 日）、/genres・/browse の件数（`PublishedSenseCounts`。1 時間）。
+- **数だけ残る**: `sitemap-facets.xml` に載る面（語は出ない。取り消しで公開語義が下限を割った面も、最大 1 日は載ったままになる）、About の収録語数（`AboutStatistics`。1 日）、/genres・/browse の件数（`PublishedSenseCounts`。1 時間）。
   ホームの「数字で見る長い言葉」は /stats と同じ数（`SiteStatistics.wall`。1 日）。`HomeStatistics` の語数（1 時間）は
   今日の一語を選ぶのに使うだけで、画面には出さない（選ぶ語は公開スコープから引く）。
   ホームの探し方の選択肢（`SearchWayMenus`。1 時間）は、公開語義が無くなったマスタの名前を最大 1 時間残す。

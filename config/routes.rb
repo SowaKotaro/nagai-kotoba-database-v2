@@ -43,6 +43,8 @@ Rails.application.routes.draw do
 
   # 検索エンジン向けの sitemap(公開・注釈済みの全単語 + 静的ページ)。Issue 15。
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: "xml" }, as: :sitemap
+  # インデックスを許可している単一条件の一覧(ファセット面)のサイトマップ。sitemap.xml とは別に登録状況を追う。
+  get "sitemap-facets.xml", to: "sitemaps#facets", defaults: { format: "xml" }, as: :facet_sitemap
 
   # サイト概要・収録基準・利用条件などの恒久ページ。Issue 20。
   get "about", to: "pages#about", as: :about

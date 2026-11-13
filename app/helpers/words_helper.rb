@@ -72,7 +72,7 @@ module WordsHelper
   FACET_MASTERS = WordSenseSearch::MASTER_FACETS
 
   # マスタを持たず、値(かな1文字)をそのまま見出しに使うファセット。
-  CHAR_FACET_KEYS = %i[first_char last_char].freeze
+  CHAR_FACET_KEYS = IndexableFacets::KANA_FACET_KEYS
 
   # マスタを持たず、値(数値)をそのまま見出しに使うファセット。
   NUMERIC_FACET_KEYS = %i[reading_length mora_count].freeze

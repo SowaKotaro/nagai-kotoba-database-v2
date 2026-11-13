@@ -2,7 +2,7 @@ require "test_helper"
 
 # robots.txt(動的配信)。Sitemap 行を canonical_host と連動させ、noindex を読ませたい面はブロックしない。
 class RobotsControllerTest < ActionDispatch::IntegrationTest
-  test "robots.txt は管理・認証だけを Disallow し、検索フォームとシード付き URL は塞がずに sitemap を案内する" do
+  test "robots.txt は管理・認証だけを Disallow し、検索フォームとシード付き URL は塞がずに 2 つの sitemap を案内する" do
     get robots_path
     assert_response :success
     assert_equal "text/plain", response.media_type
@@ -12,6 +12,7 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     # ここで確かめる(環境変数 CANONICAL_HOST を設定した環境では、ここで先に分かる)
     assert_equal CANONICAL_HOST, Rails.application.config.x.canonical_host
     assert_includes robots_directives, "Sitemap: #{CANONICAL_HOST}/sitemap.xml"
+    assert_includes robots_directives, "Sitemap: #{CANONICAL_HOST}/sitemap-facets.xml"
 
     # 検索フォームとシャッフルのシード付き URL は Disallow しない(noindex と canonical を読ませる)
     # 検索フォームは noindex を読ませるためにクロールを許す。シード付き URL も、既知の分は
