@@ -3,6 +3,7 @@
 # 1 回の起動でやること:
 #   1. 排他ロックを取る(前の起動がまだ動いていれば何もしない)
 #   2. 途中の run があれば続きから、無ければ前回の run から INTERVAL_DAYS 日経っていれば新しい run を始める
+#      (force: true のときは期限を見ない。スキル /auto から手で起動するとき)
 #      (公開語の写しを取り直し、seeds.txt から未使用の種語を SEEDS_PER_RUN 語取り出す)
 #   3. run を /expand → /notation → /reading と最後まで通す(段の間のふるいは ResearchRun)
 #   4. inbox に annotation の書き出しが置いてあれば /annotation に回す(ResearchAnnotationBatch)
@@ -25,8 +26,9 @@ class ResearchPipeline
   # seeds.txt の区切り線(「---」。オーナーが手で使った位置の目印に引いていた)。種語ではないので読み飛ばす。
   SEED_SEPARATOR = /\A\s*-{3,}\s*\z/
 
-  def initialize(root: ROOT, seeds_path: SEEDS_PATH, runner: ClaudeResearchRunner.new, fetcher: nil, output: $stdout)
+  def initialize(root: ROOT, seeds_path: SEEDS_PATH, runner: ClaudeResearchRunner.new, fetcher: nil, output: $stdout, force: false)
     @root = Pathname(root)
+    @force = force
     @seeds_path = Pathname(seeds_path)
     @runner = runner
     @fetcher = fetcher || LlmsFullFetcher.new(corpus_path)
@@ -72,7 +74,7 @@ class ResearchPipeline
   end
 
   def start_run
-    return log("新しい run はまだ始めません(前回から #{INTERVAL_DAYS} 日経っていない)") unless due?
+    return log("新しい run はまだ始めません(前回から #{INTERVAL_DAYS} 日経っていない)") unless @force || due?
 
     seeds = next_seeds
     return log("seeds.txt に未使用の種語が残っていません") if seeds.empty?
