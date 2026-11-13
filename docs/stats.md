@@ -371,8 +371,8 @@
 - ワードクラウドには足していない（最多の部品は、いちばん大きい活字がすでに示している）。
 - `/stats` の meta description も、収録語があれば実数（集計の日付・収録語数・読みの平均と最長）から作る（`StatsHelper#stats_meta_description`）。
 - **ランキング（`/rankings`）の板には文を足さない。** 1 位の値を見出しの横に立てる案は「1 行目と同じ数が並ぶ」として外してある（design.md §5.5.1）。
-  代わりに、meta description の頭に「読みが長い言葉」の 1 位を実データから入れる（`RankingsHelper#rankings_meta_description`。
-  語が長すぎて説明文が途中で切れるときは名指ししない）。
+  代わりに、meta description の頭に「読みが長い言葉」の 1 位の字数を実データから入れる（`RankingsHelper#rankings_meta_description`。
+  語は名指ししない。最長の語は表記も長く、約 120 字で切られる説明文が語だけで埋まるため）。
 
 ---
 

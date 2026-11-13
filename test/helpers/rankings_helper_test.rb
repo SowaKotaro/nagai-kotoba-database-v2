@@ -1,19 +1,15 @@
 require "test_helper"
 
 class RankingsHelperTest < ActionView::TestCase
-  test "説明文の頭には読みが長い言葉の 1 位を置き、板が無いときと語が長すぎるときは、もとの説明文のままにする" do
+  test "説明文の頭には読みが長い言葉の 1 位の字数を置き、板が無いときは、もとの説明文のままにする" do
     base = I18n.t("rankings.index.description")
     length_board = WordRanking.all.find { |ranking| ranking.key == RankingsHelper::META_TOP_KEY }
     other_board = WordRanking.all.find { |ranking| ranking.key == "mora_desc" }
-    boards = ->(surface, count) { [ [ other_board, [] ], [ length_board, [ { value: 1234, count: count, representative: { surface: surface } } ] ] ] }
+    boards = ->(count) { [ [ other_board, [] ], [ length_board, [ { value: 1234, count: count, representative: { surface: "長い語" } } ] ] ] }
 
-    assert_equal "読みがいちばん長い言葉は「長い語」（1,234字）。#{base}", rankings_meta_description(boards.("長い語", 1))
-    # 同じ長さの語が複数あれば、代表の語と語数を言う
-    assert_equal "読みがいちばん長い言葉は「長い語」など3語（1,234字）。#{base}", rankings_meta_description(boards.("長い語", 3))
-    # 説明文は約 120 字で切られるので、長すぎる語は名指ししない(上限ちょうどまでは名指しする)
-    limit = RankingsHelper::META_TOP_SURFACE_MAX_LENGTH
-    assert_includes rankings_meta_description(boards.("長" * limit, 1)), "長" * limit
-    assert_equal base, rankings_meta_description(boards.("長" * (limit + 1), 1))
+    # 語は名指しせず、同じ長さの語が何語あっても同じ文にする
+    assert_equal "読みがいちばん長い言葉は 1,234 字。#{base}", rankings_meta_description(boards.(1))
+    assert_equal "読みがいちばん長い言葉は 1,234 字。#{base}", rankings_meta_description(boards.(3))
     # その板が成立していない(出ていない)とき
     assert_equal base, rankings_meta_description([ [ other_board, [] ] ])
     assert_equal base, rankings_meta_description([])
