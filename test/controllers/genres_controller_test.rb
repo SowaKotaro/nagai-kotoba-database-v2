@@ -12,6 +12,7 @@ class GenresControllerTest < ActionDispatch::IntegrationTest
     get genres_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("genres.index.title")
+    assert_select "title", text: "#{I18n.t('genres.index.meta_title')} | #{I18n.t('layouts.brand')}" # <title> だけは何のページかまで言う
     assert_select "meta[name=robots]", count: 0
 
     # 大分類 文学(公開1件・murder 経由)は折り畳み(summary)。絞り込みは「全体を見る」リンク

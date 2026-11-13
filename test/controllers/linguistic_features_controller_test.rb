@@ -12,6 +12,7 @@ class LinguisticFeaturesControllerTest < ActionDispatch::IntegrationTest
     get linguistic_features_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("linguistic_features.index.title")
+    assert_select "title", text: "#{I18n.t('linguistic_features.index.meta_title')} | #{I18n.t('layouts.brand')}" # <title> だけは何のページかまで言う
     assert_select "meta[name=robots]", count: 0
 
     # 並びは用語解説の順(連濁 → 重箱読み)。ABC殺人事件(murder)に付いた 2 つだけで、どちらも 1 語義

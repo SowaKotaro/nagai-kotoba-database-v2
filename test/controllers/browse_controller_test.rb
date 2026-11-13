@@ -6,6 +6,7 @@ class BrowseControllerTest < ActionDispatch::IntegrationTest
     get browse_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("browse.index.title")
+    assert_select "title", text: "#{I18n.t('browse.index.meta_title')} | #{I18n.t('layouts.brand')}" # <title> だけは何のページかまで言う
     assert_select "meta[name=robots]", count: 0
 
     # カ(curry の読み カレー)→ 先頭文字の絞り込み。件数は50音表の整列を崩さないよう、

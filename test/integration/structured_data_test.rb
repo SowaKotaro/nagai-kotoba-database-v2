@@ -7,6 +7,8 @@ class StructuredDataTest < ActionDispatch::IntegrationTest
     get root_path
     site = find_type("WebSite")
     assert_equal I18n.t("layouts.brand"), site["name"]
+    assert_equal I18n.t("layouts.brand_alternate_names"), site["alternateName"]
+    assert_includes site["alternateName"], URI(CANONICAL_HOST).host # 予備の候補としてドメイン名を入れる
     assert_equal "#{CANONICAL_HOST}/", site["url"]
     action = site["potentialAction"]
     assert_equal "SearchAction", action["@type"]

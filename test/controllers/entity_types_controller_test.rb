@@ -10,6 +10,7 @@ class EntityTypesControllerTest < ActionDispatch::IntegrationTest
     get entity_types_path
     assert_response :success
     assert_select "h1.page-title", text: I18n.t("entity_types.index.title")
+    assert_select "title", text: "#{I18n.t('entity_types.index.meta_title')} | #{I18n.t('layouts.brand')}" # <title> だけは何のページかまで言う
     assert_select "meta[name=robots]", count: 0
 
     assert_select "[data-controller=list-filter]" do

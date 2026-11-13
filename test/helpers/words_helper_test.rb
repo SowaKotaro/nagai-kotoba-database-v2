@@ -22,6 +22,22 @@ class WordsHelperTest < ActionView::TestCase
     assert_equal "", word_lead_sentence(Word.new(surface: "無語義"))
   end
 
+  test "ファセット面の description: 件数と先頭の語を例に入れ、長すぎる例は並べない" do
+    word = ->(surface) { Word.new(surface: surface) }
+    long = "あ" * (WordsHelper::FACET_EXAMPLES_MAX_LENGTH - 2) # かぎ括弧を足して、ちょうど上限
+    {
+      # 先頭から上限の数まで
+      [ 1234, %w[甲 乙 丙 丁] ] => "読みが10文字の長い言葉の一覧（1,234語）。「甲」「乙」「丙」など。",
+      # 上限の長さを超える語の手前で止める(途中で切らない)
+      [ 2, [ long, "乙" ] ] => "読みが10文字の長い言葉の一覧（2語）。「#{long}」など。",
+      # 1 語目から収まらないときと、0 件のときは、件数だけの文にする
+      [ 1, [ "#{long}あ" ] ] => "読みが10文字の長い言葉の一覧（1語）。",
+      [ 0, [] ] => "読みが10文字の長い言葉の一覧（0語）。"
+    }.each do |(count, surfaces), expected|
+      assert_equal expected, facet_meta_description("読みが10文字の長い言葉", count, surfaces.map(&word))
+    end
+  end
+
   # --- X 共有の本文(投稿上限 280 単位 = 全角 128 文字に収める) ---
   test "X共有本文はリード文を上限で切り詰め、無ければ見出し語を使う" do
     word = words(:curry)

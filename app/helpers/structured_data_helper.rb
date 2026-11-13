@@ -19,6 +19,7 @@ module StructuredDataHelper
     website = {
       "@type" => "WebSite",
       "name" => t("layouts.brand"),
+      "alternateName" => t("layouts.brand_alternate_names"),
       "url" => SiteUrl.absolute("/"),
       "inLanguage" => "ja",
       "publisher" => { "@id" => organization_id },

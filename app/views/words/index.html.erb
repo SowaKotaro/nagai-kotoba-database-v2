@@ -23,10 +23,12 @@
                  (@search.conditions? ? @search.indexable_facet.present? && @total_count.positive? : true) %>
 <% content_for :robots, "noindex,follow" unless indexable %>
 <% canonical_path canonical_index_path(@search, @page, @sort) %>
-<% content_for :title, page_heading %>
+<%# <title> は、素の一覧では「何の一覧か」まで言う文言にする(見出しとパンくずは page_heading のまま) %>
+<% content_for :title, heading || t("words.index.meta_title") %>
 <%# ページの説明文(文節の配列)。meta description にはつないで渡し、ページ頭のリードは文節の切れ目でだけ折る %>
 <% page_description = heading ? t("words.index.facet_description", label: heading) : t("words.index.description") %>
-<% content_for :description, page_description.join %>
+<%# ファセット面の meta description は、面ごとの件数と例語から作る(リードと同じ定型文だと、どの面も同じ説明になる) %>
+<% content_for :description, heading ? facet_meta_description(heading, @total_count, @words) : page_description.join %>
 
 <%= render "shared/breadcrumbs", items: [ [ t("layouts.breadcrumbs_home"), root_path ], [ page_heading, nil ] ] %>
 
