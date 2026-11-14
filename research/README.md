@@ -101,13 +101,21 @@ seeds.txt ─▶ /expand ─[コード]─▶ /notation ─[コード]─▶ /re
                                        一括登録 step1 に register.txt、step2 に reading.json → step3 → 登録
 ```
 
-- **段の間のふるい（コード）**: 確実なものだけを通し、ほかは却下する。確信度は high だけ、立項スコアは満点だけ、分割案のある語・
-  読みが揺れる語・読みが基準に届かない語（`ReadingLengthCheck`。アプリと同じ数え方）は却下。重複は、表層形を畳んだ完全一致と
-  読みの Levenshtein（一括登録 step3 と同じしきい値）で、公開語の写し・台帳・同じ run の中と照合する（読みの似た兄弟の語も落ちる）。
+- **段の間のふるい（コード）**: 段ごとに次の語を却下する（2026-11-14 に緩めた。落ちた語は `auto/rejected.html` で見て人が拾い直す）。
+  - 拡張: 系統の確信度が high でない語。読みの文字数では落とさない（MeCab も通さない）。
+  - 表記: 立項スコア 3 以下、確信度 low、分割案のある語。
+  - 読み: 確信度が high でない語、読みが揺れる語、読みが基準に届かない語（`ReadingLengthCheck`。アプリと同じ数え方）。
+  - 重複（どの段でも）: 表層形を畳んだ完全一致と、読みの完全一致（`ResearchDuplicateFilter`。類似度は使わない）を、
+    公開語の写し・台帳・同じ run の中と照合する。
 - **起動**: cron で動かす。新しい run は前回から 2 日経っていれば始め（日付で比べる）、途中で失敗した run は次の起動で続きから進める。
   同じ段で 3 回失敗したら止める。起動の時刻を逃しても、次に cron が動いたときに追いつく。
 - **手で今すぐ回す**: Claude Code で `/auto`(スキル `research-auto-run`)。中身は `bin/rails research:auto FORCE=1` で、期限前でも新しい run を始める
-  (cron の次の新しい run は、その run の日付から数え直す)。`/auto cron` は FORCE を付けない(cron と同じ)。ロックは cron と共通なので重ならない。
+  (cron の次の新しい run は、その run の日付から数え直す)。`/auto 15` のように数を付けると、その run だけ種語をその数使う(`SEEDS=15`。cron は 5 語のまま)。`/auto cron` は FORCE を付けない(cron と同じ)。ロックは cron と共通なので重ならない。
+- **眺める**: `auto/index.html` をブラウザで開く(run の一覧。各 run の `runs/<日時>/index.html` に段ごとの語の通過・却下と理由)。
+  一括登録に貼る register.txt・reading.json を、run ごとにも、選んだ複数の run をつなげてもコピーできる。静的な HTML で、
+  `research:auto` が最後に `script/research_viewer.py` で作り直す(手で作り直すなら `python3 script/research_viewer.py`)。
+  落ちた語は `auto/rejected.html` で段と run ごとに集めてコピーでき、段ごとの拾い直し方(どのスキルから手で回すか)も出る。
+  見終えた run は一覧で「確認済み」にすると隠れる(印はブラウザの localStorage に残る)。
 - **注釈**: 管理画面「調査用データの書き出し」を `auto/inbox/annotation.json` に保存しておくと、次の起動で `/annotation` に回し、
   `auto/annotation/<日時>/annotation.json` に提案 JSON が出る。それを「提案 JSON の取り込み」に貼る。
 - **自動実行の Claude には Bash を渡さない**（文字数と重複はコードが見る）。公開語の写し（百万字を超える）は Read も禁じ、AI には読ませない。
