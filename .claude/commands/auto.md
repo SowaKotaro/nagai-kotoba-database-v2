@@ -1,6 +1,6 @@
 ---
 description: 調査の自動実行(cron の research:auto)を今すぐ 1 回回す（research-auto-run スキル）
-argument-hint: "[任意: cron（期限を守って cron と同じに起動）。既定は期限前でも新しい run を始める]"
+argument-hint: "[任意: 数（例 15。種語をその数だけ使う）か cron（期限を守って cron と同じに起動）。既定は期限前でも 5 語で新しい run を始める]"
 allowed-tools: Skill, Bash(bin/rails research:auto:*), Bash(tail -n 40 research/auto/auto.log), Read, Glob
 ---
 

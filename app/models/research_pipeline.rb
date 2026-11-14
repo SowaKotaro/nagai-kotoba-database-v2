@@ -4,7 +4,7 @@
 #   1. 排他ロックを取る(前の起動がまだ動いていれば何もしない)
 #   2. 途中の run があれば続きから、無ければ前回の run から INTERVAL_DAYS 日経っていれば新しい run を始める
 #      (force: true のときは期限を見ない。スキル /auto から手で起動するとき)
-#      (公開語の写しを取り直し、seeds.txt から未使用の種語を SEEDS_PER_RUN 語取り出す)
+#      (公開語の写しを取り直し、seeds.txt から未使用の種語を SEEDS_PER_RUN 語取り出す。seeds_per_run: で手で起動するときだけ変えられる)
 #   3. run を /expand → /notation → /reading と最後まで通す(段の間のふるいは ResearchRun)
 #   4. inbox に annotation の書き出しが置いてあれば /annotation に回す(ResearchAnnotationBatch)
 # 段が失敗したら(利用上限・時間切れ・出力が壊れていた)そこで止め、次の起動でやり直す。
@@ -26,9 +26,12 @@ class ResearchPipeline
   # seeds.txt の区切り線(「---」。オーナーが手で使った位置の目印に引いていた)。種語ではないので読み飛ばす。
   SEED_SEPARATOR = /\A\s*-{3,}\s*\z/
 
-  def initialize(root: ROOT, seeds_path: SEEDS_PATH, runner: ClaudeResearchRunner.new, fetcher: nil, output: $stdout, force: false)
+  def initialize(root: ROOT, seeds_path: SEEDS_PATH, runner: ClaudeResearchRunner.new, fetcher: nil, output: $stdout, force: false, seeds_per_run: SEEDS_PER_RUN)
+    raise ArgumentError, "seeds_per_run は 1 以上にする(#{seeds_per_run})" unless seeds_per_run.is_a?(Integer) && seeds_per_run.positive?
+
     @root = Pathname(root)
     @force = force
+    @seeds_per_run = seeds_per_run
     @seeds_path = Pathname(seeds_path)
     @runner = runner
     @fetcher = fetcher || LlmsFullFetcher.new(corpus_path)
@@ -59,7 +62,7 @@ class ResearchPipeline
   end
 
   # seeds.txt のうち、台帳で使っていない種語を先頭から count 語。
-  def next_seeds(count = SEEDS_PER_RUN)
+  def next_seeds(count = @seeds_per_run)
     return [] unless @seeds_path.exist?
 
     used = ledger.used_seeds
