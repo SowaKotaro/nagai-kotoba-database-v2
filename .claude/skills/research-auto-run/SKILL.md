@@ -13,15 +13,18 @@ cron が動かしている `bin/rails research:auto`(Issue 112)を、このセ�
 ## 引数
 
 - 空(既定) … `FORCE=1` を付けて起動する。前回の run から `ResearchPipeline::INTERVAL_DAYS` 日経っていなくても、新しい run を始める。
+- 数(例 `15`) … `FORCE=1 SEEDS=<数>` を付けて起動する。新しい run の種語を、`SEEDS_PER_RUN` 語ではなくその数だけ使う
+  (この 1 回だけ。cron は `SEEDS_PER_RUN` 語のまま)。種語が多いほど各段が長くなり、利用上限に当たりやすい。
 - `cron` … `FORCE` を付けずに起動する(cron と完全に同じ。期限前なら、途中の run の続きと inbox の注釈だけを進める)。
 
 ## 手順
 
 1. 起動する前に、ユーザーへ次の 2 点を一言で伝える(確認は待たずに進めてよい)。
-   - seeds.txt の未使用の種語を先頭から `ResearchPipeline::SEEDS_PER_RUN` 語使う(台帳に記録され、cron の次の run はその続きから取る)。
+   - seeds.txt の未使用の種語を先頭から `ResearchPipeline::SEEDS_PER_RUN` 語(引数に数があればその数)使う(台帳に記録され、cron の次の run はその続きから取る)。
    - 新しい run を始めると、cron が次に新しい run を始めるのは、その日から `INTERVAL_DAYS` 日後になる(期限は最後の run の日付で数える)。
 2. Bash で、**バックグラウンド実行**(`run_in_background: true`)で起動する。数分〜数十分かかる(段ごとの上限は `ClaudeResearchRunner::TIMEOUT`)。
    - 既定: `bin/rails research:auto FORCE=1 >> research/auto/auto.log 2>&1`
+   - 数: `bin/rails research:auto FORCE=1 SEEDS=<数> >> research/auto/auto.log 2>&1`
    - `cron`: `bin/rails research:auto >> research/auto/auto.log 2>&1`
    - ログは cron と同じ `research/auto/auto.log` に追記する(どちらの起動も 1 本のログで追える)。
    - 終わるのを待つ間に、ほかのコマンドを打って様子を見に行かない(終われば通知が来る)。
@@ -33,6 +36,7 @@ cron が動かしている `bin/rails research:auto`(Issue 112)を、このセ�
      利用上限で落ちたときは、次の起動(cron か、もう一度このスキル)で続きから進む。
    - 「前の起動がまだ動いている」: cron などの起動と重なった。何もしていない。
    - 「未使用の種語が残っていません」: `research/inputs/seeds.txt` に種語を足すよう伝える。
+   - 語ごとの通過・却下は `research/auto/index.html`(静的なページ。rake の最後に作り直される)で見られる、と添える。
    - inbox の注釈を回した行があれば、`research/auto/annotation/<日時>/annotation.json` を「提案 JSON の取り込み」に貼るよう伝える。
 
 ## してはいけないこと

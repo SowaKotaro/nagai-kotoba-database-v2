@@ -8,8 +8,10 @@
 #   summary.md            段ごとの件数と却下の内訳(人が読む版)
 #   register.txt / reading.json   最後まで残った語(人が一括登録に貼る)
 #
-# ふるいは「確実なものだけを流し、ほかは容赦なく却下する」(オーナー判断。最後はアノテーションで人が目を通す)。
-# 確信度は high だけ、立項スコアは満点だけを通す。しきい値は各概念の持ち主の定数を引く。
+# ふるいは「確実なものを流し、ほかは却下する」(オーナー判断。最後はアノテーションで人が目を通す)。
+# 2026-11-14 に緩めた: 拡張の段は読みの文字数で落とさない(MeCab も通さない)、表記の段は確信度 medium まで・
+# 立項スコア 4 以上を通す、重複は読みがほぼ同じ語だけ(ResearchDuplicateFilter)。読みの段は確信度 high のまま。
+# 落ちた語は research/auto/rejected.html で見て、人が拾い直す。しきい値は各概念の持ち主の定数を引く。
 # 種別: 調査 JSON の入出力。
 class ResearchRun
   STAGES = %w[expand notation reading].freeze
@@ -129,29 +131,28 @@ class ResearchRun
           "seed" => seed["surface"], "confidence" => entry["confidence"] }
       end
     end
-    mecab = ReadingExtractor.call(candidates.map { |c| c["surface"] })
 
-    sift(candidates, filter) do |candidate, index|
+    # 読みの文字数ではここで落とさない(/expand が数えて 10 字未満を除いている。オーナー判断)。読みは正規化だけする
+    sift(candidates, filter) do |candidate|
       confidence = candidate.delete("confidence")
-      check = ReadingLengthCheck.call(candidate["reading"], mecab[index])
-      candidate["reading"] = check.reading
+      candidate["reading"] = ReadingLengthCheck.normalize(candidate["reading"])
       next "系統の確信度が high でない(#{confidence || "なし"})" unless high?(confidence)
-      next "読みが基準に届かない(#{reading_length_label(check)})" unless check.ok?
 
       candidate["id"] = next_id
       nil
     end
   end
 
-  # 表記を確定した語。立項スコアが満点で、確信度が high で、分割案が無い語だけを通す。
+  # 表記を確定した語。立項スコアが懸念の帯(AnnotationProposal::ENTRY_CONCERN_MAX_SCORE 以下)でなく、
+  # 確信度が low でなく、分割案が無い語を通す。
   def sift_notation(entries, filter)
     by_id = entries.index_by { |entry| entry["id"].to_i }
     sift(words, filter) do |word|
       entry = by_id.fetch(word["id"])
       word["surface"] = entry["surface"].to_s.strip.presence || word["surface"]
       next "分割案あり(#{Array(entry["split"]).join(" / ")})" if Array(entry["split"]).any?
-      next "立項スコアが満点でない(#{entry["entry_score"].inspect})" unless entry["entry_score"] == AnnotationProposal::ENTRY_SCORE_RANGE.max
-      next "確信度が high でない(#{entry["confidence"] || "なし"})" unless high?(entry["confidence"])
+      next "立項スコアが低い(#{entry["entry_score"].inspect})" unless entry_score_enough?(entry["entry_score"])
+      next "確信度が low(#{entry["confidence"] || "なし"})" unless medium_or_high?(entry["confidence"])
 
       nil
     end
@@ -183,6 +184,11 @@ class ResearchRun
   end
 
   def high?(confidence) = confidence == AnnotationProposal::HIGH_CONFIDENCE
+  def medium_or_high?(confidence) = WordCandidate::CONFIDENCES.include?(confidence) && confidence != AnnotationProposal::LOW_CONFIDENCE
+
+  def entry_score_enough?(score)
+    score.is_a?(Integer) && AnnotationProposal::ENTRY_SCORE_RANGE.cover?(score) && score > AnnotationProposal::ENTRY_CONCERN_MAX_SCORE
+  end
 
   def reading_length_label(check)
     own = check.reading ? "#{check.reading} #{check.length}字" : "読みなし"
@@ -209,7 +215,7 @@ class ResearchRun
   def duplicate_reason(match)
     return unless match
 
-    match.kind == :surface ? "重複: 表層形が〈#{match.surface}〉と一致" : "重複: 読みが〈#{match.surface}〉(#{match.reading})と似ている"
+    match.kind == :surface ? "重複: 表層形が〈#{match.surface}〉と一致" : "重複: 読みが〈#{match.surface}〉(#{match.reading})と一致"
   end
 
   # 出力 JSON の配列を取り出し、入力の語がすべて返っているかを確かめる。欠けていれば nil。
