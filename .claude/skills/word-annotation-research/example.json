@@ -49,7 +49,7 @@
           "genre_path": ["言語", "成句論・句構造分析", "成句"],
           "genre_new": false,
           "entity_type": "ことわざ",
-          "part_of_speech": "普通名詞",
+          "part_of_speech": "連語",
           "word_origins": ["日本語"],
           "linguistic_features": []
         }
