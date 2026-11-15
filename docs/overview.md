@@ -45,7 +45,7 @@
 - CI: GitHub Actions（`.github/workflows/ci.yml`。DB は `mysql:8.4`。§11）
 - タイムゾーンは `Tokyo`、既定ロケールは `:ja`（表示文言は `config/locales/ja.yml` に集約）
 - 外部サービスへの実行時依存は持たない（web フォント CDN・チャート CDN・外部 API いずれも無し。
-  唯一の同梱ライブラリが `vendor/javascript/plotly.min.js` で、統計ページ内でのみ遅延読み込みする）
+  同梱ライブラリも無い。統計のサンバーストに使っていた Plotly は、2026-11-15 に自前の SVG へ置き換えた）
 
 ## 3. 認証（管理者）
 
@@ -260,7 +260,7 @@ bin/rails server
 | ホーム | `nav_menu`（探し方の入口の選択肢。ヘッダーの「検索」と同じ）・`swipe_dismiss`（狭幅の下からのシートを、下へのスワイプで閉じる） |
 | 単語の一覧・詳細 | `auto_submit`（並び替えを選んだら送る。管理の一覧でも使う）・`clipboard`（URL のコピー。管理画面の書き出しでも使う） |
 | 詳細検索 | `fold_count`（畳んだ区画・ジャンルの見出しの選択数）・`range_slider`（読みの文字数）・`char_type`・`char_type_toggle`（文字種） |
-| ランキング・統計・索引 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（Plotly）・`vowel_graph`（母音のつながり） |
+| ランキング・統計・索引 | `panel_switch`（セグメントボタンでパネルを切り替える）・`genre_sunburst`（ジャンルのサンバーストと階層の内訳）・`vowel_graph`（母音のつながり） |
 | ジャンル・エンティティ | `list_filter`（名前で絞り込む欄） |
 | 収録リクエスト | `nested_form`（行の追加と削除）・`reading_counter`（読みの字数） |
 | アノテーション（コンソール・デッキ） | `nested_form`・`sense_cloner`（語義の複製）・`sense_completeness`（必須項目の充足）・`genre_picker`（ジャンルの段階表示）・`inline_add`（マスタのその場追加）・`feature_range`（特徴の該当部分）・`publish_guard`（公開前の確認）・`queue_nav`（キーボード）・`deck`（カード送り） |
@@ -276,7 +276,7 @@ bin/rails server
 
 | イベント | 出す側 | 受ける側 |
 |---|---|---|
-| `theme:change`（document） | `theme` | `genre_sunburst`（Plotly の色を CSS のトークンから読み直す） |
+| `theme:change`（document） | `theme` | いまは無い（CSS だけで追従できない描画のために残してある。[`design.md`](design.md) §9.2） |
 | `char-type-toggle:changed` | `char_type_toggle` | `char_type#caseSensitivityChanged` |
 | `genre-picker:changed` | `genre_picker` | `sense_completeness#check` |
 | `inline-add:added` | `inline_add` | `sense_completeness#check` |
@@ -301,7 +301,6 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
 - JS から要素を探す手がかりを新しく足すときは、Stimulus の target か data 属性にする。`js-` 接頭辞のクラスは既存の注釈コンソールにだけ残し、
   増やさない（`js-` が付いていても、JS が使うとは限らない）。
 - 見た目用のクラスを JS やテストも参照している箇所は、CSS の側に「JS（〜_controller.js）・テストも参照」と注記する（[`design.md`](design.md) §11）。
-- Plotly は importmap にピンせず、Sprockets で配信して UMD のグローバルとして使う（`config/importmap.rb` の注記。`bin/importmap audit` の対象外）。
 
 ## 13. 事実ごとの正（単一の出典）
 

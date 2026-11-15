@@ -118,7 +118,7 @@
         </div>
         <div class="panel__body">
           <p class="stats-section__lead"><%= phrased_sentences(t("stats.index.genre_map.lead")) %></p>
-          <%= render "genre_sunburst" %>
+          <%= render "genre_sunburst", genre_map: @stats.genre_map %>
           <%= render "finding", sentences: [ stats_finding(@stats, :genre) ] %>
           <p class="stats-covered"><%= t("stats.index.annotated_note", count: number_with_delimiter(@stats.genre_map[:covered])) %></p>
         </div>

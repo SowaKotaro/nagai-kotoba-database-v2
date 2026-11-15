@@ -32,19 +32,23 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     # アノテーション依存の章には集計対象の語義数を明示する
     assert_select ".stats-covered", text: I18n.t("stats.index.annotated_note", count: 1), minimum: 1
 
-    # ジャンルのサンバーストは大→中→小の階層データ(Plotly 形式)を埋め込み、段階展開の受け皿を隠して置く
-    assert_select ".genre-analysis[data-controller=genre-sunburst]", count: 1
-    assert_select "[data-genre-sunburst-target=mediumBar]", count: 1
-    assert_select ".tag-row[data-genre-sunburst-target=smallList]", count: 1
+    # ジャンルのサンバーストは大→中→小の入れ子のデータを埋め込み、図と内訳の器、複製元の template を置く(描くのは JS)
+    assert_select ".genre-analysis[data-controller=genre-sunburst][data-genre-sunburst-search-url-value=?]", words_path, count: 1
+    assert_select "svg.genre-sunburst[data-genre-sunburst-target=figure]", count: 1
+    assert_select ".genre-crumbs[data-genre-sunburst-target=crumbs]", count: 1
+    assert_select ".genre-rows[data-genre-sunburst-target=rows]", count: 1
+    %w[crumbTemplate currentTemplate rowTemplate tagTemplate].each do |target|
+      assert_select "template[data-genre-sunburst-target=#{target}]", count: 1
+    end
     large = genres(:large_literature)
     medium = genres(:medium_japanese)
     small = genres(:small_novel)
     data = JSON.parse(css_select("script[data-genre-sunburst-target=data]").first.text)
-    assert_equal [ "文学", "日本文学", "小説" ], data["labels"]
-    assert_equal [ "L#{large.id}", "M#{medium.id}", "S#{small.id}" ], data["ids"]
-    assert_equal [ "", "L#{large.id}", "M#{medium.id}" ], data["parents"]
-    assert_equal [ 1, 1, 1 ], data["values"]
-    assert_equal [ large.id, medium.id, small.id ], data["genre_ids"]
+    assert_equal [ { "id" => large.id, "name" => "文学", "count" => 1, "children" => [
+      { "id" => medium.id, "name" => "日本文学", "count" => 1, "children" => [
+        { "id" => small.id, "name" => "小説", "count" => 1 }
+      ] }
+    ] } ], data
 
     # 母音の遷移グラフは層ごとに5ノード。色を持つのは押して選んだ線だけで、既定で塗られている線は無い
     layers = SiteStatistics.new.vowel_transitions[:layers].size
@@ -96,7 +100,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "サ")
     assert_select "a.stats-bars__bar[href=?]", words_path(first_char: "カ")
     assert_select "a.stats-bars__bar[rel=nofollow]", count: 0
-    # エンティティ型・特徴チップ(ジャンルは Plotly サンバースト側で遷移する)
+    # エンティティ型・特徴チップ(ジャンルはサンバーストの JS が遷移先を組む。test/system/stats_genre_sunburst_test.rb)
     assert_select "a[href=?]", words_path(entity_type_id: entity_types(:book_title).id)
     assert_select "a[href=?]", words_path(linguistic_feature_id: linguistic_features(:rendaku).id)
     # ワードクラウドの各項目は、その部品を含む語のキーワード検索へ。キーワード検索は必ず noindex

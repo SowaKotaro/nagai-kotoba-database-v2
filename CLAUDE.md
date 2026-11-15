@@ -62,7 +62,7 @@
 - 太さは本文の 400 と、見出し・強調（`b` / `strong`）・立てる数の 800 の 2 段だけ（中間の太さを使わない）。書体は `--font-sans`・`--font-mono`・`--font-display` の 3 つだけ。
 - 区画は地の上に置く札（白の面＋墨の 1px の枠＋角 8px）で示し、影を使わない。札の中の行は細罫で仕切り、並んだ要素どうしの罫は `border` ではなく `gap: 1px` の隙間で作る。
 - 動くのはマウスで触れたものだけで、短く・小さく・1 度だけ（型は design.md §4 の 6 つ。足すときもまずそのどれかに当てる。触れている間伸び続けるサイト名だけが例外）。
-  触れなくても動くのはホーム最上部の印だけ（ほかに、タップで開閉する部品の動きと、スクロールで上へ戻したときのヘッダーの出入りがある。design.md §4・§5.1）。図版は実データから描く線画（読みの五十音円環）だけ（写真の枠を置かない。単語一覧の 0 件の札の溶けた顔は、アイコンを図の大きさで置く例外。design.md §5.0）。
+  触れなくても動くのはホーム最上部の印だけ（ほかに、タップで開閉する部品の動き、スクロールで上へ戻したときのヘッダーの出入り、統計のサンバーストの掘り下げがある。design.md §4・§5.1）。図版は実データから描く線画（読みの五十音円環）だけ（写真の枠を置かない。単語一覧の 0 件の札の溶けた顔は、アイコンを図の大きさで置く例外。design.md §5.0）。
 - 淡さの下限（文字はどの面の上でも 4.5:1、それだけで境目を示す面と罫は地との差 ΔRGB 19）を割らない。**色を薄くしたら必ず実測する**。
 - 管理画面も公開側と同じデザインで組む（札・墨・書体・太さ・字間は共通）。違うのは幅（上限 1440px）・帯と余白の詰め・遊びの動きを止めること・破壊的な操作の赤だけで、
   HTML は公開側と共有し、`body.is-admin` の下で `admin.css` が上書きする（design.md §10）。
@@ -182,7 +182,7 @@
 | `app/controllers/concerns/` | 認証 `Authentication`、全件出力の版 `PublishedWordsDigest`、注釈のキュー `Admin::AnnotationQueue` | — |
 | `app/helpers/` | ビューに渡す値・属性・data ハッシュ | `word_requests_helper.rb` |
 | `app/views/` | ERB。公開側の共通部品は `shared/`、管理画面の共通部品は `admin/shared/` | `shared/_genre_path` |
-| `app/javascript/controllers/` | Stimulus（importmap）。共有の関数は `support/`。Plotly は意図してピンせず、Sprockets で配信する（地図は overview §12） | `decision_list_controller.js` |
+| `app/javascript/controllers/` | Stimulus（importmap）。共有の関数は `support/`（地図は overview §12） | `decision_list_controller.js` |
 | `app/assets/stylesheets/` | 手書き CSS。tokens → base → layout → components → motion → annotate・candidates・admin の順に読み、**管理用の CSS も全ページで読む** | `tokens.css` |
 | `config/locales/ja.yml` | 表示文言 | — |
 | `config/routes.rb` | ルートの正（画面の役割は overview §5） | — |

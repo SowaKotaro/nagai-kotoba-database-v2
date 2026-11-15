@@ -64,8 +64,7 @@
         theme_controller.js と対で、localStorage のキー "theme"(あちらの STORAGE_KEY)と
         theme-color に読むトークン(--bg)を同じにしておく。
         nonce: true はいま何もしていない: CSP が未設定(config/initializers/content_security_policy.rb は
-        全行コメント)。nonce 前提の CSP を入れると、nonce の無い GA4 のインライン script(layouts/_analytics)と、
-        Plotly を script 要素で差し込む genre_sunburst_controller.js の読み込みも止まるので、一緒に直す %>
+        全行コメント)。nonce 前提の CSP を入れると、nonce の無い GA4 のインライン script(layouts/_analytics)も止まるので、一緒に直す %>
     <%= javascript_tag nonce: true do %>
       (function () {
         try {

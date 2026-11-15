@@ -160,23 +160,18 @@ module StatsHelper
     }
   end
 
-  # ==== ジャンルのサンバースト(Plotly 用データ) ====================================
+  # ==== ジャンルのサンバースト ======================================================
 
-  # 大→中→小の3階層を Plotly sunburst の並列配列(ids/labels/parents/values)へ展開する。
-  # branchvalues: "total" 前提(親の値 = 子の合計)。genre_ids は各ノードのジャンル id で、
-  # 末端(小分類)クリックでの絞り込み検索への遷移に使う(customdata)。
-  def stats_genre_sunburst_data(genre_map)
-    data = { ids: [], labels: [], parents: [], values: [], genre_ids: [] }
-    genre_map[:groups].each do |large|
-      push_sunburst_node(data, "L#{large[:id]}", large, "")
-      large[:children].each do |medium|
-        push_sunburst_node(data, "M#{medium[:id]}", medium, "L#{large[:id]}")
-        medium[:children].each do |small|
-          push_sunburst_node(data, "S#{small[:id]}", small, "M#{medium[:id]}")
-        end
-      end
-    end
-    data
+  # genre_sunburst_controller に渡す値と文言(図と内訳は JS が描く。データは別に JSON で埋め込む)。
+  # resize は、幅が変わったときに扇のラベルの入り方を決め直すために受ける。
+  def genre_sunburst_data
+    {
+      controller: "genre-sunburst",
+      action: "resize@window->genre-sunburst#resize",
+      genre_sunburst_search_url_value: words_path,
+      genre_sunburst_root_label_value: t("stats.index.genre_map.root_label"),
+      genre_sunburst_back_label_value: t("stats.index.genre_map.back_label")
+    }
   end
 
   # ==== エンティティ型のツリーマップ ================================================
@@ -460,14 +455,6 @@ module StatsHelper
     areas = row.map { |item| item[:area] }
     total = areas.sum
     [ (side**2) * areas.max / (total**2), (total**2) / ((side**2) * areas.min) ].max
-  end
-
-  def push_sunburst_node(data, node_id, node, parent_id)
-    data[:ids] << node_id
-    data[:labels] << node[:name]
-    data[:parents] << parent_id
-    data[:values] << node[:count]
-    data[:genre_ids] << node[:id]
   end
 
   # 上辺を正弦波(振幅 WAVE_AMPLITUDE。低い棒では高さの半分まで。周期数 WAVE_CYCLES)にした
