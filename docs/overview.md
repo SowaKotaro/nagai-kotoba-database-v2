@@ -188,7 +188,7 @@ bin/rails server
 | `INDEXING_ENABLED` | アプリ | 未設定 | **未設定 = 全ページ noindex**。設定すると通常ページの robots メタが消える（解禁スイッチ）。**値は見ず、空でなければ解禁**になる（`false` を入れても解禁） |
 | `REQUESTS_ENABLED` | アプリ | `true` | `false` で収録リクエストの受付を止め、導線ごと隠す（真偽値として読む） |
 | `CANONICAL_HOST` | アプリ | `https://nagai-kotoba-database.jp` | canonical / OGP / sitemap の絶対 URL の基点（末尾スラッシュ無し。`SiteUrl`） |
-| `GA4_MEASUREMENT_ID` | アプリ | 未設定 | 設定すると GA4 の gtag を出力する（Turbo 対応の page_view 送信） |
+| `GA4_MEASUREMENT_ID` | アプリ | 未設定 | 設定すると GA4 の gtag を出力する（Turbo 対応の page_view 送信）。ログイン中（管理画面を含む）には出さない |
 | `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | アプリ | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
 | `MECAB_DICT` | アプリ | 未設定 | MeCab の辞書パス（`ReadingExtractor` が読む）。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | アプリ | credentials | `db:seed` が作る管理者。環境変数が優先 |

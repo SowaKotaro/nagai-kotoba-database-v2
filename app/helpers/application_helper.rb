@@ -118,8 +118,11 @@ module ApplicationHelper
     ENV["GA4_MEASUREMENT_ID"].presence
   end
 
+  # 計測するのは、ログインしていない閲覧だけ。管理画面(すべてログインの奥)と、ログイン中のオーナーが公開側を見たときには
+  # タグを出さない。page_view は URL とページの題を送るので、管理画面で出すと公開前の語が外へ出るうえ、
+  # オーナー自身の作業が利用状況に混ざる。
   def analytics_enabled?
-    ga_measurement_id.present?
+    ga_measurement_id.present? && !authenticated?
   end
 
   # 各サーチコンソールの所有権確認メタ(DNS 確認が使えない場合の代替。任意)。
