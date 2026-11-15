@@ -5263,63 +5263,220 @@ a.sound-matrix__cell:hover {
   fill: var(--text-subtle);
 }
 
-/* --- ジャンル別の語義数(Plotly サンバースト + 連動する積み上げ棒) ---
-   描画は genre_sunburst_controller(Plotly)。ここでは器のサイズと見出しだけを持つ */
+/* --- ジャンル別の語義数(サンバースト + いま見ている階層の内訳。docs/stats.md §5) ---
+   図(扇・ラベル・中心)と内訳の中身は genre_sunburst_controller が描く。ここは器と、JS が付ける要素の見た目。
+   塗りは --chart のチントで、濃さ(--t。%)は JS がきょうだいの中の順位から渡す。混ぜ先は札の白(--surface)。
+   .is-hot(触れている扇と、その内訳の行・タグ)と .is-entering・.genre-rows--tags は JS(genre_sunburst_controller.js)が付ける */
 .genre-analysis {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-5) var(--space-6);
+  gap: var(--space-5);
   align-items: flex-start;
 }
 
-.genre-analysis__sunburst {
-  flex: 0 1 460px;
-  min-width: 300px;
+/* 図 380px + 隙間 24px + 内訳 260px = 664px。札の区画(800px の列で 702px)に 2 列で収まる */
+.genre-analysis__figure {
+  flex: 0 1 380px;
+  min-width: 260px;
+  margin: 0 auto;
 }
 
-.genre-analysis__sunburst-plot {
+.genre-sunburst {
+  display: block;
   width: 100%;
-  height: 440px;
+  height: auto;
 }
 
-.genre-analysis__bars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  align-items: flex-start;
-  flex: 1 1 320px;
+.genre-sunburst__wedge {
+  fill: color-mix(in srgb, var(--chart) calc(var(--t) * 1%), var(--surface));
+  stroke: var(--surface);
+  stroke-width: 1;
+  cursor: pointer;
+}
+
+/* 触れている扇は一段濃くする(--text を載せて、ライト 7:1・ダーク 4.8:1) */
+.genre-sunburst__wedge.is-hot {
+  --t: 60 !important;
+}
+
+/* 字の大きさ(--label-size)は JS が渡す: 図が縮んでも画面上の 12px を保つ。字間は JS の幅の見積もり(LABEL_TRACKING)と同じ */
+.genre-sunburst__label {
+  fill: var(--text);
+  font-size: var(--label-size);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.genre-sunburst__label--count {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--label-size) * 0.92);
+}
+
+/* 掘り下げの動きが止まってから、ラベルを出す */
+.genre-sunburst__labels.is-entering {
+  animation: genre-sunburst-labels-in 200ms ease both;
+}
+
+@keyframes genre-sunburst-labels-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.genre-sunburst__hub {
+  fill: var(--surface);
+}
+
+.genre-sunburst__hub[data-action] {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .genre-sunburst__hub[data-action]:hover {
+    fill: var(--bg-soft);
+  }
+}
+
+.genre-sunburst__hub-name,
+.genre-sunburst__hub-hint {
+  fill: var(--text-muted);
+  font-size: var(--label-size);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.genre-sunburst__hub-hint {
+  fill: var(--text-subtle);
+  font-size: calc(var(--label-size) * 0.9);
+}
+
+.genre-sunburst__hub-count {
+  fill: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  pointer-events: none;
+}
+
+.genre-analysis__detail {
+  flex: 1 1 260px;
   min-width: 0;
 }
 
-.genre-analysis__label {
-  margin: 0 0 var(--space-1);
+/* いま見ている階層までの道筋。先頭(すべて)と途中は押して戻れる */
+.genre-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
   font-size: 13px;
+}
+
+.genre-crumbs li + li::before {
+  content: "›";
+  margin-right: var(--space-2);
+  color: var(--text-subtle);
+}
+
+.genre-crumbs button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
   color: var(--text-muted);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  cursor: pointer;
 }
 
-.genre-analysis__column {
-  width: 76px;
-  flex: none;
+.genre-crumbs button:hover {
+  color: var(--text);
+  text-decoration: none;
 }
 
-.genre-analysis__column-plot {
-  width: 76px;
-  height: 400px;
+.genre-crumbs [aria-current] {
+  font-weight: 800;
 }
 
-.genre-analysis__smalls {
-  flex: 1 1 300px;
-  min-width: 280px;
-  max-width: 560px;
+/* 内訳の行。行どうしの罫は gap: 1px の隙間で作る(.entry-list と同じ) */
+.genre-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--border);
+  border-block: 1px solid var(--border);
 }
 
-.genre-analysis__smalls .genre-analysis__label {
+/* 小分類は件数つきのタグ(.tag + .genre-hub__small)を折り返して並べる */
+.genre-rows--tags {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  background: none;
+  border: 0;
+}
+
+.genre-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 3.6em;
+  column-gap: var(--space-3);
+  align-items: baseline;
+  width: 100%;
+  padding: 7px 4px 11px;
+  border: 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: inherit;
   text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.genre-row:hover,
+.genre-row.is-hot {
+  background: var(--bg-soft);
+}
+
+.genre-row__count {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.genre-row__share {
+  font-size: 12px;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* 行の下端に重ねる横棒。幅は、その階層でいちばん多い行に対する比(JS が渡す)。濃さは扇と同じ */
+.genre-row__bar {
+  position: absolute;
+  left: 4px;
+  bottom: 3px;
+  max-width: calc(100% - 8px);
+  height: 4px;
+  background: color-mix(in srgb, var(--chart) calc(var(--t) * 1%), var(--surface));
+}
+
+.genre-rows .tag.is-hot {
+  border-color: var(--bg-tint);
+  background: var(--bg-tint);
+  color: var(--text);
 }
 
 /* --- 統計ページ §6 語種の構成(ワッフル)とエンティティ型のツリーマップ ---

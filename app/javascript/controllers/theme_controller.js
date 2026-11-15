@@ -43,7 +43,7 @@ export default class extends Controller {
     if (themeColor) {
       themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()
     }
-    // CSS だけでは追従できない描画(Plotly のグラフなど)に切り替えを知らせる
+    // CSS だけでは追従できない描画に切り替えを知らせる(いま受けているコントローラは無い。図の色は CSS のトークンで塗る)
     document.dispatchEvent(new CustomEvent("theme:change", { detail: { dark: this.dark } }))
   }
 
