@@ -37,6 +37,23 @@ class FacetIndexingTest < ActionDispatch::IntegrationTest
       description
     end.then { |descriptions| assert_equal descriptions.uniq, descriptions, "面が違うのに同じ description になっている" }
 
+    # 言語学的特徴の面だけ、一覧の前に用語解説の札を置く(Issue 102)。見えているのは定義の 1 文と例で、残りは畳む
+    entry = LinguisticFeatureGlossary.find(feature.name)
+    assert_select ".feature-note" do
+      assert_select "h2", text: I18n.t("words.feature_note.title", name: feature.name)
+      assert_select "a[href=?]", linguistic_features_path
+      assert_select ".feature-note__description", text: entry.definition
+      assert_select ".feature-note__examples > .phrase", count: entry.examples.size
+      assert_select "details .feature-note__supplement", text: entry.supplement
+    end
+    # ほかの軸の面・2 ページ目以降・用語解説に無い特徴(管理画面で足したもの)の面には置かない
+    unlisted = LinguisticFeature.create!(name: "用語解説に無い特徴")
+    [ { genre_id: genre.id }, { linguistic_feature_id: feature.id, page: 2 }, { linguistic_feature_id: unlisted.id } ].each do |params|
+      get words_path(params)
+      assert_response :success
+      assert_select ".feature-note", { count: 0 }, "#{params} に用語解説の札が出ている"
+    end
+
     # 複数条件・キーワード・範囲指定・検索フォームは noindex,follow
     # 条件の組み合わせ・キーワード・範囲指定は値の取り方が無限にあり、内容も他の面と重なる。
     get words_path(genre_id: genres(:large_literature).id, first_char: "カ")

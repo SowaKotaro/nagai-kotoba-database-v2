@@ -89,9 +89,18 @@ module WordsHelper
     elsif NUMERIC_FACET_KEYS.include?(key)
       t("words.index.facet_heading.#{key}", count: value.to_i)
     else
-      name = FACET_MASTERS[key].where(id: value).pick(:name)
+      name = facet_master_name(key, value)
       name && t("words.index.facet_heading.default", name: name)
     end
+  end
+
+  # 言語学的特徴の単一ファセット面に載せる用語解説(Issue 102。docs/seo-plan.md §5 B-2)。
+  # 特徴の面でないとき、用語解説に無い特徴(管理画面で足したもの)のときは nil。
+  def facet_feature_glossary(search)
+    key, value = search.indexable_facet
+    return nil unless key == :linguistic_feature_id
+
+    LinguisticFeatureGlossary.find(facet_master_name(key, value))
   end
 
   # ファセット面の meta description に並べる例語の数と、例語ぜんぶ(かぎ括弧つき)の長さの上限。
@@ -170,6 +179,14 @@ module WordsHelper
   end
 
   private
+
+  # 単一ファセットのマスタの名前。見出し(facet_heading)と用語解説(facet_feature_glossary)が同じ面で引くので、リクエストの中で覚えておく。
+  def facet_master_name(key, value)
+    @facet_master_names ||= {}
+    @facet_master_names.fetch([ key, value ]) do |cache_key|
+      @facet_master_names[cache_key] = FACET_MASTERS[key].where(id: value).pick(:name)
+    end
+  end
 
   # 読みの文字数・モーラ数。モーラ数は未算出のことがある。
   def sense_metrics(sense)

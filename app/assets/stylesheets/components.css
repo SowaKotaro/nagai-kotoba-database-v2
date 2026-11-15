@@ -1115,16 +1115,41 @@ a.tag:hover .genre-hub__count {
   color: var(--text-subtle);
 }
 
-.feature-hub__description {
+.feature-hub__description,
+.feature-note__description,
+.feature-note__supplement {
   margin: 0;
   font-size: 14px;
   color: var(--text-muted);
 }
 
-.feature-hub__examples {
+.feature-hub__examples,
+.feature-note__examples {
   margin: var(--space-2) 0 0;
   font-size: 13px;
   color: var(--text-subtle);
+}
+
+/* --- 言語学的特徴の面の用語解説(words/_feature_note。docs/design.md §5.3) ---
+   一覧の札の前に置く札。定義と例の字は、言語学的特徴から探すページの行(上の .feature-hub)と揃える。
+   下の一覧の札とは、札の棚(.panel-shelf)と同じ余白で空ける */
+.feature-note {
+  margin-bottom: var(--space-5);
+}
+
+/* 畳んだ「解説の続き」(.field-help)は、定義と例の左端に揃える。詳細検索では入力欄の内側の余白に合わせて
+   字下げしているが、ここには揃える欄が無い。左罫はキャレット(幅 1em = 13px)の中心に立てたまま。
+   見出しの下の余白は札の中身の余白と重なるので、閉じているときだけ打ち消す */
+.feature-note .field-help__summary {
+  padding-inline: 0;
+}
+
+.feature-note .field-help__body {
+  margin-left: 6px;
+}
+
+.feature-note .field-help:not([open]) {
+  margin-bottom: calc(-1 * var(--space-2));
 }
 
 .tag-row {
@@ -1399,6 +1424,8 @@ a.tag:hover .genre-hub__count {
    文節の配列で組むリード(.phrase-sentence)は、この上に文ごとの balance が乗る */
 .page-lead,
 .feature-hub__description,
+.feature-note__description,
+.feature-note__supplement,
 .feature-glossary dd,
 .sense-meaning,
 .prose p,

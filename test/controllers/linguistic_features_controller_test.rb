@@ -27,7 +27,7 @@ class LinguisticFeaturesControllerTest < ActionDispatch::IntegrationTest
     assert_equal rendaku.definition, items.first.at_css(".feature-hub__description").text
     examples = rendaku.examples.first(LinguisticFeaturesController::EXAMPLE_LIMIT)
     assert_equal examples.size, items.first.css(".feature-hub__examples > .phrase").size
-    assert_equal I18n.t("linguistic_features.index.examples_label") + examples.join(I18n.t("shared.feature_glossary.examples_separator")),
+    assert_equal I18n.t("shared.feature_glossary.examples_label") + examples.join(I18n.t("shared.feature_glossary.examples_separator")),
                  items.first.at_css(".feature-hub__examples").text.strip
   end
 end
