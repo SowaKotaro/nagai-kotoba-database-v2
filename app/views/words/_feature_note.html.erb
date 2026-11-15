@@ -1,0 +1,25 @@
+<%# locals: (entry:) -%>
+<%# 言語学的特徴の面(/words?linguistic_feature_id=N)の頭に置く用語解説の札(Issue 102。docs/design.md §5.3)。
+    見えているのは定義の 1 文と例で、残り(起こらない場合・このデータベースで付ける範囲)は畳んで添える。
+    定義と例は用語解説(LinguisticFeatureGlossary)の 1 か所から引く(/linguistic_features の行と同じ出どころ) -%>
+<section class="panel feature-note">
+  <div class="panel__head">
+    <h2 class="panel__title"><%= icon "pen_nib" %><%= t("words.feature_note.title", name: entry.name) %></h2>
+    <%= link_to linguistic_features_path, class: "btn btn--sm panel__more" do %>
+      <%= t("words.feature_note.more") %><%= icon "arrow_right" %>
+    <% end %>
+  </div>
+  <div class="panel__body">
+    <p class="feature-note__description"><%= entry.definition %></p>
+    <% if entry.examples.any? %>
+      <p class="feature-note__examples">
+        <%= feature_examples(entry.examples, label: t("shared.feature_glossary.examples_label")) %>
+      </p>
+    <% end %>
+    <% if entry.supplement %>
+      <%= render layout: "searches/field_help", locals: { summary: t("words.feature_note.supplement_summary") } do %>
+        <p class="feature-note__supplement"><%= entry.supplement %></p>
+      <% end %>
+    <% end %>
+  </div>
+</section>

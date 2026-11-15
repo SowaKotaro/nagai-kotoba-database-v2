@@ -352,6 +352,15 @@
   選んだ行だけを適用する(`FeatureAuditApplication`。1 トランザクションで、語の updated_at も動かす)。提案キューは通さず、注釈状態・意味・ジャンルには触れない。
   本番で「変更を確かめる」を押しても画面が変わらなかった(確認の画面は 200 で描くので、Turbo が応答を捨てていた)。貼り付けのフォームで Turbo を切って直した(PR #201)。
 
+## 言語学的特徴の面の用語解説(Issue 102、2026-11-15)
+
+検索からの流入を増やす計画の B-2([`seo-plan.md`](../seo-plan.md) §5)として採った。
+
+- **Issue 102: 言語学的特徴の用語解説を、ファセット面に載せる** [feature] — 完了(PR #211)。
+  特徴の単一ファセット面(`/words?linguistic_feature_id=N`)の 1 ページ目に、一覧の前の札「◯◯とは」(`words/_feature_note`)を置いた。
+  見えているのは定義の 1 文と例で、残り(起こらない場合・このデータベースで付ける範囲)は「解説の続き」に畳む(`LinguisticFeatureGlossary::Entry#supplement`。
+  全文を並べると、いちばん長い「ゴママヨ」は 390px 幅で札だけが 1,000px を超えた)。特徴ごとの URL は作っていない。組みは [`design.md`](../design.md) §5.3。
+
 ## 番号を持たない改善(PR 単位)
 
 Issue 番号を取らずに PR だけで進めた、オーナー指示由来の機能追加・磨き込み。
@@ -409,3 +418,4 @@ Issue 番号を取らずに PR だけで進めた、オーナー指示由来の�
 - **ファセット面のサイトマップ `/sitemap-facets.xml`(seo-plan §5 C-2・C-3)**(2026-11-13) — インデックスを許可している単一条件の一覧(`/words?reading_length=10` など)を、`sitemap.xml` とは別のファイルで出し、robots.txt に `Sitemap:` の行を足した。Search Console がサイトマップごとに登録状況を集計するので、ファセット面だけの登録数を追える。面の列挙は `IndexableFacets`(種類は `WordSenseSearch::INDEXABLE_FACET_KEYS`、件数は `PublishedSenseCounts`、文字の面は 50音表の字だけ)で、載せるのは公開語義が `IndexableFacets::SITEMAP_MIN_COUNT` 件以上の面だけ。**インデックスの規則(1 件以上なら index)は変えていない。** 条件の組み合わせ・並び替え・ページ送りは載せないので、URL の空間は有限のまま。条件付き GET とキャッシュは `sitemap.xml` と同じ版(`PublishedWordsDigest`)に従う。
 - **統計の区画ごとに結論の文(seo-plan §5 D-1)**(2026-11-13) — `/stats` の図の下に、「いちばん多いのは読みが 10 文字の語義で…」のような結論を「※」の注記で 1 文ずつ添えた(行×行の最多の注記と同じ部品 `.stats-notes`。図や色は足していない)。どれが最多か・何 % かは `SiteStatistics#findings` が決め、文は `ja.yml` の `stats.index.findings`。母音のつながりの最多は、下の注記の 1 文目からこの形へ移した。奥付に引用するときのクレジットの書き方を足し、`/stats` と `/rankings` の meta description は実数から作る(`/rankings` は「読みが長い言葉」の 1 位の字数。語は名指ししない)。**ランキングの板には文を足していない**(1 行目と同じ数が並ぶ。design.md §5.5.1)。紙面の正は stats.md §2「結論の文」。
 - **調査の自動実行をスキル `/auto` から今すぐ回せるようにした**(2026-11-13。Issue 112 の続き) — cron と同じ `bin/rails research:auto` を、`FORCE=1` で期限(`ResearchPipeline::INTERVAL_DAYS`)を飛ばして起動する薄いスキル。段の調査とふるいは司令塔のまま(手順は `research/README.md` の「自動実行」)。
+- **既知の脆弱性が見つかった puma と msgpack をパッチ版へ上げる**(2026-11-15) — puma 8.0.2 → 8.0.3、msgpack 1.8.3 → 1.8.7。bundler-audit が落ちるようになったため(`bundle update puma msgpack --patch --conservative` で、ほかの gem は動かしていない)。

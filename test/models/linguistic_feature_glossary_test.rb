@@ -18,6 +18,9 @@ class LinguisticFeatureGlossaryTest < ActiveSupport::TestCase
     # 定義は説明の最初の 1 文(句点まで)。句点の無い説明は全文
     assert_equal "複合語を作るとき、もとの語には無い音が間に加わる現象。", entry.definition
     assert_equal "句点の無い説明", LinguisticFeatureGlossary::Entry.new(description: "句点の無い説明").definition
+    # 残り(定義に続く文)は、定義とつなぐと説明の全文に戻る。定義だけの説明には無い
+    assert_equal entry.description, entry.definition + entry.supplement
+    assert_nil LinguisticFeatureGlossary.find("イ音便").supplement
 
     assert_nil LinguisticFeatureGlossary.find("存在しない特徴")
   end

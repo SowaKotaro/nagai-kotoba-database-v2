@@ -8,6 +8,10 @@ class LinguisticFeatureGlossary
     # 説明の最初の 1 文(句点まで)。説明は「定義 → 起こらない場合・このデータベースで付ける範囲」の順に書くので、
     # 探す画面(/linguistic_features)で定義だけを短く見せるのに使う。句点が無ければ説明の全文。
     def definition = description[/\A[^。]*。/] || description
+
+    # 定義に続く残り(起こらない場合・このデータベースで付ける範囲)。定義だけの説明なら nil。
+    # 特徴の面(words/_feature_note)が、定義の下に畳んで出す。
+    def supplement = description.delete_prefix(definition).presence
   end
 
   GLOSSARY_PATH = "config/linguistic_features_glossary.yml".freeze

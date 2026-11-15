@@ -74,6 +74,10 @@
   </div>
 <% end %>
 
+<%# 言語学的特徴の面は、その特徴が何かを一覧の前に言う(Issue 102)。2 ページ目以降は続きなので出さない %>
+<% feature_entry = facet_feature_glossary(@search) if @page == 1 %>
+<%= render "feature_note", entry: feature_entry if feature_entry %>
+
 <% if @words.empty? %>
   <%# 0 件の案内。結果があるときの一覧と同じ札に、溶けた顔・案内・収録リクエストの導線を中央に積む(docs/design.md §5.3) %>
   <div class="panel empty-panel">

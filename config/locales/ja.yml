@@ -123,6 +123,7 @@ ja:
       est: "EST. 2026 / JAPAN"
   shared:
     feature_glossary:
+      examples_label: "例: "
       examples_separator: "　／　"
     kana_heat_grid:
       count_label: "%{char}：%{count}語義"
@@ -414,6 +415,12 @@ ja:
         lead_html: '末尾の「<span class="shiritori__char">%{char}</span>」から始まる言葉'
         dead_end_html: '「<span class="shiritori__char">%{char}</span>」で終わるので、しりとりはここで終わり。次の一手はありません。'
         none_html: '「<span class="shiritori__char">%{char}</span>」から始まる言葉は、まだ収録されていません。'
+    # 言語学的特徴の面の頭に置く用語解説の札(words/_feature_note)
+    feature_note:
+      title: "%{name}とは"
+      more: "特徴の一覧へ"
+      # 定義に続く残り(起こらない場合・このデータベースで付ける範囲)を畳んだ見出し
+      supplement_summary: "解説の続き"
     # 単語ごとの共有カード(og:image。WordShareCard)
     share_card:
       alt: "「%{surface}」（読み %{reading}）の共有カード"
@@ -1555,7 +1562,6 @@ ja:
       # 特徴の行を収めた札の見出し
       panel_title: "言語学的特徴"
       count: "%{count}語義"
-      examples_label: "例: "
       empty: "まだ言語学的特徴の付いた語が公開されていません。"
 
   pages:

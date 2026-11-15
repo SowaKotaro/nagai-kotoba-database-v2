@@ -33,7 +33,7 @@
             <% if entry.examples.any? %>
               <p class="feature-hub__examples">
                 <%= feature_examples(entry.examples.first(LinguisticFeaturesController::EXAMPLE_LIMIT),
-                                     label: t("linguistic_features.index.examples_label")) %>
+                                     label: t("shared.feature_glossary.examples_label")) %>
               </p>
             <% end %>
           <% end %>
