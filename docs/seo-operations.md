@@ -33,6 +33,7 @@
 9. **公開済みの URL とクエリパラメータ名は変えない。インデックスの規則を触る案は、URL の空間が増えないことを先に確かめる**（CLAUDE.md §1。changelog の Issue 80・81）。
 10. **seo-plan §7「やらないこと」と、[`design.md`](design.md) §12 の退けた案を、提案しない。**
 11. 本番へ送るのは `script/seo_site_check.py` の GET（1 秒に 1 件ほど、約 40 件）と、公開語の写しの取得 1 回だけ。ほかに本番を叩かない。書き込みはしない。
+    月次の外で随時回す Lighthouse（§10）は別で、ページを 1 枚ずつ開くぶんだけを送る。
 12. 規則が変わったら、同じ PR でこの文書と seo-plan §4 とスクリプトの定数を直す（§9）。
 
 ## 2. 入力（オーナーが置くもの）
@@ -297,6 +298,7 @@
 | 月ごとの数字、施策の反映日と判定、所見 | [`seo-log.md`](seo-log.md) | 載せる |
 | 手順・判定の表・施策の台帳 | この文書 | 載せる |
 | 判定の基準値 | `script/seo_monthly.py` の定数 | 載せる |
+| Lighthouse の点数と報告書（`lighthouse.md`・`lighthouse/*.html`） | `research/outputs/seo/<月>/` | 載せない（測り直せる） |
 | 点検で期待する値 | `script/seo_site_check.py` の定数 | 載せる |
 
 前の月との差は、スクリプトが `research/inputs/seo/` と `research/outputs/seo/` の前の月から取る。別のマシンで回して前の月のファイルが無いときは、
@@ -309,3 +311,36 @@
 - インデックスの規則・ページの型・ハブの顔ぶれ・リダイレクトを変える PR は、`script/seo_site_check.py` の定数と seo-plan §4 を同じ PR で直す。
 - §6.2 に候補を足すのは、オーナーが足すと決めてから。入れた施策は §6.2 から消し、seo-log の表 4 に行を足す。
 - スキル（`.claude/skills/seo-monthly-review/SKILL.md`）は入口だけを書く。手順と規則はここに置き、スキルには写さない。
+
+## 10. Lighthouse（随時。月次の手順には入れない）
+
+`python3 script/seo_lighthouse.py <月>`。本番の代表的なページ（スクリプトの `PAGES` と、一覧の先頭の単語詳細 1 枚）を、Google 公式の診断
+[Lighthouse](https://github.com/GoogleChrome/lighthouse) で 1 枚ずつ測り、`research/outputs/seo/<月>/lighthouse.md` に点数と満点でない項目を出す。
+ページを指定するときは、月のあとにパスを並べる。
+
+- **何を見るか**: ブラウザで開いたときの性能・アクセシビリティ・ベストプラクティス・SEO の基礎。§5 の点検（検索エンジンから見える規則）とは重ならない。
+- **いつ回すか**: レイアウト・CSS・JS を大きく変えて本番に出たあと。月次のたびには回さない（§3 に入れない）。
+- **読み方**: スマホの条件で 1 回測った値なので、性能の点は回ごとに数点ぶれる。1 回の上下で判断せず、満点でない項目の顔ぶれが変わったかを見る。
+  性能の原因の調べ方と過去の対処は [`history/performance-report.md`](history/performance-report.md)。
+- **依存**: Lighthouse は `npx` で都度取り寄せる（プロジェクトの依存に足さない）。Node と Chrome が要る。Chrome は `CHROME_PATH`、
+  無ければシステムテスト用に入っているものを使う。
+- **CI には組まない**: main への merge がそのまま本番デプロイになり、CI を待たないので、関門にならない（Lighthouse CI を見送った理由）。
+- 最初に測った日は 2026-11-15（4 枚とも SEO は満点。数字は seo-log の所見）。
+
+## 11. 外部の道具の覚え書き（2026-11-15 に調べたもの）
+
+オーナーが集めた SEO・Web 品質のリポジトリを読み、このサイトで使えるかを仕分けた結果。**入れたのは Lighthouse（§10）だけ**。
+ほかは、必要になったときに見直すための控えで、候補（§6.2）ではない。星の数と中身は調べた日のもの。
+
+| 道具 | 何か | 判断 |
+|---|---|---|
+| [iannuttall/seo](https://github.com/iannuttall/seo) | Search Console・GA4 をエージェントから直接読む MCP サーバと CLI。IndexNow の送信もできる | **保留**。§2 のエクスポートの手作業が負担になったら検討する。Google のサインインを外部のホスト型サーバに通すので、採否はオーナー |
+| [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo) | Claude Code 用の SEO スキル束（技術・構造化データ・GEO の監査） | **入れない**。`/seo` と重なり、スキルとエージェントが数十増える。使うなら監査を 1 回流すだけ |
+| [TraceCohenTech/ai-seo-playbook](https://github.com/TraceCohenTech/ai-seo-playbook) | Search Console の分析スクリプト集 | **参考**。`cannibalization-detector`（同じ検索語を複数のページで食い合う検出）と `ctr-audit` の考え方は、`script/seo_monthly.py` に足す候補になる |
+| [flowforfrank/seo-checklist](https://github.com/flowforfrank/seo-checklist) | 公開時の技術的な SEO のチェックリスト | **参考**（未読）。読み合わせるなら 1 回 |
+| [GoogleChrome/modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) | エージェントに今の HTML/CSS/JS を書かせるスキル。SEO・AI 検索の道具ではない | **常設しない**。`npx modern-web-guidance@latest legacy-scan .` を 1 回流した結果は、静的なエラーページ 3 枚の `color-scheme` の宣言漏れだけで、同じ日に直した（アプリ本体は 0 件）。UI を大きく触るときに `search`・`retrieve` をその場で引けば足りる |
+| [every-app/open-seo](https://github.com/every-app/open-seo)・[towfiqi/serpbear](https://github.com/towfiqi/serpbear) | キーワード調査・順位の追跡 | **入れない**。有料の API（DataForSEO など）の鍵が要る。順位は Search Console で足りる |
+| [SEOnaut](https://github.com/StJudeWasHere/seonaut)・LibreCrawl・linkinator | サイトを総当たりで巡回する監査・リンク切れの検出 | **入れない**。§5 の点検が見ており、本番への巡回の負荷が増える（§1 の 11） |
+| next-sitemap・next-seo・react-schemaorg | Next.js・React 専用の部品 | 使えない（Rails） |
+| Lighthouse CI | Lighthouse を CI に組む | **入れない**（§10） |
+| yagomp/seoagent・umutxyp/Seo-Promt-Master、awesome-seo などの一覧 3 つ | エージェント向けの SEO の道具、リンク集 | 中身は確かめていない。claude-seo と用途が重なる |
