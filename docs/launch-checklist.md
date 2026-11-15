@@ -37,6 +37,8 @@
 
 ## 4. 観測の開始（解禁後 — ここから先は継続作業）
 
+2026-11 からは、月に 1 回の点検にまとめて回している（手順は [`seo-operations.md`](seo-operations.md)、記録は [`seo-log.md`](seo-log.md)）。
+
 - [ ] Search Console のカバレッジ（インデックス登録状況）を週次で確認
       — 解禁後に 2 度、クロール事故を検知して是正している（Issue 80・81）。この週次確認が検知手段
 - [ ] GA4 で [`growth-strategy.md`](growth-strategy.md) §3 の KPI の観測を開始

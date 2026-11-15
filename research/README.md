@@ -143,6 +143,12 @@ crontab（新しい run は午前 3 時に始めたいので 3 時に起動し�
 言語学的特徴の付け方と意味の文体は注釈スキル（`.claude/skills/word-annotation-research/SKILL.md`）が正で、
 言語学的特徴の定義は用語解説（`config/linguistic_features_glossary.yml`）が正。
 
+## SEO の月次の点検（`/seo`）
+
+語の調査とは別の流れ。Search Console のエクスポートを `inputs/seo/<YYYY-MM>/` に置いて `/seo` を打つと、
+`outputs/seo/<YYYY-MM>/` に集計（`report.md`）と本番の点検（`site-check.md`）が出る。置き方・手順・判定の正は
+[`docs/seo-operations.md`](../docs/seo-operations.md)。月ごとの `inputs/seo/` は前の月との差に使うので、消さずに残す。
+
 ## 共通の約束
 
 - **でっち上げ厳禁**。記憶で語や読みを並べず、必ず WebSearch / WebFetch で裏を取り、
