@@ -10,7 +10,8 @@
 | UI を作る・変える | [`design.md`](design.md) |
 | 何を収録するか・表記と読みの決め方 | [`annotation-guidelines.md`](annotation-guidelines.md) |
 | これから作るもの | [`issues.md`](issues.md)（確定事項の記録も同じファイル） |
-| 検索からの流入を増やす計画（SEO） | [`seo-plan.md`](seo-plan.md)（2026-11-11 の調査と計画、2026-11-12 の実測は §12。**まだ実装していない**。着手するものは `issues.md` へ起こす） |
+| 検索からの流入を増やす計画（SEO） | [`seo-plan.md`](seo-plan.md)（2026-11-11 の調査と計画、2026-11-12 の実測は §12。入れたものは §5 の「実装の記録」と §10 の追記） |
+| SEO の月次の点検（手順・判定・これから入れる施策） | [`seo-operations.md`](seo-operations.md)（起動は `/seo`。月ごとの数字と判定の記録は [`seo-log.md`](seo-log.md)） |
 | これまでに入れたもの | [`history/changelog.md`](history/changelog.md) |
 | 記録の置き場（済んだこと・当時の計測。**現行の仕様ではない**） | [`history/`](history/README.md) |
 | 統計ページの紙面 | [`stats.md`](stats.md) |
@@ -323,6 +324,7 @@ Turbo のイベントでは、`turbo:before-cache`（`nav_menu` がキャッシ�
 | デプロイ・CI・定期実行・派生物の作り直し | §11 |
 | JS のコントローラ・イベント・DOM の約束事 | §12（中身の正は各ファイルの冒頭コメント） |
 | 調査の流れ（スキル → 管理画面） | [`research/README.md`](../research/README.md) |
+| SEO の月次の手順・判定の表・施策の台帳 | [`seo-operations.md`](seo-operations.md)（基準値は `script/seo_monthly.py` の定数、月ごとの記録は [`seo-log.md`](seo-log.md)） |
 | 提案 JSON のキー | `AnnotationProposal` の定数（`SENSE_KEYS`・`META_KEYS`・`PAYLOAD_KEYS`）。schema.json と各 SKILL.md はその写し |
 | 書き出す調査 JSON の形 | 各書き出しクラス（`AnnotationResearchExport`・`FeatureResearchExport`・`FeatureAuditExport`・`ReannotationExport`）の `as_json` |
 | 特徴の点検結果（足す・外す）の JSON のキー | `FeatureAuditImport`（`word-feature-audit` の SKILL.md はその写し） |
