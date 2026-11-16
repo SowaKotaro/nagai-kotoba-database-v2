@@ -116,12 +116,21 @@ def attach_status(items, rejected):
 
 
 def deliverables(directory):
-    """一括登録に貼る 2 つ(step1 の register.txt の語、step2 の reading.json の words)。run が終わっていなければ None。"""
+    """一括登録に貼る 2 つ(step1 の register.txt の語、step2 の reading.json の words)。run が終わっていなければ None。
+    adoptable は読みの段で落ちた語の /reading の出力(人が採用に変えたら、コピーに足す。キーは input)。
+    order は読みの段の入力の並び(種語ごとに系統が続いている)。採用した語を末尾ではなく元の位置に差し込むのに使う
+    (一括登録の id がこの順に振られ、注釈の書き出しも id 順なので、系統が離れると注釈が揃わなくなる)。"""
     register = read_text(directory / "register.txt")
     reading = read_json(directory / "reading.json")
     if register is None or reading is None:
         return None
-    return {"register": [line for line in register.splitlines() if line.strip()], "words": reading.get("words", [])}
+    rejected = {row["surface"] for row in rejected_rows(directory) if row["stage"] == "reading"}
+    research_path = directory / STAGES[2][1]
+    research = (read_json(research_path) or {}).get("words", [])
+    adoptable = {w["input"]: w for w in research if isinstance(w, dict) and w.get("input") in rejected}
+    order = [line.strip() for line in (read_text(research_path.parent / "input.txt") or "").splitlines() if line.strip()]
+    return {"register": [line for line in register.splitlines() if line.strip()], "words": reading.get("words", []),
+            "adoptable": adoptable, "order": order}
 
 
 # ---- 描画 -------------------------------------------------------------------
@@ -226,42 +235,94 @@ summary::-webkit-details-marker { display: none; }
 .cell .note { max-width: none; line-height: 1.5; }
 .result { text-align: center; }
 #rejected td:first-child, #rejected th:first-child { width: 40px; }
+/* 読みの段で落ちた語を、人が採用に変える(このブラウザに覚え、一括登録のコピーに足す) */
+.adopt { display: inline-flex; align-items: center; margin-top: 4px; font-size: 13px; color: var(--sub); user-select: none; }
+.adopt:has(input:checked) { color: var(--pass); font-weight: 800; }
+.cell.is-adopted { background: #fff; box-shadow: inset 2px 0 0 var(--pass); }
+.cell.is-adopted .word { color: var(--ink); font-weight: 800; } .cell.is-adopted .badge { text-decoration: line-through; }
+.cell > details > summary { display: flex; }
 """
 
 # 一括コピー。page-data の runs(run ごとの register と words)のうち、チェックした run(一覧)か、
 # そのページの run(run のページ)の分をつなげてクリップボードに入れる。
 SCRIPT = """
 const data = JSON.parse(document.getElementById("page-data").textContent);
-// 確認済みの run(人が見終えた run)。DB もファイルも書けないので、ブラウザの localStorage に run の名前を持つ
+// 人の判断(確認済みの run・採用に変えた語)。DB もファイルも書けないので、ブラウザの localStorage に持つ
 const REVIEWED_KEY = "research-viewer:reviewed";
-function loadReviewed() {
-  try { return new Set(JSON.parse(localStorage.getItem(REVIEWED_KEY) || "[]")); } catch (_) { return new Set(); }
+const ADOPTED_KEY = "research-viewer:adopted"; // 「run\\t読みの段の input」の集合
+function loadSet(key) {
+  try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); } catch (_) { return new Set(); }
 }
-function saveReviewed(set) {
-  try { localStorage.setItem(REVIEWED_KEY, JSON.stringify([...set])); } catch (_) { /* 保存できなくても表示は続ける */ }
+function saveSet(key, set) {
+  try { localStorage.setItem(key, JSON.stringify([...set])); } catch (_) { /* 保存できなくても表示は続ける */ }
 }
+const loadReviewed = () => loadSet(REVIEWED_KEY);
+const saveReviewed = (set) => saveSet(REVIEWED_KEY, set);
+const adopted = loadSet(ADOPTED_KEY);
 function chosenRuns() {
   const boxes = [...document.querySelectorAll("input[name=run]")];
   return boxes.length ? boxes.filter((box) => box.checked).map((box) => box.value) : Object.keys(data.runs);
 }
-function payload(kind, runs) {
-  if (kind === "register") return runs.flatMap((id) => data.runs[id].register).join("\\n") + "\\n";
-  return JSON.stringify({ version: "1", words: runs.flatMap((id) => data.runs[id].words) }, null, 2) + "\\n";
+// run の、採用に変えた語の /reading の出力
+function adoptedWords(id) {
+  return Object.entries(data.runs[id].adoptable || {}).filter(([input]) => adopted.has(`${id}\\t${input}`)).map(([, word]) => word);
 }
+// 通った語と採用した語を、読みの段の入力の並び(order。系統ごとに続いている)に戻す。
+// 末尾に足すと一括登録の id が系統から離れ、id 順の注釈の書き出しで同じ系統が別の束に割れる。
+// register と words は ResearchRun#finish が同じ順に書くので、i 番目どうしが同じ語。order に無い語(古い run)は末尾に残す
+function entriesOf(id) {
+  const run = data.runs[id];
+  const rank = new Map((run.order || []).map((surface, index) => [surface, index]));
+  const entries = run.register.map((surface, index) => ({ surface, word: run.words[index] }))
+    .concat(adoptedWords(id).map((word) => ({ surface: word.input, word })));
+  const rankOf = (entry) => rank.get(entry.surface) ?? Infinity;
+  return entries.sort((a, b) => rankOf(a) - rankOf(b));
+}
+const registerOf = (id) => entriesOf(id).map((entry) => entry.surface);
+const wordsOf = (id) => entriesOf(id).map((entry) => entry.word);
+function payload(kind, runs) {
+  if (kind === "register") return runs.flatMap(registerOf).join("\\n") + "\\n";
+  return JSON.stringify({ version: "1", words: runs.flatMap(wordsOf) }, null, 2) + "\\n";
+}
+// 採用の切り替え(run のページと、落ちた語のページ)。同じ語の印をそろえ、件数とプレビューを書き直す
+function applyAdopted() {
+  document.querySelectorAll("input[name=adopt]").forEach((box) => {
+    box.checked = adopted.has(box.value);
+    box.closest(".cell")?.classList.toggle("is-adopted", box.checked);
+    const lane = box.closest(".lane");
+    if (lane) {
+      lane.classList.toggle("is-stopped", !box.checked);
+      const result = lane.querySelector(".result");
+      result.textContent = box.checked ? "✓" : ""; result.classList.toggle("pass", box.checked);
+    }
+  });
+  document.querySelectorAll("[data-adopted-count]").forEach((slot) => {
+    const id = slot.dataset.adoptedCount;
+    const count = data.runs[id] ? adoptedWords(id).length : 0;
+    slot.textContent = count ? ` + 採用 ${count}` : "";
+  });
+  updatePreview();
+}
+document.addEventListener("change", (event) => {
+  if (!event.target.matches("input[name=adopt]")) return;
+  if (event.target.checked) adopted.add(event.target.value); else adopted.delete(event.target.value);
+  saveSet(ADOPTED_KEY, adopted);
+  applyAdopted();
+});
 // コピーする中身のプレビュー(チェックした run が変わるたびに書き直す)
 function updatePreview() {
   const pre = document.querySelector("[data-preview]");
   if (!pre) return;
   const kind = document.querySelector("input[name=preview]:checked").value;
   const runs = chosenRuns();
-  const count = runs.reduce((sum, id) => sum + data.runs[id].register.length, 0);
+  const count = runs.reduce((sum, id) => sum + registerOf(id).length, 0);
   document.querySelector("[data-preview-count]").textContent = runs.length ? `${runs.length} run・${count} 語` : "run を選んでください";
   pre.textContent = runs.length ? payload(kind, runs) : "";
 }
 document.addEventListener("change", (event) => {
   if (event.target.matches("input[name=run], input[name=preview]")) updatePreview();
 });
-updatePreview();
+applyAdopted();
 // 一覧の行(data-href)は、行のどこを押しても run のページへ行く。リンクとチェックボックス(とそのラベル)は除く
 document.addEventListener("click", (event) => {
   const row = event.target.closest("tr[data-href]");
@@ -283,7 +344,7 @@ document.addEventListener("click", async (event) => {
   if (!runs.length) { flash.textContent = "run を選んでください"; flash.className = "flash reject"; return; }
   try {
     await writeClipboard(payload(button.dataset.copy, runs));
-    const count = runs.reduce((sum, id) => sum + data.runs[id].register.length, 0);
+    const count = runs.reduce((sum, id) => sum + registerOf(id).length, 0);
     flash.textContent = `${count} 語ぶんをコピーしました`; flash.className = "flash pass";
   } catch (error) {
     flash.textContent = error.message; flash.className = "flash reject";
@@ -339,7 +400,8 @@ def render_index(runs):
         report = state.get("report", [])
         seeds = "、".join(s.get("surface", "") for s in state.get("seeds", []))
         checkbox = f"<input type=\"checkbox\" name=\"run\" value=\"{e(run_id)}\" data-pick>" if delivered else ""
-        final = f"<b>{len(delivered['register'])}</b>" if delivered else "<span class=\"sub\">途中</span>"
+        final = (f"<b>{len(delivered['register'])}</b><span class=\"pass\" data-adopted-count=\"{e(run_id)}\"></span>"
+                 if delivered else "<span class=\"sub\">途中</span>")
         rows.append(
             f"<tr data-run=\"{e(run_id)}\" data-href=\"runs/{e(run_id)}/{PAGE}\"><td>{checkbox}</td><td><a href=\"runs/{e(run_id)}/{PAGE}\">{e(run_id)}</a></td><td>{e(seeds)}</td>"
             f"{counts_cell(report, 'expand')}{counts_cell(report, 'notation')}{counts_cell(report, 'reading')}"
@@ -436,14 +498,24 @@ def stage_summary(found):
     return f"<span class=\"count\">{len(found)} → <span class=\"pass\">{passed}</span></span>"
 
 
-def cell(item, word, details, mark=""):
-    """1 段の欄。畳んだ状態は語と札だけ。押すと却下の理由・付帯の値・メモが開く。"""
+def cell(item, word, details, mark="", adopt=""):
+    """1 段の欄。畳んだ状態は語と札だけ。押すと却下の理由・付帯の値・メモが開く。
+    adopt(採用の切り替え)があれば、details の外に並べる(summary の中だと、押したときに欄も開閉する)。"""
     rejected = item["reason"]
     badge = f"<span class=\"badge\">{e(short_reason(item))}</span>" if rejected else mark
     reason = f"<div class=\"reason\">{e(rejected)}</div>" if rejected else ""
     note = f"<div class=\"note\">{e(item['note'])}</div>" if item.get("note") else ""
-    return (f"<details class=\"cell{' is-rejected' if rejected else ''}\"><summary><span class=\"word\">{e(word)}</span>{badge}</summary>"
-            f"<div class=\"more\">{reason}{details}{note}</div></details>")
+    classes = f"cell{' is-rejected' if rejected else ''}"
+    inner = f"<summary><span class=\"word\">{e(word)}</span>{badge}</summary><div class=\"more\">{reason}{details}{note}</div>"
+    if adopt:
+        return f"<div class=\"{classes}\"><details>{inner}</details>{adopt}</div>"
+    return f"<details class=\"{classes}\">{inner}</details>"
+
+
+def adopt_box(run_id, item):
+    """読みの段で落ちた語を採用に変える切り替え(値は「run\\tinput」。JS が localStorage に覚える)。"""
+    return (f"<label class=\"adopt\"><input type=\"checkbox\" name=\"adopt\" value=\"{e(run_id)}\t{e(item['input'])}\">"
+            "採用に変える</label>")
 
 
 def expand_cell(item):
@@ -457,14 +529,16 @@ def notation_cell(item):
     return cell(item, item["surface"], details, "<span class=\"mark\">直</span>" if changed else "")
 
 
-def reading_cell(item):
+def reading_cell(item, run_id=None):
+    """run_id を渡すと(run が終わっているとき)、落ちた語に採用の切り替えを付ける。"""
     alternatives = "、".join(a if isinstance(a, str) else str(a.get("reading", a)) for a in item["alternatives"])
     details = (f"<div class=\"meta\">{e(item['surface'])} · {e(item['confidence'])}</div>"
                + (f"<div class=\"meta\">別の読み: {e(alternatives)}</div>" if alternatives else ""))
-    return cell(item, item["reading"], details)
+    adopt = adopt_box(run_id, item) if run_id and item["reason"] else ""
+    return cell(item, item["reading"], details, adopt=adopt)
 
 
-def lane_html(lane, items):
+def lane_html(lane, items, run_id=None):
     expand, notation, reading = lane["expand"], lane["notation"], lane["reading"]
     stopped = next((item for item in (expand, notation, reading) if item and item["reason"]), None)
     reached = not stopped and reading is not None
@@ -472,7 +546,7 @@ def lane_html(lane, items):
     # 却下された段より右は空ける。前の段を通ったのに次の段の出力に無ければ「まだ」(段に届いていない・失敗)
     for item, render, stage in ((notation, notation_cell, "notation"), (reading, reading_cell, "reading")):
         if item:
-            cells.append(render(item))
+            cells.append(render(item, run_id) if stage == "reading" else render(item))
         elif stopped or items[stage] is not None:
             cells.append("<div class=\"cell is-empty\"></div>")
         else:
@@ -481,13 +555,13 @@ def lane_html(lane, items):
     return f"<div class=\"lane{' is-stopped' if not reached else ''}\">{''.join(cells)}{result}</div>"
 
 
-def render_board(groups, items):
+def render_board(groups, items, run_id=None):
     head = ("<div class=\"board-head\"><div class=\"cell\"><b>種語</b></div><div class=\"lanes-head\">"
             + "".join(f"<div class=\"cell\"><b>{e(label)}</b>{stage_summary(items[stage])}</div>" for stage, _, label in STAGES)
             + "<div class=\"cell result\"><b>登録</b></div></div></div>")
     rows = []
     for group in groups:
-        lanes = "".join(lane_html(lane, items) for lane in group["lanes"]) or \
+        lanes = "".join(lane_html(lane, items, run_id) for lane in group["lanes"]) or \
             "<div class=\"lane is-stopped\"><div class=\"cell is-empty\"><span class=\"sub\">拡張なし</span></div></div>"
         seed = (f"<details class=\"cell seed\"><summary><span class=\"word\">{e(group['seed'])}</span></summary>"
                 f"<div class=\"more\"><div class=\"note\">{e(group['note'])}</div></div></details>")
@@ -507,8 +581,12 @@ def render_run(run_id, state, delivered):
         f"<p class=\"sub\">作成 {e(state.get('created_on'))} / 種語 {seeds_count} 語 / 公開語の写し {e(state.get('corpus_fetched_at'))}</p>",
     ]
     if delivered:
-        parts.append(f"<div class=\"card\"><b>一括登録に貼る</b>({len(delivered['register'])} 語){COPY_BUTTONS}</div>")
-    parts.append(render_board(groups, items))
+        parts.append(f"<div class=\"card\"><b>一括登録に貼る</b>({len(delivered['register'])} 語"
+                     f"<span class=\"pass\" data-adopted-count=\"{e(run_id)}\"></span>)"
+                     "<p class=\"sub\">読みの段で落ちた語は「採用に変える」で、このコピーの末尾に読みの調査ごと足せる"
+                     "(このブラウザに覚える。読み揺れの語は step2 で別の読みから選ぶ)。</p>"
+                     f"{COPY_BUTTONS}</div>")
+    parts.append(render_board(groups, items, run_id if delivered else None))
     data = {"runs": {run_id: delivered} if delivered else {}}
     return page(f"run {run_id}", "".join(parts), data)
 
@@ -521,8 +599,9 @@ RESCUE_STEPS = {
               "通った語を <code>research/inputs/reading.txt</code> に貼って <code>/reading</code> → 一括登録へ。",
     "notation": "読みからやり直す: 「語のリストをコピー」→ <code>research/inputs/reading.txt</code> に貼り、<code>/reading</code> を実行。"
                 "一括登録の step1 に語のリスト、step2 に <code>research/outputs/reading.json</code> を貼る。",
-    "reading": "登録へ進める: 「語のリストをコピー」→ 一括登録の step1 に貼り、読みは MeCab の暫定読みを見て手で確かめる。"
-               "調べ直すなら <code>research/inputs/reading.txt</code> に貼って <code>/reading</code> を実行。",
+    "reading": "登録へ進める: 「採用に変える」を付けると、run の一括登録のコピー(一覧と run のページ)の末尾に、読みの調査ごと足される"
+               "(読み揺れの語は step2 で別の読みから選ぶ)。調べ直すなら「語のリストをコピー」→ "
+               "<code>research/inputs/reading.txt</code> に貼って <code>/reading</code> を実行。",
 }
 
 # 落ちた語の一覧で、段・run の絞り込みと、チェックした語のコピー(1 行 1 語)。
@@ -583,7 +662,7 @@ def render_rejected(runs):
     """全 run の、段ごとに落ちた語。段と run で絞り、チェックした語をリストでコピーする(拾い直しの下ごしらえ)。"""
     rows = []
     counts = Counter()
-    for run_id, _, _ in runs:
+    for run_id, _, delivered in runs:
         directory = RUNS / run_id
         groups, items = build_board(directory)
         seed_of = {lane["expand"]["surface"]: group["seed"] for group in groups for lane in group["lanes"]}
@@ -601,13 +680,14 @@ def render_rejected(runs):
                 extra = (f"<div class=\"meta\">{e(reading)} · 立項 {e(item.get('entry_score'))} · {e(item.get('confidence'))}</div>"
                          if stage == "notation" else f"<div class=\"meta\">{e(reading)}</div>")
                 note = f"<div class=\"note\">{e(item['note'])}</div>" if item.get("note") else ""
+                adopt = adopt_box(run_id, item) if stage == "reading" and delivered else ""
                 rows.append(
                     f"<tr data-stage=\"{stage}\" data-run=\"{e(run_id)}\" data-surface=\"{e(item['surface'])}\""
                     f" data-line=\"{e(item['surface'])}\t{e(reading)}\t{e(item['reason'])}\">"
                     f"<td><input type=\"checkbox\" data-pick></td><td>{e(seed)}</td>"
                     f"<td><details><summary><span class=\"word\">{e(item['surface'])}</span>"
                     f"<span class=\"badge\">{e(short_reason(item))}</span></summary>"
-                    f"<div class=\"more\"><div class=\"reason\">{e(item['reason'])}</div>{changed}{extra}{note}</div></details></td>"
+                    f"<div class=\"more\"><div class=\"reason\">{e(item['reason'])}</div>{changed}{extra}{note}</div></details>{adopt}</td>"
                     f"<td class=\"sub\">{e(run_id)}</td></tr>")
     stages = "".join(
         f"<label><input type=\"radio\" name=\"stage\" value=\"{stage}\"{' checked' if stage == 'notation' else ''}>"
@@ -625,7 +705,8 @@ def render_rejected(runs):
         "<button data-copy-list=\"line\">語・読み・理由(TSV)をコピー</button><span class=\"flash\"></span></div></div>"
         "<table id=\"rejected\"><thead><tr><th><input type=\"checkbox\" data-all></th><th>種語</th><th>落ちた語</th>"
         f"<th>run</th></tr></thead><tbody>{''.join(rows)}</tbody></table>")
-    return page("落ちた語", body, {"runs": {}}, REJECTED_SCRIPT)
+    data = {"runs": {run_id: delivered for run_id, _, delivered in runs if delivered}}
+    return page("落ちた語", body, data, REJECTED_SCRIPT)
 
 
 # ---- 書き出し ---------------------------------------------------------------
