@@ -115,7 +115,10 @@ seeds.txt ─▶ /expand ─[コード]─▶ /notation ─[コード]─▶ /re
   一括登録に貼る register.txt・reading.json を、run ごとにも、選んだ複数の run をつなげてもコピーできる。静的な HTML で、
   `research:auto` が最後に `script/research_viewer.py` で作り直す(手で作り直すなら `python3 script/research_viewer.py`)。
   落ちた語は `auto/rejected.html` で段と run ごとに集めてコピーでき、段ごとの拾い直し方(どのスキルから手で回すか)も出る。
-  見終えた run は一覧で「確認済み」にすると隠れる(印はブラウザの localStorage に残る)。
+  読みの段で落ちた語は、run のページか `auto/rejected.html` の「採用に変える」で、その run のコピー(register.txt・reading.json)の
+  元の位置(読みの段の入力の並び。系統ごとに続く)に /reading の出力ごと差し込める。末尾に足すと一括登録の id が系統から離れ、
+  注釈の書き出し(id 順)で同じ系統が別の束に割れるため(ファイルは書き換えない。読み揺れの語は step2 で別の読みから選ぶ)。
+  見終えた run は一覧で「確認済み」にすると隠れる(採用と確認済みの印は、ブラウザの localStorage に残る)。
 - **注釈**: 管理画面「調査用データの書き出し」を `auto/inbox/annotation.json` に保存しておくと、次の起動で `/annotation` に回し、
   `auto/annotation/<日時>/annotation.json` に提案 JSON が出る。それを「提案 JSON の取り込み」に貼る。
 - **自動実行の Claude には Bash を渡さない**（文字数と重複はコードが見る）。公開語の写し（百万字を超える）は Read も禁じ、AI には読ませない。
