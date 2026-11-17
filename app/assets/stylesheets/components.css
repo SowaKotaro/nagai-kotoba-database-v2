@@ -1607,8 +1607,7 @@ a.tag:hover .genre-hub__count {
   }
 }
 
-/* 検索バーの下の探し方の入口。SANKOU! のトップのカテゴリボタンにならい、墨の枠のボタン(.btn)に
-   語と矢印だけを置く。列は検索バーの幅を超えない。ボタンは中身の幅のまま並べ、収まらなければ折り返して
+/* 検索バーの下の探し方の入口。墨の枠のボタン(.btn)に語と印(＋ か →)だけを置く。列は検索バーの幅を超えない。ボタンは中身の幅のまま並べ、収まらなければ折り返して
    中央に寄せる(伸ばしたり余白を詰めたりして端を揃えることはしない。docs/design.md §5.2) */
 /* 開いたパネル(.search-ways__panel)は、この列の幅でボタンの段の下に出す */
 .search-ways {
@@ -1633,7 +1632,7 @@ a.tag:hover .genre-hub__count {
   font-size: 13px;
 }
 
-/* 押すとその場で選択肢が開くボタン(∨。SANKOU! のトップと同じ)。開閉は nav-menu(ヘッダーの「検索」と同じ)。
+/* 押すとその場で選択肢が開くボタン(＋)。開閉は nav-menu(ヘッダーの「検索」と同じ)。
    ボタンの外側の箱は位置の基準にしない(パネルはボタンではなく列の幅で開く) */
 .search-ways__menu {
   display: flex;
@@ -1647,22 +1646,62 @@ a.tag:hover .genre-hub__count {
   color: var(--bg);
 }
 
-.search-ways__caret {
-  transition: transform var(--transition);
+/* 開閉の印。閉じているあいだは ＋ で、開くと縦の棒が縮んで消え、横の棒が右へ伸びて伸ばし棒「ー」になる
+   (サイト名の「長ーーーい」と同じ字。docs/design.md §5.2)。線の太さは矢印(Phosphor Light)に合わせて 1px。
+   伸びるぶんは transform で描くので、ボタンの幅は変わらない(右の余白に収まる) */
+.search-ways__mark {
+  position: relative;
+  flex: none;
+  width: 10px;
+  height: 10px;
 }
 
-.search-ways__toggle[aria-expanded="true"] .search-ways__caret {
-  transform: rotate(180deg);
+.search-ways__mark::before,
+.search-ways__mark::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
 }
 
-/* 広い幅: 列の幅の墨の枠を、ボタンの段の下に重ねて開く。選択肢は SANKOU! と同じく / で区切って流す */
+.search-ways__mark::before {
+  top: calc(50% - 0.5px);
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform-origin: left center;
+}
+
+.search-ways__mark::after {
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+}
+
+.search-ways__toggle[aria-expanded="true"] .search-ways__mark::before {
+  transform: scaleX(1.5);
+}
+
+.search-ways__toggle[aria-expanded="true"] .search-ways__mark::after {
+  transform: scaleY(0);
+}
+
+/* 開閉の動きの型(--motion-pop。ヘッダーの「検索」の ∨ の半回転と同じ曲線)。動きを減らす設定では切り替えるだけ */
+@media (prefers-reduced-motion: no-preference) {
+  .search-ways__mark::before,
+  .search-ways__mark::after {
+    transition: transform var(--motion-pop);
+  }
+}
+
+/* 広い幅: 列の幅の札(墨の枠)を、ボタンの段の下に重ねて開く。中は選択肢の升目で端まで割る */
 .search-ways__panel {
   position: absolute;
   top: calc(100% + var(--space-2));
   left: 0;
   right: 0;
   z-index: 25;
-  padding: var(--space-5) var(--space-6);
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--text);
   border-radius: var(--radius);
@@ -1700,26 +1739,69 @@ a.tag:hover .genre-hub__count {
   display: none;
 }
 
+/* 選択肢は札の中を gap: 1px の隙間で割った升目に並べる(単語一覧の行・五十音索引と同じ罫の引き方。docs/design.md §3)。
+   grid ではなく折り返す flex にする: 数が列数で割り切れなくても最終段の升が伸びて段を埋めるので、
+   空きに罫の色が面になって覗かない(管理画面の .admin-dash-grid と同じ)。升の基準の幅 140px は、列(640px)で 4 列になる値 */
 .search-ways__options {
   display: flex;
   flex-wrap: wrap;
+  gap: 1px;
   margin: 0;
   padding: 0;
   list-style: none;
+  background: var(--border);
   font-size: 14px;
-  line-height: 2.2;
+  line-height: 1.6;
 }
 
-/* 区切りは行末にも残す(SANKOU! と同じ)。罫の色なので文字の濃さの下限は掛からない */
-.search-ways__options li:not(:last-child)::after {
-  content: "/";
-  margin: 0 var(--space-3);
-  color: var(--border-strong);
+.search-ways__options li {
+  flex: 1 1 140px;
+  background: var(--surface);
 }
 
+/* 升の全面を押せるようにする。hover は一覧の行と同じく面を沈める */
 .search-ways__options a {
+  display: block;
+  height: 100%;
+  padding: 10px var(--space-4);
   color: var(--text);
   text-decoration: none;
+  transition: background-color var(--transition);
+}
+
+@media (hover: hover) {
+  .search-ways__options a:hover {
+    background-color: var(--bg-soft);
+  }
+}
+
+/* ジャンルは名前が長い(最長 16 字)ので 2 列にし、語の途中で折らない */
+.search-ways__options--wide li {
+  flex-basis: calc(50% - 1px);
+}
+
+/* 読みの長さは目盛り: 1 段に並べ、数を立てて(統計の数字の壁と同じ 20px)単位を下に小さく添える */
+.search-ways__options--ruler li {
+  flex: 1 1 0;
+}
+
+.search-ways__options--ruler a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3) 0 10px;
+}
+
+.search-ways__figure {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.search-ways__unit {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .search-ways__more {
@@ -1727,8 +1809,7 @@ a.tag:hover .genre-hub__count {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
+  padding: 10px var(--space-4);
   border-top: 1px solid var(--border);
   font-size: 13px;
   color: var(--text-muted);
@@ -1743,8 +1824,9 @@ a.tag:hover .genre-hub__count {
   display: none;
 }
 
-/* 狭い幅: 画面の下からせり上がるシートにする(SANKOU! のスマホと同じ)。ボタンが 4 段あるので、
-   列の下に開くと画面の外に出る。選択肢は 1 行に 1 つ、行の罫は gap: 1px の隙間で引く */
+/* 狭い幅: 画面の下からせり上がるシートにする。ボタンが 4 段あるので、列の下に開くと画面の外に出る。
+   升目は幅で列が減り(既定は 2 列、ジャンルは 1 列)、読みの長さの目盛りは 10〜19 を 5 升 × 2 段、上限の無い区切りを 1 段に通す
+   (11 升を 1 段に詰めると 1 升が 31px になり、押しにくい) */
 @media (max-width: 767px) {
   .search-ways__panel {
     position: fixed;
@@ -1787,29 +1869,38 @@ a.tag:hover .genre-hub__count {
   }
 
   .search-ways__options {
-    display: grid;
-    gap: 1px;
-    background: var(--border);
     font-size: 15px;
-    line-height: 1.6;
-  }
-
-  .search-ways__options li {
-    background: var(--surface);
-  }
-
-  .search-ways__options li:not(:last-child)::after {
-    content: none;
   }
 
   .search-ways__options a {
-    display: block;
     padding: var(--space-3) var(--space-4);
+  }
+
+  .search-ways__options--wide li {
+    flex-basis: 100%;
+  }
+
+  .search-ways__options--ruler li {
+    flex: 1 1 calc(20% - 1px);
+  }
+
+  .search-ways__options--ruler a {
+    padding: var(--space-3) 0 10px;
+  }
+
+  .search-ways__options--ruler .search-ways__option--open-ended {
+    flex-basis: 100%;
+  }
+
+  .search-ways__options--ruler .search-ways__option--open-ended a {
+    flex-direction: row;
+    justify-content: center;
+    align-items: baseline;
+    gap: var(--space-1);
   }
 
   .search-ways__more {
     justify-content: flex-start;
-    margin: 0;
     padding: var(--space-4);
     font-size: 14px;
   }

@@ -32,9 +32,16 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[search-way-genre search-way-entity-type search-way-linguistic-feature search-way-reading-length
                     search-way-word-origin search-way-part-of-speech],
                  css_select(".search-ways__toggle").map { |button| button["aria-controls"] }
-    # 読みの長さの選択肢は、19 文字までは 1 文字ずつ(15〜19 のようにまとめない。20 文字以上は下の多語義語の見本で見る)
-    assert_select "#search-way-reading-length a[href=?]", words_path(reading_length: 15),
-                  text: I18n.t("home.index.ways.length.exact", count: 15)
+    # 読みの長さの選択肢は、19 文字までは 1 文字ずつ(15〜19 のようにまとめない。20 文字以上は下の多語義語の見本で見る)。
+    # 目盛りなので、数を立てて単位を添える。ジャンルは名前が長いので広い升、ほかは既定の升目
+    assert_select "#search-way-reading-length .search-ways__options--ruler li:not(.search-ways__option--open-ended) a[href=?]",
+                  words_path(reading_length: 15), text: "15#{I18n.t("home.index.ways.length.unit")}" do
+      assert_select "b.search-ways__figure", text: "15"
+    end
+    assert_select "#search-way-genre .search-ways__options--wide"
+    assert_select "#search-way-entity-type .search-ways__options[class=?]", "search-ways__options"
+    # 開くボタンの印は CSS で描く ＋(開くと伸ばし棒「ー」になる)で、読み上げない
+    assert_select ".search-ways__toggle .search-ways__mark[aria-hidden=true]", count: 6
     assert_equal [ browse_path, random_words_path, search_path ], css_select(".search-ways > a.search-ways__item").map { |link| link["href"] }
     # ランダムは押すたびに行き先が変わるので、検索エンジンには辿らせない
     assert_select ".search-ways > a[href=?][rel=nofollow]", random_words_path
@@ -69,9 +76,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     first_item = css_select(".home-column").last.css(".home-column__item").first
     assert_equal word_path(word), first_item["href"]
     assert_equal "6", first_item.css(".home-column__number").text
-    # 20 文字以上はまとめて、下限だけで絞る
-    assert_select "#search-way-reading-length a[href=?]", words_path(reading_length_min: 20),
-                  text: I18n.t("home.index.ways.length.at_least", min: 20)
+    # 20 文字以上はまとめて、下限だけで絞る(目盛りの最後の、上限の無い升)
+    assert_select "#search-way-reading-length .search-ways__option--open-ended a[href=?]", words_path(reading_length_min: 20),
+                  text: "20#{I18n.t("home.index.ways.length.unit_at_least")}"
   end
 
   test "探し方の入口は描いた結果を使い回し、選択肢が変わったときだけ描き直す" do
