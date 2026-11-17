@@ -26,7 +26,6 @@
 .home-featured__word,
 .breadcrumbs a,
 .genre-path a,
-.search-ways__options a,
 .site-footer__nav a:not(.icon-label) {
   background: linear-gradient(currentColor, currentColor) no-repeat 100% 100% / 0 1px;
 }
@@ -39,17 +38,9 @@
   .home-featured__word:hover,
   .breadcrumbs a:hover,
   .genre-path a:hover,
-  .search-ways__options a:hover,
   .site-footer__nav a:not(.icon-label):hover {
     background-position: 0 100%;
     background-size: 100% 1px;
-  }
-}
-
-/* 狭い幅の探し方の選択肢は、下からのシートの 1 行になる。行の幅いっぱいに引かないよう、下線を持たせない */
-@media (max-width: 767px) {
-  .search-ways__options a {
-    background: none;
   }
 }
 
@@ -63,8 +54,7 @@
   .home-featured__word,
   .breadcrumbs a,
   .genre-path a,
-  .search-ways__options a,
-  .site-footer__nav a:not(.icon-label) {
+    .site-footer__nav a:not(.icon-label) {
     transition: background-size var(--motion-line), color var(--transition);
   }
 }

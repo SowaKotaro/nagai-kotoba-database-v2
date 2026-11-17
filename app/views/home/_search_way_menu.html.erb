@@ -1,14 +1,16 @@
 <%# locals: (way:) -%>
 <%# 探し方の入口のうち、押すとその場で選択肢が開くボタン 1 つ(HomeHelper#home_search_ways の 1 件)。
     開閉はヘッダーの「検索」と同じ nav-menu で、JS が無いと開かない。パネルは列(.search-ways)の幅でボタンの段の下に開き、
-    狭い幅では画面の下から出るシートになって、見出しと閉じるボタンが付き、下へのスワイプでも閉じる(docs/design.md §5.2) %>
+    狭い幅では画面の下から出るシートになって、見出しと閉じるボタンが付き、下へのスワイプでも閉じる。
+    選択肢は札の中を gap: 1px で割った升目に置き、読みの長さは数を立てた目盛りにする(docs/design.md §5.2) %>
 <% panel_id = "search-way-#{way[:key].to_s.dasherize}" %>
 <div class="search-ways__menu" data-controller="nav-menu"
      data-action="click@window->nav-menu#closeOnOutside keydown.esc@window->nav-menu#close">
   <button type="button" id="<%= panel_id %>-trigger" class="btn search-ways__item search-ways__toggle"
           aria-expanded="false" aria-haspopup="true" aria-controls="<%= panel_id %>"
           data-nav-menu-target="trigger" data-action="nav-menu#toggle">
-    <%= way[:label] %><%= icon "caret_down", "search-ways__caret" %>
+    <%# 開閉の印は ＋ で、開くと縦の棒が縮み、横の棒が伸びて伸ばし棒「ー」になる(線は CSS で描く) %>
+    <%= way[:label] %><span class="search-ways__mark" aria-hidden="true"></span>
   </button>
   <%# 狭い幅のシートは、下へのスワイプでも閉じる(swipe-dismiss。広い幅では何もしない) %>
   <div class="search-ways__panel" id="<%= panel_id %>" hidden
@@ -19,9 +21,16 @@
       <button type="button" class="search-ways__close" aria-label="<%= t("home.index.ways.close") %>"
               data-action="nav-menu#close"><%= icon "x" %></button>
     </div>
-    <ul class="search-ways__options">
-      <% way[:options].each do |label, path| %>
-        <li><%= link_to label, path %></li>
+    <ul class="<%= class_names("search-ways__options", "search-ways__options--#{way[:layout]}" => way[:layout]) %>">
+      <% way[:options].each do |option| %>
+        <%= tag.li class: ("search-ways__option--open-ended" if option[:open_ended]) do %>
+          <% if option[:figure] %>
+            <%= link_to option[:path] do %><b class="search-ways__figure"><%= option[:figure] %></b><span class="search-ways__unit"><%= option[:unit] %></span><% end %>
+          <% else %>
+            <%# 升は狭いので、名前は「・」の後ろと「（」の前でだけ折る(「オノマトペ（擬音／語）」と割らない) %>
+            <%= link_to phrased_name(option[:label]), option[:path] %>
+          <% end %>
+        <% end %>
       <% end %>
     </ul>
     <% if way[:more] %>
