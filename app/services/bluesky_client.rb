@@ -4,26 +4,15 @@
 # - 本文を投稿し、その返信に単語詳細へのリンクを付ける。Bluesky はリンクのカードを自動では作らないので、
 #   返信にリンクの facet(どのバイト範囲がリンクか)と、カード(app.bsky.embed.external。画像は共有カード)を付ける。
 # - 返信だけが失敗しても、本文の投稿は成功として返す(error に理由を残す)。
-# - 通信は Net::HTTP(gem を足さない)。タイムアウトを持ち、通信と応答の失敗は例外にせず Result の error で返す。
+# - 通信は Net::HTTP(gem を足さない。SnsClient)。タイムアウトを持ち、通信と応答の失敗は例外にせず Result の error で返す。
 #   エラーの文言に認証情報を入れない。
 #   仕様: https://docs.bsky.app/docs/advanced-guides/posts ・ https://docs.bsky.app/docs/api/com-atproto-server-create-session
 # 種別: 外部 API のクライアント。
 class BlueskyClient
-  require "net/http"
-
   SERVICE = "https://bsky.social"
-  # 秒。
-  OPEN_TIMEOUT = 5
-  READ_TIMEOUT = 20
   # カードの画像(blob)の上限(バイト)。超えたら画像の無いカードにする。
   MAX_IMAGE_BYTES = 1_000_000
 
-  # remote_id は本文の投稿の at:// URI(失敗したら nil)。error は失敗の理由か、返信だけ失敗したときの理由。
-  Result = Data.define(:remote_id, :error) do
-    def success? = remote_id.present?
-  end
-
-  Error = Class.new(StandardError)
 
   # 設定(config.x.sns_bluesky_*)が揃っていればクライアント、無ければ nil。
   def self.from_config
@@ -34,21 +23,22 @@ class BlueskyClient
   end
 
   # transport はテストで差し替える。(uri, request) を受け取り Net::HTTPResponse を返す。
-  def initialize(identifier:, app_password:, service: SERVICE, transport: method(:send_request))
+  def initialize(identifier:, app_password:, service: SERVICE, transport: SnsClient.method(:send_request))
     @identifier = identifier
     @app_password = app_password
     @service = service
     @transport = transport
   end
 
+  # SnsClient::Result を返す。remote_id は本文の投稿の at:// URI。
   def publish(message)
     session = xrpc("com.atproto.server.createSession", { identifier: @identifier, password: @app_password })
     post = create_post(session, { text: message.body })
-    Result.new(remote_id: post.fetch("uri"), error: reply_with_link(session, post, message.link))
-  rescue Error => e
-    Result.new(remote_id: nil, error: e.message)
+    SnsClient::Result.new(remote_id: post.fetch("uri"), error: reply_with_link(session, post, message.link))
+  rescue SnsClient::Error => e
+    SnsClient::Result.new(remote_id: nil, error: e.message)
   rescue KeyError
-    Result.new(remote_id: nil, error: "応答に必要な項目がありませんでした")
+    SnsClient::Result.new(remote_id: nil, error: "応答に必要な項目がありませんでした")
   end
 
   private
@@ -63,7 +53,7 @@ class BlueskyClient
       embed: external_embed(session, link)
     })
     nil
-  rescue Error, KeyError => e
+  rescue SnsClient::Error, KeyError => e
     "返信: #{e.is_a?(KeyError) ? "応答に必要な項目がありませんでした" : e.message}"
   end
 
@@ -96,13 +86,13 @@ class BlueskyClient
     request["Authorization"] = "Bearer #{token}" if token
     request.body = content_type == "application/json" ? body.to_json : body
     response = @transport.call(uri, request)
-    raise Error, "#{method_name}: HTTP #{response.code} #{error_name(response)}".strip unless response.is_a?(Net::HTTPSuccess)
+    raise SnsClient::Error, "#{method_name}: HTTP #{response.code} #{error_name(response)}".strip unless response.is_a?(Net::HTTPSuccess)
 
     JSON.parse(response.body)
-  rescue Timeout::Error, SystemCallError, SocketError, IOError, OpenSSL::SSL::SSLError, Net::HTTPBadResponse => e
-    raise Error, "#{method_name}: #{e.class}"
+  rescue *SnsClient::NETWORK_ERRORS => e
+    raise SnsClient::Error, "#{method_name}: #{e.class}"
   rescue JSON::ParserError
-    raise Error, "#{method_name}: 応答を読めませんでした"
+    raise SnsClient::Error, "#{method_name}: 応答を読めませんでした"
   end
 
   # 失敗の応答の { "error": "...", "message": "..." } から、名前だけを取る(本文をそのままログに出さない)。
@@ -110,12 +100,5 @@ class BlueskyClient
     JSON.parse(response.body.to_s)["error"].to_s
   rescue JSON::ParserError
     ""
-  end
-
-  def send_request(uri, request)
-    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
-                    open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT, write_timeout: READ_TIMEOUT) do |http|
-      http.request(request)
-    end
   end
 end

@@ -18,8 +18,8 @@ class SnsBroadcastTest < ActiveSupport::TestCase
 
   NOW = Time.zone.local(2026, 11, 18, 9, 41)
 
-  def ok(id) = BlueskyClient::Result.new(remote_id: id, error: nil)
-  def ng(error) = BlueskyClient::Result.new(remote_id: nil, error:)
+  def ok(id) = SnsClient::Result.new(remote_id: id, error: nil)
+  def ng(error) = SnsClient::Result.new(remote_id: nil, error:)
 
   test "同じ時刻には SNS ごとに 1 回だけ送り、1 つが落ちてもほかへは送り、失敗した SNS だけを送り直す" do
     bluesky = FakeClient.new(ok("at://1"))

@@ -458,7 +458,7 @@
 
 ## Issue 113: SNS(X・Threads・Bluesky)へ毎時、自動で投稿する
 - 種別: feature
-- 状態: 対応中(土台と Bluesky は feature/sns-autopost。アカウントと鍵はオーナーが準備中)
+- 状態: 対応中(Bluesky は 2026-11-18 から毎時で稼働(PR #221)。X は鍵が揃いクライアントを追加中。Threads は未着手)
 - 優先度: P2 ／ Impact: Med ／ Effort: Med
 - 依存: なし(「今日の一語」とは別の巡で選ぶので、Issue 104 は要らない)
 - 背景・現状: 検索以外の流入の入口。2026-11-13 に「Bluesky は 1 日 1 回の自動・X は手で予約(Issue 47)」と決めたが、
@@ -475,11 +475,11 @@
 - 内容:
   - [x] 枠と投稿の記録(`sns_slots`・`sns_posts`)、語の選び方 `SnsRotation`、文面 `SnsPostText`、1 回ぶんの送信 `SnsBroadcast`、rake `sns:post`(`DRY_RUN=1`)
   - [x] Bluesky のクライアント `BlueskyClient`(返信にリンクの facet と、共有カードの画像つきのカード)
-  - [ ] X のクライアント(OAuth 1.0a の署名。標準ライブラリで書く)
+  - [x] X のクライアント `XClient`(OAuth 1.0a の署名。標準ライブラリで書く)。共通の型と送り方は `SnsClient`
   - [ ] Threads のクライアントと、長期のトークン(60 日)の自動更新。更新したトークンの置き場所(DB に暗号化して置く見込み)を決める
   - [ ] 死活監視(healthchecks.io の型。全部の SNS に送れたら決まった URL を叩く)
   - [x] 本番の入口 `bin/sns-post`(鍵のファイルを読み、rbenv の PATH を通す)と、語を決めて出す `WORD_ID`
-  - [ ] 本番の鍵のファイルと crontab の登録(サーバの作業はオーナー。手順は sns-autopost-setup.md §5)。最初の投稿は「天上天下唯我独尊」
+  - [x] 本番の鍵のファイルと crontab の登録(2026-11-18。手順は sns-autopost-setup.md §5)。最初の投稿は「天上天下唯我独尊」(Bluesky、22:38)
   - [ ] 流入を測る(GA4 の参照元。リンクに計測用のパラメータは付けない。公開済みの URL を増やさないため)
 - 期待効果: 手を掛けずに、サイトの外へ毎時 1 語が届く。フォローが実質的な購読になる。
 

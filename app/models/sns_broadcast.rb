@@ -4,7 +4,7 @@
 # - 同じ時刻に何度呼んでも、SNS ごとに 1 回しか投稿しない。送る前に「送信中」の行を作り、(枠, SNS) の一意制約で取り合う。
 #   失敗した SNS だけは、同じ時刻のうちに呼び直せば送り直す。過ぎた枠には戻らない(遅れた投稿を後から出さない)。
 # - 1 つの SNS が落ちても、ほかの SNS には送る(クライアントは例外を投げずに Result を返す)。
-# - 外部へ送るのはクライアント(app/services の BlueskyClient など)。クライアントは publish(message) と Result を持つ。
+# - 外部へ送るのはクライアント(app/services の BlueskyClient・XClient)。クライアントは publish(message) で SnsClient::Result を返す。
 # 種別: 書き込み処理。
 class SnsBroadcast
   # outcomes は { platform => :posted / :failed / :skipped }。slot は語が無くて送らなかったとき nil。
@@ -14,7 +14,7 @@ class SnsBroadcast
 
   # 設定(認証情報)のある SNS のクライアント。{ platform => client }。
   def self.configured_clients
-    { bluesky: BlueskyClient.from_config }.compact
+    { bluesky: BlueskyClient.from_config, x: XClient.from_config }.compact
   end
 
   # word_id を渡すと、いまの枠がまだ無いときに限り、選ばずにその語で枠を作る(最初の投稿や特別な日の語を決めて出す。

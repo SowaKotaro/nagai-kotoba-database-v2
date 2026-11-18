@@ -63,6 +63,14 @@ module NagaiKotobaDatabaseV2
     # cron から読み込む環境ファイルに置く(overview §8)。空の SNS には送らない。
     config.x.sns_bluesky_identifier = ENV["SNS_BLUESKY_IDENTIFIER"]
     config.x.sns_bluesky_app_password = ENV["SNS_BLUESKY_APP_PASSWORD"]
+    config.x.sns_x_api_key = ENV["SNS_X_API_KEY"]
+    config.x.sns_x_api_key_secret = ENV["SNS_X_API_KEY_SECRET"]
+    config.x.sns_x_access_token = ENV["SNS_X_ACCESS_TOKEN"]
+    config.x.sns_x_access_token_secret = ENV["SNS_X_ACCESS_TOKEN_SECRET"]
+
+    # Active Storage は使っていない(rails/all で読み込まれるだけ。Issue 95)。画像の変換の gem が無いという警告が、
+    # rails runner や rake(SNS の自動投稿の cron)のたびにログへ出るので、変換を切る。
+    config.active_storage.variant_processor = :disabled
 
     # stylesheet_link_tag / javascript_include_tag が自動付与する
     # `Link: rel=preload` レスポンスヘッダー(HTTP/2 Server Push 向け)を無効化する。
