@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# SNS の自動投稿(bin/rails sns:post)を本番の cron と SSH から動かす入口。
+# cron と SSH の非対話のシェルでは rbenv の PATH が通らないので、ここで通す。鍵は SNS_ENV_FILE(既定は ~/.config/nagai-kotoba/sns.env)から読む。
+# 引数はそのまま rake に渡す(例: bin/sns-post DRY_RUN=1 / bin/sns-post WORD_ID=1)。手順は docs/sns-autopost-setup.md §5。
+set -euo pipefail
+env_file="${SNS_ENV_FILE:-$HOME/.config/nagai-kotoba/sns.env}"
+set -a
+# shellcheck source=/dev/null
+. "$env_file"
+set +a
+export RAILS_ENV="${RAILS_ENV:-production}"
+export PATH="$HOME/.rbenv/shims:$HOME/.rbenv/bin:$PATH"
+cd "$(dirname "$0")/.."
+exec bundle exec rails sns:post "$@"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_100000) do
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "password_digest", null: false
@@ -68,6 +68,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.index ["admin_id"], name: "index_sessions_on_admin_id"
+  end
+
+  create_table "sns_posts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "sns_slot_id", null: false
+    t.integer "platform", null: false, comment: "10:Bluesky 20:X 30:Threads"
+    t.integer "status", default: 10, null: false, comment: "10:送信中 20:投稿済み 90:失敗"
+    t.string "remote_id", comment: "SNS 側の投稿の ID(Bluesky は at:// の URI)"
+    t.string "error_message", limit: 1000, comment: "失敗の理由(返信だけ失敗したときも残す)"
+    t.datetime "posted_at", comment: "投稿できた時刻"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sns_slot_id", "platform"], name: "idx_sns_posts_slot_platform", unique: true
+  end
+
+  create_table "sns_slots", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "slot_at", null: false, comment: "枠の時刻(正時)"
+    t.bigint "word_id", comment: "出す語(語を消したら NULL)"
+    t.integer "round", null: false, comment: "何巡目か(1 から)"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["round", "word_id"], name: "idx_sns_slots_round_word"
+    t.index ["slot_at"], name: "idx_sns_slots_slot_at", unique: true
+    t.index ["word_id"], name: "idx_sns_slots_word"
   end
 
   create_table "word_candidates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -233,6 +256,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
   add_foreign_key "annotation_proposals", "words", name: "fk_annotation_proposals_word"
   add_foreign_key "genres", "genres", column: "parent_id"
   add_foreign_key "sessions", "admins"
+  add_foreign_key "sns_posts", "sns_slots", name: "fk_sns_posts_slot", on_delete: :cascade
+  add_foreign_key "sns_slots", "words", name: "fk_sns_slots_word", on_delete: :nullify
   add_foreign_key "word_candidates", "word_candidates", column: "root_id", name: "fk_word_candidates_root", on_delete: :nullify
   add_foreign_key "word_candidates", "word_candidates", column: "seed_id", name: "fk_word_candidates_seed", on_delete: :nullify
   add_foreign_key "word_candidates", "words", name: "fk_word_candidates_word", on_delete: :nullify

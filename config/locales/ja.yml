@@ -1660,3 +1660,7 @@ ja:
     create:
       rate_limited: "しばらく時間をおいてから再度お試しください。"
       invalid: "ユーザーIDまたはパスワードが正しくありません。"
+
+  # SNS の自動投稿の本文(SnsPostText。3 つの SNS で同じ形)。
+  sns_posts:
+    body: "%{surface}\n%{reading}（%{length}文字）"
