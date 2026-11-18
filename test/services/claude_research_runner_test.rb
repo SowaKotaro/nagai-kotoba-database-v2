@@ -8,10 +8,10 @@ class ClaudeResearchRunnerTest < ActiveSupport::TestCase
       log = dir.join("claude.log")
       fake = ->(body) { dir.join("fake").tap { |path| path.write("#!/bin/sh\n#{body}\n") && path.chmod(0o755) } }
 
-      # 引数はシェルを通らずに届く(プロンプトの空白・記号もそのまま)。Bash と公開語の写しの Read は禁じる
+      # 引数はシェルを通らずに届く(プロンプトの空白・記号もそのまま)。モデルと effort は固定。Bash と公開語の写しの Read は禁じる
       assert ClaudeResearchRunner.new(command: fake.call('printf "%s\n" "$@"').to_s).call("/notation a b; rm -rf x", log_path: log)
       args = log.readlines(chomp: true)
-      assert_equal [ "-p", "/notation a b; rm -rf x", "--model", "default" ], args.first(4)
+      assert_equal [ "-p", "/notation a b; rm -rf x", "--model", "claude-opus-5-5", "--effort", "high" ], args.first(6)
       assert_equal [ "--disallowedTools", "Bash", "Read(research/auto/corpus/**)" ], args.last(3)
       assert_not_includes args[args.index("--allowedTools") + 1].split(","), "Bash"
 

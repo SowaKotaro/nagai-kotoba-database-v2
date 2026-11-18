@@ -13,6 +13,10 @@ class ClaudeResearchRunner
   COMMAND = "claude".freeze
   ALLOWED_TOOLS = "Skill,ToolSearch,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch".freeze
   DISALLOWED_TOOLS = [ "Bash", "Read(research/auto/corpus/**)" ].freeze
+  # モデルと effort は固定する(2026-11-17 オーナー判断)。default だと契約側の推奨に任せることになり、
+  # effort もローカルの settings.json 次第で揺れるので、run ごとの質を揃えるためにここで決め打ちする。
+  MODEL = "claude-opus-5-5".freeze
+  EFFORT = "high".freeze
   # 秒。1 段(種語 5 の /expand、その後の数十〜百数十語の /notation・/reading)が収まる長さ。
   TIMEOUT = 3 * 60 * 60
 
@@ -23,7 +27,7 @@ class ClaudeResearchRunner
 
   # prompt(例 "/notation research/auto/runs/…/input.txt --out …")を実行し、標準出力と標準エラーを log_path に書く。
   def call(prompt, log_path:)
-    command = [ @command, "-p", prompt, "--model", "default", "--allowedTools", ALLOWED_TOOLS,
+    command = [ @command, "-p", prompt, "--model", MODEL, "--effort", EFFORT, "--allowedTools", ALLOWED_TOOLS,
                 "--disallowedTools", *DISALLOWED_TOOLS ]
     pid = Process.spawn(*command, chdir: Rails.root.to_s, in: File::NULL, out: log_path.to_s, err: [ :child, :out ])
     waiter = Process.detach(pid)
