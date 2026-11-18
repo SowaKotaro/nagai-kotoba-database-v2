@@ -59,6 +59,11 @@ module NagaiKotobaDatabaseV2
     config.x.requests_enabled =
       ActiveModel::Type::Boolean.new.cast(ENV.fetch("REQUESTS_ENABLED", "true")) || false
 
+    # SNS の自動投稿(rake sns:post。docs/sns-autopost-setup.md)の認証情報。本番では Puma ではなく cron が読むので、
+    # cron から読み込む環境ファイルに置く(overview §8)。空の SNS には送らない。
+    config.x.sns_bluesky_identifier = ENV["SNS_BLUESKY_IDENTIFIER"]
+    config.x.sns_bluesky_app_password = ENV["SNS_BLUESKY_APP_PASSWORD"]
+
     # stylesheet_link_tag / javascript_include_tag が自動付与する
     # `Link: rel=preload` レスポンスヘッダー(HTTP/2 Server Push 向け)を無効化する。
     # 本番は HTTP/2 Push を使っておらず、ブラウザには preload ヒントとしてのみ解釈されるため、

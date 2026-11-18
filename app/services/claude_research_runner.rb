@@ -8,7 +8,7 @@
 # セキュリティ: コマンドは配列で渡してシェルを通さない。
 # 失敗(起動できない・時間切れ・異常終了)は false を返し、呼び出し側は段の失敗として数える。
 # 出力の良し悪しはここでは見ない(利用上限で途中終了しても 0 で終わることがあるので、ResearchRun が中身で確かめる)。
-# 種別: 外部コマンドのラッパー（app/services には外部プロセスを起動するクラスだけを置く）。
+# 種別: 外部コマンドのラッパー（app/services には外部とやり取りするクラスだけを置く）。
 class ClaudeResearchRunner
   COMMAND = "claude".freeze
   ALLOWED_TOOLS = "Skill,ToolSearch,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch".freeze

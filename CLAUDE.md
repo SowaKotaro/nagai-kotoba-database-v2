@@ -71,10 +71,10 @@
 
 ### 置き場所と設計
 - **Ruby のクラスは `app/models` に置く**（ActiveRecord と、値オブジェクト・クエリ／集計・書き込み処理・フォーム・調査 JSON の入出力）。
-  **`app/services` は外部プロセスを起動するラッパーだけ**（手本 `share_card_renderer.rb`）。`concerns` は複数のクラスが include する振る舞い。
+  **`app/services` は外部とやり取りするクラスだけ**（外部プロセスを起動するラッパーと、外部 API のクライアント。手本 `share_card_renderer.rb`・`bluesky_client.rb`）。`concerns` は複数のクラスが include する振る舞い。
   サブディレクトリは作らない（定数名が変わる）。
 - クラスの冒頭に `# 種別:` を書く。`app/models` は `値オブジェクト（DB に触れない）`・`クエリ・集計（読み取りとキャッシュ）`・`書き込み処理`・`フォーム`・
-  `調査 JSON の入出力` の 5 つ（ActiveRecord には書かない）、`app/services` は `外部コマンドのラッパー`。
+  `調査 JSON の入出力` の 5 つ（ActiveRecord には書かない）、`app/services` は `外部コマンドのラッパー`・`外部 API のクライアント`。
 - コントローラはリクエストの受け渡しに徹し、規則はモデルへ（Fat Controller / Fat Model を避ける）。既存の Rails / gem で済むものを自作しない。
   名前は意図が伝わるように付け、省略しすぎない。重複は適度にまとめるが、過度な抽象化より読みやすさを取る。
 - **同じ規則を 2 つの画面が名乗るなら、定義は 1 か所**（手本 `Admin::AnnotationQueue`、`WordSense::KEYWORD_MATCH_CONDITION`、
@@ -177,7 +177,7 @@
 |---|---|---|
 | `app/models/` | ActiveRecord と、ほかの Ruby のクラスすべて（冒頭に種別） | 値オブジェクト `char_type_pattern.rb`、集計 `published_sense_counts.rb`、取り込み `word_candidate_notation_import.rb` |
 | `app/models/concerns/` | 複数のモデルが include する振る舞い | `refreshes_word_metrics.rb`（代表値の焼き直し）・`tag_master.rb` |
-| `app/services/` | 外部コマンドのラッパー（`reading_extractor` と `morpheme_extractor` は MeCab、`share_card_renderer` は rsvg-convert、調査の自動実行の `claude_research_runner` と `llms_full_fetcher`） | `share_card_renderer.rb` |
+| `app/services/` | 外部コマンドのラッパー（`reading_extractor` と `morpheme_extractor` は MeCab、`share_card_renderer` は rsvg-convert、調査の自動実行の `claude_research_runner` と `llms_full_fetcher`）と、外部 API のクライアント（SNS の自動投稿の `bluesky_client`） | `share_card_renderer.rb` |
 | `app/controllers/` | 公開側（`words/` は共有カード）と `admin/`（`Admin::BaseController` を継承） | `words_controller.rb`・`admin/word_candidates_controller.rb` |
 | `app/controllers/concerns/` | 認証 `Authentication`、全件出力の版 `PublishedWordsDigest`、注釈のキュー `Admin::AnnotationQueue` | — |
 | `app/helpers/` | ビューに渡す値・属性・data ハッシュ | `word_requests_helper.rb` |

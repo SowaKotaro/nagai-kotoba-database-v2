@@ -12,6 +12,7 @@
 | これから作るもの | [`issues.md`](issues.md)（確定事項の記録も同じファイル） |
 | 検索からの流入を増やす計画（SEO） | [`seo-plan.md`](seo-plan.md)（2026-11-11 の調査と計画、2026-11-12 の実測は §12。入れたものは §5 の「実装の記録」と §10 の追記） |
 | SEO の月次の点検（手順・判定・これから入れる施策） | [`seo-operations.md`](seo-operations.md)（起動は `/seo`。月ごとの数字と判定の記録は [`seo-log.md`](seo-log.md)） |
+| SNS の自動投稿の準備（アカウントと API の鍵） | [`sns-autopost-setup.md`](sns-autopost-setup.md) |
 | これまでに入れたもの | [`history/changelog.md`](history/changelog.md) |
 | 記録の置き場（済んだこと・当時の計測。**現行の仕様ではない**） | [`history/`](history/README.md) |
 | 統計ページの紙面 | [`stats.md`](stats.md) |
@@ -193,6 +194,7 @@ bin/rails server
 | `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` | アプリ | 未設定 | 所有権確認の meta タグ（DNS 確認が使えないとき用） |
 | `MECAB_DICT` | アプリ | 未設定 | MeCab の辞書パス（`ReadingExtractor` が読む）。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | アプリ | credentials | `db:seed` が作る管理者。環境変数が優先 |
+| `SNS_BLUESKY_IDENTIFIER` / `SNS_BLUESKY_APP_PASSWORD` | アプリ | 未設定 | SNS の自動投稿（`bin/rails sns:post`）の Bluesky のハンドルとアプリパスワード。どちらかが空なら Bluesky には送らない。**本番では Puma ではなく cron が読む**ので、`~/.config/nagai-kotoba/sns.env` に置く（§11） |
 | `SURFACES_FILE` | アプリ | 未設定 | `bin/rails stats:morphemes` に本番相当の入力（1 行 1 語）を渡す |
 | `RAILS_MASTER_KEY` | Rails・Puma | `config/master.key` | credentials の復号鍵 |
 | `RAILS_ENV` | Rails・Puma | `development` | 動かす環境 |
@@ -207,7 +209,7 @@ bin/rails server
 | `SSH_PRIVATE_KEY` / `KNOWN_HOSTS` | Actions | — | deploy.yml が本番サーバへ SSH で入るための鍵と known_hosts |
 | `NAGAI_KOTOBA_DATABASE_V2_PASSWORD` | Actions | — | リポジトリの `database.yml` と `deploy.rb` が参照し、deploy.yml も渡すが、**本番では使われていない**（下記） |
 
-本番の環境変数は Puma の systemd unit（override.conf）に置いている（テストと Actions の行を除く）。
+本番の環境変数は Puma の systemd unit（override.conf）に置いている（テストと Actions の行と、cron が読む `SNS_*` を除く）。
 
 > **本番 DB の接続情報は環境変数ではない。** `config/database.yml` は Capistrano の `linked_files`
 > に入っているので、本番で読まれるのは**サーバ上の共有ファイル**で、そこにパスワードが直書きされている。
@@ -241,6 +243,10 @@ bin/rails server
   スキルが新しい権限（Bash など）を要るように変わると、黙って失敗する。ログは `research/harvest-cron.log`（git の外）。
   同じ crontab で、登録前の調査の自動実行 `bin/rails research:auto`（Issue 112）も動かしている。**本番には書き込まない**（一括登録は人が行う）。
   時刻と置き場所は [`research/README.md`](../research/README.md) の「自動実行」、ログは `research/auto/auto.log`（git の外）。
+- **SNS の自動投稿**: 本番サーバの crontab が毎時 `bin/sns-post`（鍵のファイル `~/.config/nagai-kotoba/sns.env` を読んで `bin/rails sns:post` を動かす）を動かし、
+  Bluesky に投稿する（X・Threads は追って足す）。ログは shared の `log/sns.log`。
+  同じ時刻に何度動かしても SNS ごとに 1 回しか投稿せず、失敗した SNS だけ送り直す。`DRY_RUN=1` で次に出す文面を確かめられる。
+  語の選び方と記録は `SnsRotation`・`SnsBroadcast`、アカウントと鍵の準備は [`sns-autopost-setup.md`](sns-autopost-setup.md)。
 - **claude.ai 用のスキル束**: `/reannotation` を claude.ai で使うための束は、`tools/claude-ai-skill/build.sh` が作る派生物。
   元は、再注釈と注釈のスキルの SKILL.md・[`annotation-guidelines.md`](annotation-guidelines.md)・`config/linguistic_features_glossary.yml`・
   注釈スキルの `schema.json` と `example.json`。**どれかを直したら、束を作り直してアップロードし直す**（アップロードはオーナー）。

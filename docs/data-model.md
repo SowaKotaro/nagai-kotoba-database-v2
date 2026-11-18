@@ -55,6 +55,7 @@ genres ──< genres (parent_id)               大 → 中 → 小 の隣接リ
 | `annotation_proposals` | Claude Code の調査結果の下書き。`payload`（JSON）と `status`。語に 1 件（`UNIQUE(word_id)`） |
 | `word_requests` / `word_request_items` | 公開側からの収録リクエスト。通（送信 1 回 ＋ IP・UA・リファラー）と語（1 件 ＋ 状態）に分ける |
 | `word_candidates` | 登録予定単語。登録前の前処理（仕分け → 拡張 → 表記 → 登録待ち → 登録済み）で、語が「次に何を待っているか」を `status` で持つ（仕分け待ち / 拡張待ち / 表記待ち / 表記の確認待ち / 登録待ち / 登録済み。脇に 保留 / 重複 / 不要）。/expand で集めた語は `seed_id`（元の語）と `root_id`（系統の根）を持ち、画面では元の語の系統として括って並ぶ。`expanded_at` は「拡張の元にして結果を取り込んだ」印、`notated_at` は /notation の結果を取り込んだ印（採用したとき表記待ちを飛ばして登録待ちへ進めるかをこれで決める）。不要にした語も消さず、`UNIQUE(surface)` で「一度見た語」の集合を兼ねる |
+| `sns_slots` / `sns_posts` | SNS の自動投稿（毎時）。枠は 1 時間に 1 行で、その時刻に出す語と何巡目かを持つ（`UNIQUE(slot_at)`）。投稿は枠 × SNS に 1 行（`UNIQUE(sns_slot_id, platform)`）で、送る前に「送信中」で作って二重投稿を防ぐ（`SnsBroadcast`） |
 | `admins` / `sessions` | 管理者認証（`has_secure_password` ＋ セッション。ログインは `username`） |
 
 ### 語種は「外来語」で束ねない
