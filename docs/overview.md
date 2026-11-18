@@ -195,6 +195,7 @@ bin/rails server
 | `MECAB_DICT` | アプリ | 未設定 | MeCab の辞書パス（`ReadingExtractor` が読む）。未設定なら neologd の既定パス → 既定辞書の順にフォールバック |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | アプリ | credentials | `db:seed` が作る管理者。環境変数が優先 |
 | `SNS_BLUESKY_IDENTIFIER` / `SNS_BLUESKY_APP_PASSWORD` | アプリ | 未設定 | SNS の自動投稿（`bin/rails sns:post`）の Bluesky のハンドルとアプリパスワード。どちらかが空なら Bluesky には送らない。**本番では Puma ではなく cron が読む**ので、`~/.config/nagai-kotoba/sns.env` に置く（§11） |
+| `SNS_X_API_KEY` / `SNS_X_API_KEY_SECRET` / `SNS_X_ACCESS_TOKEN` / `SNS_X_ACCESS_TOKEN_SECRET` | アプリ | 未設定 | SNS の自動投稿の X の鍵（OAuth 1.0a）。1 つでも空なら X には送らない。置き場所は Bluesky と同じ |
 | `SURFACES_FILE` | アプリ | 未設定 | `bin/rails stats:morphemes` に本番相当の入力（1 行 1 語）を渡す |
 | `RAILS_MASTER_KEY` | Rails・Puma | `config/master.key` | credentials の復号鍵 |
 | `RAILS_ENV` | Rails・Puma | `development` | 動かす環境 |
@@ -244,7 +245,7 @@ bin/rails server
   同じ crontab で、登録前の調査の自動実行 `bin/rails research:auto`（Issue 112）も動かしている。**本番には書き込まない**（一括登録は人が行う）。
   時刻と置き場所は [`research/README.md`](../research/README.md) の「自動実行」、ログは `research/auto/auto.log`（git の外）。
 - **SNS の自動投稿**: 本番サーバの crontab が毎時 `bin/sns-post`（鍵のファイル `~/.config/nagai-kotoba/sns.env` を読んで `bin/rails sns:post` を動かす）を動かし、
-  Bluesky に投稿する（X・Threads は追って足す）。ログは shared の `log/sns.log`。
+  Bluesky と X に投稿する（Threads は追って足す）。ログは shared の `log/sns.log`。
   同じ時刻に何度動かしても SNS ごとに 1 回しか投稿せず、失敗した SNS だけ送り直す。`DRY_RUN=1` で次に出す文面を確かめられる。
   語の選び方と記録は `SnsRotation`・`SnsBroadcast`、アカウントと鍵の準備は [`sns-autopost-setup.md`](sns-autopost-setup.md)。
 - **claude.ai 用のスキル束**: `/reannotation` を claude.ai で使うための束は、`tools/claude-ai-skill/build.sh` が作る派生物。

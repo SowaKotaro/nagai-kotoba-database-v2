@@ -31,7 +31,7 @@ class BlueskyClientTest < ActiveSupport::TestCase
     result = client([ session, http(200, { uri: "at://post", cid: "c1" }), http(200, { blob: { ref: "b" } }),
                       http(200, { uri: "at://reply", cid: "c2" }) ], requests).publish(MESSAGE)
 
-    assert_equal BlueskyClient::Result.new(remote_id: "at://post", error: nil), result
+    assert_equal SnsClient::Result.new(remote_id: "at://post", error: nil), result
     assert_equal %w[com.atproto.server.createSession com.atproto.repo.createRecord com.atproto.repo.uploadBlob
                     com.atproto.repo.createRecord], requests.map(&:first)
     assert_equal({ "identifier" => "nagaikotoba-bot.bsky.social", "password" => "secret-app-password" },
@@ -62,7 +62,7 @@ class BlueskyClientTest < ActiveSupport::TestCase
     no_image = SnsPostText::Message.new(body: MESSAGE.body, link: LINK.with(image: nil))
     requests = []
     reply_failed = client([ session, http(200, { uri: "at://post", cid: "c1" }), http(500, {}) ], requests).publish(no_image)
-    assert_equal BlueskyClient::Result.new(remote_id: "at://post", error: "返信: com.atproto.repo.createRecord: HTTP 500"), reply_failed
+    assert_equal SnsClient::Result.new(remote_id: "at://post", error: "返信: com.atproto.repo.createRecord: HTTP 500"), reply_failed
     assert_equal 3, requests.size, "画像が無ければ blob を上げない"
     assert_not_includes [ failed, timeout, reply_failed ].map(&:error).join, "secret-app-password"
   end
