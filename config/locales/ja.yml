@@ -198,10 +198,10 @@ ja:
         close: "閉じる"
         # パネルの末尾に添える、全部を並べたページへのリンク。%{name} は探し方の語(layouts.nav.*)
         more: "%{name}の一覧へ"
-        # 読みの長さの区切り(SearchWayMenus::READING_LENGTH_BANDS)
+        # 読みの長さの区切り(SearchWayMenus::READING_LENGTH_BANDS)。目盛りは数を立て、この単位を添える(「15文字」「20文字以上」)
         length:
-          exact: "%{count}文字"
-          at_least: "%{min}文字以上"
+          unit: "文字"
+          unit_at_least: "文字以上"
       featured: "今日の一語"
       featured_more: "詳しく見る"
       # 今日の一語の丸タグ。文字だけだと何の値か読めないのでラベルを添える(docs/design.md §5.5)

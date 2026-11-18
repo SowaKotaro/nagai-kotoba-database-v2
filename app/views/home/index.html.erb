@@ -35,7 +35,7 @@
       <button type="submit" class="hero-search__submit"><%= t("layouts.search_submit") %></button>
     <% end %>
 
-    <%# 探し方の入口(HomeHelper#home_search_ways)。選択肢を持つものは押すとその場で開くボタン(∨)、
+    <%# 探し方の入口(HomeHelper#home_search_ways)。選択肢を持つものは押すとその場で開くボタン(＋)、
         ほかはそのページへ進むボタン(→)。語と印だけを置き、説明やアイコンは添えない(docs/design.md §5.2)。
         描いた結果は、選択肢が変わるまで使い回す(HomeHelper#home_search_ways_cache_key) %>
     <% cache home_search_ways_cache_key do %>

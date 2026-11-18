@@ -1,6 +1,6 @@
 module HomeHelper
-  # ホームの検索バーの下に並べる探し方の入口(docs/design.md §5.2)。SANKOU! のトップと同じく、選択肢を持つものは
-  # 押すとその場で選択肢が開くボタン(∨)にし、そのほかはそのページへ進むボタン(→)にする。
+  # ホームの検索バーの下に並べる探し方の入口(docs/design.md §5.2)。選択肢を持つものは
+  # 押すとその場で選択肢が開くボタン(＋。開くと伸ばし棒「ー」になる)にし、そのほかはそのページへ進むボタン(→)にする。
   # 並びは、開くボタン(SearchWayMenus::KEYS の順)→ 索引 → ランダム → 詳細検索。
   # 探すページを持つ探し方は、ヘッダーの「検索」メニュー(ApplicationHelper#search_ways)と同じ語と行き先を使い、
   # 開いたパネルの末尾にそのページ(全部を並べたもの)へのリンクを添える。
@@ -12,7 +12,8 @@ module HomeHelper
 
         page = pages[key]
         { key:, label: page ? page[:label] : t("home.index.ways.#{key}"),
-          options: options.map { |option| [ search_way_option_label(option.name), words_path(option.params) ] },
+          layout: SEARCH_WAY_OPTION_LAYOUTS[key],
+          options: options.map { |option| search_way_option(option) },
           more: page && [ t("home.index.ways.more", name: page[:label]), page[:path] ] }
       end
       menus + [
@@ -30,12 +31,18 @@ module HomeHelper
     [ :home_search_ways, ActiveSupport::Digest.hexdigest(SearchWayMenus.all.to_s) ]
   end
 
-  # 選択肢の語。読みの長さだけは区切り(SearchWayMenus::READING_LENGTH_BANDS)から組む
-  def search_way_option_label(name)
-    return name unless name.is_a?(Range)
-    return t("home.index.ways.length.at_least", min: name.begin) if name.end.nil?
+  # 開いた札の升目の組み方(docs/design.md §5.2)。名前が長い(最長 16 字)ジャンルは列を減らして広い升にし、
+  # 読みの長さは数を立てた目盛りにする。ほかは既定の升目
+  SEARCH_WAY_OPTION_LAYOUTS = { genre: :wide, reading_length: :ruler }.freeze
 
-    t("home.index.ways.length.exact", count: name.begin)
+  # 選択肢 1 つ(語と行き先)。読みの長さだけは区切り(SearchWayMenus::READING_LENGTH_BANDS)から、目盛りに立てる数と単位を組む
+  def search_way_option(option)
+    path = words_path(option.params)
+    name = option.name
+    return { label: name, path: } unless name.is_a?(Range)
+
+    open_ended = name.end.nil?
+    { figure: name.begin, unit: t(open_ended ? "home.index.ways.length.unit_at_least" : "home.index.ways.length.unit"), open_ended:, path: }
   end
 
   # ランキングの下の「数字で見る長い言葉」に出す数(統計ページの数字の壁の行のキー)と、押したときに送る統計ページの章(id は stats/index)。
