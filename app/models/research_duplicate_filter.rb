@@ -3,12 +3,17 @@
 # - 表層形: 登録予定単語の照合(WordCandidateDuplicateCheck.key)で畳んで、完全に一致したら重複
 # - 読み: 完全に一致したら重複(一括登録 step3 は Levenshtein の類似度で警告するが、ここでは使わない。下記)
 # 照合の相手は、公開済みの語の写し(ResearchCorpus)・過去の run の台帳(ResearchLedger)・同じ run で先に通した語。
+# run を始める前の種語選び(ResearchPipeline#pick_seeds)でも、表層形だけで使う。
 # 自動実行では警告ではなく却下に使う。類似度では同じ系統の兄弟(読みが似る)まで落ちたので、
 # 同じ読みだけを落とす(オーナー判断、2026-11-14)。完全一致ならハッシュで引けて速い。
 # 種別: 値オブジェクト（DB に触れない）。
 class ResearchDuplicateFilter
-  # 一致した相手(理由の文に使う)。
-  Match = Data.define(:kind, :surface, :reading)
+  # 一致した相手。reason は却下・飛ばした理由として残す文(ResearchRun の却下と ResearchPipeline の種語選びが共有する)。
+  Match = Data.define(:kind, :surface, :reading) do
+    def reason
+      kind == :surface ? "重複: 表層形が〈#{surface}〉と一致" : "重複: 読みが〈#{surface}〉(#{reading})と一致"
+    end
+  end
 
   # known は [表層形, 読み or nil] の配列(照合の相手)。
   def initialize(known = [])

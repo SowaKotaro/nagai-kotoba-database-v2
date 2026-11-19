@@ -4,7 +4,8 @@
 #   1. 排他ロックを取る(前の起動がまだ動いていれば何もしない)
 #   2. 途中の run があれば続きから、無ければ前回の run から INTERVAL_DAYS 日経っていれば新しい run を始める
 #      (force: true のときは期限を見ない。スキル /auto から手で起動するとき)
-#      (公開語の写しを取り直し、seeds.txt から未使用の種語を SEEDS_PER_RUN 語取り出す。seeds_per_run: で手で起動するときだけ変えられる)
+#      (公開語の写しを取り直し、seeds.txt から未使用の種語を SEEDS_PER_RUN 語取り出す。seeds_per_run: で手で起動するときだけ変えられる。
+#       公開語・台帳の語と重複する種語は /expand に渡さずに飛ばし、その先の種語で数を満たす。pick_seeds)
 #   3. run を /expand → /notation → /reading と最後まで通す(段の間のふるいは ResearchRun)
 #   4. inbox に annotation の書き出しが置いてあれば /annotation に回す(ResearchAnnotationBatch)
 # 段が失敗したら(利用上限・時間切れ・出力が壊れていた)そこで止め、次の起動でやり直す。
@@ -61,13 +62,34 @@ class ResearchPipeline
     last.nil? || Date.current >= last.created_on + INTERVAL_DAYS
   end
 
-  # seeds.txt のうち、台帳で使っていない種語を先頭から count 語。
-  def next_seeds(count = @seeds_per_run)
+  # seeds.txt のうち、台帳で使っていない(使った・飛ばしたのどちらでもない)種語。並びは seeds.txt の順。
+  def unused_seeds
     return [] unless @seeds_path.exist?
 
     used = ledger.used_seeds
     @seeds_path.each_line.grep_v(SEED_SEPARATOR).map { |line| line.sub(SEED_PREFIX, "").strip }.reject(&:blank?).uniq
-               .reject { |seed| used.include?(seed) }.first(count)
+               .reject { |seed| used.include?(seed) }
+  end
+
+  # 未使用の種語を先頭から見て、count 語を選ぶ。公開語・台帳の語と表層形が重複する種語は飛ばし、その先の語で数を満たす
+  # (登録済みの種語を /expand に渡すと、同じ系統の語を集め直すだけで後段の重複に落ち、利用枠を使って何も増えない)。
+  # 種語には読みが無いので、照合は表層形だけ(読みの重複は /expand の後のふるいが見る)。
+  # 戻り値は [選んだ種語, 飛ばした [種語, 理由]]。飛ばした語は、count 語を選び終えるまでに見た語だけ。公開語の写しを読んでから呼ぶ。
+  def pick_seeds(count = @seeds_per_run)
+    filter = ResearchDuplicateFilter.new(known_words)
+    picked = []
+    skipped = []
+    unused_seeds.each do |seed|
+      break if picked.size >= count
+
+      if (match = filter.match(seed, nil))
+        skipped << [ seed, match.reason ]
+      else
+        filter.remember(seed, nil) # 畳むと同じになる種語(全角・半角の違いなど)を 1 run に 2 つ入れない
+        picked << seed
+      end
+    end
+    [ picked, skipped ]
   end
 
   private
@@ -79,14 +101,18 @@ class ResearchPipeline
   def start_run
     return log("新しい run はまだ始めません(前回から #{INTERVAL_DAYS} 日経っていない)") unless @force || due?
 
-    seeds = next_seeds
-    return log("seeds.txt に未使用の種語が残っていません") if seeds.empty?
+    return log("seeds.txt に未使用の種語が残っていません") if unused_seeds.empty?
 
     log("公開語の写し: #{@fetcher.call}")
     return log("公開語の写し(#{corpus_path})が無いため、run を始めません") unless corpus
 
-    run = ResearchRun.create(runs_root, seeds:, corpus_fetched_at: corpus_path.mtime, ledger:)
+    seeds, skipped = pick_seeds
+    # 飛ばした語は run を作ったときに台帳へ記録する。run を作らないときは記録せず、次の起動でまた見る(照合は速い)
+    return log("seeds.txt の未使用の種語 #{skipped.size} 語は、すべて公開語か台帳の語と重複していました") if seeds.empty?
+
+    run = ResearchRun.create(runs_root, seeds:, skipped_seeds: skipped, corpus_fetched_at: corpus_path.mtime, ledger:)
     log("run #{run.id} を始めます: #{seeds.join("、")}")
+    log("重複のため飛ばした種語(#{skipped.size} 語): #{skipped.map(&:first).join("、")}") if skipped.any?
     run
   end
 
@@ -126,13 +152,13 @@ class ResearchPipeline
     @corpus = ResearchCorpus.load(corpus_path)
   end
 
-  # 重複照合の相手: 公開済みの語の読みすべてと、台帳の語(この run の行を除く。前の段で落とした兄弟に、
+  # 重複照合の相手: 公開済みの語の読みすべてと、台帳の語(段のふるいでは、この run の行を除く。前の段で落とした兄弟に、
   # 通した側が次の段で当たらないように。この run の中の照合は ResearchRun が順に足していく)。
-  def known_words(run)
+  def known_words(run = nil)
     published = Array(corpus).flat_map do |entry|
       entry.readings.empty? ? [ [ entry.surface, nil ] ] : entry.readings.map { |reading| [ entry.surface, reading ] }
     end
-    published + ledger.known_words(except_run: run.id)
+    published + ledger.known_words(except_run: run&.id)
   end
 
   def relative(path) = Pathname(path).relative_path_from(Rails.root).to_s
