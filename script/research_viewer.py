@@ -106,12 +106,15 @@ def stage_items(directory, stage, output):
 
 
 def attach_status(items, rejected):
-    """却下の行(段・表層形)を突き合わせ、各行に却下の理由を付ける(無ければ通過)。"""
+    """却下の行(段・表層形)を突き合わせ、各行に却下の理由を付ける(無ければ通過)。
+    却下の 1 行は語 1 つにだけ当てる。表記の段で 2 語が同じ表層形に揃うと、ふるいは先の語を通して後の語を
+    run 内の重複で落とす(ResearchRun#sift_notation)ので、後ろの語から当てる(前から当てると通った語が却下に見える)。"""
     reasons = {}
     for row in rejected:
-        reasons.setdefault(row["surface"], row["reason"])
-    for item in items:
-        item["reason"] = next((reasons[name] for name in item["match"] if name in reasons), None)
+        reasons.setdefault(row["surface"], []).append(row["reason"])
+    for item in reversed(items):
+        name = next((name for name in item["match"] if reasons.get(name)), None)
+        item["reason"] = reasons[name].pop() if name else None
     return items
 
 
@@ -241,6 +244,11 @@ summary::-webkit-details-marker { display: none; }
 .cell.is-adopted { background: #fff; box-shadow: inset 2px 0 0 var(--pass); }
 .cell.is-adopted .word { color: var(--ink); font-weight: 800; } .cell.is-adopted .badge { text-decoration: line-through; }
 .cell > details > summary { display: flex; }
+/* その逆: 読みの段まで通った語を、人が不採用に変える(一括登録のコピーから外す) */
+.drop { display: inline-flex; align-items: center; margin-top: 4px; font-size: 13px; color: var(--sub); user-select: none; }
+.drop:has(input:checked) { color: var(--reject); font-weight: 800; }
+.cell.is-dropped { background: #fffafa; box-shadow: inset 2px 0 0 var(--reject); }
+.cell.is-dropped .word { color: var(--sub); font-weight: 400; text-decoration: line-through; }
 """
 
 # 一括コピー。page-data の runs(run ごとの register と words)のうち、チェックした run(一覧)か、
@@ -250,6 +258,7 @@ const data = JSON.parse(document.getElementById("page-data").textContent);
 // 人の判断(確認済みの run・採用に変えた語)。DB もファイルも書けないので、ブラウザの localStorage に持つ
 const REVIEWED_KEY = "research-viewer:reviewed";
 const ADOPTED_KEY = "research-viewer:adopted"; // 「run\\t読みの段の input」の集合
+const DROPPED_KEY = "research-viewer:dropped"; // 通った語のうち、人が不採用に変えたもの(同じ形の集合)
 function loadSet(key) {
   try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); } catch (_) { return new Set(); }
 }
@@ -259,6 +268,7 @@ function saveSet(key, set) {
 const loadReviewed = () => loadSet(REVIEWED_KEY);
 const saveReviewed = (set) => saveSet(REVIEWED_KEY, set);
 const adopted = loadSet(ADOPTED_KEY);
+const dropped = loadSet(DROPPED_KEY);
 function chosenRuns() {
   const boxes = [...document.querySelectorAll("input[name=run]")];
   return boxes.length ? boxes.filter((box) => box.checked).map((box) => box.value) : Object.keys(data.runs);
@@ -267,13 +277,14 @@ function chosenRuns() {
 function adoptedWords(id) {
   return Object.entries(data.runs[id].adoptable || {}).filter(([input]) => adopted.has(`${id}\\t${input}`)).map(([, word]) => word);
 }
-// 通った語と採用した語を、読みの段の入力の並び(order。系統ごとに続いている)に戻す。
+// 通った語(不採用に変えた語を除く)と採用した語を、読みの段の入力の並び(order。系統ごとに続いている)に戻す。
 // 末尾に足すと一括登録の id が系統から離れ、id 順の注釈の書き出しで同じ系統が別の束に割れる。
 // register と words は ResearchRun#finish が同じ順に書くので、i 番目どうしが同じ語。order に無い語(古い run)は末尾に残す
 function entriesOf(id) {
   const run = data.runs[id];
   const rank = new Map((run.order || []).map((surface, index) => [surface, index]));
   const entries = run.register.map((surface, index) => ({ surface, word: run.words[index] }))
+    .filter((entry) => !dropped.has(`${id}\\t${entry.surface}`))
     .concat(adoptedWords(id).map((word) => ({ surface: word.input, word })));
   const rankOf = (entry) => rank.get(entry.surface) ?? Infinity;
   return entries.sort((a, b) => rankOf(a) - rankOf(b));
@@ -284,30 +295,45 @@ function payload(kind, runs) {
   if (kind === "register") return runs.flatMap(registerOf).join("\\n") + "\\n";
   return JSON.stringify({ version: "1", words: runs.flatMap(wordsOf) }, null, 2) + "\\n";
 }
-// 採用の切り替え(run のページと、落ちた語のページ)。同じ語の印をそろえ、件数とプレビューを書き直す
-function applyAdopted() {
+// run の、不採用に変えた語の数(register にある語だけを数える。古い印は数えない)
+function droppedCount(id) {
+  return data.runs[id].register.filter((surface) => dropped.has(`${id}\\t${surface}`)).length;
+}
+// 欄の印と、行の「登録」の ✓ をそろえる(registered: 一括登録のコピーに入るか)
+function markLane(box, cellClass, registered) {
+  box.closest(".cell")?.classList.toggle(cellClass, box.checked);
+  const lane = box.closest(".lane");
+  if (!lane) return;
+  lane.classList.toggle("is-stopped", !registered);
+  const result = lane.querySelector(".result");
+  result.textContent = registered ? "✓" : ""; result.classList.toggle("pass", registered);
+}
+// 採用・不採用の切り替え(run のページと、落ちた語のページ)。同じ語の印をそろえ、件数とプレビューを書き直す
+function applyJudgements() {
   document.querySelectorAll("input[name=adopt]").forEach((box) => {
     box.checked = adopted.has(box.value);
-    box.closest(".cell")?.classList.toggle("is-adopted", box.checked);
-    const lane = box.closest(".lane");
-    if (lane) {
-      lane.classList.toggle("is-stopped", !box.checked);
-      const result = lane.querySelector(".result");
-      result.textContent = box.checked ? "✓" : ""; result.classList.toggle("pass", box.checked);
-    }
+    markLane(box, "is-adopted", box.checked);
+  });
+  document.querySelectorAll("input[name=drop]").forEach((box) => {
+    box.checked = dropped.has(box.value);
+    markLane(box, "is-dropped", !box.checked);
   });
   document.querySelectorAll("[data-adopted-count]").forEach((slot) => {
     const id = slot.dataset.adoptedCount;
-    const count = data.runs[id] ? adoptedWords(id).length : 0;
-    slot.textContent = count ? ` + 採用 ${count}` : "";
+    const adds = data.runs[id] ? adoptedWords(id).length : 0;
+    const drops = data.runs[id] ? droppedCount(id) : 0;
+    slot.textContent = (adds ? ` + 採用 ${adds}` : "") + (drops ? ` − 不採用 ${drops}` : "");
   });
   updatePreview();
 }
+const JUDGEMENTS = { adopt: [adopted, ADOPTED_KEY], drop: [dropped, DROPPED_KEY] };
 document.addEventListener("change", (event) => {
-  if (!event.target.matches("input[name=adopt]")) return;
-  if (event.target.checked) adopted.add(event.target.value); else adopted.delete(event.target.value);
-  saveSet(ADOPTED_KEY, adopted);
-  applyAdopted();
+  const judgement = JUDGEMENTS[event.target.matches("input[name=adopt], input[name=drop]") && event.target.name];
+  if (!judgement) return;
+  const [set, key] = judgement;
+  if (event.target.checked) set.add(event.target.value); else set.delete(event.target.value);
+  saveSet(key, set);
+  applyJudgements();
 });
 // コピーする中身のプレビュー(チェックした run が変わるたびに書き直す)
 function updatePreview() {
@@ -322,7 +348,7 @@ function updatePreview() {
 document.addEventListener("change", (event) => {
   if (event.target.matches("input[name=run], input[name=preview]")) updatePreview();
 });
-applyAdopted();
+applyJudgements();
 // 一覧の行(data-href)は、行のどこを押しても run のページへ行く。リンクとチェックボックス(とそのラベル)は除く
 document.addEventListener("click", (event) => {
   const row = event.target.closest("tr[data-href]");
@@ -500,7 +526,7 @@ def stage_summary(found):
 
 def cell(item, word, details, mark="", adopt=""):
     """1 段の欄。畳んだ状態は語と札だけ。押すと却下の理由・付帯の値・メモが開く。
-    adopt(採用の切り替え)があれば、details の外に並べる(summary の中だと、押したときに欄も開閉する)。"""
+    adopt(採用・不採用の切り替え)があれば、details の外に並べる(summary の中だと、押したときに欄も開閉する)。"""
     rejected = item["reason"]
     badge = f"<span class=\"badge\">{e(short_reason(item))}</span>" if rejected else mark
     reason = f"<div class=\"reason\">{e(rejected)}</div>" if rejected else ""
@@ -518,6 +544,12 @@ def adopt_box(run_id, item):
             "採用に変える</label>")
 
 
+def drop_box(run_id, item):
+    """読みの段まで通った語を不採用に変える切り替え(値は「run\\tinput」。register の語と同じ文字列。JS が localStorage に覚える)。"""
+    return (f"<label class=\"drop\"><input type=\"checkbox\" name=\"drop\" value=\"{e(run_id)}\t{e(item['input'])}\">"
+            "不採用にする</label>")
+
+
 def expand_cell(item):
     return cell(item, item["surface"], f"<div class=\"meta\">{e(item['reading'])}</div>")
 
@@ -530,12 +562,12 @@ def notation_cell(item):
 
 
 def reading_cell(item, run_id=None):
-    """run_id を渡すと(run が終わっているとき)、落ちた語に採用の切り替えを付ける。"""
+    """run_id を渡すと(run が終わっているとき)、落ちた語に採用の、通った語に不採用の切り替えを付ける。"""
     alternatives = "、".join(a if isinstance(a, str) else str(a.get("reading", a)) for a in item["alternatives"])
     details = (f"<div class=\"meta\">{e(item['surface'])} · {e(item['confidence'])}</div>"
                + (f"<div class=\"meta\">別の読み: {e(alternatives)}</div>" if alternatives else ""))
-    adopt = adopt_box(run_id, item) if run_id and item["reason"] else ""
-    return cell(item, item["reading"], details, adopt=adopt)
+    toggle = "" if not run_id else adopt_box(run_id, item) if item["reason"] else drop_box(run_id, item)
+    return cell(item, item["reading"], details, adopt=toggle)
 
 
 def lane_html(lane, items, run_id=None):
@@ -583,8 +615,9 @@ def render_run(run_id, state, delivered):
     if delivered:
         parts.append(f"<div class=\"card\"><b>一括登録に貼る</b>({len(delivered['register'])} 語"
                      f"<span class=\"pass\" data-adopted-count=\"{e(run_id)}\"></span>)"
-                     "<p class=\"sub\">読みの段で落ちた語は「採用に変える」で、このコピーの末尾に読みの調査ごと足せる"
-                     "(このブラウザに覚える。読み揺れの語は step2 で別の読みから選ぶ)。</p>"
+                     "<p class=\"sub\">読みの段で落ちた語は「採用に変える」で、このコピーに読みの調査ごと足せる"
+                     "(読み揺れの語は step2 で別の読みから選ぶ)。通ったけれど思っていたのと違う語は「不採用にする」で、"
+                     "このコピーから外せる(どちらもこのブラウザに覚え、一覧のまとめてコピーにも効く)。</p>"
                      f"{COPY_BUTTONS}</div>")
     parts.append(render_board(groups, items, run_id if delivered else None))
     data = {"runs": {run_id: delivered} if delivered else {}}
