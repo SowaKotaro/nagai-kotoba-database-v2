@@ -70,7 +70,7 @@ def reason_kind(reason):
 
 
 def remaining_seeds():
-    """seeds.txt のうち、台帳で使っていない種語(ResearchPipeline#next_seeds と同じ読み方)。"""
+    """seeds.txt のうち、台帳で使っていない種語(ResearchPipeline#unused_seeds と同じ読み方。重複で飛ばす種語もまだ数に入る)。"""
     used = set()
     for line in (read_text(AUTO / "ledger.tsv") or "").splitlines():
         cells = line.split("\t")

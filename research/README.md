@@ -107,6 +107,9 @@ seeds.txt ─▶ /expand ─[コード]─▶ /notation ─[コード]─▶ /re
   - 読み: 確信度が high でない語、読みが揺れる語、読みが基準に届かない語（`ReadingLengthCheck`。アプリと同じ数え方）。
   - 重複（どの段でも）: 表層形を畳んだ完全一致と、読みの完全一致（`ResearchDuplicateFilter`。類似度は使わない）を、
     公開語の写し・台帳・同じ run の中と照合する。
+- **種語の選び方**: seeds.txt の未使用の種語を先頭から 5 語(`ResearchPipeline::SEEDS_PER_RUN`)取る。表層形が公開語の写し・台帳の語と
+  重複する種語は /expand に渡さずに飛ばし(登録済みの語を拡張し直しても、集めた兄弟は後段の重複に落ちるだけで利用枠を使う)、
+  その先の種語で数を満たす。飛ばした種語は run の `summary.md` と台帳(結果 `skipped`)に残り、次の run でも取り出さない。
 - **起動**: cron で動かす。新しい run は前回から 2 日経っていれば始め（日付で比べる）、途中で失敗した run は次の起動で続きから進める。
   同じ段で 3 回失敗したら止める。起動の時刻を逃しても、次に cron が動いたときに追いつく。
 - **手で今すぐ回す**: Claude Code で `/auto`(スキル `research-auto-run`)。中身は `bin/rails research:auto FORCE=1` で、期限前でも新しい run を始める
@@ -128,7 +131,7 @@ seeds.txt ─▶ /expand ─[コード]─▶ /notation ─[コード]─▶ /re
 | パス | 中身 |
 | --- | --- |
 | `auto/runs/<日時>/` | run 1 回ぶん。`summary.md`（件数と却下の内訳）・`rejected.tsv`（却下した語と理由）・`register.txt`・`reading.json`・段ごとの入出力 |
-| `auto/ledger.tsv` | 台帳。使った種語と、却下した語・登録用に出した語（次の run の照合の相手。消すと同じ語をまた調べる） |
+| `auto/ledger.tsv` | 台帳。使った種語・重複で飛ばした種語と、却下した語・登録用に出した語（次の run の照合の相手。消すと同じ語をまた調べる） |
 | `auto/corpus/llms-full.txt` | 公開語の写し。新しい run の前に、司令塔が公開側から条件付きで取り直す（更新が無ければ転送しない） |
 | `auto/inbox/annotation.json` | 人が置く注釈の書き出し（拾ったら `auto/annotation/<日時>/` へ移す） |
 | `auto/auto.log` | cron の出力 |

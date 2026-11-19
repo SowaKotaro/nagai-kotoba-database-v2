@@ -2,7 +2,7 @@
 # 一括登録に貼る register.txt(step1)と reading.json(step2)を作る。段を動かすのは ResearchPipeline。
 #
 # 入出力は run のディレクトリに段ごとに置き、上書きしない(途中で止まっても、どこまで進んだかと何を落としたかが残る):
-#   state.json            段・失敗の回数・種語・生き残っている語
+#   state.json            段・失敗の回数・種語(と、重複として飛ばした種語)・生き残っている語
 #   01-expand/ 02-notation/ 03-reading/   各段の input.txt(スキルに渡す)と、スキルが書く JSON(OUTPUT_FILES)と人が読む txt
 #   rejected.tsv          却下した語(段・表層形・読み・理由)。台帳(ResearchLedger)にも同じ行を足す
 #   summary.md            段ごとの件数と却下の内訳(人が読む版)
@@ -25,17 +25,20 @@ class ResearchRun
 
   attr_reader :directory
 
-  # 種語は台帳に「使った」と記録する(次の run で同じ種語を取り出さないように)。
-  def self.create(root, seeds:, corpus_fetched_at:, ledger:)
+  # 種語は台帳に「使った」と記録する(次の run で同じ種語を取り出さないように)。skipped_seeds([種語, 理由])は、
+  # 種語選びで重複として飛ばした語。調べずに「飛ばした」と記録し、次の run でも取り出さない。
+  def self.create(root, seeds:, corpus_fetched_at:, ledger:, skipped_seeds: [])
     directory = new_directory(root)
     run = new(directory, {
       "created_on" => Date.current.iso8601, "corpus_fetched_at" => corpus_fetched_at&.iso8601,
       "stage" => STAGES.first, "attempts" => 0, "next_id" => seeds.size + 1,
       "seeds" => seeds.each_with_index.map { |surface, index| { "id" => index + 1, "surface" => surface } },
+      "skipped_seeds" => skipped_seeds.map { |surface, reason| { "surface" => surface, "reason" => reason } },
       "words" => [], "report" => []
     })
     run.save
-    ledger.append(seeds.map { |surface| run.ledger_row("used", { "surface" => surface }, nil, kind: "seed") })
+    ledger.append(seeds.map { |surface| run.ledger_row("used", { "surface" => surface }, nil, kind: "seed") } +
+                  skipped_seeds.map { |surface, reason| run.ledger_row("skipped", { "surface" => surface }, reason, kind: "seed") })
     run
   end
 
@@ -67,6 +70,7 @@ class ResearchRun
   def attempts = @state["attempts"]
   def finished? = [ DONE, ABORTED ].include?(stage)
   def seeds = @state["seeds"]
+  def skipped_seeds = Array(@state["skipped_seeds"]) # 種語を飛ばすようになる前の run には無い
   def words = @state["words"]
 
   def input_path = stage_directory.join("input.txt")
@@ -201,7 +205,7 @@ class ResearchRun
     rejected = []
     items.each_with_index do |item, index|
       reason = yield(item, index)
-      reason ||= duplicate_reason(filter.match(item["surface"], item["reading"]))
+      reason ||= filter.match(item["surface"], item["reading"])&.reason
       if reason
         rejected << [ item, reason ]
       else
@@ -210,12 +214,6 @@ class ResearchRun
       end
     end
     [ passed, rejected ]
-  end
-
-  def duplicate_reason(match)
-    return unless match
-
-    match.kind == :surface ? "重複: 表層形が〈#{match.surface}〉と一致" : "重複: 読みが〈#{match.surface}〉(#{match.reading})と一致"
   end
 
   # 出力 JSON の配列を取り出し、入力の語がすべて返っているかを確かめる。欠けていれば nil。
@@ -266,7 +264,9 @@ class ResearchRun
 
   def summary
     lines = [ "# 調査の自動実行 #{id}", "", "- 状態: #{stage}(失敗 #{attempts} 回)",
-              "- 種語: #{seeds.map { |seed| seed["surface"] }.join("、")}", "- 公開語の写し: #{@state["corpus_fetched_at"] || "なし"}", "" ]
+              "- 種語: #{seeds.map { |seed| seed["surface"] }.join("、")}", "- 公開語の写し: #{@state["corpus_fetched_at"] || "なし"}" ]
+    lines << "- 飛ばした種語: #{skipped_seeds.map { |seed| "#{seed["surface"]}(#{seed["reason"]})" }.join("、")}" if skipped_seeds.any?
+    lines << ""
     @state["report"].each do |report|
       lines << "## #{report["stage"]}: #{report["input"]} 語 → 通過 #{report["passed"]} 語"
       report["rejected"].each { |reason, count| lines << "- 却下 #{reason}: #{count} 語" }

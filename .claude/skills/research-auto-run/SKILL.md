@@ -21,6 +21,7 @@ cron が動かしている `bin/rails research:auto`(Issue 112)を、このセ�
 
 1. 起動する前に、ユーザーへ次の 2 点を一言で伝える(確認は待たずに進めてよい)。
    - seeds.txt の未使用の種語を先頭から `ResearchPipeline::SEEDS_PER_RUN` 語(引数に数があればその数)使う(台帳に記録され、cron の次の run はその続きから取る)。
+     公開語・台帳の語と重複する種語は飛ばして、その先の種語で数を満たす。
    - 新しい run を始めると、cron が次に新しい run を始めるのは、その日から `INTERVAL_DAYS` 日後になる(期限は最後の run の日付で数える)。
 2. Bash で、**バックグラウンド実行**(`run_in_background: true`)で起動する。数分〜数十分かかる(段ごとの上限は `ClaudeResearchRunner::TIMEOUT`)。
    - 既定: `bin/rails research:auto FORCE=1 >> research/auto/auto.log 2>&1`
@@ -31,7 +32,7 @@ cron が動かしている `bin/rails research:auto`(Issue 112)を、このセ�
 3. 終わったら `tail -n 40 research/auto/auto.log` で、今回の起動の行を読む。
 4. 結果をユーザーに数行で返す。
    - 新しい run を通し切った(`done`): `research/auto/runs/<run>/summary.md` を Read し、種語・段ごとの件数・却下の内訳を要約する。
-     続けて、人がやること(一括登録 step1 に `register.txt`、step2 に `reading.json` を貼る)と、その 2 つのパスを示す。
+     重複で飛ばした種語があれば(summary.md の「飛ばした種語」)、その数も添える。続けて、人がやること(一括登録 step1 に `register.txt`、step2 に `reading.json` を貼る)と、その 2 つのパスを示す。
    - 段に失敗した: ログの行(何回目か・run を止めたか)と、その段の `claude.log` のパス(`research/auto/runs/<run>/<段>/claude.log`)を示す。
      利用上限で落ちたときは、次の起動(cron か、もう一度このスキル)で続きから進む。
    - 「前の起動がまだ動いている」: cron などの起動と重なった。何もしていない。

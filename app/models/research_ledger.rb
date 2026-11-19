@@ -2,7 +2,8 @@
 # 本番の登録予定単語が不要にした語を残して再流入を防ぐのと同じ役目を、ローカルで持つ
 # (自動実行は本番に書き込まないので、本番の候補の一覧には載らない)。
 #
-# 行: 記録日 / run / 種類(seed=使った種語・word=調べた語) / 結果(output=登録用に出した・rejected=却下) / 段 / 表層形 / 読み / 理由
+# 行: 記録日 / run / 種類(seed=種語・word=調べた語) / 結果(種語は used=使った・skipped=重複として飛ばした、
+#     語は output=登録用に出した・rejected=却下) / 段 / 表層形 / 読み / 理由
 # 1 語は、却下された段か、登録用に出した時点で 1 行になる。追記だけで、書き換えない。
 # 種別: 調査 JSON の入出力。
 class ResearchLedger
@@ -29,7 +30,7 @@ class ResearchLedger
     rows.select { |row| row.kind == "word" && row.run_id != except_run }.map { |row| [ row.surface, row.reading ] }
   end
 
-  # 使った種語の表層形。
+  # 使った種語と、飛ばした種語の表層形(どちらも次の run で取り出さない)。
   def used_seeds
     rows.select { |row| row.kind == "seed" }.to_set(&:surface)
   end

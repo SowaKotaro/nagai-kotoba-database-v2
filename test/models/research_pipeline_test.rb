@@ -76,6 +76,43 @@ class ResearchPipelineTest < ActiveSupport::TestCase
     end
   end
 
+  test "公開語・台帳の語と重複する種語は /expand に渡さずに飛ばし、その先の種語で数を満たして、飛ばした語も台帳に記録する" do
+    # 種語ニは公開済み(seeds.txt にはひらがなで書いてあっても畳んで当たる)、種語ヨンは前の run で調べた語
+    write_corpus("種語ニ")
+    @seeds_path.write(@seeds_path.read.sub("種語ニ", "種語に").sub("種語ゴ", "種語ゴ\n種語・ゴ"))
+    ResearchLedger.new(@dir.join("auto/ledger.tsv")).append([
+      ResearchLedger::Row.new(recorded_on: "2026-11-01", run_id: "20261101-030000", kind: "word", outcome: "rejected", stage: "notation",
+                              surface: "種語ヨン", reading: nil, reason: "立項スコアが低い(3)")
+    ])
+
+    stub_method(ReadingExtractor, :available?, -> { false }) do
+      pipeline(seeds_per_run: 3).call
+      run = runs.sole
+      # 選んだ種語も照合の相手になる(畳むと種語ゴと同じ「種語・ゴ」は、次の run で飛ばす)
+      assert_equal %w[種語イチ 種語サン 種語ゴ], run.seeds.map { |seed| seed["surface"] }
+      assert_equal [ [ "種語に", "重複: 表層形が〈種語ニ〉と一致" ], [ "種語ヨン", "重複: 表層形が〈種語ヨン〉と一致" ] ],
+                   run.skipped_seeds.map { |seed| seed.values_at("surface", "reason") }
+      assert_equal 3, @runner.prompts.first.then { |prompt| Rails.root.join(prompt.split(" ")[1]).readlines.size }
+      assert_includes run.directory.join("summary.md").read, "飛ばした種語: 種語に(重複: 表層形が〈種語ニ〉と一致)、種語ヨン"
+      assert_includes @output.string, "重複のため飛ばした種語(2 語): 種語に、種語ヨン"
+      skipped_rows = ResearchLedger.new(@dir.join("auto/ledger.tsv")).rows.select { |row| row.outcome == "skipped" }
+      assert_equal [ [ "seed", run.id ] ], skipped_rows.map { |row| [ row.kind, row.run_id ] }.uniq
+
+      # 次の run は飛ばした語を見直さず、残り(畳むと種語ゴになる語と、種語ロク)から選ぶ
+      travel ResearchPipeline::INTERVAL_DAYS.days
+      pipeline(seeds_per_run: 3).call
+      assert_equal [ "種語ロク" ], runs.last.seeds.map { |seed| seed["surface"] }
+      assert_equal [ "種語・ゴ" ], runs.last.skipped_seeds.map { |seed| seed["surface"] }
+
+      # 残りがすべて重複なら run を始めない(記録もしないので、次の起動でまた見る)
+      @seeds_path.write("種語イチ\n種語ニ\n")
+      travel ResearchPipeline::INTERVAL_DAYS.days
+      pipeline.call
+      assert_equal 2, runs.size
+      assert_includes @output.string, "未使用の種語 1 語は、すべて公開語か台帳の語と重複していました"
+    end
+  end
+
   test "段が失敗したらそこで止め、次の起動で期限に関係なく続きから進める" do
     @failing << "/notation"
     stub_method(ReadingExtractor, :available?, -> { false }) do
@@ -130,16 +167,16 @@ class ResearchPipelineTest < ActiveSupport::TestCase
 
   private
 
-  def pipeline(fetcher: FakeFetcher.new(:not_modified), force: false)
-    ResearchPipeline.new(root: @dir.join("auto"), seeds_path: @seeds_path, runner: @runner, fetcher:, output: @output, force:)
+  def pipeline(fetcher: FakeFetcher.new(:not_modified), force: false, seeds_per_run: ResearchPipeline::SEEDS_PER_RUN)
+    ResearchPipeline.new(root: @dir.join("auto"), seeds_path: @seeds_path, runner: @runner, fetcher:, output: @output, force:, seeds_per_run:)
   end
 
   def runs = ResearchRun.all(@dir.join("auto/runs"))
 
-  def write_corpus
+  def write_corpus(*surfaces)
     path = @dir.join("auto/corpus/llms-full.txt")
     FileUtils.mkdir_p(path.dirname)
-    path.write("公開している全 0 語の内容を、1ファイルにまとめています。\n")
+    path.write("公開している全 #{surfaces.size} 語の内容を、1ファイルにまとめています。\n" + surfaces.map { |surface| "### #{surface}\n" }.join)
   end
 
   # 全語を通す応答。@failing に入れたコマンドは何も書かずに失敗する。
