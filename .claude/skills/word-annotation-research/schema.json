@@ -99,7 +99,11 @@
             "description": "【旧形式・使わない】senses の variants に入れる"
           },
           "confidence": { "enum": ["high", "medium", "low"], "description": "low のときは notes 必須。語全体のメタ" },
-          "notes": { "type": "string", "description": "判断に迷った点・確認してほしい点。語全体のメタ" }
+          "notes": { "type": "string", "description": "判断に迷った点・確認してほしい点。語全体のメタ" },
+          "console_fixes": {
+            "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1,
+            "description": "「提案を反映」では入らず、オーナーがコンソールで手で直す点(1要素=1つの手直しを「何を・どこで・どうする」の1文で)。特徴の2か所目以降・既存の特徴/別表記/語義の削除・語の読みの訂正・表層形の訂正だけに使う。迷い・確認依頼は notes へ。無ければキーごと省く。コンソールで赤い札が出て、一括承認の対象から外れる。語全体のメタ"
+          }
         }
       }
     }

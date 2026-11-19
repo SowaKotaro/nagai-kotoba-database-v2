@@ -169,14 +169,21 @@ class Admin::AnnotationsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select ".ann-proposal__entry", text: "立項 5/5"
     assert_select ".ann-proposal__entry--concern", count: 0
+    assert_select ".ann-proposal__console-fix", count: 0
+    assert_select ".ann-proposal__console-fixes", count: 0
 
     proposal = annotation_proposals(:haruhi_proposal)
     proposal.update!(payload: proposal.payload.merge(
-      "entry_score" => 2, "entry_notes" => "公然性を欠く。第三者が確認できる媒体に存在しない。"
+      "entry_score" => 2, "entry_notes" => "公然性を欠く。第三者が確認できる媒体に存在しない。",
+      "console_fixes" => [ "別表記「ハルヒ」を削除", "表層形を「涼宮ハルヒの憂鬱」に直す" ]
     ))
     get admin_annotation_path(@word)
     assert_select ".ann-proposal__entry--concern", text: "立項 2/5"
     assert_select ".ann-proposal__notes--entry", text: /公然性を欠く/
+    # コンソールでの手直しは、見出しの赤い札(件数つき)と一覧で出す
+    assert_select ".ann-proposal__head .ann-proposal__console-fix", text: "要手直し 2"
+    assert_select ".ann-proposal__console-fixes li", count: 2
+    assert_select ".ann-proposal__console-fixes li", text: "別表記「ハルヒ」を削除"
 
     # 提案の無い語には出ない
     get admin_annotation_path(words(:pending_bermuda))

@@ -5,7 +5,7 @@
 #
 # 語義は複数持てる(Issue 41: 同一表記の同音異義語)。payload["senses"] が配列ならそれを
 # 語義ごとの提案とみなし、無ければ従来のトップレベル形式(単一語義)を1件として扱う。
-# confidence / notes / entry_score / entry_notes は語全体のメタで語義に依らない。
+# confidence / notes / entry_score / entry_notes / console_fixes は語全体のメタで語義に依らない。
 class AnnotationProposal < ApplicationRecord
   belongs_to :word
 
@@ -19,7 +19,8 @@ class AnnotationProposal < ApplicationRecord
   SENSE_KEYS = %w[reading meaning genre_path genre_new entity_type part_of_speech
                   word_origins linguistic_features variants].freeze
   # 語全体のメタ(語義に依らない)。並びは再調査の書き出し(ReannotationExport)の出力順。
-  META_KEYS = %w[entry_score entry_notes confidence notes].freeze
+  # console_fixes は「提案を反映」では入らず、オーナーがコンソールで手で直す点(文字列の配列)。
+  META_KEYS = %w[entry_score entry_notes confidence notes console_fixes].freeze
   # 旧形式(senses を使わずトップレベルに単一語義を並べる)で読む語義のキー。
   # トップレベルの reading と linguistic_features は保持しない(スキルは senses に書く取り決め。
   # schema.json の description)。
@@ -39,13 +40,17 @@ class AnnotationProposal < ApplicationRecord
   HIGH_CONFIDENCE = "high"
   LOW_CONFIDENCE = "low"
 
-  # コンソールのキューで「要判断」に絞る(Issue 67)。立項スコアが低い(ENTRY_CONCERN_MAX_SCORE 以下)か確信度が low の提案。
+  # コンソールのキューで「要判断」に絞る(Issue 67)。立項スコアが低い(ENTRY_CONCERN_MAX_SCORE 以下)か確信度が low か、
+  # コンソールでの手直し(console_fixes)が要る提案。
   # payload(JSON)から取り出す。joins された words クエリからも呼べるよう列を明示修飾する。
   # 範囲外の立項スコア(0・負の値・数値でない文字列)は、CAST で 0 以下になるので「要判断」に入る。
   # Ruby の entry_score は同じ値を nil(未評価)として扱うので、範囲外の値では両者の判定が食い違う。
+  # console_fixes は JSON_LENGTH で数える(キーが無ければ NULL で偽。文字列 1 つでも 1 になり、Ruby の Array() と揃う)。
   scope :needs_review, -> {
     where("CAST(annotation_proposals.payload->>'$.entry_score' AS SIGNED) <= ? " \
-          "OR annotation_proposals.payload->>'$.confidence' = ?", ENTRY_CONCERN_MAX_SCORE, LOW_CONFIDENCE)
+          "OR annotation_proposals.payload->>'$.confidence' = ? " \
+          "OR JSON_LENGTH(annotation_proposals.payload, '$.console_fixes') > 0",
+          ENTRY_CONCERN_MAX_SCORE, LOW_CONFIDENCE)
   }
 
   validates :payload, presence: true
@@ -142,6 +147,12 @@ class AnnotationProposal < ApplicationRecord
 
   # 立項の懸念理由(どの原則を・なぜ欠くか)。スコア3以下の語に付く。
   def entry_notes = payload["entry_notes"].presence
+
+  # 「提案を反映」では入らず、オーナーがコンソールで手で直す点(特徴の2か所目・既存の特徴や別表記の削除・
+  # 表層形の訂正など。書く場面の正は word-annotation-research スキル)。コンソールの提案パネルで赤い札を出し、
+  # キューの「要判断」に入れ、一括承認の対象から外す。
+  def console_fixes = Array(payload["console_fixes"]).map(&:to_s).reject(&:blank?)
+  def console_fixes? = console_fixes.any?
 
   # ENTRY_CONCERN_MAX_SCORE 以下は「オーナー判断が必要」ゾーン。コンソールの提案パネルで赤いバッジを出す。
   def entry_concern?

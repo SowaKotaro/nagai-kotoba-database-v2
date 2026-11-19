@@ -1158,6 +1158,8 @@ ja:
         entry_score: "立項 %{score}/5"
         entry_notes: "立項の懸念"
         notes: "判断メモ"
+        console_fix_badge: "要手直し %{count}"
+        console_fixes: "コンソールで直すこと（提案を反映しても入りません）"
         confidence:
           high: "確信 高"
           medium: "確信 中"
