@@ -14,7 +14,7 @@
 
 | 区分 | 採用技術 |
 |---|---|
-| 言語 / FW | Ruby 3.4.2 / Rails 8.1 |
+| 言語 / FW | Ruby 3.4.13 / Rails 8.1 |
 | DB | MySQL 8.4（mysql2、utf8mb4。照合順序は `utf8mb4_0900_ai_ci`、読み・表層形のカラムだけ `utf8mb4_0900_as_ci`） |
 | アプリサーバ | Puma（本番は systemd で管理） |
 | フロントエンド | Hotwire（Turbo・Stimulus）+ importmap-rails |
