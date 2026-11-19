@@ -29,14 +29,27 @@ class Admin::TagsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".tag-table__inuse", text: I18n.t("admin.tags.in_use")
     end
 
-    # fixtures は 文学 › 日本文学 › 小説 の一系統。深さ優先で大→中→小の順に並ぶ
+    # fixtures は 文学 › 日本文学 › 小説 の一系統。大分類・中分類は折り畳み(畳んだ状態)、小分類は表の行で、
+    # 大→中→小と入れ子に並ぶ。頭には配下の数と編集の口を出す
     get admin_tag_kind_path("genres")
     assert_response :success
-    names = css_select(".tag-table tbody td.tag-table__name").map { |cell| cell.at_css("a").text.strip }
-    assert_equal %w[文学 日本文学 小説], names
-    assert_select "td.tag-table__name--large a", text: "文学"
-    assert_select "td.tag-table__name--medium a", text: "日本文学"
-    assert_select "td.tag-table__name--small a", text: "小説"
+    assert_select "details.tag-tree__fold--large:not([open])" do
+      assert_select "> summary .tag-tree__label", text: "文学"
+      assert_select "> summary .tag-tree__children", text: "中分類 1"
+      assert_select "> summary a[href=?]", admin_edit_tag_path("genres", genres(:large_literature)), text: I18n.t("admin.tags.edit")
+      assert_select "details.tag-tree__fold--medium:not([open])" do
+        assert_select "> summary .tag-tree__label", text: "日本文学"
+        assert_select "table.tag-tree__smalls td.tag-table__name--small a", text: "小説"
+      end
+    end
+
+    # 統合の選択肢は、名前と使用件数を先に、親のパスを後ろに置く(狭い幅で末尾が切れても名前が見える)。
+    # ジャンルは階層を data-level で渡す(統合先を同じ階層に絞る JS が使う)。名前で絞り込む欄は JS がつながってから出す
+    assert_select "form[data-controller='tag-merge']" do
+      assert_select "select#source_id option[data-level='small']", text: /\A小説（\d+）　文学 › 日本文学\z/
+      assert_select "select#target_id option[data-level='large']", text: /\A文学（\d+）\z/
+      assert_select "[data-tag-merge-target='field'][hidden]", 3
+    end
 
     # seed 管理タグには一覧で seed 印、編集画面で警告が出る
     get admin_tag_kind_path("word_origins")

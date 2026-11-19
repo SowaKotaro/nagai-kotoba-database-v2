@@ -1,4 +1,7 @@
 <% content_for :title, t("admin.words.title") %>
+<%# タブ・絞り込み解除で引き継ぐ条件(検索・id の指定・並び)。並びは既定(登録順)なら URL に出さない %>
+<% kept = { q: @query.presence, ids: @ids.join(",").presence,
+            sort: (@sort unless @sort == Admin::WordsController::SORTS.keys.first) }.compact %>
 
 <header class="page-header">
   <h1 class="page-title"><%= t("admin.words.title") %></h1>
@@ -15,7 +18,7 @@
       <%# タブは絞り込みの定義(Admin::WordsController::STATUS_FILTERS)から組む。文言のキーは状態名から annotation_ を除いたもの %>
       <% [ nil, *Admin::WordsController::STATUS_FILTERS ].each do |status| %>
         <% label = status ? t("admin.words.index.status_#{status.delete_prefix("annotation_")}") : t("admin.words.index.status_all") %>
-        <%= link_to label, admin_words_path({ q: @query.presence, status: status }.merge(@tag_filters).compact),
+        <%= link_to label, admin_words_path(kept.merge(status: status).merge(@tag_filters).compact),
               class: "admin-status-tabs__tab", "aria-current": (@status == status ? "page" : nil) %>
       <% end %>
     </nav>
@@ -23,10 +26,21 @@
   <%= form_with url: admin_words_path, method: :get, class: "admin-words-filter panel__body",
         data: { controller: "auto-submit" } do %>
     <% if @status %><%= hidden_field_tag :status, @status %><% end %>
-    <div class="admin-words-search">
-      <%= text_field_tag :q, @query, placeholder: t("admin.words.index.q_placeholder"),
-            class: "admin-words-search__input", aria: { label: t("admin.words.index.q_label") } %>
-      <button type="submit" class="admin-words-search__submit" aria-label="<%= t("admin.words.index.search") %>"><%= icon "magnifying_glass" %></button>
+    <% if kept[:sort] %><%= hidden_field_tag :sort, kept[:sort] %><% end %>
+    <%# 検索と id の指定は横に並べる。id はカンマ・空白・読点のどれで区切ってもよい(IdList) %>
+    <div class="admin-words-search-row">
+      <div class="admin-words-search">
+        <%= text_field_tag :q, @query, placeholder: t("admin.words.index.q_placeholder"),
+              class: "admin-words-search__input", aria: { label: t("admin.words.index.q_label") } %>
+        <button type="submit" class="admin-words-search__submit" aria-label="<%= t("admin.words.index.search") %>"><%= icon "magnifying_glass" %></button>
+      </div>
+      <div class="admin-words-search admin-words-search--ids">
+        <span class="admin-words-search__prefix" aria-hidden="true"><%= t("admin.words.index.ids_prefix") %></span>
+        <%= text_field_tag :ids, @ids.join(", "), placeholder: t("admin.words.index.ids_placeholder"),
+              class: "admin-words-search__input", inputmode: "numeric", autocomplete: "off",
+              aria: { label: t("admin.words.index.ids_label") } %>
+        <button type="submit" class="admin-words-search__submit" aria-label="<%= t("admin.words.index.search") %>"><%= icon "magnifying_glass" %></button>
+      </div>
     </div>
 
     <div class="admin-words-tag-filters">
@@ -72,9 +86,10 @@
               placeholder: t("admin.words.index.filter_feature_target_placeholder"),
               data: { action: "change->auto-submit#submit" } %>
       </label>
-      <% if @tag_filters.any? %>
+      <%# 解除するのはタグと id の指定。検索・状態・並びは残す %>
+      <% if @tag_filters.any? || @ids.any? %>
         <%= link_to t("admin.words.index.filter_reset"),
-              admin_words_path({ q: @query.presence, status: @status }.compact),
+              admin_words_path(kept.except(:ids).merge(status: @status).compact),
               class: "admin-words-tag-filter__reset" %>
       <% end %>
       <noscript><%= submit_tag t("admin.words.index.search"), class: "btn btn--sm" %></noscript>
@@ -88,8 +103,20 @@
              feature_filter: @tag_filters.slice(:linguistic_feature_id, :feature_target) %>
 
   <section class="panel">
-  <div class="panel__head">
-    <p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@total_count)) %></p>
+  <div class="panel__head admin-words-results-head">
+    <p class="admin-words-count"><%= t("admin.words.index.total", count: number_with_delimiter(@pagination.total_count)) %></p>
+    <% if @missing_ids.present? %>
+      <p class="admin-words-missing"><%= t("admin.words.index.ids_missing", ids: @missing_ids.join(", ")) %></p>
+    <% end %>
+    <%# 並びは 2 つ(登録順・新しい順)だけなので、押すたびにもう一方へ切り替えるアイコンのボタンにする。
+        ほかの条件は保ち、ページは先頭に戻す。今の並びは title と読み上げの名前で示す %>
+    <% other_sort = (Admin::WordsController::SORTS.keys - [ @sort ]).first %>
+    <% sort_label = t("admin.words.index.sort_toggle", current: t("admin.words.index.sorts.#{@sort}"),
+                      other: t("admin.words.index.sorts.#{other_sort}")) %>
+    <%= link_to admin_words_path(word_list_params.except("sort", "page").merge(sort: other_sort)),
+          class: "btn btn--sm admin-words-sort", title: sort_label, aria: { label: sort_label } do %>
+      <%= icon "arrows_down_up" %>
+    <% end %>
   </div>
   <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
   <div class="table-scroll" data-controller="check-all">
@@ -100,6 +127,7 @@
           <input type="checkbox" aria-label="<%= t("admin.bulk_annotations.select_all") %>"
                  data-check-all-target="toggle" data-action="check-all#toggle">
         </th>
+        <th class="admin-words-table__id"><%= t("admin.words.index.col_id") %></th>
         <th><%= Word.human_attribute_name(:surface) %></th>
         <th><%= t("admin.words.index.col_reading") %></th>
         <th class="admin-words-table__num"><%= t("admin.words.senses_count") %></th>
@@ -120,7 +148,8 @@
           </td>
           <%# 行き先は注釈状態で分ける。公開済みの語は修正画面(注釈状態を変えずに直す)、未公開の語はコンソール(注釈して公開する) %>
           <% row_path = word.annotation_done? ? edit_admin_word_path(word, word_list_params) : admin_annotation_path(word) %>
-          <td><%= link_to word.surface, row_path, data: { turbo_frame: "_top" } %></td>
+          <td class="admin-words-table__id"><%= word.id %></td>
+          <td class="admin-words-table__surface"><%= link_to word.surface, row_path, data: { turbo_frame: "_top" } %></td>
           <td class="admin-words-table__reading"><%= word.word_senses.map(&:reading).uniq.join("、") %></td>
           <td class="admin-words-table__num"><%= word.word_senses.size %></td>
           <td class="admin-words-table__status">
@@ -158,19 +187,7 @@
   </div>
   </section>
 
-  <nav class="pagination">
-    <%# 検索・絞り込み条件を保持したままページ送りする %>
-    <% base = request.query_parameters.except("page") %>
-    <% if @page > 1 %>
-      <%= link_to t("words.pagination.prev"), admin_words_path(base.merge(page: @page - 1)) %>
-    <% end %>
-
-    <span><%= t("words.pagination.status", page: @page, total: @total_pages) %></span>
-
-    <% if @page < @total_pages %>
-      <%= link_to t("words.pagination.next"), admin_words_path(base.merge(page: @page + 1)) %>
-    <% end %>
-  </nav>
+  <%= render "admin/words/pagination", pagination: @pagination, list_params: word_list_params.except("page") %>
 <% else %>
   <p class="empty-note"><%= t("admin.words.index.empty") %></p>
 <% end %>

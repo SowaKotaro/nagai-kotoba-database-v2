@@ -42,28 +42,43 @@
     <div class="panel__body">
     <p class="tag-merge__hint"><%= t("admin.tags.merge.hint#{'_genre' if @kind.hierarchical?}") %></p>
 
+    <%# 統合元・統合先は名前で絞り込める一覧にし、統合先は統合元と同じ階層に絞る(tag_merge_controller.js)。
+        絞り込む欄は JS がつながってから出す(hidden で描く)。どこにも送らない欄なので name を持たせない %>
+    <% merge_options = tag_merge_options(@kind, @records, @usage_counts, @genre_index) %>
     <%= form_with url: admin_merge_tags_path(@kind.key), method: :post, class: "tag-merge__form",
-          data: { turbo_confirm: t("admin.tags.merge.confirm") } do %>
+          data: { turbo_confirm: t("admin.tags.merge.confirm"), controller: "tag-merge",
+                  tag_merge_empty_value: t("admin.tags.merge.no_match"),
+                  action: "turbo:before-cache@document->tag-merge#reset" } do %>
       <div class="tag-merge__pair">
-        <label class="field">
-          <span><%= t("admin.tags.merge.source") %></span>
-          <%= select_tag :source_id,
-                options_for_select(@records.map { |r| [ tag_display_label(@kind, r, @genre_index), r.id ] }),
-                include_blank: t("admin.tags.merge.choose") %>
-        </label>
-        <span class="tag-merge__arrow" aria-hidden="true">→</span>
-        <label class="field">
-          <span><%= t("admin.tags.merge.target") %></span>
-          <%= select_tag :target_id,
-                options_for_select(@records.map { |r| [ tag_display_label(@kind, r, @genre_index), r.id ] }),
-                include_blank: t("admin.tags.merge.choose") %>
-        </label>
+        <% { source: "filterSource", target: "filterTarget" }.each_with_index do |(side, filter), index| %>
+          <% if index == 1 %><span class="tag-merge__arrow" aria-hidden="true">→</span><% end %>
+          <div class="field tag-merge__side">
+            <label for="<%= side %>_id"><%= t("admin.tags.merge.#{side}") %></label>
+            <div class="list-filter tag-merge__query" hidden data-tag-merge-target="field">
+              <%= icon "funnel" %>
+              <%= tag.input type: "search", class: "list-filter__input", autocomplete: "off",
+                    placeholder: t("admin.tags.merge.query_placeholder"),
+                    aria: { label: t("admin.tags.merge.query_label", side: t("admin.tags.merge.#{side}")) },
+                    data: { tag_merge_target: "#{side}Query", action: "input->tag-merge##{filter}" } %>
+            </div>
+            <%= select_tag "#{side}_id", options_for_select(merge_options), include_blank: t("admin.tags.merge.choose"),
+                  class: "tag-merge__select",
+                  data: { tag_merge_target: "#{side}Select", action: ("change->tag-merge#filterTarget" if side == :source) } %>
+            <% if side == :target && @kind.hierarchical? %>
+              <p class="tag-merge__note" hidden data-tag-merge-target="field"><%= t("admin.tags.merge.target_note_genre") %></p>
+            <% end %>
+          </div>
+        <% end %>
       </div>
       <%= submit_tag t("admin.tags.merge.submit"), class: "btn" %>
     <% end %>
     </div>
   </details>
 
+  <% if @kind.hierarchical? %>
+    <%= render "admin/tags/genre_tree", kind: @kind, children: @genre_children, usage_counts: @usage_counts,
+          deletable_ids: @deletable_ids, genre_index: @genre_index %>
+  <% else %>
   <%# 狭幅ではテーブルを潰さず、この枠内で横スクロールさせる %>
   <section class="panel">
   <div class="table-scroll">
@@ -71,7 +86,6 @@
     <thead>
       <tr>
         <th><%= t("admin.tags.col_name") %></th>
-        <% if @kind.hierarchical? %><th><%= t("admin.tags.col_level") %></th><% end %>
         <th class="tag-table__num"><%= t("admin.tags.col_usage") %></th>
         <th></th>
       </tr>
@@ -79,17 +93,12 @@
     <tbody>
       <% @records.each do |record| %>
         <tr>
-          <%# ジャンルは木を深さ優先で並べ、中・小分類は階層ぶんインデントする %>
-          <% name_class = @kind.hierarchical? ? "tag-table__name tag-table__name--#{record.level}" : nil %>
-          <td class="<%= name_class %>">
+          <td class="tag-table__name">
             <%= link_to record.name, admin_edit_tag_path(@kind.key, record) %>
-            <% if @kind.seeded?(record, genre_index: @genre_index) %>
+            <% if @kind.seeded?(record) %>
               <span class="tag-table__seed" title="<%= t("admin.tags.seed_badge_title") %>"><%= t("admin.tags.seed_badge") %></span>
             <% end %>
           </td>
-          <% if @kind.hierarchical? %>
-            <td><span class="tag-table__level"><%= t("admin.tags.levels.#{record.level}") %></span></td>
-          <% end %>
           <td class="tag-table__num"><%= number_with_delimiter(@usage_counts[record.id].to_i) %></td>
           <td>
             <div class="actions">
@@ -108,6 +117,7 @@
   </table>
   </div>
   </section>
+  <% end %>
 <% else %>
   <p class="empty-note"><%= t("admin.tags.empty") %></p>
 <% end %>

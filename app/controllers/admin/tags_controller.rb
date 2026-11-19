@@ -83,6 +83,8 @@ class Admin::TagsController < Admin::BaseController
     @deletable_ids = @kind.deletable_ids(@records, @usage_counts)
     # ジャンルは親名の表示に使う(id => レコードの索引。N+1 回避)。
     @genre_index = @records.index_by(&:id) if @kind.hierarchical?
+    # ジャンルは大→中→小の折り畳みで並べる(親 id => 子の配列。@records の深さ優先の並びを保つ)。
+    @genre_children = @records.group_by(&:parent_id) if @kind.hierarchical?
   end
 
   # どの種別でもフォームは tag[name] で受ける(単一コントローラのため)。

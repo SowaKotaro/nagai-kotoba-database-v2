@@ -1,0 +1,60 @@
+<%# locals: (kind:, children:, usage_counts:, deletable_ids:, genre_index:) -%>
+<%# ジャンルのタグ一覧。大分類・中分類は折り畳み(details)、小分類は表の行にする。
+    すべて並べると縦に長すぎるので、公開側の /genres と同じく初期表示は大分類の一覧だけに畳む。
+    大分類・中分類の行(summary)は列を表と揃えた格子で組み、名前のクリックは開閉に充てる(編集はボタンに分ける)。
+    summary の中には form を置けない(button_to が使えない)ので、削除は turbo_method のリンクで送る。
+    767px 以下は横に流さず、行を 2 段(上に名前、下に使用件数と操作)に組み替える(見出しの行は隠し、件数に「使用」を添える) -%>
+<section class="panel">
+  <div class="table-scroll">
+    <div class="tag-tree">
+      <div class="tag-tree__head" aria-hidden="true">
+        <span><%= t("admin.tags.col_name") %></span>
+        <span class="tag-table__num"><%= t("admin.tags.col_usage") %></span>
+        <span></span>
+      </div>
+
+      <% (children[nil] || []).each do |large| %>
+        <details class="tag-tree__fold tag-tree__fold--large">
+          <%= render "admin/tags/genre_tree_summary", kind: kind, genre: large, children: children,
+                usage_counts: usage_counts, deletable_ids: deletable_ids, genre_index: genre_index %>
+
+          <% (children[large.id] || []).each do |medium| %>
+            <details class="tag-tree__fold tag-tree__fold--medium">
+              <%= render "admin/tags/genre_tree_summary", kind: kind, genre: medium, children: children,
+                    usage_counts: usage_counts, deletable_ids: deletable_ids, genre_index: genre_index %>
+
+              <% if children[medium.id].present? %>
+                <table class="data-table tag-table tag-tree__smalls">
+                  <tbody>
+                    <% children[medium.id].each do |small| %>
+                      <tr>
+                        <td class="tag-table__name tag-table__name--small">
+                          <%= link_to small.name, admin_edit_tag_path(kind.key, small) %>
+                          <% if kind.seeded?(small, genre_index: genre_index) %>
+                            <span class="tag-table__seed" title="<%= t("admin.tags.seed_badge_title") %>"><%= t("admin.tags.seed_badge") %></span>
+                          <% end %>
+                        </td>
+                        <td class="tag-table__num"><span class="tag-tree__usage-label"><%= t("admin.tags.genre_tree.usage") %></span><%= number_with_delimiter(usage_counts[small.id].to_i) %></td>
+                        <td>
+                          <div class="actions">
+                            <%= link_to t("admin.tags.edit"), admin_edit_tag_path(kind.key, small), class: "btn btn--sm" %>
+                            <% if deletable_ids.include?(small.id) %>
+                              <%= button_to t("admin.tags.destroy"), admin_tag_path(kind.key, small), method: :delete,
+                                    class: "btn btn--sm", data: { turbo_confirm: t("admin.tags.confirm_destroy", name: small.name) } %>
+                            <% else %>
+                              <span class="tag-table__inuse"><%= t("admin.tags.in_use") %></span>
+                            <% end %>
+                          </div>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              <% end %>
+            </details>
+          <% end %>
+        </details>
+      <% end %>
+    </div>
+  </div>
+</section>
