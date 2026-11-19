@@ -1,0 +1,24 @@
+<%# locals: (pagination:, list_params:) -%>
+<%# 単語の修正の一覧のページ送り。前へ・次への間の「6 / 17 ページ」のページ番号を、打って飛べる欄にする。
+    欄は GET のフォームで、検索・絞り込み・並び(list_params)を隠しフィールドで持ち回り、値を確定したら送る
+    (auto-submit。Enter でも送れる。最後のページより先はコントローラが丸める) -%>
+<nav class="pagination admin-pagination" aria-label="<%= t("admin.words.index.pagination.label") %>">
+  <% if pagination.page > 1 %>
+    <%= link_to t("words.pagination.prev"), admin_words_path(list_params.merge(page: pagination.page - 1)), rel: "prev" %>
+  <% end %>
+
+  <%= form_with url: admin_words_path, method: :get, class: "admin-pagination__jump", data: { controller: "auto-submit" } do %>
+    <% list_params.each do |key, value| %>
+      <%= hidden_field_tag key, value, id: nil %>
+    <% end %>
+    <%= number_field_tag :page, pagination.page, min: 1, max: pagination.total_pages, id: "admin-pagination-page",
+          class: "admin-pagination__input", aria: { label: t("admin.words.index.pagination.jump_label") },
+          data: { action: "change->auto-submit#submit" } %>
+    <span class="admin-pagination__total"><%= t("admin.words.index.pagination.total", total: pagination.total_pages) %></span>
+    <noscript><%= submit_tag t("admin.words.index.pagination.jump"), name: nil, class: "btn btn--sm" %></noscript>
+  <% end %>
+
+  <% if pagination.page < pagination.total_pages %>
+    <%= link_to t("words.pagination.next"), admin_words_path(list_params.merge(page: pagination.page + 1)), rel: "next" %>
+  <% end %>
+</nav>

@@ -11,24 +11,33 @@ class Admin::WordsController < Admin::BaseController
   # 注釈状態の絞り込み(enum が生やす Word の同名スコープをそのまま使う)。
   # 未対応 / 保留 / 完了 の3状態。
   STATUS_FILTERS = %w[annotation_pending annotation_on_hold annotation_done].freeze
+  # 並び(?sort=)。既定は登録順(id の昇順)で、id_desc は新しく登録した語から。
+  # 公開側の WordSort の created_* は公開した日時(annotated_at)の並びで、未公開の語を含むこの一覧には使えないので別に持つ。
+  SORTS = { "id_asc" => { id: :asc }, "id_desc" => { id: :desc } }.freeze
 
   before_action :set_word, only: :destroy
   before_action :set_word_with_senses, only: %i[edit update]
 
-  # 一覧: 6,000語規模でも運用できるよう、検索(表層形・読み)+注釈状態+タグの絞り込み+ページネーション。
+  # 一覧: 6,000語規模でも運用できるよう、検索(表層形・読み)+ id の指定(カンマ区切りで複数)+注釈状態+タグの絞り込み
+  # +並び(登録順・新しい順)+ページネーション(番号と、番号を打って飛ぶ欄)。
   # タグの絞り込みは、まとめて付ける・外すパネルと組み合わせて「絞り込み → 全選択 → 付け替え・外す」に使う。
   # 各行から、注釈済みの語は修正画面へ、未注釈の語はアノテーション・コンソールへ飛べる。
   def index
     @query = params[:q].to_s.strip
+    @ids = IdList.call(params[:ids])
     @status = params[:status].presence_in(STATUS_FILTERS)
+    @sort = params[:sort].presence_in(SORTS.keys) || SORTS.keys.first
     @tag_filters = tag_filters_from_params
-    @page = Pagination.page_number(params[:page])
 
     scope = filtered_words
-    pagination = Pagination.new(page: @page, per_page: PER_PAGE, total_count: scope.count)
-    @total_count = pagination.total_count
-    @total_pages = pagination.total_pages
-    @words = pagination.paginate(scope.includes(:word_senses).order(:id))
+    total_count = scope.count
+    # ページ番号を打って飛ぶと最後のページより先を指せるので、最後のページに丸める
+    page = Pagination.page_number(params[:page])
+    page = [ page, Pagination.new(page: page, per_page: PER_PAGE, total_count: total_count).total_pages ].min
+    @pagination = Pagination.new(page: page, per_page: PER_PAGE, total_count: total_count)
+    @words = @pagination.paginate(scope.includes(:word_senses).order(SORTS.fetch(@sort)))
+    # 指定した id のうち、語が無いもの(消した語・打ち間違い)を知らせる
+    @missing_ids = @ids - Word.where(id: @ids).pluck(:id) if @ids.any?
     # 行に載せる、語の特徴の id。まとめて外す特徴の選択肢を、選択した語に共通するものへ絞る手がかり(bulk-detachment-features)
     @feature_ids_by_word = WordSenseFeature.feature_ids_by_word(@words.map(&:id))
     load_masters_for_bulk
@@ -136,6 +145,7 @@ class Admin::WordsController < Admin::BaseController
   # 一覧の絞り込み(キーワード + 注釈状態 + タグ)。
   def filtered_words
     scope = Word.all
+    scope = scope.where(id: @ids) if @ids.any?
     scope = scope.keyword(@query) if @query.present?
     scope = scope.public_send(@status) if @status
     # タグは語義に付くため、条件に合致する語義を持つ語へサブクエリで絞る(join の重複を避ける)。

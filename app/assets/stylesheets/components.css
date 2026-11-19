@@ -3544,6 +3544,54 @@ html:has(.search-actions) {
   color: var(--text);
 }
 
+/* 検索(表層形・読み)と id の指定を横に並べる。id は短い数の並びなので、検索の欄に幅を多く配る */
+.admin-words-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .admin-words-search-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* id の欄の頭の「ID」 */
+.admin-words-search__prefix {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.admin-words-search--ids .admin-words-search__input {
+  font-family: var(--font-mono);
+}
+
+/* 指定した id のうち見つからないもの */
+.admin-words-missing {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+/* 結果の札の頭: 件数・見つからない id・並び。見つからない id が長いときは折り返す */
+.admin-words-results-head {
+  flex-wrap: wrap;
+}
+
+/* 結果の札の頭の右端の並びの切り替え(アイコンだけの正方形のボタン) */
+.admin-words-sort {
+  margin-left: auto;
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+.admin-words-sort .icon {
+  font-size: 18px;
+}
+
 /* 検索とタグ絞り込みを縦に積む(タグは語義のジャンル・品詞・エンティティ・語種・特徴) */
 .admin-words-filter {
   display: flex;
@@ -3834,11 +3882,12 @@ html:has(.search-actions) {
   min-width: 760px;
 }
 
-.admin-words-table td:nth-child(2) {
+/* 列は番号(nth-child)でなくクラスで指す。ID の列を足したときに、番号がずれて幅の下限が別の列に掛かった */
+.admin-words-table td.admin-words-table__surface {
   min-width: 10em;
 }
 
-.admin-words-table td:nth-child(3) {
+.admin-words-table td.admin-words-table__reading {
   min-width: 14em;
 }
 
@@ -3853,6 +3902,17 @@ html:has(.search-actions) {
 }
 
 .admin-words-table__reading {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ID は数の列なので等幅で右に揃え、内容ぶんの幅だけ取る */
+.admin-words-table__id,
+.admin-words-table thead th.admin-words-table__id {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text-muted);
 }
@@ -3907,6 +3967,32 @@ html:has(.search-actions) {
   gap: var(--space-4);
   margin-top: var(--space-7);
   font-size: 14px;
+}
+
+/* 管理の単語一覧のページ送り(admin/words/_pagination)。前へ・次への間の「6 / 17 ページ」のページ番号を、打てる欄にする */
+.admin-pagination__jump {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-pagination__input {
+  width: 5em;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+}
+
+.admin-pagination__total {
+  font-size: 13px;
+  color: var(--text-subtle);
+  white-space: nowrap;
 }
 
 /* 「1 / 5 ページ」の状態だけを淡くする。子結合子にしないと、前へ・次へのボタンの中の文字まで淡くなる */
@@ -4807,15 +4893,56 @@ textarea {
 
 .tag-merge__pair {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
 }
 
 .tag-merge__arrow {
+  align-self: center;
   font-size: 18px;
   line-height: 2.2;
+  color: var(--text-subtle);
+}
+
+/* 統合元・統合先は、名前で絞り込む欄と、絞った選択肢の一覧(size 付きの select)を縦に積む(tag_merge_controller.js)。
+   長い階層名(大 › 中 › 小)が読めるよう、2 つで横幅を分け合う */
+.tag-merge__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 320px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.tag-merge__side label {
+  margin-bottom: 0;
+}
+
+.tag-merge__query {
+  max-width: none;
+  flex: none;
+}
+
+.tag-merge__select {
+  width: 100%;
+}
+
+/* JS が一覧(size)にしたときは、開く印を外して行の間を空ける(size="0" は全件に戻したプルダウン) */
+.tag-merge__select[size]:not([size="0"]) {
+  background-image: none;
+  padding: var(--space-2) var(--space-3);
+}
+
+.tag-merge__select[size]:not([size="0"]) option {
+  padding: 3px var(--space-2);
+}
+
+.tag-merge__note {
+  margin: 0;
+  font-size: 12px;
   color: var(--text-subtle);
 }
 
@@ -4858,6 +4985,225 @@ textarea {
   font-size: 12px;
   color: var(--text-subtle);
 }
+/* ジャンルのタグ一覧(admin/tags/_genre_tree)。大分類・中分類は折り畳み、小分類は表の行。
+   縦に長くなりすぎるので、初期表示は大分類だけに畳む(公開側 /genres の文法)。
+   折り畳みの頭(summary)は表の行と同じ 3 列の格子で組み、列の幅を表の colgroup と共有して縦に揃える */
+.tag-tree {
+  /* 行ごとに字の大きさが違うので、列の幅と字下げは em でなく px で持つ */
+  --tag-tree-num: 96px;
+  --tag-tree-actions: 160px;
+  --tag-tree-step: 22px; /* 1 段ぶんの字下げ(キャレットと間) */
+  min-width: 560px;
+}
+
+/* 小分類の表の行も同じ格子にする(表の colgroup の幅はセルの余白の数え方がエンジンで違い、列がずれた) */
+.tag-tree__head,
+.tag-tree__row,
+.tag-tree__smalls tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--tag-tree-num) var(--tag-tree-actions);
+  align-items: center;
+}
+
+/* 見出しの行は .data-table thead th と同じ沈めた面と墨の罫 */
+.tag-tree__head {
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tag-tree__head > span,
+.tag-tree__row > * {
+  padding: var(--space-3) var(--space-3) var(--space-3) 0;
+}
+
+.tag-tree__head > span:first-child,
+.tag-tree__row > :first-child {
+  padding-left: var(--space-5);
+}
+
+.tag-tree__head > span:last-child,
+.tag-tree__row > :last-child {
+  padding-right: var(--space-5);
+}
+
+.tag-tree__row {
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.tag-tree__row::-webkit-details-marker {
+  display: none;
+}
+
+.tag-tree__row:hover {
+  background: var(--bg-soft);
+}
+
+.tag-tree__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tag-tree__row--large .tag-tree__label {
+  font-weight: 800;
+}
+
+.tag-tree__row--medium > :first-child {
+  padding-left: calc(var(--space-5) + var(--tag-tree-step));
+}
+
+.tag-tree__fold[open] > .tag-tree__row .genre-fold__caret {
+  transform: rotate(0deg);
+}
+
+/* 配下の数(畳んだままでも中身の量が分かる) */
+.tag-tree__children {
+  font-size: 12px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+/* 開いた大分類の下端は墨の罫で締め、次の大分類との境目を見失わないようにする */
+.tag-tree__fold--large[open] {
+  border-bottom: 1px solid var(--text);
+}
+
+/* 罫を重ねない: 開いた大分類の最後の行は大分類の墨の罫に任せ、一覧の最後の行は札の枠に任せる */
+.tag-tree__fold--large > .tag-tree__fold--medium:last-child:not([open]) > .tag-tree__row,
+.tag-tree__fold--large > .tag-tree__fold--medium:last-child > .tag-tree__smalls,
+.tag-tree > .tag-tree__fold--large:last-child,
+.tag-tree > .tag-tree__fold--large:last-child:not([open]) > .tag-tree__row {
+  border-bottom: none;
+}
+
+/* 小分類の表。行は上の格子で組み、列の幅は折り畳みの頭と共有する */
+.tag-tree__smalls {
+  display: block;
+  min-width: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tag-tree__smalls tbody {
+  display: block;
+}
+
+/* 罫はセルでなく行に引く(格子のセルは高さが揃わず、セルの罫が途切れる) */
+.tag-tree__smalls tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table.tag-tree__smalls td {
+  border-bottom: none;
+}
+
+.tag-tree__smalls tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* 表のリンクの字の大きさ(.data-table td a)がボタンにも掛かるので、頭の行のボタンと揃える */
+.tag-tree__smalls td a.btn {
+  font-size: 13px;
+}
+
+.tag-tree__smalls tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table.tag-tree__smalls td.tag-table__name--small {
+  padding-left: calc(var(--space-5) + var(--tag-tree-step) * 2 + 22px);
+}
+
+/* 件数の前の「使用」は、見出しの行を隠す狭い幅でだけ出す */
+.tag-tree__usage-label {
+  display: none;
+}
+
+/* 767px 以下: 横にスクロールさせず、行を 2 段に組み替える(上に名前、下に使用件数と操作)。
+   左右の余白は管理画面の本文と同じ 16px に詰め、1 段ぶんの字下げも詰める */
+@media (max-width: 767px) {
+  .tag-tree {
+    --tag-tree-step: 16px;
+    min-width: 0;
+  }
+
+  .tag-tree__head {
+    display: none;
+  }
+
+  .tag-tree__row,
+  .tag-tree__smalls tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "name name" "num actions";
+    row-gap: var(--space-1);
+    padding: var(--space-2) var(--space-4) var(--space-2) 0;
+  }
+
+  .tag-tree__row > *,
+  .data-table.tag-tree__smalls td {
+    padding: 0;
+  }
+
+  .tag-tree__row > :first-child,
+  .data-table.tag-tree__smalls td:first-child {
+    grid-area: name;
+    padding-left: var(--space-4);
+  }
+
+  .tag-tree__row--medium > :first-child {
+    padding-left: calc(var(--space-4) + var(--tag-tree-step));
+  }
+
+  .data-table.tag-tree__smalls td.tag-table__name--small {
+    padding-left: calc(var(--space-4) + var(--tag-tree-step) * 2 + 22px);
+  }
+
+  /* 件数は名前の頭(キャレットの後ろ)に揃えて左に置き、操作は右端へ */
+  .tag-tree__row > .tag-table__num,
+  .tag-tree__smalls td.tag-table__num {
+    grid-area: num;
+    text-align: left;
+    padding-left: calc(var(--space-4) + 22px);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .tag-tree__row--medium > .tag-table__num {
+    padding-left: calc(var(--space-4) + var(--tag-tree-step) + 22px);
+  }
+
+  /* 小分類の名前は「└」(負の余白で左へ出す)のぶん 7px 左から始まるので、件数もそこに揃える */
+  .tag-tree__smalls td.tag-table__num {
+    padding-left: calc(var(--space-4) + var(--tag-tree-step) * 2 + 15px);
+  }
+
+  .tag-tree__row > .actions,
+  .tag-tree__smalls td:last-child {
+    grid-area: actions;
+    justify-self: end;
+  }
+
+  .tag-tree__usage-label {
+    display: inline;
+    margin-right: 0.4em;
+    font-family: var(--font-sans);
+  }
+
+  /* 統合: 2 つの欄は縦に積むので、矢印は下向きにする */
+  .tag-merge__arrow {
+    align-self: flex-start;
+    margin-left: var(--space-2);
+    line-height: 1;
+    transform: rotate(90deg);
+  }
+}
+
 /* seed(SeedCatalog)管理タグの印(Issue 49) */
 .tag-table__seed {
   display: inline-block;

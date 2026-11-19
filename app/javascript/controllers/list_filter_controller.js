@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { normalizeSearchText as normalize } from "controllers/support/search_text"
 
 // 探すための一覧(ジャンル /genres・エンティティ /entity_types)を、打った名前で絞り込む。
 //   ジャンルは分類が 大 → 中 → 小 に畳まれていて、「アニメ」「鉄道」がどの大分類にあるかは開くまで分からない。
@@ -43,11 +44,4 @@ export default class extends Controller {
       delete fold.dataset.listFilterOpened
     }
   }
-}
-
-function normalize(text) {
-  return text
-    .normalize("NFKC")
-    .toLowerCase()
-    .replace(/[ぁ-ゖ]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0x60))
 }

@@ -6,7 +6,7 @@ module Admin::WordListParams
   # 語義のタグ(マスタの id)での絞り込み。言語学的特徴は該当部分(FEATURE_TARGET_KEY)でも絞れる。
   TAG_FILTER_KEYS = %i[genre_id part_of_speech_id entity_type_id word_origin_id linguistic_feature_id].freeze
   FEATURE_TARGET_KEY = :feature_target
-  KEYS = [ :q, :status, :page, *TAG_FILTER_KEYS, FEATURE_TARGET_KEY ].freeze
+  KEYS = [ :q, :ids, :status, :sort, :page, *TAG_FILTER_KEYS, FEATURE_TARGET_KEY ].freeze
 
   included do
     # 一覧の行のリンクと、修正画面の戻り先・隠しフィールドで使う

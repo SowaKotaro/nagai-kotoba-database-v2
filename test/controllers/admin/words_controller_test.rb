@@ -32,7 +32,12 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-words-table__unannotated", text: "未対応", minimum: 1
     # 件数表示とページネーション
     assert_select ".admin-words-count", text: /#{Word.count}\s*語/
-    assert_select ".pagination span", text: "1 / 1 ページ"
+    assert_select "input.admin-pagination__input[name=page][value='1'][max='1']"
+    assert_select ".admin-pagination__total", text: "/ 1 ページ"
+    # 最後のページより先を指しても最後のページに丸める
+    get admin_words_path(page: 999)
+    assert_select "input.admin-pagination__input[value='1']"
+    assert_select "td a", text: @word.surface
 
     # 一覧に、まとめて付ける・外すパネルと選択チェックボックスが 1 つのフォームで出る(Issue 37・108)
     get admin_words_path
@@ -74,13 +79,18 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # コールバックを通さず一括投入(char_type_pattern は NOT NULL のため明示)
     Word.insert_all((1..110).map { |i| { surface: "ページ送り検証語#{format('%03d', i)}", char_type_pattern: "漢" } })
 
-    get admin_words_path
+    get admin_words_path(sort: "id_desc")
     assert_select "tbody tr", count: 100
-    assert_select ".pagination a", text: "次へ"
+    assert_select ".pagination a[href=?]", admin_words_path(sort: "id_desc", page: 2), text: "次へ"
+    # ページ番号の欄は、一覧の条件を隠しフィールドで持ち回る
+    assert_select "form.admin-pagination__jump" do
+      assert_select "input[type=hidden][name=sort][value=?]", "id_desc"
+      assert_select "input[type=number][name=page][value='1'][max='2']"
+    end
 
     get admin_words_path(page: 2)
     assert_select ".pagination a", text: "前へ"
-    assert_select ".pagination span", text: "2 / 2 ページ"
+    assert_select "input.admin-pagination__input[value='2']"
   end
 
   # 特徴の絞り込みは「まとめて外す」と同じ行の選び方(WordSenseFeature.matching)。該当部分は完全一致。
@@ -224,6 +234,36 @@ class Admin::WordsControllerTest < ActionDispatch::IntegrationTest
     # セレクトは選択状態を復元し、解除リンクが出る
     assert_select "select[name=part_of_speech_id] option[selected][value=?]", pos_id.to_s
     assert_select ".admin-words-tag-filter__reset"
+
+    # id で指定できる(カンマ・読点・空白・全角の数字のどれでも拾う)。ほかの条件と AND で、語の無い id は知らせる
+    curry = words(:curry)
+    get admin_words_path(ids: "#{@word.id}、 ９９９９９９ ,#{curry.id}")
+    assert_select "td.admin-words-table__id", text: @word.id.to_s
+    assert_select "td a", text: curry.surface
+    assert_select "td a", text: words(:pending_haruhi).surface, count: 0
+    assert_select ".admin-words-missing", text: /999999/
+    assert_select "input[name=ids][value=?]", "#{@word.id}, 999999, #{curry.id}"
+    get admin_words_path(ids: "#{@word.id},#{curry.id}", q: "カレー")
+    assert_select "td a", text: curry.surface
+    assert_select "td a", text: @word.surface, count: 0
+    assert_select ".admin-words-missing", count: 0
+
+    # 並びは既定が登録順(id の昇順)で、新しい順は id の降順。id の指定と並びは状態タブに引き継がれ、
+    # 修正画面へのリンク(戻り先)にも載る
+    listed_ids = -> { css_select("td.admin-words-table__id").map { |cell| cell.text.to_i } }
+    get admin_words_path
+    assert_equal listed_ids.call.sort, listed_ids.call
+    # 並びの切り替えはもう一方の並びへのリンクで、ほかの条件を保つ
+    assert_select "a.admin-words-sort[href=?]", admin_words_path(sort: "id_desc")
+    get admin_words_path(sort: "id_desc", ids: "#{@word.id},#{curry.id}")
+    assert_equal [ @word.id, curry.id ].sort.reverse, listed_ids.call
+    assert_select "a.admin-words-sort[href=?]", admin_words_path(ids: "#{@word.id},#{curry.id}", sort: "id_asc")
+    assert_select ".admin-status-tabs__tab[href*=?]", "sort=id_desc", count: 4
+    assert_select ".admin-status-tabs__tab[href*=?]", "ids=", count: 4
+    assert_select "td a[href=?]", edit_admin_word_path(@word, ids: "#{@word.id},#{curry.id}", sort: "id_desc")
+    # 未知の並びは既定へ畳む
+    get admin_words_path(sort: "surface; DROP TABLE words")
+    assert_select "a.admin-words-sort[href=?]", admin_words_path(sort: "id_desc")
   end
 
   # --- step2: 読みの取得 ---

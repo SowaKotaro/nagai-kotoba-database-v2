@@ -273,9 +273,11 @@ bin/rails server
 | アノテーション（コンソール・デッキ） | `nested_form`・`sense_cloner`（語義の複製）・`sense_completeness`（必須項目の充足）・`genre_picker`（ジャンルの段階表示）・`inline_add`（マスタのその場追加）・`feature_range`（特徴の該当部分）・`publish_guard`（公開前の確認）・`queue_nav`（キーボード）・`deck`（カード送り） |
 | 管理の一覧・一括登録 | `check_all`（全選択）・`genre_picker`（一括適用）・`reading_choice`（読みの候補）・`reading_format`（読みの形式） |
 | 登録予定単語 | `decision_list`（語ごとの処理）・`row_select`（行の選択）・`submit_shortcut`（Ctrl+Enter で送る） |
+| タグ管理 | `tag_merge`（統合元・統合先を名前で絞り、統合先を同じ階層に絞る） |
 
-複数のコントローラが使う関数は `controllers/support/`（いまは `senses.js` と `create_master.js`）。stimulus-loading は `_controller` で終わるファイルしか
+複数のコントローラが使う関数は `controllers/support/`（いまは `senses.js`・`create_master.js`・`search_text.js`）。stimulus-loading は `_controller` で終わるファイルしか
 登録しないので、ここに置いた関数はコントローラにならない。マスタのその場追加の fetch は `support/create_master.js` の `createMaster()` を使う（`inline_add` と `genre_picker`）。
+名前で絞り込むときの表記の寄せ（ひらがな→カタカナ・全角→半角）は `support/search_text.js` の `normalizeSearchText()`（`list_filter` と `tag_merge`）。
 
 ### 独自のイベント
 

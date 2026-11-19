@@ -1,0 +1,28 @@
+<%# locals: (kind:, genre:, children:, usage_counts:, deletable_ids:, genre_index:) -%>
+<%# 大分類・中分類の折り畳みの頭。列(名前・使用数・操作)は小分類の表と同じ幅に揃える。
+    名前の後ろに配下の数を添え、畳んだままでも中身の量が分かるようにする -%>
+<% kids = children[genre.id] || [] %>
+<summary class="tag-tree__row tag-tree__row--<%= genre.level %>">
+  <span class="tag-tree__name tag-table__name tag-table__name--<%= genre.level %>">
+    <%= icon "caret_down", "genre-fold__caret" %>
+    <span class="tag-tree__label"><%= genre.name %></span>
+    <% if kind.seeded?(genre, genre_index: genre_index) %>
+      <span class="tag-table__seed" title="<%= t("admin.tags.seed_badge_title") %>"><%= t("admin.tags.seed_badge") %></span>
+    <% end %>
+    <% if kids.any? %>
+      <span class="tag-tree__children">
+        <%= t("admin.tags.genre_tree.children", level: t("admin.tags.levels.#{kids.first.level}"), count: kids.size) %>
+      </span>
+    <% end %>
+  </span>
+  <span class="tag-table__num"><span class="tag-tree__usage-label"><%= t("admin.tags.genre_tree.usage") %></span><%= number_with_delimiter(usage_counts[genre.id].to_i) %></span>
+  <span class="actions">
+    <%= link_to t("admin.tags.edit"), admin_edit_tag_path(kind.key, genre), class: "btn btn--sm" %>
+    <% if deletable_ids.include?(genre.id) %>
+      <%= link_to t("admin.tags.destroy"), admin_tag_path(kind.key, genre), class: "btn btn--sm",
+            data: { turbo_method: :delete, turbo_confirm: t("admin.tags.confirm_destroy", name: genre.name) } %>
+    <% else %>
+      <span class="tag-table__inuse"><%= t("admin.tags.in_use") %></span>
+    <% end %>
+  </span>
+</summary>
