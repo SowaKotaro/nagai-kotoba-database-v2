@@ -1,6 +1,6 @@
 # 提案の一括承認(Issue 65)。厳格ゲートを満たす pending 提案だけを、プレビュー後にまとめて
 # 承認する。承認 = 提案値で word_senses を組んで保存し、公開(mark_annotated)、提案を applied
-# にする。危うい提案(低信頼・低スコア・複数語義・新設マスタあり・マスタ未解決)は対象外で、
+# にする。危うい提案(低信頼・低スコア・複数語義・新設マスタあり・マスタ未解決・コンソールでの手直しあり)は対象外で、
 # 人手キューに残してコンソールで1語ずつ確認する。
 #
 # ゲート判定は各提案の payload と各マスタの find_by で行うため、対象数に比例してクエリが増える
@@ -16,6 +16,7 @@ class BulkProposalApproval
     return false unless proposal.confidence == AnnotationProposal::HIGH_CONFIDENCE
     return false unless proposal.entry_score && proposal.entry_score > AnnotationProposal::ENTRY_CONCERN_MAX_SCORE
     return false unless proposal.senses.size == 1
+    return false if proposal.console_fixes?   # 手直しを経ずに公開しない
 
     sense = proposal.senses.first
     sense.resolved_genre.present? &&              # ジャンル小分類(末端)まで既存の木で解決

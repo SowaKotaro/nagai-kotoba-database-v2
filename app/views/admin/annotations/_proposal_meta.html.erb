@@ -1,6 +1,7 @@
 <%# locals: (proposal:) -%>
 <%# 提案の確信度と立項スコア(docs/annotation-guidelines.md §2・§8)のバッジ。1語コンソールとデッキが共有する。
-    立項スコアが AnnotationProposal::ENTRY_CONCERN_MAX_SCORE 以下なら赤でオーナー判断を促す -%>
+    立項スコアが AnnotationProposal::ENTRY_CONCERN_MAX_SCORE 以下なら赤でオーナー判断を促す。
+    コンソールでの手直し(console_fixes)がある提案には、高速で回していても見落とさないよう赤のベタの札を足す -%>
 <% if proposal.confidence %>
   <span class="ann-proposal__confidence ann-proposal__confidence--<%= proposal.confidence %>">
     <%= t("admin.annotations.proposal.confidence.#{proposal.confidence}", default: proposal.confidence) %>
@@ -9,5 +10,10 @@
 <% if proposal.entry_score %>
   <span class="ann-proposal__entry <%= "ann-proposal__entry--concern" if proposal.entry_concern? %>">
     <%= t("admin.annotations.proposal.entry_score", score: proposal.entry_score) %>
+  </span>
+<% end %>
+<% if proposal.console_fixes? %>
+  <span class="ann-proposal__console-fix">
+    <%= t("admin.annotations.proposal.console_fix_badge", count: proposal.console_fixes.size) %>
   </span>
 <% end %>

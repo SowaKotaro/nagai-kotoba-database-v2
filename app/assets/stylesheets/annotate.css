@@ -278,6 +278,40 @@
   color: var(--danger);
 }
 
+/* コンソールでの手直し(console_fixes)。反映では入らないので、高速で回していても目に留まるよう
+   赤のベタの札にする(2026-11-19 オーナー指示。文字は反転色で、除外のベタと同じ組み合わせ。
+   実測は design.md §10.1 の破壊的な操作の主ボタン)。中身は判断メモの上に赤の細枠で並べる */
+.ann-proposal__console-fix {
+  padding: 0 8px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--danger);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.7;
+  color: var(--bg);
+  white-space: nowrap;
+}
+
+.ann-proposal__console-fixes {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.ann-proposal__console-fixes-title {
+  margin: 0;
+  font-weight: 800;
+}
+
+.ann-proposal__console-fixes ul {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.2em;
+}
+
 /* 複数語義(同音異義語・Issue 41)。語義ごとに細罫で区切り、小さく語義番号を打つ */
 .ann-proposal__senses-note {
   margin: 0 0 var(--space-2);
@@ -420,7 +454,8 @@
     line-height: 1.6;
   }
 
-  .ann-proposal__notes {
+  .ann-proposal__notes,
+  .ann-proposal__console-fixes {
     margin-top: var(--space-2);
     line-height: 1.6;
   }

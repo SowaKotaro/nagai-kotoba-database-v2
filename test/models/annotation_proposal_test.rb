@@ -85,6 +85,25 @@ class AnnotationProposalTest < ActiveSupport::TestCase
     assert_includes AnnotationProposal.needs_review, @proposal
   end
 
+  test "コンソールでの手直しは空の要素を落として読み、1つでもあれば要判断にする" do
+    assert_empty @proposal.console_fixes
+    assert_not @proposal.console_fixes?
+
+    # 空の配列・空文字だけでは手直しにならない
+    @proposal.update!(payload: @proposal.payload.merge("console_fixes" => []))
+    assert_not @proposal.console_fixes?
+    assert_not_includes AnnotationProposal.needs_review, @proposal
+
+    @proposal.update!(payload: @proposal.payload.merge("console_fixes" => [ "", "別表記「ハルヒ」を削除" ]))
+    assert_equal [ "別表記「ハルヒ」を削除" ], @proposal.console_fixes
+    assert_includes AnnotationProposal.needs_review, @proposal
+
+    # 配列でなく文字列 1 つで書かれても 1 件として読む(SQL の JSON_LENGTH も 1 を返す)
+    @proposal.update!(payload: @proposal.payload.merge("console_fixes" => "表層形を「涼宮ハルヒの憂鬱」に直す"))
+    assert_equal [ "表層形を「涼宮ハルヒの憂鬱」に直す" ], @proposal.console_fixes
+    assert_includes AnnotationProposal.needs_review, @proposal
+  end
+
   test "語には提案は1件まで(上書き前提のユニーク制約)" do
     duplicate = AnnotationProposal.new(word: words(:pending_haruhi), payload: { "meaning" => "重複" })
     assert_raises(ActiveRecord::RecordNotUnique) { duplicate.save!(validate: false) }

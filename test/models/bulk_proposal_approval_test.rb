@@ -5,7 +5,7 @@ require "test_helper"
 class BulkProposalApprovalTest < ActiveSupport::TestCase
   setup { @proposal = annotation_proposals(:haruhi_proposal) }
 
-  test "厳格ゲート: 確信 high・立項4以上・単一語義・マスタがすべて既存の未適用の提案だけが対象" do
+  test "厳格ゲート: 確信 high・立項4以上・単一語義・マスタがすべて既存・手直し無しの未適用の提案だけが対象" do
     assert BulkProposalApproval.eligible?(@proposal)
     assert_includes BulkProposalApproval.eligible, @proposal
 
@@ -19,6 +19,7 @@ class BulkProposalApprovalTest < ActiveSupport::TestCase
       "エンティティが未解決" => base.merge("entity_type" => "存在しない種別"),
       "語種が無い" => base.merge("word_origins" => []),
       "語種に未解決(新設)を含む" => base.merge("word_origins" => %w[和語 タミル語]),
+      "コンソールでの手直しがある" => base.merge("console_fixes" => [ "別表記「ハルヒ」を削除" ]),
       "特徴に未解決(新設)の名前を含む" => eligible_senses_payload(
         "linguistic_features" => [ { "name" => "存在しない特徴", "target" => "涼宮", "target_reading" => "すずみや" } ]
       )

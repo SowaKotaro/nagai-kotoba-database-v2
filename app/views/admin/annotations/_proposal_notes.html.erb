@@ -1,5 +1,16 @@
 <%# locals: (proposal:) -%>
-<%# 提案の「立項の懸念」と「判断メモ」。1語コンソールとデッキが共有する -%>
+<%# 提案の「コンソールで直すこと」「立項の懸念」「判断メモ」。1語コンソールとデッキが共有する。
+    手直しは反映では入らないので、真っ先に目に入るよう先頭に赤で並べる -%>
+<% if proposal.console_fixes? %>
+  <div class="ann-proposal__console-fixes">
+    <p class="ann-proposal__console-fixes-title"><%= t("admin.annotations.proposal.console_fixes") %></p>
+    <ul>
+      <% proposal.console_fixes.each do |fix| %>
+        <li><%= fix %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
 <% if proposal.entry_notes %>
   <p class="ann-proposal__notes ann-proposal__notes--entry"><%= t("admin.annotations.proposal.entry_notes") %>　<%= proposal.entry_notes %></p>
 <% end %>
