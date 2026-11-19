@@ -251,6 +251,11 @@ bin/rails server
 - **claude.ai 用のスキル束**: `/reannotation` を claude.ai で使うための束は、`tools/claude-ai-skill/build.sh` が作る派生物。
   元は、再注釈と注釈のスキルの SKILL.md・[`annotation-guidelines.md`](annotation-guidelines.md)・`config/linguistic_features_glossary.yml`・
   注釈スキルの `schema.json` と `example.json`。**どれかを直したら、束を作り直してアップロードし直す**（アップロードはオーナー）。
+- **サーバの保守**（設定はリポジトリの外、2026-11-19）: Rails のログは標準出力に出し、Puma の systemd unit が shared の `log/puma.log` に足す。
+  この `log/*.log` は `/etc/logrotate.d/nagai-kotoba-database` が日次で切り替える（`copytruncate`。Puma の再起動は要らない。14 日分を圧縮して残す）。
+  入れるまでは切り替えが無く、`puma.log` が 19G まで育っていた。systemd のログは `journald.conf` の `SystemMaxUse` で上限を付けている。
+  OS のセキュリティ更新は自動で入るが、**再起動は自動ではしない**ので、カーネルと libc の修正を効かせるには再起動が要る
+  （`/var/run/reboot-required` があれば再起動待ち。Puma・nginx・MySQL は再起動後に自動で上がる）。
 - **本番の確かめ方**: ヘルスチェックは `/up`。派生値の整合は、サーバで `RAILS_ENV=production bin/rails backfill:verify`
   （[`data-model.md`](data-model.md) §3.4）。インデックスの状況は Search Console を週次で見る（[`launch-checklist.md`](launch-checklist.md) §4）。
 

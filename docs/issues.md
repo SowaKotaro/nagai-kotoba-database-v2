@@ -77,7 +77,7 @@
 - 内容:
   - [ ] 外形監視: 無料の監視サービス(UptimeRobot 等)で `/` と `/up`(ヘルスチェック)を監視し、ダウン時にメール通知
   - [ ] エラー通知: Rails の error reporter(`Rails.error.subscribe`)でメール通知、または gem 導入を比較検討(**gem 追加は相談の上**)
-  - [ ] nginx / Puma のログローテーション設定の確認
+  - [x] nginx / Puma のログローテーション設定の確認(2026-11-19。Puma 側が無く `puma.log` が 19G に育っていたので logrotate を入れた。nginx は Ubuntu の既定の logrotate で回っている。overview §11)
 - 期待効果: 障害・エラーの検知が「ユーザーに言われて気づく」から「先に気づいて直す」になる。
 
 ## Issue 46: DB バックアップの自動化(日次 mysqldump + 世代管理)
