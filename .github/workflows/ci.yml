@@ -6,8 +6,9 @@ on:
     branches:
       - main
 
-# runner は ubuntu-24.04 に固定する。ubuntu-latest(26.04)には、setup-ruby が .ruby-version の Ruby 3.4.2 の
-# ビルド済みバイナリを用意していない(新しいイメージには各系列の最新パッチだけを置く)。本番の Ruby を上げるまで外さない。
+# runner は ubuntu-24.04 に固定する。固定したのは、ubuntu-latest(26.04)では setup-ruby が当時の Ruby 3.4.2 の
+# ビルド済みバイナリを用意しておらず(新しいイメージには各系列の最新パッチだけを置く)、全ジョブが落ちたため。
+# 3.4.13 に上げたあとも、イメージの替わりで Chrome・MySQL が変わる影響を別に確かめるまで外さない。
 jobs:
   scan_ruby:
     name: Brakeman (Rubyセキュリティ静的解析)

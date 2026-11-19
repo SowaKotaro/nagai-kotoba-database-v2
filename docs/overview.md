@@ -37,7 +37,7 @@
 
 ## 2. 技術スタック
 
-- **Ruby 3.4.2 / Rails 8.1**（`config.load_defaults 8.1`）
+- **Ruby 3.4.13 / Rails 8.1**（`config.load_defaults 8.1`）
 - **MySQL 8.x（mysql2）** — 照合順序は `utf8mb4_0900_ai_ci` 基準（読みまわりだけ `as_ci`。[`data-model.md`](data-model.md) §6）
 - Puma / Hotwire（Turbo・Stimulus）/ importmap-rails / Sprockets — **ビルドツールは入れない**
 - CSS は手書き（`tokens → base → layout → components → motion` ＋ `annotate.css` / `candidates.css` / `admin.css`）
